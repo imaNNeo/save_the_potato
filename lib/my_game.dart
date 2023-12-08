@@ -1,14 +1,22 @@
 import 'dart:math';
-import 'dart:ui';
 
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 
-class MyGame extends FlameGame<MyWorld> with PanDetector {
-  MyGame() : super(world: MyWorld());
+class MyGame extends FlameGame<MyWorld>
+    with PanDetector, HasCollisionDetection {
+  MyGame()
+      : super(
+          world: MyWorld(),
+          camera: CameraComponent.withFixedResolution(
+            width: 800,
+            height: 800,
+          ),
+        );
 
   @override
   void onPanStart(DragStartInfo info) => world._player.onPanStart(info);
@@ -20,16 +28,31 @@ class MyGame extends FlameGame<MyWorld> with PanDetector {
   void onPanUpdate(DragUpdateInfo info) => world._player.onPanUpdate(info);
 }
 
-class MyWorld extends World {
+class MyWorld extends World with HasGameRef<MyGame> {
   late Player _player;
 
   @override
   Future<void> onLoad() async {
     await add(_player = Player());
+    add(TimerComponent(
+      period: 3.0,
+      repeat: true,
+      onTick: _spawnSpawner,
+    ));
   }
 
-  void _dragged(double dragLength) {
-    _player.fireShield.angle += dragLength / 10000;
+  void _spawnSpawner() {
+    // final spawner = ParticleSpawner(
+    //   position: Vector2(
+    //         Random().nextDouble() * game.size.x,
+    //         Random().nextDouble() * game.size.y,
+    //       ) -
+    //       game.size / 2,
+    //   type: TemperatureType.values[Random().nextInt(2)],
+    //   spawnInterval: 0.1,
+    //   spawnCount: 10,
+    // );
+    // add(spawner);
   }
 }
 
@@ -64,14 +87,15 @@ class Player extends PositionComponent with HasGameRef<MyGame> {
   @override
   void onLoad() {
     super.onLoad();
-    add(fireShield = Shield(color: Colors.red));
-    add(iceShield = Shield(color: Colors.blue));
+    add(CircleHitbox(collisionType: CollisionType.passive));
+    add(fireShield = Shield(type: TemperatureType.hot));
+    add(iceShield = Shield(type: TemperatureType.cold));
   }
 
   @override
   void update(double dt) {
     super.update(dt);
-    iceShield.angle = fireShield.angle - pi / 2;
+    iceShield.angle = fireShield.angle - pi;
   }
 
   @override
@@ -87,27 +111,61 @@ class Player extends PositionComponent with HasGameRef<MyGame> {
   }
 }
 
-class Shield extends PositionComponent with ParentIsA<Player> {
+class Shield extends PositionComponent
+    with ParentIsA<Player>, HasGameRef<MyGame> {
   Shield({
-    required this.color,
+    required this.type,
     this.shieldWidth = 8.0,
     this.shieldSweep = pi / 2,
-    this.offset = 8,
+    this.offset = 4,
   }) : super(
           position: Vector2.all(0),
           anchor: Anchor.center,
         );
 
-  final Color color;
+  final TemperatureType type;
   final double shieldWidth;
   final double shieldSweep;
   final double offset;
 
   @override
-  void update(double dt) {
+  void onLoad() {
+    super.onLoad();
     size = parent.size + Vector2.all(shieldWidth * 2) + Vector2.all(offset * 2);
     position = parent.size / 2;
-    super.update(dt);
+    _addHitbox();
+  }
+
+  void _addHitbox() {
+    final center = size / 2;
+
+    const precision = 8;
+
+    final segment = shieldSweep / (precision - 1);
+    final radius = size.x / 2;
+    final startAngle = 0 - shieldSweep / 2;
+
+    List<Vector2> vertices = [];
+    for (int i = 0; i < precision; i++) {
+      final thisSegment = startAngle + segment * i;
+      vertices.add(
+        center + Vector2(cos(thisSegment), sin(thisSegment)) * radius,
+      );
+    }
+
+    for (int i = precision - 1; i >= 0; i--) {
+      final thisSegment = startAngle + segment * i;
+      vertices.add(
+        center +
+            Vector2(cos(thisSegment), sin(thisSegment)) *
+                (radius - shieldWidth),
+      );
+    }
+
+    add(PolygonHitbox(
+      vertices,
+      collisionType: CollisionType.passive,
+    ));
   }
 
   @override
@@ -115,14 +173,100 @@ class Shield extends PositionComponent with ParentIsA<Player> {
     super.render(canvas);
     canvas.drawArc(
       size.toRect().deflate(shieldWidth / 2),
-      angle - shieldSweep / 2,
+      -shieldSweep / 2,
       shieldSweep,
       false,
       Paint()
-        ..color = color
+        ..color = type.color
         ..strokeWidth = shieldWidth
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round,
     );
   }
+}
+
+class ParticleSpawner extends PositionComponent with HasGameRef<MyGame> {
+  ParticleSpawner({
+    required super.position,
+    required this.type,
+    required this.spawnInterval,
+    required this.spawnCount,
+  });
+
+  final double spawnInterval;
+  final TemperatureType type;
+  final int spawnCount;
+
+  double _timeSinceLastSpawn = 0;
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _timeSinceLastSpawn += dt;
+    if (_timeSinceLastSpawn >= spawnInterval) {
+      _timeSinceLastSpawn = 0;
+      _spawn();
+    }
+  }
+
+  void _spawn() {
+    game.world.add(
+      ParticleElement(
+        type: type,
+        speed: 100,
+        size: 10,
+        target: game.world._player,
+        position: position.clone(),
+      ),
+    );
+  }
+}
+
+class ParticleElement extends PositionComponent with HasGameRef<MyGame> {
+  ParticleElement({
+    required this.type,
+    required this.speed,
+    required double size,
+    required this.target,
+    required super.position,
+  }) : super(size: Vector2.all(size));
+
+  final TemperatureType type;
+  final double speed;
+  final PositionComponent target;
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    final angle = atan2(
+      target.position.y - position.y,
+      target.position.x - position.x,
+    );
+    position += Vector2(cos(angle), sin(angle)) * speed * dt;
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+    canvas.drawCircle(
+      Offset.zero,
+      size.x / 2,
+      Paint()..color = type.color,
+    );
+  }
+}
+
+enum TemperatureType {
+  hot,
+  cold;
+
+  TemperatureType get opposite => switch (this) {
+        TemperatureType.hot => TemperatureType.cold,
+        TemperatureType.cold => TemperatureType.hot,
+      };
+
+  Color get color => switch (this) {
+        TemperatureType.hot => Colors.red,
+        TemperatureType.cold => Colors.blue,
+      };
 }
