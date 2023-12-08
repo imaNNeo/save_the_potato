@@ -66,7 +66,7 @@ class Player extends PositionComponent
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
-    if (other is Element) {
+    if (other is ElementParticle) {
       other.removeFromParent();
     }
   }
