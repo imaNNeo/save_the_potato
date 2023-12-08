@@ -2,16 +2,38 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
+import 'package:flame/game.dart';
+import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 
+class MyGame extends FlameGame<MyWorld> with PanDetector {
+  MyGame() : super(world: MyWorld());
+
+  @override
+  void onPanStart(DragStartInfo info) => world._player.onPanStart(info);
+
+  @override
+  void onPanDown(DragDownInfo info) => world._player.onPanDown(info);
+
+  @override
+  void onPanUpdate(DragUpdateInfo info) => world._player.onPanUpdate(info);
+}
+
 class MyWorld extends World {
+  late Player _player;
+
   @override
   Future<void> onLoad() async {
-    await add(Player());
+    await add(_player = Player());
+  }
+
+  void _dragged(double dragLength) {
+    _player.fireShield.angle += dragLength / 10000;
   }
 }
 
-class Player extends PositionComponent {
+class Player extends PositionComponent with HasGameRef<MyGame> {
   Player({
     double size = 100,
   }) : super(
@@ -22,6 +44,22 @@ class Player extends PositionComponent {
 
   late final Shield fireShield;
   late final Shield iceShield;
+
+  double? panStartAngle;
+
+  void onPanStart(DragStartInfo info) => _initPan(info.eventPosition.global);
+
+  void onPanDown(DragDownInfo info) => _initPan(info.eventPosition.global);
+
+  void _initPan(Vector2 touchGlobalPos) {
+    final dir = game.camera.globalToLocal(touchGlobalPos) - position;
+    panStartAngle = atan2(dir.x, dir.y);
+  }
+
+  void onPanUpdate(DragUpdateInfo info) {
+    final dir = game.camera.globalToLocal(info.eventPosition.global) - position;
+    fireShield.angle = (panStartAngle! - atan2(dir.x, dir.y)) * 1.5;
+  }
 
   @override
   void onLoad() {
