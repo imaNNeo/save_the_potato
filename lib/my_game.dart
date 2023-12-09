@@ -1,18 +1,23 @@
 import 'dart:math';
 
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
+import 'package:flame_bloc/flame_bloc.dart';
+import 'package:flame_noise/flame_noise.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ice_fire_game/effects/camera_zoom_effect.dart';
 
-import 'element_ball.dart';
-import 'player.dart';
+import 'cubit/game_cubit.dart';
+import 'components/element_ball.dart';
+import 'components/player.dart';
 
 class MyGame extends FlameGame<MyWorld>
     with PanDetector, HasCollisionDetection, KeyboardEvents {
-  MyGame()
+  MyGame(this._gameCubit)
       : super(
           world: MyWorld(),
           camera: CameraComponent.withFixedResolution(
@@ -20,6 +25,19 @@ class MyGame extends FlameGame<MyWorld>
             height: 800,
           ),
         );
+
+  @override
+  void onLoad() {
+    remove(world);
+    add(FlameBlocProvider<GameCubit, GameState>(
+      create: () => _gameCubit,
+      children: [world],
+    ));
+  }
+
+  final GameCubit _gameCubit;
+
+  PlayingState get playingState => _gameCubit.state.playingState;
 
   Random rnd = Random();
 
@@ -44,14 +62,34 @@ class MyGame extends FlameGame<MyWorld>
   @override
   void onPanUpdate(DragUpdateInfo info) => world.player.onPanUpdate(info);
 
+  void onElementBallHit(TemperatureType type) {
+    _gameCubit.potatoElementBallHit(type);
+    camera.viewfinder.add(
+      MoveEffect.by(
+        Vector2(8, 8),
+        PerlinNoiseEffectController(
+          duration: 1,
+          frequency: 400,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Color backgroundColor() => const Color(0xFF251E2C);
+
   @override
   KeyEventResult onKeyEvent(
-      RawKeyEvent event,
-      Set<LogicalKeyboardKey> keysPressed,
-      ) => world.player.onKeyEvent(event, keysPressed);
+    RawKeyEvent event,
+    Set<LogicalKeyboardKey> keysPressed,
+  ) =>
+      world.player.onKeyEvent(event, keysPressed);
 }
 
-class MyWorld extends World with HasGameRef<MyGame> {
+class MyWorld extends World
+    with
+        HasGameRef<MyGame>,
+        FlameBlocListenable<GameCubit, GameState> {
   late Player player;
 
   @override
@@ -62,6 +100,31 @@ class MyWorld extends World with HasGameRef<MyGame> {
       repeat: true,
       onTick: _spawnSpawner,
     ));
+  }
+
+  @override
+  bool listenWhen(GameState previousState, GameState newState) =>
+      previousState.playingState != newState.playingState;
+
+  @override
+  void onNewState(GameState state) {
+    super.onNewState(state);
+    if (state.playingState == PlayingState.gameOver) {
+      add(CameraZoomEffect(
+        controller: EffectController(
+          duration: 1.0,
+          curve: Curves.easeOut,
+        ),
+        zoomTo: 2.0,
+      ));
+    } else {
+      add(CameraZoomEffect(
+        controller: EffectController(
+          duration: 1.0,
+        ),
+        zoomTo: 1.0,
+      ));
+    }
   }
 
   double _getSpawnRandomDistance() {
@@ -84,19 +147,4 @@ class MyWorld extends World with HasGameRef<MyGame> {
     );
     add(spawner);
   }
-}
-
-enum TemperatureType {
-  hot,
-  cold;
-
-  TemperatureType get opposite => switch (this) {
-        TemperatureType.hot => TemperatureType.cold,
-        TemperatureType.cold => TemperatureType.hot,
-      };
-
-  Color get color => switch (this) {
-        TemperatureType.hot => Colors.red,
-        TemperatureType.cold => Colors.blue,
-      };
 }

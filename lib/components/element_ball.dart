@@ -4,10 +4,13 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/particles.dart';
+import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:ice_fire_game/game_configs.dart';
 import 'package:ice_fire_game/list_extension.dart';
 
-import 'my_game.dart';
+import '../cubit/game_cubit.dart';
+import '../my_game.dart';
 
 class ElementBallSpawner extends PositionComponent with HasGameRef<MyGame> {
   ElementBallSpawner({
@@ -38,6 +41,9 @@ class ElementBallSpawner extends PositionComponent with HasGameRef<MyGame> {
   }
 
   void _spawn() {
+    if (game.playingState != PlayingState.playing) {
+      return;
+    }
     spawned++;
     const speedMin = 80;
     const speedMax = 150;
@@ -53,7 +59,11 @@ class ElementBallSpawner extends PositionComponent with HasGameRef<MyGame> {
   }
 }
 
-class ElementBall extends PositionComponent with HasGameRef<MyGame> {
+class ElementBall extends PositionComponent
+    with
+        HasGameRef<MyGame>,
+        HasTimeScale,
+        FlameBlocListenable<GameCubit, GameState> {
   ElementBall({
     required this.type,
     required this.speed,
@@ -75,6 +85,20 @@ class ElementBall extends PositionComponent with HasGameRef<MyGame> {
         TemperatureType.hot => game.hotColors,
         TemperatureType.cold => game.coldColors,
       };
+
+  @override
+  bool listenWhen(GameState previousState, GameState newState) =>
+      previousState.playingState != newState.playingState;
+
+  @override
+  void onNewState(GameState state) {
+    super.onNewState(state);
+    if (state.playingState == PlayingState.gameOver) {
+      timeScale = GameConfigs.gameOverTimeScale;
+    } else {
+      timeScale = 1.0;
+    }
+  }
 
   @override
   void onLoad() {

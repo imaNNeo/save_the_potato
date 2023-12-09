@@ -2,18 +2,25 @@ import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/particles.dart';
-import 'package:flame_noise/flame_noise.dart';
+import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
 
+import '../cubit/game_cubit.dart';
 import 'element_ball.dart';
-import 'my_game.dart';
+import '../game_configs.dart';
+import '../my_game.dart';
 import 'player.dart';
 
 class Shield extends PositionComponent
-    with ParentIsA<Player>, HasGameRef<MyGame>, CollisionCallbacks, HasPaint {
+    with
+        ParentIsA<Player>,
+        HasGameRef<MyGame>,
+        CollisionCallbacks,
+        HasPaint,
+        HasTimeScale,
+        FlameBlocListenable<GameCubit, GameState> {
   Shield({
     required this.type,
     this.shieldWidth = 6.0,
@@ -31,6 +38,20 @@ class Shield extends PositionComponent
 
   late Timer _particleTimer;
   late List<Sprite> _flameSprites;
+
+  @override
+  bool listenWhen(GameState previousState, GameState newState) =>
+      previousState.playingState != newState.playingState;
+
+  @override
+  void onNewState(GameState state) {
+    super.onNewState(state);
+    if (state.playingState == PlayingState.gameOver) {
+      timeScale = GameConfigs.gameOverTimeScale;
+    } else {
+      timeScale = 1.0;
+    }
+  }
 
   @override
   Future<void> onLoad() async {

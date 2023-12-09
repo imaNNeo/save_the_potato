@@ -2,15 +2,14 @@ import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
-import 'package:flame_noise/flame_noise.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ice_fire_game/shield.dart';
+import 'package:ice_fire_game/components/shield.dart';
 
+import '../cubit/game_cubit.dart';
 import 'element_ball.dart';
-import 'my_game.dart';
+import '../my_game.dart';
 
 class Player extends PositionComponent
     with HasGameRef<MyGame>, CollisionCallbacks {
@@ -29,6 +28,10 @@ class Player extends PositionComponent
 
   int arrowLeftOrRight = 0;
 
+  late Sprite potatoSprite;
+
+  double get radius => size.x / 2;
+
   void onPanStart(DragStartInfo info) => _initPan(info.eventPosition.global);
 
   void onPanDown(DragDownInfo info) => _initPan(info.eventPosition.global);
@@ -46,9 +49,15 @@ class Player extends PositionComponent
   }
 
   @override
-  void onLoad() {
+  Future<void> onLoad() async {
     super.onLoad();
-    add(CircleHitbox(collisionType: CollisionType.active));
+    potatoSprite = await Sprite.load('potato.png');
+    add(CircleHitbox(
+      collisionType: CollisionType.active,
+      radius: radius * 0.7,
+      position: size / 2,
+      anchor: Anchor.center,
+    ));
     add(fireShield = Shield(type: TemperatureType.hot));
     add(iceShield = Shield(type: TemperatureType.cold));
   }
@@ -66,12 +75,9 @@ class Player extends PositionComponent
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    canvas.drawCircle(
-      Offset.zero + (size / 2).toOffset(),
-      size.x / 2,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..color = Colors.white,
+    potatoSprite.render(
+      canvas,
+      size: size,
     );
   }
 
@@ -79,13 +85,7 @@ class Player extends PositionComponent
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
     if (other is ElementBall) {
-      //Shake the camera
-      game.camera.viewfinder.add(
-        MoveEffect.by(
-          Vector2(8, 8),
-          PerlinNoiseEffectController(duration: 1, frequency: 400),
-        ),
-      );
+      game.onElementBallHit(other.type);
       other.removeFromParent();
     }
   }

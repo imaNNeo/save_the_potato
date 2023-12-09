@@ -1,0 +1,66 @@
+part of 'game_cubit.dart';
+
+class GameState extends Equatable {
+  const GameState({
+    this.heatLevel = 0,
+    this.startTimeStamp = 0,
+    this.playingState = PlayingState.none,
+    this.showGameOverUI = false,
+  });
+
+  /// Between [GameConfigs.minHeatLevel] and [GameConfigs.maxHeatLevel]
+  final int heatLevel;
+
+  final int startTimeStamp;
+
+  final PlayingState playingState;
+
+  final bool showGameOverUI;
+
+  GameState copyWith({
+    int? heatLevel,
+    int? startTimeStamp,
+    PlayingState? playingState,
+    bool? showGameOverUI,
+  }) {
+    return GameState(
+      heatLevel: heatLevel ?? this.heatLevel,
+      startTimeStamp: startTimeStamp ?? this.startTimeStamp,
+      playingState: playingState ?? this.playingState,
+      showGameOverUI: showGameOverUI ?? this.showGameOverUI,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        heatLevel,
+        startTimeStamp,
+        playingState,
+        showGameOverUI,
+      ];
+}
+
+enum PlayingState {
+  none,
+  playing,
+  paused,
+  gameOver;
+
+  bool get isNone => this == PlayingState.none;
+
+  bool get isGameOver => this == PlayingState.gameOver;
+
+  bool get isPlaying => this == PlayingState.playing;
+
+  bool get isPaused => this == PlayingState.paused;
+}
+
+enum TemperatureType {
+  hot,
+  cold;
+
+  Color get color => switch (this) {
+        TemperatureType.hot => Colors.red,
+        TemperatureType.cold => Colors.blue,
+      };
+}
