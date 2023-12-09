@@ -2,8 +2,10 @@ import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/particles.dart';
+import 'package:flame_noise/flame_noise.dart';
 import 'package:flutter/material.dart';
 
 import 'element_ball.dart';

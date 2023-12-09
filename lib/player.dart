@@ -2,7 +2,9 @@ import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
+import 'package:flame_noise/flame_noise.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_fire_game/shield.dart';
@@ -77,6 +79,13 @@ class Player extends PositionComponent
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
     if (other is ElementBall) {
+      //Shake the camera
+      game.camera.viewfinder.add(
+        MoveEffect.by(
+          Vector2(8, 8),
+          PerlinNoiseEffectController(duration: 1, frequency: 400),
+        ),
+      );
       other.removeFromParent();
     }
   }

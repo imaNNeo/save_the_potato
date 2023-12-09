@@ -57,14 +57,38 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.1"
+  fast_noise:
+    dependency: transitive
+    description:
+      name: fast_noise
+      sha256: "271031cebf1602fc064472970e658fa7ff2f3b55a979bb430337b715bd55690b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
+  fixnum:
+    dependency: transitive
+    description:
+      name: fixnum
+      sha256: "25517a4deb0c03aa0f32fd12db525856438902d9c16536311e76cdc57b31d7d1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   flame:
     dependency: "direct main"
     description:
       name: flame
-      sha256: "4418cf72c53059241a2e9ddf8e783a01ae84caec31d7f6d30a19122b2c602748"
+      sha256: "8703abbdb3aec264f91823f8af3de4f1a14656326aff0f344d90484be97ee8e7"
       url: "https://pub.dev"
     source: hosted
-    version: "1.11.0"
+    version: "1.12.0"
+  flame_noise:
+    dependency: "direct main"
+    description:
+      name: flame_noise
+      sha256: "0c53b23c91186d73a914046c7388e58edc611c0955a628eea38d7f0e7e0543ef"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.1+10"
   flutter:
     dependency: "direct main"
     description: flutter
