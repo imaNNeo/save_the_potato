@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ice_fire_game/cubit/game_cubit.dart';
-import 'package:ice_fire_game/my_game.dart';
+import 'package:save_the_potato/cubit/game_cubit.dart';
+import 'package:save_the_potato/my_game.dart';
 
 void main() {
   runApp(const MyApp());

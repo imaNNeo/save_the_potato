@@ -1,4 +1,4 @@
-# ice_fire_game
+# save_the_potato
 
 A new Flutter project.
 

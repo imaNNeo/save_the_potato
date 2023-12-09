@@ -1,4 +1,4 @@
-package com.example.ice_fire_game
+package dev.app2pack.savethepotato
 
 import io.flutter.embedding.android.FlutterActivity
 

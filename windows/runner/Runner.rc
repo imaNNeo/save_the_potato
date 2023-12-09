@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "ice_fire_game" "\0"
+            VALUE "FileDescription", "save_the_potato" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "ice_fire_game" "\0"
+            VALUE "InternalName", "save_the_potato" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2023 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "ice_fire_game.exe" "\0"
-            VALUE "ProductName", "ice_fire_game" "\0"
+            VALUE "OriginalFilename", "save_the_potato.exe" "\0"
+            VALUE "ProductName", "save_the_potato" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

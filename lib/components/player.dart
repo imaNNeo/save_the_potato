@@ -5,7 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ice_fire_game/components/shield.dart';
+import 'package:save_the_potato/components/shield.dart';
 
 import '../cubit/game_cubit.dart';
 import 'element_ball.dart';

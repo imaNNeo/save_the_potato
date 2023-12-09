@@ -1,6 +1,6 @@
 {
-    "name": "ice_fire_game",
-    "short_name": "ice_fire_game",
+    "name": "save_the_potato",
+    "short_name": "save_the_potato",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

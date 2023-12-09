@@ -9,7 +9,7 @@ import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_noise/flame_noise.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ice_fire_game/effects/camera_zoom_effect.dart';
+import 'package:save_the_potato/effects/camera_zoom_effect.dart';
 
 import 'cubit/game_cubit.dart';
 import 'components/element_ball.dart';

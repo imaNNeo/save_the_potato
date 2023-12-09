@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flame/effects.dart';
 import 'package:flame/components.dart';
-import 'package:ice_fire_game/my_game.dart';
+import 'package:save_the_potato/my_game.dart';
 
 class CameraZoomEffect extends Effect with HasGameRef<MyGame> {
   CameraZoomEffect({
