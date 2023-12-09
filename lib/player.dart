@@ -34,7 +34,9 @@ class Player extends PositionComponent
 
   void onPanUpdate(DragUpdateInfo info) {
     final dir = game.camera.globalToLocal(info.eventPosition.global) - position;
-    fireShield.angle = (panStartAngle! - atan2(dir.x, dir.y)) * 1.5;
+    final angle = atan2(dir.x, dir.y);
+    fireShield.angle += (panStartAngle! - angle);
+    _initPan(info.eventPosition.global);
   }
 
   @override
