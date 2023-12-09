@@ -336,7 +336,7 @@ class Shield extends PositionComponent
     super.onCollisionStart(intersectionPoints, other);
     if (other is ElementBall) {
       if (other.type == type) {
-        other.removeFromParent();
+        other.dissolve();
       }
     }
   }

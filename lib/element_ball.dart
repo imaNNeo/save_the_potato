@@ -67,6 +67,15 @@ class ElementBall extends PositionComponent with HasGameRef<MyGame> {
   final PositionComponent target;
   late Timer _particleTimer;
 
+  Random get rnd => game.rnd;
+
+  double get radius => size.x / 2;
+
+  List<Color> get colors => switch (type) {
+        TemperatureType.hot => game.hotColors,
+        TemperatureType.cold => game.coldColors,
+      };
+
   @override
   void onLoad() {
     super.onLoad();
@@ -76,16 +85,9 @@ class ElementBall extends PositionComponent with HasGameRef<MyGame> {
   }
 
   void _addParticles() {
-    Random rnd = Random();
-
     _particleTimer = Timer(
       0.04,
       onTick: () {
-        final parentSize = size.x / 2;
-        final colors = switch (type) {
-          TemperatureType.hot => game.hotColors,
-          TemperatureType.cold => game.coldColors,
-        };
         final color = colors.random();
         final randomOrder = colors.randomOrder();
         TweenSequence<Color?> colorTween = TweenSequence<Color?>([
@@ -115,9 +117,11 @@ class ElementBall extends PositionComponent with HasGameRef<MyGame> {
                 // print(opacity);
                 canvas.drawCircle(
                   Offset.zero,
-                  (parentSize * 0.8) * (1 - particle.progress),
+                  (radius * 0.8) * (1 - particle.progress),
                   Paint()
-                    ..color = (rnd.nextBool() ? color : colorTween.transform(particle.progress))!
+                    ..color = (rnd.nextBool()
+                            ? color
+                            : colorTween.transform(particle.progress))!
                         .withOpacity(opacity)
                     ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
                 );
@@ -167,5 +171,58 @@ class ElementBall extends PositionComponent with HasGameRef<MyGame> {
   void onRemove() {
     _particleTimer.stop();
     super.onRemove();
+  }
+
+  void dissolve() {
+    removeFromParent();
+    final color = colors.random();
+    final randomOrder = colors.randomOrder();
+    TweenSequence<Color?> colorTween = TweenSequence<Color?>([
+      for (int i = 0; i < randomOrder.length - 1; i++)
+        TweenSequenceItem(
+          weight: 1,
+          tween: ColorTween(
+            begin: randomOrder[i],
+            end: randomOrder[i + 1],
+          ),
+        ),
+    ]);
+    game.world.add(ParticleSystemComponent(
+      position: positionOfAnchor(Anchor.center),
+      anchor: Anchor.center,
+      particle: Particle.generate(
+        count: 20,
+        lifespan: 0.8,
+        generator: (i) => AcceleratedParticle(
+          speed: Vector2(
+            (rnd.nextDouble() * 200) - 100,
+            (rnd.nextDouble() * 200) - 100,
+          ),
+          acceleration: Vector2(
+            (rnd.nextDouble() * 200) - 100,
+            (rnd.nextDouble() * 200) - 100,
+          ),
+          child: ComputedParticle(
+            renderer: (canvas, particle) {
+              final opacity =
+                  Tween(begin: 1.0, end: 0.0).transform(particle.progress);
+              canvas.drawCircle(
+                Offset.zero,
+                (radius * 0.6) * (1 - particle.progress),
+                Paint()
+                  ..color = (rnd.nextBool()
+                          ? color
+                          : colorTween.transform(particle.progress))!
+                      .withOpacity(opacity)
+                  ..maskFilter = MaskFilter.blur(
+                    BlurStyle.normal,
+                    (1 - particle.progress) * 2,
+                  ),
+              );
+            },
+          ),
+        ),
+      ),
+    ));
   }
 }

@@ -21,6 +21,8 @@ class MyGame extends FlameGame<MyWorld>
           ),
         );
 
+  Random rnd = Random();
+
   final hotColors = [
     Colors.red,
     Colors.orange,
