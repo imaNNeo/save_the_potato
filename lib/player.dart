@@ -4,6 +4,8 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/src/services/keyboard_key.g.dart';
 
 import 'element.dart';
 import 'my_game.dart';
@@ -22,6 +24,8 @@ class Player extends PositionComponent
   late final Shield iceShield;
 
   double? panStartAngle;
+
+  int arrowLeftOrRight = 0;
 
   void onPanStart(DragStartInfo info) => _initPan(info.eventPosition.global);
 
@@ -50,6 +54,10 @@ class Player extends PositionComponent
   @override
   void update(double dt) {
     super.update(dt);
+    if (arrowLeftOrRight != 0) {
+      final angle = arrowLeftOrRight * dt * 2 * pi;
+      fireShield.angle += angle;
+    }
     iceShield.angle = fireShield.angle - pi;
   }
 
@@ -71,6 +79,33 @@ class Player extends PositionComponent
     if (other is ElementParticle) {
       other.removeFromParent();
     }
+  }
+
+  KeyEventResult onKeyEvent(
+      RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    final isLeftArrow = keysPressed.contains(LogicalKeyboardKey.arrowLeft);
+    final isRightArrow = keysPressed.contains(LogicalKeyboardKey.arrowRight);
+
+    arrowLeftOrRight = 0;
+
+    if (isLeftArrow && isRightArrow && event is RawKeyDownEvent) {
+      return KeyEventResult.handled;
+    }
+
+    if (isLeftArrow) {
+      arrowLeftOrRight += -1;
+      arrowLeftOrRight = arrowLeftOrRight.clamp(-1, 1);
+    }
+
+    if (isRightArrow) {
+      arrowLeftOrRight += 1;
+      arrowLeftOrRight = arrowLeftOrRight.clamp(-1, 1);
+    }
+
+    if (arrowLeftOrRight != 0) {
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
   }
 }
 

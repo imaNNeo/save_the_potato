@@ -5,12 +5,13 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'element.dart';
 import 'player.dart';
 
 class MyGame extends FlameGame<MyWorld>
-    with PanDetector, HasCollisionDetection {
+    with PanDetector, HasCollisionDetection, KeyboardEvents {
   MyGame()
       : super(
           world: MyWorld(),
@@ -28,6 +29,12 @@ class MyGame extends FlameGame<MyWorld>
 
   @override
   void onPanUpdate(DragUpdateInfo info) => world.player.onPanUpdate(info);
+
+  @override
+  KeyEventResult onKeyEvent(
+      RawKeyEvent event,
+      Set<LogicalKeyboardKey> keysPressed,
+      ) => world.player.onKeyEvent(event, keysPressed);
 }
 
 class MyWorld extends World with HasGameRef<MyGame> {
