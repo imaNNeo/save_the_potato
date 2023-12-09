@@ -5,4 +5,5 @@ class GameConfigs {
 
   static const double gameOverTimeScale = 0.1;
   static const showRetryAfterGameOverDelay = Duration(seconds: 3);
+  static const showShieldLineAnimDuration = 2.0;
 }

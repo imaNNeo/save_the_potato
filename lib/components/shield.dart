@@ -39,6 +39,9 @@ class Shield extends PositionComponent
   late Timer _particleTimer;
   late List<Sprite> _flameSprites;
 
+  late Color shieldLineColor;
+  late Color shieldTargetColor;
+
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
       previousState.playingState != newState.playingState;
@@ -56,6 +59,8 @@ class Shield extends PositionComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
+    shieldLineColor = type.color.withOpacity(0.0);
+    shieldTargetColor = type.color.withOpacity(0.8);
     size = parent.size + Vector2.all(shieldWidth * 2) + Vector2.all(offset * 2);
     position = parent.size / 2;
     paint = Paint()
@@ -335,6 +340,13 @@ class Shield extends PositionComponent
   @override
   void update(double dt) {
     _particleTimer.update(dt);
+
+    if (shieldLineColor != shieldTargetColor) {
+      shieldLineColor = ColorTween(
+        begin: shieldLineColor,
+        end: shieldTargetColor,
+      ).lerp(dt)!;
+    }
     super.update(dt);
   }
 
@@ -347,7 +359,7 @@ class Shield extends PositionComponent
       shieldSweep,
       false,
       paint
-        ..color = type.color.withOpacity(0.8)
+        ..color = shieldLineColor
         ..strokeWidth = shieldWidth
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
     );
