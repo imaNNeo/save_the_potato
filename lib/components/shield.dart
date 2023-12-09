@@ -43,17 +43,9 @@ class Shield extends PositionComponent
   late Color shieldTargetColor;
 
   @override
-  bool listenWhen(GameState previousState, GameState newState) =>
-      previousState.playingState != newState.playingState;
-
-  @override
   void onNewState(GameState state) {
     super.onNewState(state);
-    if (state.playingState == PlayingState.gameOver) {
-      timeScale = GameConfigs.gameOverTimeScale;
-    } else {
-      timeScale = 1.0;
-    }
+    timeScale = state.gameOverTimeScale;
   }
 
   @override

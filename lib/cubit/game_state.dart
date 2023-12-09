@@ -17,6 +17,22 @@ class GameState extends Equatable {
 
   final bool showGameOverUI;
 
+  double get gameOverTimeScale {
+    if (playingState.isPaused) {
+      return 0.0;
+    }
+
+    if (playingState.isGameOver) {
+      if (showGameOverUI) {
+        return 0.0;
+      } else {
+        return GameConfigs.gameOverTimeScale;
+      }
+    }
+
+    return 1.0;
+  }
+
   GameState copyWith({
     int? heatLevel,
     int? startTimeStamp,

@@ -10,6 +10,7 @@ import 'package:flame_noise/flame_noise.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:save_the_potato/effects/camera_zoom_effect.dart';
+import 'package:save_the_potato/effects/game_over_effects.dart';
 
 import 'cubit/game_cubit.dart';
 import 'components/element_ball.dart';
@@ -110,13 +111,7 @@ class MyWorld extends World
   void onNewState(GameState state) {
     super.onNewState(state);
     if (state.playingState == PlayingState.gameOver) {
-      add(CameraZoomEffect(
-        controller: EffectController(
-          duration: 1.0,
-          curve: Curves.easeOut,
-        ),
-        zoomTo: 2.0,
-      ));
+      add(GameOverCameraZoomEffect());
     } else {
       add(CameraZoomEffect(
         controller: EffectController(
