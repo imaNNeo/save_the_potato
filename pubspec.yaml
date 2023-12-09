@@ -40,6 +40,7 @@ dependencies:
   flutter_bloc: ^8.1.3
   flame_bloc: ^1.10.7
   equatable: ^2.0.5
+  flame_audio: ^2.1.5
 
 dev_dependencies:
   flutter_test:
@@ -72,3 +73,4 @@ flutter:
     - assets/images/flame/
     - assets/images/
     - assets/fonts/
+    - assets/audio/

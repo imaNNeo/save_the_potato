@@ -20,7 +20,7 @@ class GameState extends Equatable {
   double get spawnOrbsEvery {
     return max(
       GameConfigs.spawnOrbsEveryMinimum,
-      GameConfigs.initialSpawnOrbsEvery - (timePassed * 0.01),
+      GameConfigs.initialSpawnOrbsEvery - (timePassed * 0.015),
     );
   }
 
