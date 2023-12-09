@@ -6,58 +6,10 @@ import 'package:flame/extensions.dart';
 import 'package:flame/particles.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:save_the_potato/game_configs.dart';
 import 'package:save_the_potato/list_extension.dart';
 
 import '../cubit/game_cubit.dart';
 import '../my_game.dart';
-
-class ElementBallSpawner extends PositionComponent with HasGameRef<MyGame> {
-  ElementBallSpawner({
-    required super.position,
-    required this.type,
-    required this.spawnInterval,
-    required this.spawnCount,
-  });
-
-  final double spawnInterval;
-  final TemperatureType type;
-  final int spawnCount;
-
-  double _timeSinceLastSpawn = 0;
-  int spawned = 0;
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    _timeSinceLastSpawn += dt;
-    if (_timeSinceLastSpawn >= spawnInterval) {
-      _timeSinceLastSpawn = 0;
-      _spawn();
-    }
-    if (spawned >= spawnCount) {
-      removeFromParent();
-    }
-  }
-
-  void _spawn() {
-    if (game.playingState != PlayingState.playing) {
-      return;
-    }
-    spawned++;
-    const speedMin = 80;
-    const speedMax = 150;
-    game.world.add(
-      ElementBall(
-        type: type,
-        speed: Random().nextDouble() * (speedMax - speedMin) + speedMin,
-        size: 18 + Random().nextDouble() * 4,
-        target: game.world.player,
-        position: position.clone(),
-      ),
-    );
-  }
-}
 
 class ElementBall extends PositionComponent
     with

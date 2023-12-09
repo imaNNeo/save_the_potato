@@ -3,7 +3,7 @@ part of 'game_cubit.dart';
 class GameState extends Equatable {
   const GameState({
     this.heatLevel = 0,
-    this.startTimeStamp = 0,
+    this.timePassed = 0,
     this.playingState = PlayingState.none,
     this.showGameOverUI = false,
   });
@@ -11,11 +11,18 @@ class GameState extends Equatable {
   /// Between [GameConfigs.minHeatLevel] and [GameConfigs.maxHeatLevel]
   final int heatLevel;
 
-  final int startTimeStamp;
+  final double timePassed;
 
   final PlayingState playingState;
 
   final bool showGameOverUI;
+
+  double get spawnOrbsEvery {
+    return max(
+      GameConfigs.spawnOrbsEveryMinimum,
+      GameConfigs.initialSpawnOrbsEvery - (timePassed * 0.01),
+    );
+  }
 
   double get gameOverTimeScale {
     if (playingState.isPaused) {
@@ -35,13 +42,13 @@ class GameState extends Equatable {
 
   GameState copyWith({
     int? heatLevel,
-    int? startTimeStamp,
+    double? timePassed,
     PlayingState? playingState,
     bool? showGameOverUI,
   }) {
     return GameState(
       heatLevel: heatLevel ?? this.heatLevel,
-      startTimeStamp: startTimeStamp ?? this.startTimeStamp,
+      timePassed: timePassed ?? this.timePassed,
       playingState: playingState ?? this.playingState,
       showGameOverUI: showGameOverUI ?? this.showGameOverUI,
     );
@@ -50,7 +57,7 @@ class GameState extends Equatable {
   @override
   List<Object?> get props => [
         heatLevel,
-        startTimeStamp,
+    timePassed,
         playingState,
         showGameOverUI,
       ];

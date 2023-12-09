@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,10 +11,17 @@ class GameCubit extends Cubit<GameState> {
   GameCubit() : super(const GameState());
 
   void startGame() {
-    emit(state.copyWith(
+    emit(const GameState().copyWith(
       playingState: PlayingState.playing,
-      startTimeStamp: DateTime.now().millisecondsSinceEpoch,
-      heatLevel: GameConfigs.initialHeatLevel,
+    ));
+  }
+
+  void update(double dt) {
+    if (!state.playingState.isPlaying) {
+      return;
+    }
+    emit(state.copyWith(
+      timePassed: state.timePassed + dt,
     ));
   }
 
@@ -37,7 +46,8 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void restartGame() {
-    emit(const GameState());
-    startGame();
+    emit(const GameState().copyWith(
+      playingState: PlayingState.playing,
+    ));
   }
 }

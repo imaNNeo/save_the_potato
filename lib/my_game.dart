@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
+import 'package:flame/extensions.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flame_bloc/flame_bloc.dart';
@@ -55,6 +56,12 @@ class MyGame extends FlameGame<MyWorld>
   ];
 
   @override
+  void update(double dt) {
+    _gameCubit.update(dt);
+    super.update(dt);
+  }
+
+  @override
   void onPanStart(DragStartInfo info) => world.player.onPanStart(info);
 
   @override
@@ -88,19 +95,14 @@ class MyGame extends FlameGame<MyWorld>
 }
 
 class MyWorld extends World
-    with
-        HasGameRef<MyGame>,
-        FlameBlocListenable<GameCubit, GameState> {
+    with HasGameRef<MyGame>, FlameBlocListenable<GameCubit, GameState> {
   late Player player;
+
+  double lastSpawnOrbTimer = 0.0;
 
   @override
   Future<void> onLoad() async {
     await add(player = Player());
-    add(TimerComponent(
-      period: 1.5,
-      repeat: true,
-      onTick: _spawnSpawner,
-    ));
   }
 
   @override
@@ -122,6 +124,16 @@ class MyWorld extends World
     }
   }
 
+  @override
+  void update(double dt) {
+    super.update(dt);
+    lastSpawnOrbTimer += dt;
+    if (lastSpawnOrbTimer >= bloc.state.spawnOrbsEvery) {
+      lastSpawnOrbTimer = 0.0;
+      spawnOrb();
+    }
+  }
+
   double _getSpawnRandomDistance() {
     final distanceMin = player.size.x * 3;
     final distanceMax = game.size.x / 2;
@@ -129,17 +141,25 @@ class MyWorld extends World
     return distanceMin + Random().nextDouble() * distanceDiff;
   }
 
-  void _spawnSpawner() {
+  void spawnOrb() {
+    if (game.playingState != PlayingState.playing) {
+      return;
+    }
+
     final distance = _getSpawnRandomDistance();
     final angle = Random().nextDouble() * pi * 2;
     final position = Vector2(cos(angle), sin(angle)) * distance;
 
-    final spawner = ElementBallSpawner(
-      position: position,
-      type: TemperatureType.values[Random().nextInt(2)],
-      spawnInterval: 0.0,
-      spawnCount: 1,
+    const speedMin = 160;
+    const speedMax = 200;
+    add(
+      ElementBall(
+        type: TemperatureType.values.random(),
+        speed: Random().nextDouble() * (speedMax - speedMin) + speedMin,
+        size: 18 + Random().nextDouble() * 4,
+        target: game.world.player,
+        position: position.clone(),
+      ),
     );
-    add(spawner);
   }
 }

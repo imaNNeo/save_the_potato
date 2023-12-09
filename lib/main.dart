@@ -1,10 +1,13 @@
 import 'dart:async';
 
 import 'package:flame/game.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/cubit/game_cubit.dart';
 import 'package:save_the_potato/my_game.dart';
+
+import 'game_configs.dart';
 
 void main() {
   runApp(const MyApp());
@@ -98,6 +101,57 @@ class _MainPageState extends State<MainPage> {
                             ElevatedButton(
                               onPressed: _gameCubit.restartGame,
                               child: const Text('Play Again'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (kDebugMode)
+                    Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Container(
+                        margin: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: Colors.black87,
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Debug Panel:',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'timePassed: ${state.timePassed.toStringAsFixed(2)}',
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                                'spawnEvery: ${state.spawnOrbsEvery.toStringAsFixed(2)}'),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                    '${GameConfigs.initialSpawnOrbsEvery}'),
+                                SizedBox(
+                                  width: 200,
+                                  child: LinearProgressIndicator(
+                                    value: 1 -
+                                        ((state.spawnOrbsEvery -
+                                                GameConfigs
+                                                    .spawnOrbsEveryMinimum) /
+                                            (GameConfigs.initialSpawnOrbsEvery -
+                                                GameConfigs
+                                                    .spawnOrbsEveryMinimum)),
+                                  ),
+                                ),
+                                const Text(
+                                    '${GameConfigs.spawnOrbsEveryMinimum}'),
+                              ],
                             ),
                           ],
                         ),
