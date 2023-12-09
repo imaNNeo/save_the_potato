@@ -19,7 +19,11 @@ class MyApp extends StatelessWidget {
       create: (context) => GameCubit(),
       child: MaterialApp(
         title: 'Save the Potato',
-        theme: ThemeData.dark(),
+        theme: ThemeData.dark().copyWith(
+          textTheme: ThemeData.dark().textTheme.apply(
+                fontFamily: 'Cookies',
+              ),
+        ),
         home: const MainPage(),
       ),
     );

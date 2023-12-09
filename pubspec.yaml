@@ -63,6 +63,12 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  fonts:
+    - family: Cookies
+      fonts:
+        - asset: assets/fonts/Cookies.ttf
+
   assets:
     - assets/images/flame/
     - assets/images/
+    - assets/fonts/
