@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_fire_game/shield.dart';
 
-import 'element.dart';
+import 'element_ball.dart';
 import 'my_game.dart';
 
 class Player extends PositionComponent
@@ -76,7 +76,7 @@ class Player extends PositionComponent
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
-    if (other is ElementParticle) {
+    if (other is ElementBall) {
       other.removeFromParent();
     }
   }

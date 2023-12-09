@@ -6,7 +6,7 @@ import 'package:flame/extensions.dart';
 import 'package:flame/particles.dart';
 import 'package:flutter/material.dart';
 
-import 'element.dart';
+import 'element_ball.dart';
 import 'my_game.dart';
 import 'player.dart';
 
@@ -92,11 +92,6 @@ class Shield extends PositionComponent
   void _addColdParticles() {
     Random rnd = Random();
 
-    final flameColors = [
-      Colors.white,
-      Colors.blue,
-      Colors.lightBlueAccent,
-    ];
     _particleTimer = Timer(
       0.04,
       onTick: () {
@@ -105,12 +100,10 @@ class Shield extends PositionComponent
         final maxAngle = angle + (shieldSweep / 2);
         final generateAngle =
             minAngle + rnd.nextDouble() * (maxAngle - minAngle);
-        final worldPos =
-            Vector2(cos(generateAngle), sin(generateAngle)) * radius;
         final localPos = (size / 2) +
             Vector2(cos(generateAngle - angle), sin(generateAngle - angle)) *
                 radius;
-        final color = flameColors.random();
+        final color = game.coldColors.random();
 
         final spriteIndex = rnd.nextInt(_flameSprites.length);
         final isShortFlame = spriteIndex <= 2;
@@ -209,11 +202,6 @@ class Shield extends PositionComponent
   void _addHotParticles() {
     Random rnd = Random();
 
-    final flameColors = [
-      Colors.orange,
-      Colors.yellow,
-      Colors.red,
-    ];
     _particleTimer = Timer(
       0.04,
       onTick: () {
@@ -222,12 +210,10 @@ class Shield extends PositionComponent
         final maxAngle = angle + (shieldSweep / 2);
         final generateAngle =
             minAngle + rnd.nextDouble() * (maxAngle - minAngle);
-        final worldPos =
-            Vector2(cos(generateAngle), sin(generateAngle)) * radius;
         final localPos = (size / 2) +
             Vector2(cos(generateAngle - angle), sin(generateAngle - angle)) *
                 radius;
-        final color = flameColors.random();
+        final color = game.hotColors.random();
 
         final spriteIndex = rnd.nextInt(_flameSprites.length);
         final isShortFlame = spriteIndex <= 2;
@@ -348,7 +334,7 @@ class Shield extends PositionComponent
   void onCollisionStart(
       Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
-    if (other is ElementParticle) {
+    if (other is ElementBall) {
       if (other.type == type) {
         other.removeFromParent();
       }

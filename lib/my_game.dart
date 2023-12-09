@@ -7,7 +7,7 @@ import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'element.dart';
+import 'element_ball.dart';
 import 'player.dart';
 
 class MyGame extends FlameGame<MyWorld>
@@ -20,6 +20,18 @@ class MyGame extends FlameGame<MyWorld>
             height: 800,
           ),
         );
+
+  final hotColors = [
+    Colors.red,
+    Colors.orange,
+    Colors.yellow,
+  ];
+
+  final coldColors = [
+    Colors.white,
+    Colors.lightBlueAccent,
+    Colors.blue,
+  ];
 
   @override
   void onPanStart(DragStartInfo info) => world.player.onPanStart(info);
@@ -62,13 +74,13 @@ class MyWorld extends World with HasGameRef<MyGame> {
     final angle = Random().nextDouble() * pi * 2;
     final position = Vector2(cos(angle), sin(angle)) * distance;
 
-    // final spawner = ElementSpawner(
-    //   position: position,
-    //   type: TemperatureType.values[Random().nextInt(2)],
-    //   spawnInterval: 0.0,
-    //   spawnCount: 1,
-    // );
-    // add(spawner);
+    final spawner = ElementBallSpawner(
+      position: position,
+      type: TemperatureType.values[Random().nextInt(2)],
+      spawnInterval: 0.0,
+      spawnCount: 1,
+    );
+    add(spawner);
   }
 }
 
