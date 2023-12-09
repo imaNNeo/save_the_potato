@@ -62,13 +62,13 @@ class MyWorld extends World with HasGameRef<MyGame> {
     final angle = Random().nextDouble() * pi * 2;
     final position = Vector2(cos(angle), sin(angle)) * distance;
 
-    final spawner = ElementSpawner(
-      position: position,
-      type: TemperatureType.values[Random().nextInt(2)],
-      spawnInterval: 0.0,
-      spawnCount: 1,
-    );
-    add(spawner);
+    // final spawner = ElementSpawner(
+    //   position: position,
+    //   type: TemperatureType.values[Random().nextInt(2)],
+    //   spawnInterval: 0.0,
+    //   spawnCount: 1,
+    // );
+    // add(spawner);
   }
 }
 
