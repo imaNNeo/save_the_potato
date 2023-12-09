@@ -6,6 +6,7 @@ import 'package:flame/extensions.dart';
 import 'package:flame/particles.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:save_the_potato/game_configs.dart';
 import 'package:save_the_potato/list_extension.dart';
 
 import '../cubit/game_cubit.dart';
@@ -34,8 +35,8 @@ class ElementBall extends PositionComponent
   double get radius => size.x / 2;
 
   List<Color> get colors => switch (type) {
-        TemperatureType.hot => game.hotColors,
-        TemperatureType.cold => game.coldColors,
+        TemperatureType.hot => GameConfigs.hotColors,
+        TemperatureType.cold => GameConfigs.coldColors,
       };
 
   @override
@@ -123,7 +124,7 @@ class ElementBall extends PositionComponent
       offset,
       radius,
       Paint()
-        ..color = type.color.withOpacity(1)
+        ..color = type.baseColor.withOpacity(1)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
     );
     canvas.drawCircle(

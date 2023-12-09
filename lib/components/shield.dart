@@ -38,6 +38,7 @@ class Shield extends PositionComponent
 
   late Timer _particleTimer;
   late List<Sprite> _flameSprites;
+  late Sprite _snowFlake1;
 
   late Color shieldLineColor;
   late Color shieldTargetColor;
@@ -51,12 +52,12 @@ class Shield extends PositionComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    shieldLineColor = type.color.withOpacity(0.0);
-    shieldTargetColor = type.color.withOpacity(0.8);
+    shieldLineColor = type.baseColor.withOpacity(0.0);
+    shieldTargetColor = type.baseColor.withOpacity(0.8);
     size = parent.size + Vector2.all(shieldWidth * 2) + Vector2.all(offset * 2);
     position = parent.size / 2;
     paint = Paint()
-      ..color = type.color
+      ..color = type.baseColor
       ..strokeWidth = shieldWidth
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -66,6 +67,8 @@ class Shield extends PositionComponent
     for (int i = 1; i <= 8; i++) {
       _flameSprites.add(await Sprite.load('flame/flame$i.png'));
     }
+
+    _snowFlake1 = await Sprite.load('snow/snowflake1.png');
 
     switch (type) {
       case TemperatureType.cold:
@@ -123,7 +126,7 @@ class Shield extends PositionComponent
         final localPos = (size / 2) +
             Vector2(cos(generateAngle - angle), sin(generateAngle - angle)) *
                 radius;
-        final color = game.coldColors.random();
+        final color = GameConfigs.coldColors.random();
 
         final spriteIndex = rnd.nextInt(_flameSprites.length);
         final isShortFlame = spriteIndex <= 2;
@@ -154,14 +157,14 @@ class Shield extends PositionComponent
               renderer: (canvas, particle) {
                 final opacity = TweenSequence<double>([
                   TweenSequenceItem<double>(
-                    tween: Tween<double>(begin: 0.0, end: 0.5)
+                    tween: Tween<double>(begin: 0.0, end: 0.8)
                         .chain(CurveTween(curve: Curves.easeIn)),
-                    weight: 0.5,
+                    weight: 0.2,
                   ),
                   TweenSequenceItem<double>(
-                    tween: Tween<double>(begin: 0.5, end: 0.0)
+                    tween: Tween<double>(begin: 0.8, end: 0.0)
                         .chain(CurveTween(curve: Curves.easeOut)),
-                    weight: 0.5,
+                    weight: 0.8,
                   ),
                 ]).transform(particle.progress);
                 canvas.rotate(rotation);
@@ -174,7 +177,7 @@ class Shield extends PositionComponent
                       color.withOpacity(opacity),
                       BlendMode.srcIn,
                     )
-                    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+                    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
                 );
               },
             ),
@@ -203,11 +206,16 @@ class Shield extends PositionComponent
                   weight: 0.5,
                 ),
               ]).transform(particle.progress);
-              c.drawCircle(
-                Offset.zero,
-                opacity * 1,
-                Paint()
-                  ..color = color.withOpacity(opacity)
+
+              _snowFlake1.render(
+                c,
+                size: Vector2.all(opacity * 14),
+                anchor: Anchor.center,
+                overridePaint: Paint()
+                  ..colorFilter = ColorFilter.mode(
+                    color.withOpacity(opacity),
+                    BlendMode.srcIn,
+                  )
                   ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
               );
             }),
@@ -233,7 +241,7 @@ class Shield extends PositionComponent
         final localPos = (size / 2) +
             Vector2(cos(generateAngle - angle), sin(generateAngle - angle)) *
                 radius;
-        final color = game.hotColors.random();
+        final color = GameConfigs.hotColors.random();
 
         final spriteIndex = rnd.nextInt(_flameSprites.length);
         final isShortFlame = spriteIndex <= 2;
@@ -353,7 +361,7 @@ class Shield extends PositionComponent
       paint
         ..color = shieldLineColor
         ..strokeWidth = shieldWidth
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
     );
   }
 

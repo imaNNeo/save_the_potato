@@ -43,18 +43,6 @@ class MyGame extends FlameGame<MyWorld>
 
   Random rnd = Random();
 
-  final hotColors = [
-    Colors.red,
-    Colors.orange,
-    Colors.yellow,
-  ];
-
-  final coldColors = [
-    Colors.white,
-    Colors.lightBlueAccent,
-    Colors.blue,
-  ];
-
   @override
   void update(double dt) {
     _gameCubit.update(dt);

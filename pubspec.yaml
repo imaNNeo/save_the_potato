@@ -71,6 +71,7 @@ flutter:
 
   assets:
     - assets/images/flame/
+    - assets/images/snow/
     - assets/images/
     - assets/fonts/
     - assets/audio/
