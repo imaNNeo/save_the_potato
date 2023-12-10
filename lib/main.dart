@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/cubit/game_cubit.dart';
 import 'package:save_the_potato/my_game.dart';
+import 'package:save_the_potato/widgets/analog_timer.dart';
 import 'package:save_the_potato/widgets/retry_button.dart';
 
 import 'game_configs.dart';
@@ -71,6 +72,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
           GameWidget(
@@ -158,6 +160,15 @@ class _MainPageState extends State<MainPage> {
                         ),
                       ),
                     ),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: AnalogTimer(time: state.timePassed),
+                      ),
+                    ),
+                  )
                 ],
               );
             },
