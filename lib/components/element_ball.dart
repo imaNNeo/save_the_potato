@@ -107,6 +107,9 @@ class ElementBall extends PositionComponent
   @override
   void update(double dt) {
     super.update(dt);
+    if (bloc.state.playingState.isGameOver) {
+      removeFromParent();
+    }
     _particleTimer.update(dt);
     final angle = atan2(
       target.position.y - position.y,

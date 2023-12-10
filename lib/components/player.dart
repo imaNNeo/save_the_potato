@@ -52,6 +52,9 @@ class Player extends PositionComponent
   }
 
   void onPanUpdate(DragUpdateInfo info) {
+    if (!bloc.state.playingState.isPlaying) {
+      return;
+    }
     final dir = game.camera.globalToLocal(info.eventPosition.global) - position;
     final angle = atan2(dir.x, dir.y);
     fireShield.angle += (panStartAngle! - angle);

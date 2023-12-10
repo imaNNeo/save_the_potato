@@ -90,16 +90,18 @@ class _MainPageState extends State<MainPage> {
                 children: [
                   Align(
                     alignment: Alignment.topCenter,
-                    child: Text(
-                      state.heatLevel.toString(),
-                      style: const TextStyle(fontSize: 50),
+                    child: SafeArea(
+                      child: Text(
+                        state.heatLevel.toString(),
+                        style: const TextStyle(fontSize: 50),
+                      ),
                     ),
                   ),
                   if (state.showGameOverUI)
                     Container(
                       width: double.infinity,
                       height: double.infinity,
-                      color: Colors.black87,
+                      color: Colors.black54,
                       child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -110,8 +112,23 @@ class _MainPageState extends State<MainPage> {
                             ),
                             const SizedBox(height: 24),
                             ElevatedButton(
+                              style: ButtonStyle(
+                                shape: MaterialStateProperty.all<
+                                    RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18.0),
+                                    side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                                  ),
+                                ),
+                              ),
                               onPressed: _gameCubit.restartGame,
-                              child: const Text('Play Again'),
+                              child: const Padding(
+                                padding: EdgeInsets.all(12.0),
+                                child: Text(
+                                  'Play Again',
+                                  style: TextStyle(fontSize: 24),
+                                ),
+                              ),
                             ),
                           ],
                         ),

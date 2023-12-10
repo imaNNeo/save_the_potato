@@ -45,7 +45,22 @@ class GameCubit extends Cubit<GameState> {
 
   void _gameOver() async {
     emit(state.copyWith(playingState: PlayingState.gameOver));
-    await Future.delayed(GameConfigs.showRetryAfterGameOverDelay);
+
+    final currentVolume = FlameAudio.bgm.audioPlayer.volume;
+    const targetVolume = 0.0;
+    final volumeTween = Tween<double>(
+      begin: currentVolume,
+      end: targetVolume,
+    ).chain(CurveTween(curve: Curves.fastOutSlowIn));
+    int stepCount = 30;
+    final stepDelay = GameConfigs.showRetryAfterGameOverDelay ~/ stepCount;
+    for (int i = 0; i < stepCount; i++) {
+      await FlameAudio.bgm.audioPlayer.setVolume(
+        volumeTween.transform((i + 1) / stepCount),
+      );
+      await Future.delayed(Duration(milliseconds: stepDelay.inMilliseconds));
+    }
+    await FlameAudio.bgm.audioPlayer.setVolume(targetVolume);
     emit(state.copyWith(showGameOverUI: true));
     FlameAudio.bgm.stop();
   }
