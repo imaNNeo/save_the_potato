@@ -8,6 +8,7 @@ import 'package:flame_rive/flame_rive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:save_the_potato/components/shield.dart';
+import 'package:save_the_potato/components/two-way-arrow.dart';
 
 import '../cubit/game_cubit.dart';
 import '../my_game.dart';
@@ -49,6 +50,7 @@ class Player extends PositionComponent
   void _initPan(Vector2 touchGlobalPos) {
     final dir = game.camera.globalToLocal(touchGlobalPos) - position;
     panStartAngle = atan2(dir.x, dir.y);
+    bloc.guideInteracted();
   }
 
   void onPanUpdate(DragUpdateInfo info) {
@@ -108,6 +110,10 @@ class Player extends PositionComponent
     ));
     add(fireShield = Shield(type: TemperatureType.hot));
     add(iceShield = Shield(type: TemperatureType.cold));
+
+    if (game.playingState.isGuide) {
+      add(TwoWayArrow());
+    }
   }
 
   @override
@@ -145,6 +151,10 @@ class Player extends PositionComponent
     final isRightArrow = keysPressed.contains(LogicalKeyboardKey.arrowRight);
 
     arrowLeftOrRight = 0;
+
+    if (isLeftArrow || isRightArrow) {
+      bloc.guideInteracted();
+    }
 
     if (isLeftArrow && isRightArrow && event is RawKeyDownEvent) {
       return KeyEventResult.handled;

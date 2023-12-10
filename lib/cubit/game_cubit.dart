@@ -15,8 +15,15 @@ class GameCubit extends Cubit<GameState> {
 
   void startGame() async {
     emit(const GameState().copyWith(
-      playingState: PlayingState.playing,
+      playingState: PlayingState.guide,
     ));
+  }
+
+  void guideInteracted() async {
+    if (!state.playingState.isGuide) {
+      return;
+    }
+    emit(state.copyWith(playingState: PlayingState.playing));
     await FlameAudio.bgm.play('bg.mp3');
     await FlameAudio.bgm.audioPlayer.setVolume(GameConfigs.bgmVolume);
   }
@@ -68,10 +75,8 @@ class GameCubit extends Cubit<GameState> {
 
   void restartGame() async {
     emit(const GameState().copyWith(
-      playingState: PlayingState.playing,
+      playingState: PlayingState.guide,
     ));
-    await FlameAudio.bgm.play('bg.mp3');
-    await FlameAudio.bgm.audioPlayer.setVolume(GameConfigs.bgmVolume);
   }
 
   @override

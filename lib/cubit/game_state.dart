@@ -65,9 +65,12 @@ class GameState extends Equatable {
 
 enum PlayingState {
   none,
+  guide,
   playing,
   paused,
   gameOver;
+
+  bool get isGuide => this == PlayingState.guide;
 
   bool get isNone => this == PlayingState.none;
 
