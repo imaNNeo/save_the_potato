@@ -57,7 +57,7 @@ class GameState extends Equatable {
   @override
   List<Object?> get props => [
         heatLevel,
-    timePassed,
+        timePassed,
         playingState,
         showGameOverUI,
       ];
@@ -85,5 +85,10 @@ enum TemperatureType {
   Color get baseColor => switch (this) {
         TemperatureType.hot => Colors.red,
         TemperatureType.cold => GameConfigs.coldColors.first,
+      };
+
+  List<Color> get colors => switch (this) {
+        TemperatureType.hot => GameConfigs.hotColors,
+        TemperatureType.cold => GameConfigs.coldColors,
       };
 }

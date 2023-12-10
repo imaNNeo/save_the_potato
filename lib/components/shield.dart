@@ -38,7 +38,8 @@ class Shield extends PositionComponent
 
   late Timer _particleTimer;
   late List<Sprite> _flameSprites;
-  late Sprite _snowFlake1;
+  late List<Sprite> _sparkleSprites;
+  late List<Sprite> _snowflakeSprites;
 
   late Color shieldLineColor;
   late Color shieldTargetColor;
@@ -68,16 +69,17 @@ class Shield extends PositionComponent
       _flameSprites.add(await Sprite.load('flame/flame$i.png'));
     }
 
-    _snowFlake1 = await Sprite.load('snow/snowflake1.png');
-
-    switch (type) {
-      case TemperatureType.cold:
-        _addColdParticles();
-        break;
-      case TemperatureType.hot:
-        _addHotParticles();
-        break;
+    _sparkleSprites = [];
+    for (int i = 1; i <= 2; i++) {
+      _sparkleSprites.add(await Sprite.load('sparkle/sparkle$i.png'));
     }
+
+    _snowflakeSprites = [];
+    for (int i = 1; i <= 2; i++) {
+      _snowflakeSprites.add(await Sprite.load('snow/snowflake$i.png'));
+    }
+
+    _addParticles();
   }
 
   void _addHitbox() {
@@ -112,7 +114,7 @@ class Shield extends PositionComponent
     ));
   }
 
-  void _addColdParticles() {
+  void _addParticles() {
     Random rnd = Random();
 
     _particleTimer = Timer(
@@ -126,7 +128,7 @@ class Shield extends PositionComponent
         final localPos = (size / 2) +
             Vector2(cos(generateAngle - angle), sin(generateAngle - angle)) *
                 radius;
-        final color = GameConfigs.coldColors.random();
+        final color = type.colors.random();
 
         final spriteIndex = rnd.nextInt(_flameSprites.length);
         final isShortFlame = spriteIndex <= 2;
@@ -183,11 +185,16 @@ class Shield extends PositionComponent
             ),
           ),
         ));
+
+        final extraParticle = switch (type) {
+          TemperatureType.cold => _snowflakeSprites.random(),
+          TemperatureType.hot => _sparkleSprites.random(),
+        };
         add(ParticleSystemComponent(
           position: localPos,
           anchor: Anchor.center,
           particle: AcceleratedParticle(
-            lifespan: 1,
+            lifespan: 1.15,
             acceleration: Vector2(
               (rnd.nextDouble() * 120) - 20,
               -15 + rnd.nextDouble() * 30,
@@ -207,7 +214,7 @@ class Shield extends PositionComponent
                 ),
               ]).transform(particle.progress);
 
-              _snowFlake1.render(
+              extraParticle.render(
                 c,
                 size: Vector2.all(opacity * 14),
                 anchor: Anchor.center,
@@ -216,116 +223,6 @@ class Shield extends PositionComponent
                     color.withOpacity(opacity),
                     BlendMode.srcIn,
                   )
-                  ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
-              );
-            }),
-          ),
-        ));
-      },
-      repeat: true,
-    );
-    _particleTimer.start();
-  }
-
-  void _addHotParticles() {
-    Random rnd = Random();
-
-    _particleTimer = Timer(
-      0.04,
-      onTick: () {
-        final radius = (size.x / 2) - shieldWidth / 2;
-        final minAngle = angle - (shieldSweep / 2);
-        final maxAngle = angle + (shieldSweep / 2);
-        final generateAngle =
-            minAngle + rnd.nextDouble() * (maxAngle - minAngle);
-        final localPos = (size / 2) +
-            Vector2(cos(generateAngle - angle), sin(generateAngle - angle)) *
-                radius;
-        final color = GameConfigs.hotColors.random();
-
-        final spriteIndex = rnd.nextInt(_flameSprites.length);
-        final isShortFlame = spriteIndex <= 2;
-        final sprite = _flameSprites[spriteIndex];
-        final spriteActualSize = sprite.originalSize / 8;
-
-        /// -0.5 to 0.5
-        final place = (generateAngle - angle) / (maxAngle - minAngle);
-        final largeFlameAngle = place * (pi / 2);
-        final shortFlameAngle = radians((rnd.nextDouble() * 20) - 5);
-        final rotation =
-            isShortFlame ? shortFlameAngle : pi / 2 + largeFlameAngle;
-        add(ParticleSystemComponent(
-          position: localPos,
-          anchor: Anchor.center,
-          particle: AcceleratedParticle(
-            lifespan: 2,
-            acceleration: isShortFlame
-                ? Vector2(
-                    rnd.nextDouble() * 40,
-                    -10 + rnd.nextDouble() * 20,
-                  )
-                : Vector2(
-                    0,
-                    -20 + rnd.nextDouble() * 40,
-                  ),
-            child: ComputedParticle(
-              renderer: (canvas, particle) {
-                final opacity = TweenSequence<double>([
-                  TweenSequenceItem<double>(
-                    tween: Tween<double>(begin: 0.0, end: 0.5)
-                        .chain(CurveTween(curve: Curves.easeIn)),
-                    weight: 0.5,
-                  ),
-                  TweenSequenceItem<double>(
-                    tween: Tween<double>(begin: 0.5, end: 0.0)
-                        .chain(CurveTween(curve: Curves.easeOut)),
-                    weight: 0.5,
-                  ),
-                ]).transform(particle.progress);
-                canvas.rotate(rotation);
-                sprite.render(
-                  canvas,
-                  size: spriteActualSize,
-                  anchor: Anchor.center,
-                  overridePaint: Paint()
-                    ..colorFilter = ColorFilter.mode(
-                      color.withOpacity(opacity),
-                      BlendMode.srcIn,
-                    )
-                    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-                );
-              },
-            ),
-          ),
-        ));
-        add(ParticleSystemComponent(
-          position: localPos,
-          anchor: Anchor.center,
-          particle: AcceleratedParticle(
-            lifespan: 1,
-            acceleration: Vector2(
-              (rnd.nextDouble() * 120) - 20,
-              -15 + rnd.nextDouble() * 30,
-            ),
-            position: Vector2.zero(),
-            child: ComputedParticle(renderer: (Canvas c, Particle particle) {
-              final opacity = TweenSequence<double>([
-                TweenSequenceItem<double>(
-                  tween: Tween<double>(begin: 0.0, end: 0.8)
-                      .chain(CurveTween(curve: Curves.easeIn)),
-                  weight: 0.5,
-                ),
-                TweenSequenceItem<double>(
-                  tween: Tween<double>(begin: 0.8, end: 0.0)
-                      .chain(CurveTween(curve: Curves.easeOut)),
-                  weight: 0.5,
-                ),
-              ]).transform(particle.progress);
-              c.drawCircle(
-                Offset.zero,
-                opacity * 1,
-                Paint()
-                  ..color = color.withOpacity(opacity)
                   ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
               );
             }),

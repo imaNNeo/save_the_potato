@@ -15,9 +15,9 @@ class GameConfigs {
   static const double spawnOrbsEveryMinimum = 0.7;
 
   static const hotColors = [
-    Colors.red,
-    Colors.orange,
-    Colors.yellow,
+    Color(0xFFFF9362),
+    Color(0xFFFF5900),
+    Color(0xFFFF2F00),
   ];
 
   static const coldColors = [
