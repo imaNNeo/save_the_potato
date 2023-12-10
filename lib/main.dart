@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flame/game.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/cubit/game_cubit.dart';
@@ -9,6 +10,7 @@ import 'package:save_the_potato/widgets/analog_timer.dart';
 import 'package:save_the_potato/widgets/retry_button.dart';
 
 import 'game_configs.dart';
+import 'widgets/debug_panel.dart';
 import 'widgets/potato_state_bar.dart';
 
 void main() {
@@ -100,6 +102,10 @@ class _MainPageState extends State<MainPage> {
                         child: ReplyButton(onPressed: _gameCubit.startGame),
                       ),
                     ),
+                  const Align(
+                    alignment: Alignment.bottomLeft,
+                    child: DebugPanel(),
+                  ),
                   Align(
                     alignment: Alignment.bottomRight,
                     child: SafeArea(
