@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
@@ -44,7 +45,8 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _MainPageState extends State<MainPage>
+    with SingleTickerProviderStateMixin {
   late MyGame _game;
 
   late GameCubit _gameCubit;
@@ -52,6 +54,8 @@ class _MainPageState extends State<MainPage> {
   late StreamSubscription _streamSubscription;
 
   late PlayingState _previousState;
+
+  late AnimationController _gameOverAnimationController;
 
   @override
   void initState() {
@@ -67,6 +71,13 @@ class _MainPageState extends State<MainPage> {
         });
       }
       _previousState = state.playingState;
+    });
+    _gameOverAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _gameOverAnimationController.addListener(() {
+      setState(() {});
     });
     super.initState();
   }
@@ -89,17 +100,46 @@ class _MainPageState extends State<MainPage> {
               );
             },
           ),
-          BlocBuilder<GameCubit, GameState>(
+          BlocConsumer<GameCubit, GameState>(
+            listener: (context, state) {
+              if (state.showGameOverUI &&
+                  !_gameOverAnimationController.isAnimating) {
+                _gameOverAnimationController.forward();
+              }
+              if ((state.playingState.isPlaying ||
+                      state.playingState.isGuide) &&
+                  !_gameOverAnimationController.isAnimating) {
+                _gameOverAnimationController.reverse();
+              }
+            },
             builder: (context, state) {
               return Stack(
                 children: [
+                  const Align(
+                    alignment: Alignment.topCenter,
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 40.0),
+                      child: PotatoStateBar(),
+                    ),
+                  ),
                   if (state.showGameOverUI)
-                    Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      color: Colors.black54,
-                      child: Center(
-                        child: ReplyButton(onPressed: _gameCubit.startGame),
+                    BackdropFilter(
+                      filter: ImageFilter.blur(
+                        sigmaX: Tween<double>(begin: 0.0, end: 16.0).transform(
+                          _gameOverAnimationController.value,
+                        ),
+                        sigmaY: Tween<double>(begin: 0.0, end: 16.0).transform(
+                          _gameOverAnimationController.value,
+                        ),
+                      ),
+                      child: Container(
+                        width: double.infinity,
+                        height: double.infinity,
+                        color: Colors.black.withOpacity(
+                          Tween<double>(begin: 0.0, end: 0.7).transform(
+                            _gameOverAnimationController.value,
+                          ),
+                        ),
                       ),
                     ),
                   const Align(
@@ -107,21 +147,31 @@ class _MainPageState extends State<MainPage> {
                     child: DebugPanel(),
                   ),
                   Align(
-                    alignment: Alignment.bottomRight,
+                    alignment: AlignmentTween(
+                      begin: Alignment.bottomRight,
+                      end: Alignment.center,
+                    ).transform(_gameOverAnimationController.value),
                     child: SafeArea(
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
-                        child: AnalogTimer(time: state.timePassed),
+                        child: AnalogTimer(
+                          time: state.timePassed,
+                          isGameOverStyle: state.showGameOverUI,
+                          size: Tween<double>(
+                            begin: 150,
+                            end: 300,
+                          ).transform(_gameOverAnimationController.value),
+                        ),
                       ),
                     ),
                   ),
-                  const Align(
-                    alignment: Alignment.topCenter,
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 40.0),
-                      child: PotatoStateBar(),
+                  if (state.showGameOverUI)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 460.0),
+                        child: ReplyButton(onPressed: _gameCubit.startGame),
+                      ),
                     ),
-                  )
                 ],
               );
             },
@@ -134,6 +184,7 @@ class _MainPageState extends State<MainPage> {
   @override
   void dispose() {
     _streamSubscription.cancel();
+    _gameOverAnimationController.dispose();
     super.dispose();
   }
 }

@@ -9,7 +9,7 @@ class DebugPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const manualDisable = false;
+    const manualDisable = true;
     if (!kDebugMode || manualDisable) {
       return const SizedBox();
     }

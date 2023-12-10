@@ -19,8 +19,8 @@ class ReplyButton extends StatelessWidget {
           style: ButtonStyle(
             shape: MaterialStateProperty.all<RoundedRectangleBorder>(
               RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18.0),
-                side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                borderRadius: BorderRadius.circular(40.0),
+                // side: BorderSide(color: Theme.of(context).colorScheme.primary),
               ),
             ),
           ),

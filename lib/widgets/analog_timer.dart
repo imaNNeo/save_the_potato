@@ -7,33 +7,53 @@ class AnalogTimer extends StatelessWidget {
   const AnalogTimer({
     super.key,
     required this.time,
+    required this.isGameOverStyle,
+    required this.size,
   });
 
   final double time;
+  final bool isGameOverStyle;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 100,
-      height: 100,
-      child: CustomPaint(
-        painter: _AnalogTimerPainter(time),
+      width: size,
+      height: size,
+      child: Stack(
+        children: [
+           Center(
+              child: Icon(
+                isGameOverStyle ? Icons.star_border : Icons.safety_check,
+                color: Colors.white.withOpacity(isGameOverStyle ? 0.5 : 0.2),
+                size: isGameOverStyle ? size * 0.5: size * 0.5,
+              ),
+            ),
+          CustomPaint(
+            painter: _AnalogTimerPainter(
+              time,
+              isGameOverStyle,
+            ),
+            size: Size(size, size),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _AnalogTimerPainter extends CustomPainter {
-  final double time;
-
   double normalTickLength = 0.12;
   double quarterTickLength = 0.15;
   double tickWidthRatio = 0.02;
   double quarterTickWidthRatio = 0.03;
   double tickSpaceRatio = 6;
-  double handWidthRatio = 0.02;
+  double handWidthRatio = 0.01;
 
-  _AnalogTimerPainter(this.time);
+  _AnalogTimerPainter(this.time, this.isGameOverStyle);
+
+  final double time;
+  final bool isGameOverStyle;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -85,19 +105,23 @@ class _AnalogTimerPainter extends CustomPainter {
         );
       }
     }
-    final secondsHandDegree = (pi * 2) * (time / 60) - (pi / 2);
-    final lineStrokeWidth = handWidthRatio * radius;
-    canvas.drawLine(
-      center,
-      polarToCartesian(secondsHandDegree, radius - lineStrokeWidth / 2),
-      Paint()
-        ..color = Colors.white
-        ..strokeWidth = lineStrokeWidth
-        ..strokeCap = StrokeCap.round,
-    );
+
+    if (!isGameOverStyle) {
+      final secondsHandDegree = (pi * 2) * (time / 60) - (pi / 2);
+      final lineStrokeWidth = handWidthRatio * radius;
+      canvas.drawLine(
+        center,
+        polarToCartesian(secondsHandDegree, radius - lineStrokeWidth / 2),
+        Paint()
+          ..color = Colors.white.withOpacity(0.3)
+          ..strokeWidth = lineStrokeWidth
+          ..strokeCap = StrokeCap.round,
+      );
+    }
   }
 
   @override
   bool shouldRepaint(covariant _AnalogTimerPainter oldDelegate) =>
-      oldDelegate.time != time;
+      oldDelegate.time != time ||
+      oldDelegate.isGameOverStyle != isGameOverStyle;
 }
