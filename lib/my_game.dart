@@ -72,9 +72,6 @@ class MyGame extends FlameGame<MyWorld>
   }
 
   @override
-  Color backgroundColor() => const Color(0xFF251E2C);
-
-  @override
   KeyEventResult onKeyEvent(
     RawKeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,

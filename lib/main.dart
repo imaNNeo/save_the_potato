@@ -72,7 +72,18 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       body: Stack(
         children: [
-          GameWidget(game: _game),
+          GameWidget(
+            game: _game,
+            backgroundBuilder: (context) {
+              return BlocBuilder<GameCubit, GameState>(
+                buildWhen: (prev, current) =>
+                    prev.heatLevel != current.heatLevel,
+                builder: (context, state) {
+                  return BackgroundGradient(heatLevel: state.heatLevel);
+                },
+              );
+            },
+          ),
           BlocBuilder<GameCubit, GameState>(
             builder: (context, state) {
               return Stack(
@@ -170,5 +181,41 @@ class _MainPageState extends State<MainPage> {
   void dispose() {
     _streamSubscription.cancel();
     super.dispose();
+  }
+}
+
+class BackgroundGradient extends StatelessWidget {
+  const BackgroundGradient({
+    super.key,
+    required this.heatLevel,
+  });
+
+  final int heatLevel;
+
+  @override
+  Widget build(BuildContext context) {
+    final isNeutral = heatLevel == 0;
+
+    final gradientFrom = isNeutral
+        ? GameConfigs.neutralGradientFrom
+        : heatLevel > 0
+            ? ColorTween(
+                begin: GameConfigs.neutralGradientFrom,
+                end: GameConfigs.heatGradientFrom,
+              ).lerp(heatLevel / GameConfigs.maxHeatLevel)!
+            : ColorTween(
+                begin: GameConfigs.neutralGradientFrom,
+                end: GameConfigs.coldGradientFrom,
+              ).lerp(heatLevel.abs() / GameConfigs.maxHeatLevel)!;
+    return Container(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          colors: [
+            gradientFrom,
+            const Color(0xFF000000),
+          ],
+        ),
+      ),
+    );
   }
 }

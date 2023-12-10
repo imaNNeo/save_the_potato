@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 
 class GameConfigs {
   static const int initialHeatLevel = 0;
-  static const int minHeatLevel = -3000;
-  static const int maxHeatLevel = 3000;
+  static const int minHeatLevel = -5;
+  static const int maxHeatLevel = 5;
 
   static const double gameOverTimeScale = 0.1;
   static const showRetryAfterGameOverDelay = Duration(seconds: 3);
@@ -13,6 +13,10 @@ class GameConfigs {
 
   static const double initialSpawnOrbsEvery = 2;
   static const double spawnOrbsEveryMinimum = 0.7;
+
+  static const heatGradientFrom = Color(0xFF290101);
+  static const neutralGradientFrom = Color(0xFF141414);
+  static const coldGradientFrom = Color(0xFF002140);
 
   static const hotColors = [
     Color(0xFFFF9362),
