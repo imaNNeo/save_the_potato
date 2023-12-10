@@ -125,8 +125,20 @@ class Shield extends PositionComponent
   void _addParticles() {
     Random rnd = Random();
 
+    final increaseDecreaseTween = TweenSequence<double>([
+      TweenSequenceItem<double>(
+        tween: Tween<double>(begin: 0.0, end: 0.8)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 0.5,
+      ),
+      TweenSequenceItem<double>(
+        tween: Tween<double>(begin: 0.8, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 0.5,
+      ),
+    ]);
     _particleTimer = Timer(
-      0.04,
+      0.06,
       onTick: () {
         final radius = (size.x / 2) - shieldWidth / 2;
         final minAngle = angle - (shieldSweep / 2);
@@ -149,35 +161,24 @@ class Shield extends PositionComponent
         final shortFlameAngle = radians((rnd.nextDouble() * 20) - 5);
         final rotation =
             isShortFlame ? shortFlameAngle : pi / 2 + largeFlameAngle;
+
         add(ParticleSystemComponent(
           position: localPos,
           anchor: Anchor.center,
           particle: AcceleratedParticle(
             lifespan: 2,
             acceleration: isShortFlame
-                ? Vector2(
-                    rnd.nextDouble() * 40,
-                    -10 + rnd.nextDouble() * 20,
-                  )
-                : Vector2(
-                    0,
-                    -20 + rnd.nextDouble() * 40,
-                  ),
+                ? Vector2(rnd.nextDouble() * 40, -10 + rnd.nextDouble() * 20)
+                : Vector2(0, -20 + rnd.nextDouble() * 40),
             child: ComputedParticle(
               renderer: (canvas, particle) {
-                final opacity = TweenSequence<double>([
-                  TweenSequenceItem<double>(
-                    tween: Tween<double>(begin: 0.0, end: 0.8)
-                        .chain(CurveTween(curve: Curves.easeIn)),
-                    weight: 0.2,
-                  ),
-                  TweenSequenceItem<double>(
-                    tween: Tween<double>(begin: 0.8, end: 0.0)
-                        .chain(CurveTween(curve: Curves.easeOut)),
-                    weight: 0.8,
-                  ),
-                ]).transform(particle.progress);
+                final opacity = increaseDecreaseTween.transform(
+                  particle.progress,
+                );
                 canvas.rotate(rotation);
+                if (opacity <= 0.01) {
+                  return;
+                }
                 sprite.render(
                   canvas,
                   size: spriteActualSize,
@@ -208,18 +209,8 @@ class Shield extends PositionComponent
             ),
             position: Vector2.zero(),
             child: ComputedParticle(renderer: (Canvas c, Particle particle) {
-              final opacity = TweenSequence<double>([
-                TweenSequenceItem<double>(
-                  tween: Tween<double>(begin: 0.0, end: 0.8)
-                      .chain(CurveTween(curve: Curves.easeIn)),
-                  weight: 0.5,
-                ),
-                TweenSequenceItem<double>(
-                  tween: Tween<double>(begin: 0.8, end: 0.0)
-                      .chain(CurveTween(curve: Curves.easeOut)),
-                  weight: 0.5,
-                ),
-              ]).transform(particle.progress);
+              final opacity =
+                  increaseDecreaseTween.transform(particle.progress);
 
               extraParticle.render(
                 c,
