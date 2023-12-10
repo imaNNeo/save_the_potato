@@ -42,6 +42,7 @@ dependencies:
   equatable: ^2.0.5
   flame_audio: ^2.1.5
   flame_rive: ^1.9.8
+  rive: ^0.12.3
 
 dev_dependencies:
   flutter_test:

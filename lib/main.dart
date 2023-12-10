@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flame/game.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/cubit/game_cubit.dart';
@@ -10,6 +9,7 @@ import 'package:save_the_potato/widgets/analog_timer.dart';
 import 'package:save_the_potato/widgets/retry_button.dart';
 
 import 'game_configs.dart';
+import 'widgets/potato_state_bar.dart';
 
 void main() {
   runApp(const MyApp());
@@ -91,15 +91,6 @@ class _MainPageState extends State<MainPage> {
             builder: (context, state) {
               return Stack(
                 children: [
-                  Align(
-                    alignment: Alignment.topCenter,
-                    child: SafeArea(
-                      child: Text(
-                        state.heatLevel.toString(),
-                        style: const TextStyle(fontSize: 50),
-                      ),
-                    ),
-                  ),
                   if (state.showGameOverUI)
                     Container(
                       width: double.infinity,
@@ -109,57 +100,6 @@ class _MainPageState extends State<MainPage> {
                         child: ReplyButton(onPressed: _gameCubit.startGame),
                       ),
                     ),
-                  if (kDebugMode)
-                    Align(
-                      alignment: Alignment.bottomLeft,
-                      child: Container(
-                        margin: const EdgeInsets.all(8.0),
-                        padding: const EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          color: Colors.black87,
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Debug Panel:',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'timePassed: ${state.timePassed.toStringAsFixed(2)}',
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                                'spawnEvery: ${state.spawnOrbsEvery.toStringAsFixed(2)}'),
-                            const SizedBox(height: 4),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                    '${GameConfigs.initialSpawnOrbsEvery}'),
-                                SizedBox(
-                                  width: 200,
-                                  child: LinearProgressIndicator(
-                                    value: 1 -
-                                        ((state.spawnOrbsEvery -
-                                                GameConfigs
-                                                    .spawnOrbsEveryMinimum) /
-                                            (GameConfigs.initialSpawnOrbsEvery -
-                                                GameConfigs
-                                                    .spawnOrbsEveryMinimum)),
-                                  ),
-                                ),
-                                const Text(
-                                    '${GameConfigs.spawnOrbsEveryMinimum}'),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   Align(
                     alignment: Alignment.bottomRight,
                     child: SafeArea(
@@ -167,6 +107,13 @@ class _MainPageState extends State<MainPage> {
                         padding: const EdgeInsets.all(24.0),
                         child: AnalogTimer(time: state.timePassed),
                       ),
+                    ),
+                  ),
+                  const Align(
+                    alignment: Alignment.topCenter,
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 40.0),
+                      child: PotatoStateBar(),
                     ),
                   )
                 ],
