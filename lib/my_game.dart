@@ -25,8 +25,8 @@ class MyGame extends FlameGame<MyWorld>
       : super(
           world: MyWorld(),
           camera: CameraComponent.withFixedResolution(
-            width: 800,
-            height: 800,
+            width: 600,
+            height: 600,
           ),
         );
 
@@ -129,8 +129,8 @@ class MyWorld extends World
   }
 
   double _getSpawnRandomDistance() {
-    final distanceMin = player.size.x * 3;
-    final distanceMax = game.size.x / 2;
+    final distanceMin = player.size.x * 2;
+    final distanceMax = (game.size.x / 2) - (game.size.x * 0.05);
     final distanceDiff = distanceMax - distanceMin;
     return distanceMin + Random().nextDouble() * distanceDiff;
   }
