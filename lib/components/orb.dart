@@ -232,6 +232,9 @@ class Orb extends PositionComponent
                 final opacity = Tween(begin: 0.8, end: 0.0)
                     .chain(CurveTween(curve: Curves.easeOutCubic))
                     .transform(particle.progress);
+                if (opacity <= 0.01) {
+                  return;
+                }
                 if (i % 3 == 0) {
                   canvas.drawCircle(
                     Offset.zero,

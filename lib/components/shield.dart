@@ -212,6 +212,9 @@ class Shield extends PositionComponent
               final opacity =
                   increaseDecreaseTween.transform(particle.progress);
 
+              if (opacity <= 0.01) {
+                return;
+              }
               extraParticle.render(
                 c,
                 size: Vector2.all(opacity * 14),
