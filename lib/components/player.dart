@@ -161,6 +161,9 @@ class Player extends PositionComponent
     }
 
     if (arrowLeftOrRight != 0) {
+      if (!bloc.state.playingState.isPlaying) {
+        arrowLeftOrRight = 0;
+      }
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
