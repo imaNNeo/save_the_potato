@@ -5,6 +5,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:save_the_potato/cubit/game_cubit.dart';
 import 'package:save_the_potato/my_game.dart';
 import 'package:save_the_potato/widgets/analog_timer.dart';
@@ -15,7 +16,7 @@ import 'widgets/debug_panel.dart';
 import 'widgets/potato_state_bar.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(Phoenix(child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -106,11 +107,6 @@ class _MainPageState extends State<MainPage>
                   !_gameOverAnimationController.isAnimating) {
                 _gameOverAnimationController.forward();
               }
-              if ((state.playingState.isPlaying ||
-                      state.playingState.isGuide) &&
-                  !_gameOverAnimationController.isAnimating) {
-                _gameOverAnimationController.reverse();
-              }
             },
             builder: (context, state) {
               return Stack(
@@ -118,7 +114,7 @@ class _MainPageState extends State<MainPage>
                   const Align(
                     alignment: Alignment.topCenter,
                     child: Padding(
-                      padding: EdgeInsets.only(top: 40.0),
+                      padding: EdgeInsets.only(top: 40.0, left: 24, right: 18),
                       child: PotatoStateBar(),
                     ),
                   ),
@@ -169,7 +165,9 @@ class _MainPageState extends State<MainPage>
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.only(top: 460.0),
-                        child: ReplyButton(onPressed: _gameCubit.startGame),
+                        child: ReplyButton(onPressed: () {
+                          Phoenix.rebirth(context);
+                        }),
                       ),
                     ),
                 ],

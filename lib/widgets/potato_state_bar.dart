@@ -48,6 +48,7 @@ class _PotatoStateBarState extends State<PotatoStateBar> {
 
         final diff = state.heatLevel - _previousGameState.heatLevel;
         if (diff == 0) {
+          _previousGameState = state;
           return;
         }
         if (diff > 0) {

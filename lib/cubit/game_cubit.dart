@@ -73,12 +73,6 @@ class GameCubit extends Cubit<GameState> {
     FlameAudio.bgm.stop();
   }
 
-  void restartGame() async {
-    emit(const GameState().copyWith(
-      playingState: PlayingState.guide,
-    ));
-  }
-
   @override
   Future<void> close() async {
     super.close();
