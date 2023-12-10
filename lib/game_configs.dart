@@ -8,7 +8,7 @@ class GameConfigs {
   static const int maxHeatLevel = 3;
 
   static const double gameOverTimeScale = 0.1;
-  static const showRetryAfterGameOverDelay = Duration(seconds: 3);
+  static const showRetryAfterGameOverDelay = Duration(seconds: 4);
   static const showShieldLineAnimDuration = 2.0;
 
   static const double initialSpawnOrbsEvery = 2;
