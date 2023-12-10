@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flame/game.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
@@ -85,6 +84,7 @@ class _MainPageState extends State<MainPage>
 
   @override
   Widget build(BuildContext context) {
+    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -164,7 +164,10 @@ class _MainPageState extends State<MainPage>
                   if (state.showGameOverUI)
                     Center(
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 460.0),
+                        padding: EdgeInsets.only(
+                          top: isPortrait ? 460.0 : 0,
+                          left: isPortrait ? 0 : 460.0,
+                        ),
                         child: ReplyButton(onPressed: () {
                           Phoenix.rebirth(context);
                         }),
