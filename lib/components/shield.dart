@@ -17,7 +17,6 @@ class Shield extends PositionComponent
         ParentIsA<Player>,
         HasGameRef<MyGame>,
         CollisionCallbacks,
-        HasPaint,
         HasTimeScale,
         FlameBlocListenable<GameCubit, GameState> {
   Shield({
@@ -43,6 +42,10 @@ class Shield extends PositionComponent
   late Color shieldLineColor;
   late Color shieldTargetColor;
 
+  late Paint flamePaint;
+  late Paint sparklePaint;
+  late Paint shieldLinePaint;
+
   @override
   void onNewState(GameState state) {
     super.onNewState(state);
@@ -56,11 +59,17 @@ class Shield extends PositionComponent
     shieldTargetColor = type.baseColor.withOpacity(0.8);
     size = parent.size + Vector2.all(shieldWidth * 2) + Vector2.all(offset * 2);
     position = parent.size / 2;
-    paint = Paint()
+    shieldLinePaint = Paint()
       ..color = type.baseColor
       ..strokeWidth = shieldWidth
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
+
+    flamePaint = Paint()
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+
+    sparklePaint = Paint()
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
     _addHitbox();
 
     _flameSprites = [];
@@ -173,12 +182,11 @@ class Shield extends PositionComponent
                   canvas,
                   size: spriteActualSize,
                   anchor: Anchor.center,
-                  overridePaint: Paint()
+                  overridePaint: flamePaint
                     ..colorFilter = ColorFilter.mode(
                       color.withOpacity(opacity),
                       BlendMode.srcIn,
-                    )
-                    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
+                    ),
                 );
               },
             ),
@@ -217,12 +225,11 @@ class Shield extends PositionComponent
                 c,
                 size: Vector2.all(opacity * 14),
                 anchor: Anchor.center,
-                overridePaint: Paint()
+                overridePaint: sparklePaint
                   ..colorFilter = ColorFilter.mode(
                     color.withOpacity(opacity),
                     BlendMode.srcIn,
-                  )
-                  ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
+                  ),
               );
             }),
           ),
@@ -254,7 +261,7 @@ class Shield extends PositionComponent
       -shieldSweep / 2,
       shieldSweep,
       false,
-      paint
+      shieldLinePaint
         ..color = shieldLineColor
         ..strokeWidth = shieldWidth
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),

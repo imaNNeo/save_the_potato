@@ -42,6 +42,10 @@ class Orb extends PositionComponent
   List<Sprite> _sparkleSprites = [];
   List<Sprite> _snowflakeSprites = [];
 
+  late Paint particlePaint;
+  late Paint headPaint;
+  late Paint disjointParticlePaint;
+
   @override
   void onNewState(GameState state) {
     super.onNewState(state);
@@ -62,6 +66,10 @@ class Orb extends PositionComponent
       _snowflakeSprites.add(await Sprite.load('snow/snowflake$i.png'));
     }
 
+    particlePaint = Paint()
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+    headPaint = Paint();
+    disjointParticlePaint = Paint();
     add(CircleHitbox(collisionType: CollisionType.passive));
 
     _addParticles();
@@ -108,15 +116,14 @@ class Orb extends PositionComponent
                     canvas,
                     size: Vector2.all((size.x * 0.7) * (1 - particle.progress)),
                     anchor: Anchor.center,
-                    overridePaint: Paint()
+                    overridePaint: particlePaint
                       ..colorFilter = ColorFilter.mode(
                         (rnd.nextBool()
                                 ? color
                                 : colorTween.transform(particle.progress))!
                             .withOpacity(opacity),
                         BlendMode.srcIn,
-                      )
-                      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
+                      ),
                   );
                 },
               ),
@@ -151,7 +158,7 @@ class Orb extends PositionComponent
     canvas.drawCircle(
       offset,
       radius * 1.4,
-      Paint()
+      headPaint
         ..color = type.colors.last.withOpacity(0.25)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40),
     );
@@ -159,7 +166,7 @@ class Orb extends PositionComponent
     canvas.drawCircle(
       offset,
       radius,
-      Paint()
+      headPaint
         ..color = type.colors.last.withOpacity(1)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30),
     );
@@ -167,12 +174,14 @@ class Orb extends PositionComponent
     canvas.drawCircle(
       offset,
       radius,
-      Paint()..color = type.colors.last.withOpacity(1),
+      headPaint
+        ..color = type.colors.last.withOpacity(1)
+        ..maskFilter = null,
     );
     canvas.drawCircle(
       offset,
       radius * 0.75,
-      Paint()
+      headPaint
         ..color = Colors.white.withOpacity(0.8)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
     );
@@ -227,7 +236,9 @@ class Orb extends PositionComponent
                   canvas.drawCircle(
                     Offset.zero,
                     (radius * 0.6) * (1 - particle.progress),
-                    Paint()
+                    disjointParticlePaint
+                      ..colorFilter = null
+                      ..maskFilter = null
                       ..color = (rnd.nextBool()
                               ? color
                               : colorTween.transform(particle.progress))!
@@ -238,7 +249,7 @@ class Orb extends PositionComponent
                     canvas,
                     size: Vector2.all((size.x * 1.2) * (1 - particle.progress)),
                     anchor: Anchor.center,
-                    overridePaint: Paint()
+                    overridePaint: disjointParticlePaint
                       ..colorFilter = ColorFilter.mode(
                         (rnd.nextBool()
                                 ? color
