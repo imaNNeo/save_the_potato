@@ -56,8 +56,8 @@ class _MainPageState extends State<MainPage> {
     _game = MyGame(_gameCubit);
     _previousState = _gameCubit.state.playingState;
     _streamSubscription = _gameCubit.stream.listen((state) {
-      if (_previousState == PlayingState.none &&
-          state.playingState == PlayingState.playing) {
+      if ((_previousState.isNone || _previousState.isGameOver) &&
+          state.playingState.isPlaying) {
         setState(() {
           _game = MyGame(_gameCubit);
         });
