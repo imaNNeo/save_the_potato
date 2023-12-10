@@ -48,10 +48,12 @@ class Player extends PositionComponent
   void _initPan(Vector2 touchGlobalPos) {
     final dir = game.camera.globalToLocal(touchGlobalPos) - position;
     panStartAngle = atan2(dir.x, dir.y);
-    bloc.guideInteracted();
   }
 
   void onPanUpdate(DragUpdateInfo info) {
+    if (bloc.state.playingState.isGuide) {
+      bloc.guideInteracted();
+    }
     if (!bloc.state.playingState.isPlaying) {
       return;
     }
