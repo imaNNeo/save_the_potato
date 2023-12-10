@@ -8,9 +8,8 @@ import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
 
 import '../cubit/game_cubit.dart';
-import 'element_ball.dart';
-import '../game_configs.dart';
 import '../my_game.dart';
+import 'orb.dart';
 import 'player.dart';
 
 class Shield extends PositionComponent
@@ -266,7 +265,7 @@ class Shield extends PositionComponent
   void onCollisionStart(
       Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
-    if (other is ElementBall) {
+    if (other is Orb) {
       if (other.type == type) {
         other.dissolve();
       }

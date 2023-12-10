@@ -10,8 +10,8 @@ import 'package:flutter/services.dart';
 import 'package:save_the_potato/components/shield.dart';
 
 import '../cubit/game_cubit.dart';
-import 'element_ball.dart';
 import '../my_game.dart';
+import 'orb.dart';
 
 class Player extends PositionComponent
     with
@@ -123,7 +123,7 @@ class Player extends PositionComponent
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
-    if (other is ElementBall) {
+    if (other is Orb) {
       game.onElementBallHit(other.type);
       if (bloc.state.playingState.isPlaying) {
         switch (other.type) {

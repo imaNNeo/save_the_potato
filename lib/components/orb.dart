@@ -12,12 +12,12 @@ import 'package:save_the_potato/list_extension.dart';
 import '../cubit/game_cubit.dart';
 import '../my_game.dart';
 
-class ElementBall extends PositionComponent
+class Orb extends PositionComponent
     with
         HasGameRef<MyGame>,
         HasTimeScale,
         FlameBlocListenable<GameCubit, GameState> {
-  ElementBall({
+  Orb({
     required this.type,
     required this.speed,
     required double size,

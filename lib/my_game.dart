@@ -13,8 +13,8 @@ import 'package:flutter/services.dart';
 import 'package:save_the_potato/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/effects/game_over_effects.dart';
 
+import 'components/orb.dart';
 import 'cubit/game_cubit.dart';
-import 'components/element_ball.dart';
 import 'components/player.dart';
 
 class MyGame extends FlameGame<MyWorld>
@@ -138,7 +138,7 @@ class MyWorld extends World
     const speedMin = 160;
     const speedMax = 200;
     add(
-      ElementBall(
+      Orb(
         type: TemperatureType.values.random(),
         speed: Random().nextDouble() * (speedMax - speedMin) + speedMin,
         size: 18 + Random().nextDouble() * 4,
