@@ -13,6 +13,7 @@ class GameConfigs {
 
   static const double initialSpawnOrbsEvery = 2;
   static const double spawnOrbsEveryMinimum = 0.7;
+  static const double bgmVolume = 0.2;
 
   static const heatGradientFrom = Color(0xFF290101);
   static const neutralGradientFrom = Color(0xFF141414);

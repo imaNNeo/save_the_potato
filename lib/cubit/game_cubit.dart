@@ -13,11 +13,12 @@ class GameCubit extends Cubit<GameState> {
     FlameAudio.bgm.initialize();
   }
 
-  void startGame() {
+  void startGame() async {
     emit(const GameState().copyWith(
       playingState: PlayingState.playing,
     ));
-    FlameAudio.bgm.play('bg.mp3');
+    await FlameAudio.bgm.play('bg.mp3');
+    await FlameAudio.bgm.audioPlayer.setVolume(GameConfigs.bgmVolume);
   }
 
   void update(double dt) {
@@ -65,11 +66,12 @@ class GameCubit extends Cubit<GameState> {
     FlameAudio.bgm.stop();
   }
 
-  void restartGame() {
+  void restartGame() async {
     emit(const GameState().copyWith(
       playingState: PlayingState.playing,
     ));
-    FlameAudio.bgm.play('bg.mp3');
+    await FlameAudio.bgm.play('bg.mp3');
+    await FlameAudio.bgm.audioPlayer.setVolume(GameConfigs.bgmVolume);
   }
 
   @override
