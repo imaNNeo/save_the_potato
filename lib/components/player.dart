@@ -37,10 +37,10 @@ class Player extends PositionComponent
 
   double get radius => size.x / 2;
 
-  late SMITrigger fireHit;
-  late SMITrigger iceHit;
-  late SMITrigger fireDie;
-  late SMITrigger iceDie;
+  late SMITrigger fireHitTrigger;
+  late SMITrigger iceHitTrigger;
+  late SMITrigger fireDieTrigger;
+  late SMITrigger iceDieTrigger;
 
   void onPanStart(DragStartInfo info) => _initPan(info.eventPosition.global);
 
@@ -66,9 +66,9 @@ class Player extends PositionComponent
   void onNewState(GameState state) {
     if (state.playingState.isGameOver) {
       if (state.heatLevel > 0) {
-        fireDie.fire();
+        fireDieTrigger.fire();
       } else {
-        iceDie.fire();
+        iceDieTrigger.fire();
       }
     }
   }
@@ -92,10 +92,10 @@ class Player extends PositionComponent
       potatoArtBoard,
       "State Machine 1",
     )!;
-    fireHit = controller.findInput<bool>('fire-hit') as SMITrigger;
-    iceHit = controller.findInput<bool>('ice-hit') as SMITrigger;
-    fireDie = controller.findInput<bool>('fire-die') as SMITrigger;
-    iceDie = controller.findInput<bool>('ice-die') as SMITrigger;
+    fireHitTrigger = controller.findInput<bool>('fire-hit') as SMITrigger;
+    iceHitTrigger = controller.findInput<bool>('ice-hit') as SMITrigger;
+    fireDieTrigger = controller.findInput<bool>('fire-die') as SMITrigger;
+    iceDieTrigger = controller.findInput<bool>('ice-die') as SMITrigger;
     potatoArtBoard.addController(controller);
     add(CustomRiveComponent(
       artboard: potatoArtBoard,
@@ -125,10 +125,10 @@ class Player extends PositionComponent
       if (bloc.state.playingState.isPlaying) {
         switch (other.type) {
           case TemperatureType.hot:
-            fireHit.fire();
+            fireHitTrigger.fire();
             break;
           case TemperatureType.cold:
-            iceHit.fire();
+            iceHitTrigger.fire();
             break;
         }
       }
