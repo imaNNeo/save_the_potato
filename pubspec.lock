@@ -201,6 +201,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.1+10"
+  flame_rive:
+    dependency: "direct main"
+    description:
+      name: flame_rive
+      sha256: fa00a46b1e3264b201e730c992277ca5e22b5970eab9526e9f5e7052c4aa2be5
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.9.8"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -232,6 +240,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  graphs:
+    dependency: transitive
+    description:
+      name: graphs
+      sha256: aedc5a15e78fc65a6e23bcd927f24c64dd995062bcd1ca6eda65a3cff92a4d19
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.1"
   http:
     dependency: transitive
     description:
@@ -384,6 +400,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.1"
+  rive:
+    dependency: transitive
+    description:
+      name: rive
+      sha256: fd15b219f5cc110285ebf52093b0b0f4038c3ca750f2fc5fc44d9c80a56c44f3
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.12.3"
+  rive_common:
+    dependency: transitive
+    description:
+      name: rive_common
+      sha256: f4e20d0a99c5040c85624a3eb2b0b6b19e614d93a693c3bb25cf6e7bb2d3d6d3
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.8"
   sky_engine:
     dependency: transitive
     description: flutter

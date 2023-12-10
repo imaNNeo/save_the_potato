@@ -17,7 +17,7 @@ class GameCubit extends Cubit<GameState> {
     emit(const GameState().copyWith(
       playingState: PlayingState.playing,
     ));
-    // FlameAudio.bgm.play('bg.mp3');
+    FlameAudio.bgm.play('bg.mp3');
   }
 
   void update(double dt) {
@@ -54,7 +54,7 @@ class GameCubit extends Cubit<GameState> {
     emit(const GameState().copyWith(
       playingState: PlayingState.playing,
     ));
-    // FlameAudio.bgm.play('bg.mp3');
+    FlameAudio.bgm.play('bg.mp3');
   }
 
   @override

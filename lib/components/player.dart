@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
+import 'package:flame_bloc/flame_bloc.dart';
+import 'package:flame_rive/flame_rive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:save_the_potato/components/shield.dart';
@@ -12,7 +14,10 @@ import 'element_ball.dart';
 import '../my_game.dart';
 
 class Player extends PositionComponent
-    with HasGameRef<MyGame>, CollisionCallbacks {
+    with
+        HasGameRef<MyGame>,
+        CollisionCallbacks,
+        FlameBlocListenable<GameCubit, GameState> {
   Player({
     double size = 100,
   }) : super(
@@ -32,6 +37,11 @@ class Player extends PositionComponent
 
   double get radius => size.x / 2;
 
+  late SMITrigger fireHit;
+  late SMITrigger iceHit;
+  late SMITrigger fireDie;
+  late SMITrigger iceDie;
+
   void onPanStart(DragStartInfo info) => _initPan(info.eventPosition.global);
 
   void onPanDown(DragDownInfo info) => _initPan(info.eventPosition.global);
@@ -49,6 +59,21 @@ class Player extends PositionComponent
   }
 
   @override
+  bool listenWhen(GameState previousState, GameState newState) =>
+      previousState.playingState != newState.playingState;
+
+  @override
+  void onNewState(GameState state) {
+    if (state.playingState.isGameOver) {
+      if (state.heatLevel > 0) {
+        fireDie.fire();
+      } else {
+        iceDie.fire();
+      }
+    }
+  }
+
+  @override
   Future<void> onLoad() async {
     super.onLoad();
     potatoSprite = await Sprite.load('potato.png');
@@ -57,6 +82,26 @@ class Player extends PositionComponent
       radius: radius * 0.7,
       position: size / 2,
       anchor: Anchor.center,
+    ));
+
+    final potatoArtBoard = await loadArtboard(
+      RiveFile.asset('assets/rive/potato.riv'),
+    );
+
+    final controller = StateMachineController.fromArtboard(
+      potatoArtBoard,
+      "State Machine 1",
+    )!;
+    fireHit = controller.findInput<bool>('fire-hit') as SMITrigger;
+    iceHit = controller.findInput<bool>('ice-hit') as SMITrigger;
+    fireDie = controller.findInput<bool>('fire-die') as SMITrigger;
+    iceDie = controller.findInput<bool>('ice-die') as SMITrigger;
+    potatoArtBoard.addController(controller);
+    add(CustomRiveComponent(
+      artboard: potatoArtBoard,
+      size: Vector2.all(152),
+      anchor: Anchor.center,
+      position: size / 2,
     ));
     add(fireShield = Shield(type: TemperatureType.hot));
     add(iceShield = Shield(type: TemperatureType.cold));
@@ -73,19 +118,20 @@ class Player extends PositionComponent
   }
 
   @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-    potatoSprite.render(
-      canvas,
-      size: size,
-    );
-  }
-
-  @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
     if (other is ElementBall) {
       game.onElementBallHit(other.type);
+      if (bloc.state.playingState.isPlaying) {
+        switch (other.type) {
+          case TemperatureType.hot:
+            fireHit.fire();
+            break;
+          case TemperatureType.cold:
+            iceHit.fire();
+            break;
+        }
+      }
       other.removeFromParent();
     }
   }
@@ -115,5 +161,25 @@ class Player extends PositionComponent
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
+  }
+}
+
+class CustomRiveComponent extends RiveComponent {
+  CustomRiveComponent({
+    required super.artboard,
+    super.size,
+    super.anchor,
+    super.position,
+  });
+
+  @override
+  void render(Canvas canvas) {
+    canvas.save();
+    canvas.clipRect(Rect.fromCircle(
+      center: (size / 2).toOffset(),
+      radius: size.x / 3,
+    ));
+    super.render(canvas);
+    canvas.restore();
   }
 }

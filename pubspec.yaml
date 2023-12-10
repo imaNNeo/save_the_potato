@@ -41,6 +41,7 @@ dependencies:
   flame_bloc: ^1.10.7
   equatable: ^2.0.5
   flame_audio: ^2.1.5
+  flame_rive: ^1.9.8
 
 dev_dependencies:
   flutter_test:
@@ -76,3 +77,4 @@ flutter:
     - assets/images/
     - assets/fonts/
     - assets/audio/
+    - assets/rive/
