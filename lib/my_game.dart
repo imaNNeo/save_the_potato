@@ -4,8 +4,10 @@ import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_noise/flame_noise.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +31,14 @@ class MyGame extends FlameGame<MyWorld>
         );
 
   @override
-  void onLoad() {
+  Future<void> onLoad() async {
+    await FlameAudio.audioCache.load('bg.mp3');
+    await Flame.images.loadAll([
+      ...List.generate(8, (index) => 'flame/flame${index + 1}.png'),
+      ...List.generate(2, (index) => 'snow/snowflake${index + 1}.png'),
+      ...List.generate(2, (index) => 'sparkle/sparkle${index + 1}.png'),
+      'two-way-arrow.png',
+    ]);
     remove(world);
     add(FlameBlocProvider<GameCubit, GameState>(
       create: () => _gameCubit,

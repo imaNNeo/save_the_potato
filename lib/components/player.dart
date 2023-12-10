@@ -34,8 +34,6 @@ class Player extends PositionComponent
 
   int arrowLeftOrRight = 0;
 
-  late Sprite potatoSprite;
-
   double get radius => size.x / 2;
 
   late SMITrigger fireHitTrigger;
@@ -81,7 +79,6 @@ class Player extends PositionComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    potatoSprite = await Sprite.load('potato.png');
     add(CircleHitbox(
       collisionType: CollisionType.active,
       radius: radius * 0.7,
