@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/cubit/game_cubit.dart';
 import 'package:save_the_potato/my_game.dart';
+import 'package:save_the_potato/widgets/retry_button.dart';
 
 import 'game_configs.dart';
 
@@ -103,35 +104,7 @@ class _MainPageState extends State<MainPage> {
                       height: double.infinity,
                       color: Colors.black54,
                       child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Game Over',
-                              style: TextStyle(fontSize: 48),
-                            ),
-                            const SizedBox(height: 24),
-                            ElevatedButton(
-                              style: ButtonStyle(
-                                shape: MaterialStateProperty.all<
-                                    RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(18.0),
-                                    side: BorderSide(color: Theme.of(context).colorScheme.primary),
-                                  ),
-                                ),
-                              ),
-                              onPressed: _gameCubit.restartGame,
-                              child: const Padding(
-                                padding: EdgeInsets.all(12.0),
-                                child: Text(
-                                  'Play Again',
-                                  style: TextStyle(fontSize: 24),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        child: ReplyButton(onPressed: _gameCubit.startGame),
                       ),
                     ),
                   if (kDebugMode)
