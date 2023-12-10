@@ -83,7 +83,7 @@ enum TemperatureType {
   cold;
 
   Color get baseColor => switch (this) {
-        TemperatureType.hot => Colors.red,
+        TemperatureType.hot => GameConfigs.hotColors.first,
         TemperatureType.cold => GameConfigs.coldColors.first,
       };
 

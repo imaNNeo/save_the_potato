@@ -39,6 +39,9 @@ class Orb extends PositionComponent
         TemperatureType.cold => GameConfigs.coldColors,
       };
 
+  List<Sprite> _sparkleSprites = [];
+  List<Sprite> _snowflakeSprites = [];
+
   @override
   void onNewState(GameState state) {
     super.onNewState(state);
@@ -46,8 +49,19 @@ class Orb extends PositionComponent
   }
 
   @override
-  void onLoad() {
+  Future<void> onLoad() async {
     super.onLoad();
+
+    _sparkleSprites = [];
+    for (int i = 1; i <= 2; i++) {
+      _sparkleSprites.add(await Sprite.load('sparkle/sparkle$i.png'));
+    }
+
+    _snowflakeSprites = [];
+    for (int i = 1; i <= 2; i++) {
+      _snowflakeSprites.add(await Sprite.load('snow/snowflake$i.png'));
+    }
+
     add(CircleHitbox(collisionType: CollisionType.passive));
 
     _addParticles();
@@ -69,32 +83,43 @@ class Orb extends PositionComponent
               ),
             ),
         ]);
+        final sprite = switch (type) {
+          TemperatureType.hot => _sparkleSprites.random(),
+          TemperatureType.cold => _snowflakeSprites.random(),
+        };
         game.world.add(ParticleSystemComponent(
           position: positionOfAnchor(Anchor.center),
           anchor: Anchor.center,
-          particle: AcceleratedParticle(
-            lifespan: 2,
-            acceleration: Vector2(
-              (rnd.nextDouble() * 200) - (200 / 2),
-              (rnd.nextDouble() * 200) - (200 / 2),
-            ),
-            child: ComputedParticle(
-              renderer: (canvas, particle) {
-                final opacity =
-                    Tween(begin: 0.2, end: 0.0).transform(particle.progress);
-                // final opacity = 0.2;
-                // print(opacity);
-                canvas.drawCircle(
-                  Offset.zero,
-                  (radius * 0.8) * (1 - particle.progress),
-                  Paint()
-                    ..color = (rnd.nextBool()
-                            ? color
-                            : colorTween.transform(particle.progress))!
-                        .withOpacity(opacity)
-                    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
-                );
-              },
+          particle: Particle.generate(
+            lifespan: 1.2,
+            count: 2,
+            generator: (index) => AcceleratedParticle(
+              acceleration: Vector2(
+                (rnd.nextDouble() * 200) - (200 / 2),
+                (rnd.nextDouble() * 200) - (200 / 2),
+              ),
+              child: ComputedParticle(
+                renderer: (canvas, particle) {
+                  final opacity = Tween(begin: 0.8, end: 0.0)
+                      .chain(CurveTween(curve: Curves.easeOutQuart))
+                      .transform(particle.progress);
+                  canvas.rotate(particle.progress * pi * 2);
+                  sprite.render(
+                    canvas,
+                    size: Vector2.all((size.x * 0.7) * (1 - particle.progress)),
+                    anchor: Anchor.center,
+                    overridePaint: Paint()
+                      ..colorFilter = ColorFilter.mode(
+                        (rnd.nextBool()
+                                ? color
+                                : colorTween.transform(particle.progress))!
+                            .withOpacity(opacity),
+                        BlendMode.srcIn,
+                      )
+                      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
+                  );
+                },
+              ),
             ),
           ),
         ));
@@ -125,16 +150,30 @@ class Orb extends PositionComponent
     final radius = size.x / 2;
     canvas.drawCircle(
       offset,
+      radius * 1.4,
+      Paint()
+        ..color = type.colors.last.withOpacity(0.25)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40),
+    );
+
+    canvas.drawCircle(
+      offset,
       radius,
       Paint()
-        ..color = type.baseColor.withOpacity(1)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+        ..color = type.colors.last.withOpacity(1)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30),
+    );
+
+    canvas.drawCircle(
+      offset,
+      radius,
+      Paint()..color = type.colors.last.withOpacity(1),
     );
     canvas.drawCircle(
       offset,
-      radius * 0.8,
+      radius * 0.75,
       Paint()
-        ..color = Colors.white.withOpacity(0.7)
+        ..color = Colors.white.withOpacity(0.8)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
     );
   }
@@ -145,7 +184,7 @@ class Orb extends PositionComponent
     super.onRemove();
   }
 
-  void dissolve() {
+  void disjoint() {
     removeFromParent();
     final color = colors.random();
     final randomOrder = colors.randomOrder();
@@ -163,37 +202,57 @@ class Orb extends PositionComponent
       position: positionOfAnchor(Anchor.center),
       anchor: Anchor.center,
       particle: Particle.generate(
-        count: 20,
-        lifespan: 0.8,
-        generator: (i) => AcceleratedParticle(
-          speed: Vector2(
-            (rnd.nextDouble() * 200) - 100,
-            (rnd.nextDouble() * 200) - 100,
-          ),
-          acceleration: Vector2(
-            (rnd.nextDouble() * 200) - 100,
-            (rnd.nextDouble() * 200) - 100,
-          ),
-          child: ComputedParticle(
-            renderer: (canvas, particle) {
-              final opacity =
-                  Tween(begin: 1.0, end: 0.0).transform(particle.progress);
-              canvas.drawCircle(
-                Offset.zero,
-                (radius * 0.6) * (1 - particle.progress),
-                Paint()
-                  ..color = (rnd.nextBool()
-                          ? color
-                          : colorTween.transform(particle.progress))!
-                      .withOpacity(opacity)
-                  ..maskFilter = MaskFilter.blur(
-                    BlurStyle.normal,
-                    (1 - particle.progress) * 2,
-                  ),
-              );
-            },
-          ),
-        ),
+        count: 30,
+        lifespan: 2,
+        generator: (i) {
+          final sprite = switch (type) {
+            TemperatureType.hot => _sparkleSprites.random(),
+            TemperatureType.cold => _snowflakeSprites.random(),
+          };
+          return AcceleratedParticle(
+            speed: Vector2(
+              (rnd.nextDouble() * 200) - 100,
+              (rnd.nextDouble() * 200) - 100,
+            ),
+            acceleration: Vector2(
+              (rnd.nextDouble() * 200) - 100,
+              (rnd.nextDouble() * 200) - 100,
+            ),
+            child: ComputedParticle(
+              renderer: (canvas, particle) {
+                final opacity = Tween(begin: 0.8, end: 0.0)
+                    .chain(CurveTween(curve: Curves.easeOutCubic))
+                    .transform(particle.progress);
+                if (i % 3 == 0) {
+                  canvas.drawCircle(
+                    Offset.zero,
+                    (radius * 0.6) * (1 - particle.progress),
+                    Paint()
+                      ..color = (rnd.nextBool()
+                              ? color
+                              : colorTween.transform(particle.progress))!
+                          .withOpacity(opacity),
+                  );
+                } else {
+                  sprite.render(
+                    canvas,
+                    size: Vector2.all((size.x * 1.2) * (1 - particle.progress)),
+                    anchor: Anchor.center,
+                    overridePaint: Paint()
+                      ..colorFilter = ColorFilter.mode(
+                        (rnd.nextBool()
+                                ? color
+                                : colorTween.transform(particle.progress))!
+                            .withOpacity(opacity),
+                        BlendMode.srcIn,
+                      )
+                      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
+                  );
+                }
+              },
+            ),
+          );
+        },
       ),
     ));
   }

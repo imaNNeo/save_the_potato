@@ -137,14 +137,12 @@ class MyWorld extends World
 
     const speedMin = 160;
     const speedMax = 200;
-    add(
-      Orb(
-        type: TemperatureType.values.random(),
-        speed: Random().nextDouble() * (speedMax - speedMin) + speedMin,
-        size: 18 + Random().nextDouble() * 4,
-        target: game.world.player,
-        position: position.clone(),
-      ),
-    );
+    add(Orb(
+      type: TemperatureType.values.random(),
+      speed: Random().nextDouble() * (speedMax - speedMin) + speedMin,
+      size: 16 + Random().nextDouble() * 2,
+      target: game.world.player,
+      position: position.clone(),
+    ));
   }
 }

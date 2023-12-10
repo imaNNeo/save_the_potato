@@ -267,7 +267,7 @@ class Shield extends PositionComponent
     super.onCollisionStart(intersectionPoints, other);
     if (other is Orb) {
       if (other.type == type) {
-        other.dissolve();
+        other.disjoint();
       }
     }
   }
