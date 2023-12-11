@@ -8,7 +8,7 @@ import 'package:save_the_potato/cubit/game_cubit.dart';
 
 import 'potato.dart';
 
-class TwoWayArrow extends PositionComponent
+class GuideArrow extends PositionComponent
     with
         ParentIsA<Potato>,
         FlameBlocListenable<GameCubit, GameState>,

@@ -10,7 +10,7 @@ import 'package:save_the_potato/my_game.dart';
 import 'package:save_the_potato/widgets/game_timer.dart';
 import 'game_configs.dart';
 import 'widgets/debug_panel.dart';
-import 'widgets/potato_state_bar.dart';
+import 'widgets/potato_top_bar.dart';
 
 void main() {
   runApp(Phoenix(child: const MyApp()));
@@ -110,7 +110,7 @@ class _MainPageState extends State<MainPage>
                 children: [
                   const Align(
                     alignment: Alignment.topCenter,
-                    child: PotatoStateBar(),
+                    child: PotatoTopBar(),
                   ),
                   if (state.showGameOverUI)
                     BackdropFilter(
