@@ -14,12 +14,12 @@ import '../cubit/game_cubit.dart';
 import '../my_game.dart';
 import 'orb.dart';
 
-class Player extends PositionComponent
+class Potato extends PositionComponent
     with
         HasGameRef<MyGame>,
         CollisionCallbacks,
         FlameBlocListenable<GameCubit, GameState> {
-  Player({
+  Potato({
     double size = 100,
   }) : super(
           size: Vector2.all(size),

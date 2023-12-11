@@ -6,15 +6,15 @@ import 'package:flame/extensions.dart';
 import 'package:flame/particles.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:save_the_potato/components/potato.dart';
 
 import '../cubit/game_cubit.dart';
 import '../my_game.dart';
 import 'orb.dart';
-import 'player.dart';
 
 class Shield extends PositionComponent
     with
-        ParentIsA<Player>,
+        ParentIsA<Potato>,
         HasGameRef<MyGame>,
         CollisionCallbacks,
         HasTimeScale,

@@ -17,7 +17,7 @@ import 'package:save_the_potato/effects/game_over_effects.dart';
 
 import 'components/orb.dart';
 import 'cubit/game_cubit.dart';
-import 'components/player.dart';
+import 'components/potato.dart';
 
 class MyGame extends FlameGame<MyWorld>
     with PanDetector, HasCollisionDetection, KeyboardEvents {
@@ -90,13 +90,13 @@ class MyGame extends FlameGame<MyWorld>
 
 class MyWorld extends World
     with HasGameRef<MyGame>, FlameBlocListenable<GameCubit, GameState> {
-  late Player player;
+  late Potato player;
 
   double lastSpawnOrbTimer = 0.0;
 
   @override
   Future<void> onLoad() async {
-    await add(player = Player());
+    await add(player = Potato());
   }
 
   @override
