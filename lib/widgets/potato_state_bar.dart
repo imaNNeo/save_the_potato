@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rive/rive.dart';
 import 'package:save_the_potato/cubit/game_cubit.dart';
 
+import 'game_timer.dart';
+
 class PotatoStateBar extends StatefulWidget {
   const PotatoStateBar({super.key});
 
@@ -62,13 +64,27 @@ class _PotatoStateBarState extends State<PotatoStateBar> {
         }
         _previousGameState = state;
       },
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: RiveAnimation.asset(
-          'assets/rive/state-bar.riv',
-          fit: BoxFit.fitWidth,
-          onInit: _onRiveInit,
+      child: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 40),
+            const GameTimer(),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: 24,
+                right: 18,
+              ),
+              child: SizedBox(
+                width: width,
+                height: height,
+                child: RiveAnimation.asset(
+                  'assets/rive/state-bar.riv',
+                  fit: BoxFit.fitWidth,
+                  onInit: _onRiveInit,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
