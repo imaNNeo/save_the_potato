@@ -1,4 +1,3 @@
-# Save The Potato
 [<img src="./repo_files/preview.png" width="600" />](https://www.youtube.com/watch?v=IuXIr0qrsvM)
 
 ## General info
