@@ -1,4 +1,4 @@
-[<img src="./repo_files/preview.png" width="600" />](https://www.youtube.com/watch?v=IuXIr0qrsvM)
+[<img src="./repo_files/preview.jpg" width="800" />](https://www.youtube.com/watch?v=IuXIr0qrsvM)
 
 ## General info
 This game is developed during the [Flame Game Jam 3](https://itch.io/jam/flame-jam-3) by me [Fateme](hhttps://www.linkedin.com/in/fateme-bahrami-388585156) and [@imaNNeo](https://github.com/imaNNeo)(me) using [Flutter](https://flutter.dev/) and [Flame game engine](https://flame-engine.org/)
