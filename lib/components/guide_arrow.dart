@@ -6,11 +6,11 @@ import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/cubit/game_cubit.dart';
 
-import 'player.dart';
+import 'potato.dart';
 
-class TwoWayArrow extends PositionComponent
+class GuideArrow extends PositionComponent
     with
-        ParentIsA<Player>,
+        ParentIsA<Potato>,
         FlameBlocListenable<GameCubit, GameState>,
         HasPaint {
   late Sprite _arrowSprite;

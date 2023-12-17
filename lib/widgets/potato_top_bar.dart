@@ -4,20 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rive/rive.dart';
 import 'package:save_the_potato/cubit/game_cubit.dart';
+import 'package:save_the_potato/game_configs.dart';
 
-class PotatoStateBar extends StatefulWidget {
-  const PotatoStateBar({super.key});
+import 'game_timer.dart';
+
+class PotatoTopBar extends StatefulWidget {
+  const PotatoTopBar({super.key});
 
   @override
-  State<PotatoStateBar> createState() => _PotatoStateBarState();
+  State<PotatoTopBar> createState() => _PotatoTopBarState();
 }
 
-class _PotatoStateBarState extends State<PotatoStateBar> {
+class _PotatoTopBarState extends State<PotatoTopBar> {
   late SMIBool _increaseOrDecreaseInput;
   late SMINumber _fromInput;
 
   late GameState _previousGameState;
   double ratio = 1.0;
+
+  double opacity = GameConfigs.topBarNonPlayingOpacity;
 
   @override
   void initState() {
@@ -46,6 +51,10 @@ class _PotatoStateBarState extends State<PotatoStateBar> {
           _resetBarToZero();
         }
 
+        if (_previousGameState.playingState != state.playingState) {
+          playingStateChanged(state.playingState);
+        }
+
         final diff = state.heatLevel - _previousGameState.heatLevel;
         if (diff == 0) {
           _previousGameState = state;
@@ -62,16 +71,42 @@ class _PotatoStateBarState extends State<PotatoStateBar> {
         }
         _previousGameState = state;
       },
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: RiveAnimation.asset(
-          'assets/rive/state-bar.riv',
-          fit: BoxFit.fitWidth,
-          onInit: _onRiveInit,
+      child: Opacity(
+        opacity: _previousGameState.playingState.isPlaying ? 1.0 : 0.2,
+        child: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              const GameTimer(),
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: 24,
+                  right: 18,
+                ),
+                child: SizedBox(
+                  width: width,
+                  height: height,
+                  child: RiveAnimation.asset(
+                    'assets/rive/state-bar.riv',
+                    fit: BoxFit.fitWidth,
+                    onInit: _onRiveInit,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  void playingStateChanged(PlayingState playingState) {
+    print('playingStateChanged: $playingState');
+    setState(() {
+      opacity = playingState.isPlaying
+          ? GameConfigs.topBarPlayingOpacity
+          : GameConfigs.topBarNonPlayingOpacity;
+    });
   }
 
   void _onRiveInit(Artboard artBoard) {
