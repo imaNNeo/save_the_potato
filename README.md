@@ -1,5 +1,5 @@
 # Save The Potato
-Winner of the **[Flame Jam 3](https://itch.io/jam/flame-jam-3/results)** 🏆
+#### Winner of the **[Flame Jam 3](https://itch.io/jam/flame-jam-3/results)** 🏆
 [<img src="./repo_files/preview.jpg" width="800" />](https://www.youtube.com/watch?v=IuXIr0qrsvM)
 
 ## General info
