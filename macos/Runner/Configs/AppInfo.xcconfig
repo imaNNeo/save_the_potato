@@ -8,7 +8,7 @@
 PRODUCT_NAME = save_the_potato
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.iceFireGame
+PRODUCT_BUNDLE_IDENTIFIER = dev.app2pack.savethepotato
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2023 com.example. All rights reserved.
