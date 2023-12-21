@@ -23,3 +23,25 @@ platform :ios do
     upload_to_app_store(skip_metadata: true, skip_screenshots: true)
   end
 end
+
+lane :beta do
+  if is_ci
+    create_keychain(
+      name: ENV['MATCH_KEYCHAIN_NAME'],
+      password: ENV["MATCH_KEYCHAIN_PASSWORD"],
+      default_keychain: true,
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: false
+    )
+  end  match(
+    type: "appstore",
+    readonly: is_ci,
+    keychain_name: ENV['MATCH_KEYCHAIN_NAME'],
+    keychain_password: ENV["MATCH_KEYCHAIN_PASSWORD"],
+  )
+end
+
+lane :beta do
+  upload_to_testflight
+end
