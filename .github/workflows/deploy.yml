@@ -5,7 +5,7 @@ on:
     types: [ published ]
 
 jobs:
-  build_setup:
+  deploy_ios:
     runs-on: macos-latest
     steps:
       - name: Checkout the code
@@ -51,8 +51,32 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_KEY_ISSUER_ID: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
           APPSTORE_KEY_CONTENT: ${{ secrets.APPSTORE_KEY_CONTENT }}
-      - name: Upload iPA
-        uses: actions/upload-artifact@v2
+      - name: Rename the iPA file
+        run: cp ios/Runner.ipa ios/SaveThePotato-${{ github.ref_name }}.ipa
+      - name: Upload the iPA file
+        uses: actions/upload-artifact@v3
         with:
-          name: ios-build
-          path: ios/*.ipa
+          name: artifacts-${{ github.ref_name }}
+          path: ios/SaveThePotato-${{ github.ref_name }}.ipa
+
+  upload_artifacts:
+    name: Upload the artifacts
+    runs-on: ubuntu-latest
+    needs: [ deploy_ios ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts-${{ github.ref_name }}
+          path: artifacts/
+
+      - name: Upload artifacts to the release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: artifacts/*
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
