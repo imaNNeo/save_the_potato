@@ -1,0 +1,15 @@
+[
+  {
+    "version": "0.1.0",
+    "shared": [
+      "This is the first version (beta) of game"
+    ],
+    "ios_specific": [
+      "Test iOS Specific"
+    ],
+    "android_specific": [
+      "Test android specific"
+    ]
+  }
+]
+

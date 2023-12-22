@@ -30,3 +30,5 @@ To do that, you have to setup the below environment variables (these are on the 
 
 Also, we run `fastlane match appstore` to get the certificates and profiles for the publish process (it handled in the CI/CD)
 
+# Release
+Here is the [release guide](./docs/RELEASE_GUIDE.md)
