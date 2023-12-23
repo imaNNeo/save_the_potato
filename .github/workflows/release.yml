@@ -77,13 +77,14 @@ jobs:
         with:
           channel: 'stable'
       - name: Create the Keystore file
-        run: echo $ANDROID_KEYSTORE_BASE64 | base64 -d > keystore.jks
+        run: |
+          echo $ANDROID_KEYSTORE_BASE64 | base64 -d > keystore.jks
         env:
-          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       - name: Create the keystore.properties file
         run: echo $ANDROID_KEYSTORE_PROPERTIES_BASE64 | base64 -d > android/key.properties
         env:
-          KEYSTORE_PROPERTIES_BASE64: ${{ secrets.ANDROID_KEYSTORE_PROPERTIES_BASE64 }}
+          ANDROID_KEYSTORE_PROPERTIES_BASE64: ${{ secrets.ANDROID_KEYSTORE_PROPERTIES_BASE64 }}
       - name: Setup Java
         uses: actions/setup-java@v1
         with:
