@@ -1,3 +1,6 @@
+## 0.3.0
+* Fixed android/iOS CI issues
+
 ## 0.2.0
 * Implemented CI/CD for Android (only build the app)
 * Upload artifacts separately in each build
