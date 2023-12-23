@@ -72,6 +72,10 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@v3
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
       - name: Create the Keystore file
         run: echo $ANDROID_KEYSTORE_BASE64 | base64 -d > keystore.jks
         env:
