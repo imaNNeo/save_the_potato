@@ -6,6 +6,7 @@ on:
 
 jobs:
   release_ios:
+    name: Build and Deploy iOS
     runs-on: macos-latest
     steps:
       - name: Checkout the code
@@ -52,12 +53,56 @@ jobs:
           APPSTORE_KEY_ISSUER_ID: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
           APPSTORE_KEY_CONTENT: ${{ secrets.APPSTORE_KEY_CONTENT }}
       - name: Rename the iPA file
-        run: cp ios/Runner.ipa ios/SaveThePotato-${{ github.ref_name }}.ipa
+        run: cp ios/Runner.ipa ios/SaveThePotato-iOS-${{ github.ref_name }}.ipa
       - name: Upload the iPA file
         uses: actions/upload-artifact@v3
         with:
           name: artifacts-${{ github.ref_name }}
-          path: ios/SaveThePotato-${{ github.ref_name }}.ipa
+          path: ios/SaveThePotato-iOS-${{ github.ref_name }}.ipa
+
+  release_android:
+    name: Build and Deploy Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v3
+      - name: Create the Keystore file
+        run: echo ANDROID_KEYSTORE_BASE64 | base64 -d > keystore.jks
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      - name: Create the keystore.properties file
+        run: echo ANDROID_KEYSTORE_PROPERTIES_BASE64 | base64 -d > android/key.properties
+        env:
+          KEYSTORE_PROPERTIES_BASE64: ${{ secrets.ANDROID_KEYSTORE_PROPERTIES_BASE64 }}
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: "12.x"
+      - name: Build Android App Bundle
+        run: flutter build appbundle --release
+      - name: Build Android APK
+        run: flutter build apk --release && flutter build apk --split-per-abi --release
+
+      - name: Rename the apk and aab files
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk SaveThePotato-Android-Universal-${{ github.ref_name }}.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk SaveThePotato-Android-ARMv7-${{ github.ref_name }}.apk
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk SaveThePotato-Android-ARMv8-${{ github.ref_name }}.apk
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk SaveThePotato-Android-x86_64-${{ github.ref_name }}.apk
+          cp build/app/outputs/bundle/release/app-release.aab SaveThePotato-${{ github.ref_name }}.aab
+
+      - name: Upload the artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: artifacts-${{ github.ref_name }}
+          path: |
+            SaveThePotato-Android-Universal-${{ github.ref_name }}.apk
+            SaveThePotato-Android-ARMv7-${{ github.ref_name }}.apk
+            SaveThePotato-Android-ARMv8-${{ github.ref_name }}.apk
+            SaveThePotato-Android-x86_64-${{ github.ref_name }}.apk
+            SaveThePotato-Android-${{ github.ref_name }}.aab
+
 
   upload_artifacts:
     name: Upload the artifacts
