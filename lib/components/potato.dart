@@ -2,17 +2,14 @@ import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:flame/events.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_rive/flame_rive.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:save_the_potato/components/guide_title.dart';
 import 'package:save_the_potato/components/shield.dart';
 
 import '../cubit/game_cubit.dart';
 import '../my_game.dart';
-import 'guide_arrow.dart';
 import 'orb.dart';
 
 class Potato extends PositionComponent
@@ -31,38 +28,12 @@ class Potato extends PositionComponent
   late final Shield fireShield;
   late final Shield iceShield;
 
-  double? panStartAngle;
-
-  int arrowLeftOrRight = 0;
-
   double get radius => size.x / 2;
 
   late SMITrigger fireHitTrigger;
   late SMITrigger iceHitTrigger;
   late SMITrigger fireDieTrigger;
   late SMITrigger iceDieTrigger;
-
-  void onPanStart(DragStartInfo info) => _initPan(info.eventPosition.global);
-
-  void onPanDown(DragDownInfo info) => _initPan(info.eventPosition.global);
-
-  void _initPan(Vector2 touchGlobalPos) {
-    final dir = game.camera.globalToLocal(touchGlobalPos) - position;
-    panStartAngle = atan2(dir.x, dir.y);
-  }
-
-  void onPanUpdate(DragUpdateInfo info) {
-    if (bloc.state.playingState.isGuide) {
-      bloc.guideInteracted();
-    }
-    if (!bloc.state.playingState.isPlaying) {
-      return;
-    }
-    final dir = game.camera.globalToLocal(info.eventPosition.global) - position;
-    final angle = atan2(dir.x, dir.y);
-    fireShield.angle += (panStartAngle! - angle);
-    _initPan(info.eventPosition.global);
-  }
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
@@ -112,7 +83,6 @@ class Potato extends PositionComponent
     add(iceShield = Shield(type: TemperatureType.cold));
 
     if (game.playingState.isGuide) {
-      add(GuideArrow());
       add(GuideTitle());
     }
   }
@@ -120,9 +90,12 @@ class Potato extends PositionComponent
   @override
   void update(double dt) {
     super.update(dt);
-    if (arrowLeftOrRight != 0) {
-      final angle = arrowLeftOrRight * dt * 2 * pi;
-      fireShield.angle += angle;
+    if (!bloc.state.playingState.isPlaying) {
+      return;
+    }
+    final rotationSpeed = bloc.state.shieldsAngleRotationSpeed;
+    if (rotationSpeed != 0) {
+      fireShield.angle += rotationSpeed * dt;
     }
     iceShield.angle = fireShield.angle - pi;
   }
@@ -144,40 +117,6 @@ class Potato extends PositionComponent
       }
       other.removeFromParent();
     }
-  }
-
-  KeyEventResult onKeyEvent(
-      RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    final isLeftArrow = keysPressed.contains(LogicalKeyboardKey.arrowLeft);
-    final isRightArrow = keysPressed.contains(LogicalKeyboardKey.arrowRight);
-
-    arrowLeftOrRight = 0;
-
-    if (isLeftArrow || isRightArrow) {
-      bloc.guideInteracted();
-    }
-
-    if (isLeftArrow && isRightArrow && event is RawKeyDownEvent) {
-      return KeyEventResult.handled;
-    }
-
-    if (isLeftArrow) {
-      arrowLeftOrRight += -1;
-      arrowLeftOrRight = arrowLeftOrRight.clamp(-1, 1);
-    }
-
-    if (isRightArrow) {
-      arrowLeftOrRight += 1;
-      arrowLeftOrRight = arrowLeftOrRight.clamp(-1, 1);
-    }
-
-    if (arrowLeftOrRight != 0) {
-      if (!bloc.state.playingState.isPlaying) {
-        arrowLeftOrRight = 0;
-      }
-      return KeyEventResult.handled;
-    }
-    return KeyEventResult.ignored;
   }
 }
 

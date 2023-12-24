@@ -4,6 +4,8 @@ import 'dart:ui';
 import 'package:equatable/equatable.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/src/services/keyboard_key.g.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/game_configs.dart';
 import 'package:save_the_potato/models/double_range.dart';
@@ -15,13 +17,15 @@ class GameCubit extends Cubit<GameState> {
     FlameAudio.bgm.initialize();
   }
 
+  final _shieldAngleRotationAmount = pi * 2;
+
   void startGame() async {
     emit(const GameState().copyWith(
       playingState: PlayingState.guide,
     ));
   }
 
-  void guideInteracted() async {
+  void _guideInteracted() async {
     if (!state.playingState.isGuide) {
       return;
     }
@@ -72,5 +76,77 @@ class GameCubit extends Cubit<GameState> {
     await FlameAudio.bgm.audioPlayer.setVolume(targetVolume);
     emit(state.copyWith(showGameOverUI: true));
     FlameAudio.bgm.stop();
+  }
+
+  void onLeftTapDown() {
+    _guideInteracted();
+    _updateShieldsRotationSpeed(-_shieldAngleRotationAmount);
+  }
+
+  void onLeftTapUp() {
+    if (state.shieldsAngleRotationSpeed == _shieldAngleRotationAmount) {
+      return;
+    }
+    _updateShieldsRotationSpeed(0.0);
+  }
+
+  void onRightTapDown() {
+    _guideInteracted();
+    _updateShieldsRotationSpeed(_shieldAngleRotationAmount);
+  }
+
+  void onRightTapUp() {
+    if (state.shieldsAngleRotationSpeed == -_shieldAngleRotationAmount) {
+      return;
+    }
+    _updateShieldsRotationSpeed(0.0);
+  }
+
+  KeyEventResult handleKeyEvent(
+      RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    final containsLeftArrow = keysPressed.contains(
+      LogicalKeyboardKey.arrowLeft,
+    );
+    final containsRightArrow = keysPressed.contains(
+      LogicalKeyboardKey.arrowRight,
+    );
+    if (containsLeftArrow || containsRightArrow) {
+      _guideInteracted();
+    }
+    var rotationSpeed = 0.0;
+
+    if (containsLeftArrow && containsRightArrow) {
+      _updateShieldsRotationSpeed(0.0);
+      return KeyEventResult.handled;
+    }
+
+    if (!containsLeftArrow && !containsRightArrow) {
+      _updateShieldsRotationSpeed(0.0);
+      return KeyEventResult.handled;
+    }
+
+    if (containsLeftArrow) {
+      rotationSpeed -= _shieldAngleRotationAmount;
+    }
+
+    if (containsRightArrow) {
+      rotationSpeed += _shieldAngleRotationAmount;
+    }
+
+    if (rotationSpeed != 0) {
+      _updateShieldsRotationSpeed(rotationSpeed);
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
+  }
+
+  void _updateShieldsRotationSpeed(double speed) {
+    emit(state.copyWith(
+      shieldsAngleRotationSpeed: speed.clamp(
+        -_shieldAngleRotationAmount,
+        _shieldAngleRotationAmount,
+      ),
+    ));
   }
 }

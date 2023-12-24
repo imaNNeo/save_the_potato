@@ -11,6 +11,7 @@ import 'package:save_the_potato/widgets/game_timer.dart';
 import 'game_configs.dart';
 import 'widgets/debug_panel.dart';
 import 'widgets/potato_top_bar.dart';
+import 'widgets/rotating_controls.dart';
 
 void main() {
   runApp(Phoenix(child: const MyApp()));
@@ -135,6 +136,13 @@ class _MainPageState extends State<MainPage>
                   const Align(
                     alignment: Alignment.bottomLeft,
                     child: DebugPanel(),
+                  ),
+                  RotationControls(
+                    showGuide: state.playingState.isGuide,
+                    onLeftDown: _gameCubit.onLeftTapDown,
+                    onLeftUp: _gameCubit.onLeftTapUp,
+                    onRightDown: _gameCubit.onRightTapDown,
+                    onRightUp: _gameCubit.onRightTapUp,
                   ),
                   if (state.showGameOverUI)
                     Center(

@@ -20,7 +20,7 @@ import 'cubit/game_cubit.dart';
 import 'components/potato.dart';
 
 class MyGame extends FlameGame<MyWorld>
-    with PanDetector, HasCollisionDetection, KeyboardEvents {
+    with HasCollisionDetection, KeyboardEvents {
   MyGame(this._gameCubit)
       : super(
           world: MyWorld(),
@@ -58,15 +58,6 @@ class MyGame extends FlameGame<MyWorld>
     super.update(dt);
   }
 
-  @override
-  void onPanStart(DragStartInfo info) => world.player.onPanStart(info);
-
-  @override
-  void onPanDown(DragDownInfo info) => world.player.onPanDown(info);
-
-  @override
-  void onPanUpdate(DragUpdateInfo info) => world.player.onPanUpdate(info);
-
   void onOrbHit(TemperatureType type) {
     _gameCubit.potatoOrbHit(type);
     camera.viewfinder.add(
@@ -84,8 +75,9 @@ class MyGame extends FlameGame<MyWorld>
   KeyEventResult onKeyEvent(
     RawKeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
-  ) =>
-      world.player.onKeyEvent(event, keysPressed);
+  ) {
+    return _gameCubit.handleKeyEvent(event, keysPressed);
+  }
 }
 
 class MyWorld extends World
