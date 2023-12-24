@@ -1,3 +1,6 @@
+## 0.5.0
+* Add publish to google play logic
+
 ## 0.4.0
 * Increase java version in CD workflows
 
