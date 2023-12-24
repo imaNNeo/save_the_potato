@@ -18,6 +18,9 @@ class GameCubit extends Cubit<GameState> {
 
   final _shieldAngleRotationAmount = pi * 1.8;
 
+  bool isTapLeftDown = false;
+  bool isTapRightDown = false;
+
   void startGame() async {
     emit(const GameState().copyWith(
       playingState: PlayingState.guide,
@@ -78,27 +81,33 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void onLeftTapDown() {
+    isTapLeftDown = true;
     _guideInteracted();
     _updateShieldsRotationSpeed(-_shieldAngleRotationAmount);
   }
 
   void onLeftTapUp() {
-    if (state.shieldsAngleRotationSpeed == _shieldAngleRotationAmount) {
-      return;
+    isTapLeftDown = false;
+    if (isTapRightDown) {
+      _updateShieldsRotationSpeed(_shieldAngleRotationAmount);
+    } else {
+      _updateShieldsRotationSpeed(0.0);
     }
-    _updateShieldsRotationSpeed(0.0);
   }
 
   void onRightTapDown() {
+    isTapRightDown = true;
     _guideInteracted();
     _updateShieldsRotationSpeed(_shieldAngleRotationAmount);
   }
 
   void onRightTapUp() {
-    if (state.shieldsAngleRotationSpeed == -_shieldAngleRotationAmount) {
-      return;
+    isTapRightDown = false;
+    if (isTapLeftDown) {
+      _updateShieldsRotationSpeed(-_shieldAngleRotationAmount);
+    } else {
+      _updateShieldsRotationSpeed(0.0);
     }
-    _updateShieldsRotationSpeed(0.0);
   }
 
   KeyEventResult handleKeyEvent(
