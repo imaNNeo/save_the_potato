@@ -67,8 +67,8 @@ class MyGame extends FlameGame<MyWorld>
   @override
   void onPanUpdate(DragUpdateInfo info) => world.player.onPanUpdate(info);
 
-  void onElementBallHit(TemperatureType type) {
-    _gameCubit.potatoElementBallHit(type);
+  void onOrbHit(TemperatureType type) {
+    _gameCubit.potatoOrbHit(type);
     camera.viewfinder.add(
       MoveEffect.by(
         Vector2(8, 8),

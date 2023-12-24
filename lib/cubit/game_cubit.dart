@@ -37,7 +37,7 @@ class GameCubit extends Cubit<GameState> {
     ));
   }
 
-  void potatoElementBallHit(TemperatureType type) {
+  void potatoOrbHit(TemperatureType type) {
     final newHeatLevel = switch (type) {
       TemperatureType.hot => state.heatLevel + 1,
       TemperatureType.cold => state.heatLevel - 1,

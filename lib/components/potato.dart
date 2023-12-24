@@ -131,7 +131,7 @@ class Potato extends PositionComponent
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
     if (other is Orb) {
-      game.onElementBallHit(other.type);
+      game.onOrbHit(other.type);
       if (bloc.state.playingState.isPlaying) {
         switch (other.type) {
           case TemperatureType.hot:
