@@ -90,12 +90,11 @@ class Potato extends PositionComponent
   @override
   void update(double dt) {
     super.update(dt);
-    if (!bloc.state.playingState.isPlaying) {
-      return;
-    }
-    final rotationSpeed = bloc.state.shieldsAngleRotationSpeed;
-    if (rotationSpeed != 0) {
-      fireShield.angle += rotationSpeed * dt;
+    if (bloc.state.playingState.isPlaying) {
+      final rotationSpeed = bloc.state.shieldsAngleRotationSpeed;
+      if (rotationSpeed != 0) {
+        fireShield.angle += rotationSpeed * dt;
+      }
     }
     iceShield.angle = fireShield.angle - pi;
   }
