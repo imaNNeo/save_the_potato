@@ -5,7 +5,6 @@ import 'package:equatable/equatable.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/src/services/keyboard_key.g.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/game_configs.dart';
 import 'package:save_the_potato/models/double_range.dart';
@@ -17,7 +16,7 @@ class GameCubit extends Cubit<GameState> {
     FlameAudio.bgm.initialize();
   }
 
-  final _shieldAngleRotationAmount = pi * 2;
+  final _shieldAngleRotationAmount = pi * 1.8;
 
   void startGame() async {
     emit(const GameState().copyWith(
