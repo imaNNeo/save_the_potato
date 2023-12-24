@@ -1,3 +1,8 @@
+## 0.6.0
+* Change debug panel's font to Roboto (for better readability)
+* Re-implemented rotation controls using tap and buttons (instead of dragging)
+* Re-implemented difficulty incrementing. Now it should be better
+
 ## 0.5.4
 * Add publish to google play logic
 * Fix google play package name in the workflow
