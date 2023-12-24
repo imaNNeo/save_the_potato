@@ -1,6 +1,7 @@
-## 0.5.1
+## 0.5.2
 * Add publish to google play logic
 * Fix google play package name in the workflow
+* Change track to production
 
 ## 0.4.0
 * Increase java version in CD workflows
