@@ -1,3 +1,12 @@
+## 0.5.4
+* Add publish to google play logic
+* Fix google play package name in the workflow
+* Change track to production
+* Finalized CI/CD for Android and iOS
+
+## 0.4.0
+* Increase java version in CD workflows
+
 ## 0.3.0
 * Fixed android/iOS CI issues
 
