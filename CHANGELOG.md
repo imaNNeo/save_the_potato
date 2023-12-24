@@ -1,3 +1,7 @@
+## 0.7.0
+* Improved touch behaviour
+* Fixed shields issue when game starts
+
 ## 0.6.0
 * Change debug panel's font to Roboto (for better readability)
 * Re-implemented rotation controls using tap and buttons (instead of dragging)
