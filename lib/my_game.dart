@@ -128,27 +128,19 @@ class MyWorld extends World
     }
   }
 
-  double _getSpawnRandomDistance() {
-    final distanceMin = player.size.x * 2;
-    final distanceMax = (game.size.x / 2) - (game.size.x * 0.05);
-    final distanceDiff = distanceMax - distanceMin;
-    return distanceMin + Random().nextDouble() * distanceDiff;
-  }
-
   void spawnOrb() {
     if (game.playingState != PlayingState.playing) {
       return;
     }
 
-    final distance = _getSpawnRandomDistance();
+    final distance = (game.size.x / 2) + (game.size.x * 0.05);
     final angle = Random().nextDouble() * pi * 2;
     final position = Vector2(cos(angle), sin(angle)) * distance;
 
-    const speedMin = 160;
-    const speedMax = 200;
+    final moveSpeed = bloc.state.spawnOrbsMoveSpeedRange.random();
     add(Orb(
       type: TemperatureType.values.random(),
-      speed: Random().nextDouble() * (speedMax - speedMin) + speedMin,
+      speed: moveSpeed,
       size: 16 + Random().nextDouble() * 2,
       target: game.world.player,
       position: position.clone(),

@@ -17,12 +17,37 @@ class GameState extends Equatable {
 
   final bool showGameOverUI;
 
-  double get spawnOrbsEvery {
-    return max(
-      GameConfigs.spawnOrbsEveryMinimum,
-      GameConfigs.initialSpawnOrbsEvery - (timePassed * 0.015),
-    );
-  }
+  // double get spawnOrbsEvery {
+  //   return max(
+  //     GameConfigs.spawnOrbsEveryMinimum,
+  //     GameConfigs.initialSpawnOrbsEvery - (timePassed * 0.015),
+  //   );
+  // }
+
+  /// Between 0.0 and 1.0
+  double get difficulty => Curves.easeOutCubic.transform(min(
+    1.0,
+    timePassed / GameConfigs.difficultyInitialToPeakDuration,
+  ));
+
+
+  /// Between [GameConfigs.orbsSpawnEveryInitial] and [GameConfigs.orbsSpawnEveryPeak]
+  /// based on [difficulty]
+  double get spawnOrbsEvery => lerpDouble(
+    GameConfigs.orbsSpawnEveryInitial,
+    GameConfigs.orbsSpawnEveryPeak,
+    difficulty,
+  )!;
+
+  /// Between [GameConfigs.orbsMoveSpeedInitial] and [GameConfigs.orbsMoveSpeedPeak]
+  /// based on [difficulty]
+  DoubleRange get spawnOrbsMoveSpeedRange => DoubleRange.lerp(
+    GameConfigs.orbsMoveSpeedInitial,
+    GameConfigs.orbsMoveSpeedPeak,
+    difficulty,
+  );
+
+
 
   double get gameOverTimeScale {
     if (playingState.isPaused) {

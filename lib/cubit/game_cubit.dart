@@ -1,10 +1,12 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/game_configs.dart';
+import 'package:save_the_potato/models/double_range.dart';
 
 part 'game_state.dart';
 
@@ -32,9 +34,8 @@ class GameCubit extends Cubit<GameState> {
     if (!state.playingState.isPlaying) {
       return;
     }
-    emit(state.copyWith(
-      timePassed: state.timePassed + dt,
-    ));
+    // We calculate the [state.difficulty] based on the time passed
+    emit(state.copyWith(timePassed: state.timePassed + dt));
   }
 
   void potatoOrbHit(TemperatureType type) {
