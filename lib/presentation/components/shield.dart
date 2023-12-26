@@ -7,9 +7,9 @@ import 'package:flame/particles.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/presentation/components/potato.dart';
+import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
+import 'package:save_the_potato/presentation/my_game.dart';
 
-import '../../cubit/game_cubit.dart';
-import '../my_game.dart';
 import 'orb.dart';
 
 class Shield extends PositionComponent

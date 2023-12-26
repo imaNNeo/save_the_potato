@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:save_the_potato/cubit/game_cubit.dart';
+import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 
 class GameTimer extends StatelessWidget {
   const GameTimer({super.key});

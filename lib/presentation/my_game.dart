@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
@@ -16,8 +15,8 @@ import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
 
 import 'components/orb.dart';
-import '../cubit/game_cubit.dart';
 import 'components/potato.dart';
+import 'cubit/game_cubit.dart';
 
 class MyGame extends FlameGame<MyWorld>
     with HasCollisionDetection, KeyboardEvents {

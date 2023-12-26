@@ -3,8 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
-import 'package:save_the_potato/cubit/game_cubit.dart';
 import 'package:save_the_potato/domain/game_configs.dart';
+import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 
 import 'game_timer.dart';
 
