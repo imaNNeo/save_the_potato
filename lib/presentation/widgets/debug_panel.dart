@@ -11,7 +11,10 @@ class DebugPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!kDebugMode || true) {
+    if (!context.read<GameCubit>().state.playingState.isPlaying) {
+      return const SizedBox();
+    }
+    if (!kDebugMode) {
       return const SizedBox();
     }
     return BlocBuilder<GameCubit, GameState>(

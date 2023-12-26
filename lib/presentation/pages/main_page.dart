@@ -1,15 +1,13 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:save_the_potato/cubit/game_cubit.dart';
 import 'package:save_the_potato/domain/game_configs.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
-import 'package:save_the_potato/presentation/widgets/game_timer.dart';
+import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
 import 'package:save_the_potato/presentation/widgets/rotating_controls.dart';
 
@@ -30,8 +28,6 @@ class _MainPageState extends State<MainPage>
 
   late PlayingState _previousState;
 
-  late AnimationController _gameOverAnimationController;
-
   @override
   void initState() {
     _gameCubit = context.read<GameCubit>();
@@ -47,141 +43,48 @@ class _MainPageState extends State<MainPage>
       }
       _previousState = state.playingState;
     });
-    _gameOverAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _gameOverAnimationController.addListener(() {
-      setState(() {});
-    });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final gameWidget = GameWidget(
+      game: _game,
+      backgroundBuilder: (context) {
+        return BlocBuilder<GameCubit, GameState>(
+          buildWhen: (prev, current) => prev.heatLevel != current.heatLevel,
+          builder: (context, state) {
+            return BackgroundGradient(heatLevel: state.heatLevel);
+          },
+        );
+      },
+    );
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          GameWidget(
-            game: _game,
-            backgroundBuilder: (context) {
-              return BlocBuilder<GameCubit, GameState>(
-                buildWhen: (prev, current) =>
-                    prev.heatLevel != current.heatLevel,
-                builder: (context, state) {
-                  return BackgroundGradient(heatLevel: state.heatLevel);
-                },
-              );
-            },
-          ),
-          BlocConsumer<GameCubit, GameState>(
-            listener: (context, state) {
-              if (state.showGameOverUI &&
-                  !_gameOverAnimationController.isAnimating) {
-                _gameOverAnimationController.forward();
-              }
-            },
-            builder: (context, state) {
-              return Stack(
-                children: [
-                  const Align(
-                    alignment: Alignment.topCenter,
-                    child: PotatoTopBar(),
-                  ),
-                  if (state.showGameOverUI)
-                    BackdropFilter(
-                      filter: ImageFilter.blur(
-                        sigmaX: Tween<double>(begin: 0.0, end: 16.0).transform(
-                          _gameOverAnimationController.value,
-                        ),
-                        sigmaY: Tween<double>(begin: 0.0, end: 16.0).transform(
-                          _gameOverAnimationController.value,
-                        ),
-                      ),
-                      child: Container(
-                        width: double.infinity,
-                        height: double.infinity,
-                        color: Colors.black.withOpacity(
-                          Tween<double>(begin: 0.0, end: 0.7).transform(
-                            _gameOverAnimationController.value,
-                          ),
-                        ),
-                      ),
-                    ),
-                  const Align(
-                    alignment: Alignment.bottomLeft,
-                    child: DebugPanel(),
-                  ),
-                  RotationControls(
-                    showGuide: state.playingState.isGuide,
-                    onLeftDown: _gameCubit.onLeftTapDown,
-                    onLeftUp: _gameCubit.onLeftTapUp,
-                    onRightDown: _gameCubit.onRightTapDown,
-                    onRightUp: _gameCubit.onRightTapUp,
-                  ),
-                  if (state.showGameOverUI)
-                    Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Game Over',
-                            style: Theme.of(context)
-                                .textTheme
-                                .displayLarge!
-                                .copyWith(
-                              shadows: [
-                                Shadow(
-                                  blurRadius: 8.0,
-                                  color: GameConfigs.hotColors.last,
-                                  offset: const Offset(2.0, 2.0),
-                                ),
-                              ],
-                            ),
-                          ),
-                          FormattedGameTime(time: state.timePassed),
-                          const SizedBox(height: 40),
-                          TextButton(
-                            style: ButtonStyle(
-                              shape: MaterialStateProperty.all<
-                                  RoundedRectangleBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18.0),
-                                  side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                              backgroundColor: MaterialStateProperty.all<Color>(
-                                Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                            onPressed: () => Phoenix.rebirth(context),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                'Try Again!',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineSmall!
-                                    .copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onPrimary,
-                                    ),
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-        ],
+      body: BlocBuilder<GameCubit, GameState>(
+        builder: (context, state) {
+          return Stack(
+            children: [
+              gameWidget,
+              const Align(
+                alignment: Alignment.topCenter,
+                child: PotatoTopBar(),
+              ),
+              const Align(
+                alignment: Alignment.bottomLeft,
+                child: DebugPanel(),
+              ),
+              RotationControls(
+                showGuide: state.playingState.isGuide,
+                onLeftDown: _gameCubit.onLeftTapDown,
+                onLeftUp: _gameCubit.onLeftTapUp,
+                onRightDown: _gameCubit.onRightTapDown,
+                onRightUp: _gameCubit.onRightTapUp,
+              ),
+              if (state.showGameOverUI) const GameOverUI(),
+            ],
+          );
+        },
       ),
     );
   }
@@ -189,7 +92,6 @@ class _MainPageState extends State<MainPage>
   @override
   void dispose() {
     _streamSubscription.cancel();
-    _gameOverAnimationController.dispose();
     super.dispose();
   }
 }
