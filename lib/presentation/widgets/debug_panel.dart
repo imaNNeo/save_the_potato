@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/cubit/game_cubit.dart';
-import 'package:save_the_potato/game_configs.dart';
+import 'package:save_the_potato/domain/game_configs.dart';
 
 import 'range_progress_indicator/range_progress_indicator.dart';
 
@@ -11,7 +11,7 @@ class DebugPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!kDebugMode) {
+    if (!kDebugMode || true) {
       return const SizedBox();
     }
     return BlocBuilder<GameCubit, GameState>(

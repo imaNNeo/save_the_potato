@@ -6,8 +6,8 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:save_the_potato/game_configs.dart';
-import 'package:save_the_potato/models/double_range.dart';
+import 'package:save_the_potato/domain/game_configs.dart';
+import 'package:save_the_potato/domain/models/double_range.dart';
 
 part 'game_state.dart';
 

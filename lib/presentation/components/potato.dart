@@ -5,10 +5,10 @@ import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_rive/flame_rive.dart';
 import 'package:flutter/material.dart';
-import 'package:save_the_potato/components/guide_title.dart';
-import 'package:save_the_potato/components/shield.dart';
+import 'package:save_the_potato/presentation/components/guide_title.dart';
+import 'package:save_the_potato/presentation/components/shield.dart';
 
-import '../cubit/game_cubit.dart';
+import '../../cubit/game_cubit.dart';
 import '../my_game.dart';
 import 'orb.dart';
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:save_the_potato/models/double_range.dart';
+import 'package:save_the_potato/domain/models/double_range.dart';
 
 class RangeProgressIndicator extends StatelessWidget {
   const RangeProgressIndicator({

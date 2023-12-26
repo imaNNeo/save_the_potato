@@ -2,9 +2,9 @@ import 'package:flame/components.dart';
 import 'package:flame/text.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:save_the_potato/components/potato.dart';
+import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/cubit/game_cubit.dart';
-import 'package:save_the_potato/my_game.dart';
+import 'package:save_the_potato/presentation/my_game.dart';
 
 class GuideTitle extends PositionComponent
     with

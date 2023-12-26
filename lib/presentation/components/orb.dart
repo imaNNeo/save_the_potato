@@ -6,10 +6,10 @@ import 'package:flame/extensions.dart';
 import 'package:flame/particles.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:save_the_potato/game_configs.dart';
-import 'package:save_the_potato/list_extension.dart';
+import 'package:save_the_potato/domain/game_configs.dart';
+import 'package:save_the_potato/domain/extensions/list_extension.dart';
 
-import '../cubit/game_cubit.dart';
+import '../../cubit/game_cubit.dart';
 import '../my_game.dart';
 
 class Orb extends PositionComponent

@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:save_the_potato/models/double_range.dart';
+import 'package:save_the_potato/domain/models/double_range.dart';
 
 class GameConfigs {
   static const int initialHeatLevel = 0;
