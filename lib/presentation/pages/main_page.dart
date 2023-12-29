@@ -12,7 +12,7 @@ import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
 import 'package:save_the_potato/presentation/widgets/rotating_controls.dart';
 
-import 'settings_page.dart';
+import 'settings_content.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
