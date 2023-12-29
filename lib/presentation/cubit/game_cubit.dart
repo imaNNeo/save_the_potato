@@ -159,4 +159,14 @@ class GameCubit extends Cubit<GameState> {
       ),
     ));
   }
+
+  void pauseGame() {
+    emit(state.copyWith(playingState: PlayingState.paused));
+    FlameAudio.bgm.pause();
+  }
+
+  void resumeGame() {
+    emit(state.copyWith(playingState: PlayingState.playing));
+    FlameAudio.bgm.resume();
+  }
 }
