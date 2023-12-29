@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
+import 'package:save_the_potato/presentation/widgets/game_round_button.dart';
 
 class GamePausedUI extends StatelessWidget {
   const GamePausedUI({super.key});
@@ -11,12 +13,16 @@ class GamePausedUI extends StatelessWidget {
     return Stack(
       children: [
         Container(
-          color: Colors.black.withOpacity(0.6),
+          color: Colors.black.withOpacity(0.7),
         ),
         Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Expanded(
+                flex: 4,
+                child: Container(),
+              ),
               const Text(
                 'PAUSED',
                 style: TextStyle(
@@ -32,6 +38,24 @@ class GamePausedUI extends StatelessWidget {
                 ),
                 onPressed: gameCubit.resumeGame,
               ),
+              const SizedBox(height: 24),
+              Expanded(
+                flex: 3,
+                child: Container(),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GameRoundButton(
+                    title: 'HOME',
+                    icon: const Icon(Icons.home),
+                    onPressed: () {
+                      Phoenix.rebirth(context);
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),

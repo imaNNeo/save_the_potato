@@ -97,13 +97,14 @@ class _GameOverUIState extends State<GameOverUI>
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
-                        'Try Again!',
+                        'TRY AGAIN!',
                         style: Theme.of(context)
                             .textTheme
                             .headlineSmall!
                             .copyWith(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
+                              letterSpacing: 1,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
                       ),
                     ),
                   )
