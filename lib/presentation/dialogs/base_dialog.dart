@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:save_the_potato/presentation/dialogs/settings_dialog.dart';
 
 class BaseDialog extends AlertDialog {
   BaseDialog({
@@ -14,4 +15,14 @@ class BaseDialog extends AlertDialog {
           title: Text(title),
           content: content,
         );
+
+  static void showSettingsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => BaseDialog(
+        title: 'Settings',
+        content: const SettingsDialogContent(),
+      ),
+    );
+  }
 }

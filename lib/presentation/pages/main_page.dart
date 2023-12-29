@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_configs.dart';
 import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
-import 'package:save_the_potato/presentation/dialogs/settings_dialog.dart';
+import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
@@ -91,7 +91,7 @@ class _MainPageState extends State<MainPage>
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: IconButton(
-                    onPressed: () => SettingsDialog.show(context),
+                    onPressed: () => BaseDialog.showSettingsDialog(context),
                     icon: const Icon(Icons.settings),
                   ),
                 ),
