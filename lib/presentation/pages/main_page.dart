@@ -5,11 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_configs.dart';
 import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
+import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
 import 'package:save_the_potato/presentation/widgets/rotating_controls.dart';
+
+import 'settings_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -23,6 +26,7 @@ class _MainPageState extends State<MainPage>
   late MyGame _game;
 
   late GameCubit _gameCubit;
+  late SettingsCubit _settingsCubit;
 
   late StreamSubscription _streamSubscription;
 
@@ -31,14 +35,15 @@ class _MainPageState extends State<MainPage>
   @override
   void initState() {
     _gameCubit = context.read<GameCubit>();
+    _settingsCubit = context.read<SettingsCubit>();
     _gameCubit.startGame();
-    _game = MyGame(_gameCubit);
+    _game = MyGame(_gameCubit, _settingsCubit);
     _previousState = _gameCubit.state.playingState;
     _streamSubscription = _gameCubit.stream.listen((state) {
       if ((_previousState.isNone || _previousState.isGameOver) &&
           (state.playingState.isPlaying || state.playingState.isGuide)) {
         setState(() {
-          _game = MyGame(_gameCubit);
+          _game = MyGame(_gameCubit, _settingsCubit);
         });
       }
       _previousState = state.playingState;
@@ -82,6 +87,31 @@ class _MainPageState extends State<MainPage>
                 onRightUp: _gameCubit.onRightTapUp,
               ),
               if (state.showGameOverUI) const GameOverUI(),
+              Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: IconButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return const AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(28.0),
+                              ),
+                            ),
+                            title: Text("Settings"),
+                            content: SettingsContent(),
+                          );
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.settings),
+                  ),
+                ),
+              ),
             ],
           );
         },

@@ -11,6 +11,7 @@ import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_noise/flame_noise.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
 
@@ -20,8 +21,10 @@ import 'cubit/game_cubit.dart';
 
 class MyGame extends FlameGame<MyWorld>
     with HasCollisionDetection, KeyboardEvents {
-  MyGame(this._gameCubit)
-      : super(
+  MyGame(
+    this._gameCubit,
+    this._settingsCubit,
+  ) : super(
           world: MyWorld(),
           camera: CameraComponent.withFixedResolution(
             width: 600,
@@ -39,13 +42,19 @@ class MyGame extends FlameGame<MyWorld>
       'two-way-arrow.png',
     ]);
     remove(world);
-    add(FlameBlocProvider<GameCubit, GameState>(
-      create: () => _gameCubit,
+    add(FlameMultiBlocProvider(
+      providers: [
+        FlameBlocProvider<GameCubit, GameState>.value(value: _gameCubit),
+        FlameBlocProvider<SettingsCubit, SettingsState>.value(
+          value: _settingsCubit,
+        ),
+      ],
       children: [world],
     ));
   }
 
   final GameCubit _gameCubit;
+  final SettingsCubit _settingsCubit;
 
   PlayingState get playingState => _gameCubit.state.playingState;
 

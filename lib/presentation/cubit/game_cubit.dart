@@ -8,11 +8,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_configs.dart';
 import 'package:save_the_potato/domain/models/double_range.dart';
+import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 
 part 'game_state.dart';
 
 class GameCubit extends Cubit<GameState> {
-  GameCubit() : super(const GameState()) {
+  GameCubit(this.audioHelper) : super(const GameState()) {
     FlameAudio.bgm.initialize();
   }
 
@@ -20,6 +21,8 @@ class GameCubit extends Cubit<GameState> {
 
   bool isTapLeftDown = false;
   bool isTapRightDown = false;
+
+  final AudioHelper audioHelper;
 
   void startGame() async {
     emit(const GameState().copyWith(
@@ -32,8 +35,7 @@ class GameCubit extends Cubit<GameState> {
       return;
     }
     emit(state.copyWith(playingState: PlayingState.playing));
-    await FlameAudio.bgm.play('bg.mp3');
-    await FlameAudio.bgm.audioPlayer.setVolume(GameConfigs.bgmVolume);
+    audioHelper.playBackgroundMusic();
   }
 
   void update(double dt) {
