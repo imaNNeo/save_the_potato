@@ -6,13 +6,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_configs.dart';
 import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
+import 'package:save_the_potato/presentation/dialogs/settings_dialog.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
 import 'package:save_the_potato/presentation/widgets/rotating_controls.dart';
-
-import 'settings_content.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -92,22 +91,7 @@ class _MainPageState extends State<MainPage>
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: IconButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return const AlertDialog(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(28.0),
-                              ),
-                            ),
-                            title: Text("Settings"),
-                            content: SettingsContent(),
-                          );
-                        },
-                      );
-                    },
+                    onPressed: () => SettingsDialog.show(context),
                     icon: const Icon(Icons.settings),
                   ),
                 ),
