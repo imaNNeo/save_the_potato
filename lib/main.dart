@@ -1,4 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,15 +15,16 @@ import 'presentation/cubit/scores/scores_cubit.dart';
 import 'presentation/cubit/settings/settings_cubit.dart';
 import 'presentation/pages/main_page.dart';
 
-late final FirebaseApp app;
-late final FirebaseAuth auth;
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  app = await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  auth = FirebaseAuth.instanceFor(app: app);
+  if (Platform.isAndroid || Platform.isIOS) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
   setupServiceLocator();
   runApp(Phoenix(child: const MyApp()));
 }
