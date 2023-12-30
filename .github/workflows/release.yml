@@ -17,6 +17,18 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+      - name: Setup Firebase
+        run: |
+          curl -sL https://firebase.tools | bash
+          dart pub global activate flutterfire_cli
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}" | base64 -d > gcloud-service-key.json
+          GOOGLE_APPLICATION_CREDENTIALS=gcloud-service-key.json \
+          flutterfire configure \
+          --project save-the-potato  \
+          --android-app-id=dev.app2pack.savethepotato \
+          --ios-bundle-id=dev.app2pack.savethepotato \
+          --platforms=android,ios \
+          > /dev/null 2>&1
       - name: Setup Flutter
         run: |
           flutter pub get
@@ -76,6 +88,18 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+      - name: Setup Firebase
+        run: |
+          curl -sL https://firebase.tools | bash
+          dart pub global activate flutterfire_cli
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}" | base64 -d > gcloud-service-key.json
+          GOOGLE_APPLICATION_CREDENTIALS=gcloud-service-key.json \
+          flutterfire configure \
+          --project save-the-potato  \
+          --android-app-id=dev.app2pack.savethepotato \
+          --ios-bundle-id=dev.app2pack.savethepotato \
+          --platforms=android,ios \
+          > /dev/null 2>&1
       - name: Create the Keystore file
         run: |
           echo $ANDROID_KEYSTORE_BASE64 | base64 -d > keystore.jks
