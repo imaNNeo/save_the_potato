@@ -11,14 +11,14 @@ class DebugPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!context.read<GameCubit>().state.playingState.isPlaying) {
-      return const SizedBox();
-    }
-    if (!kDebugMode) {
-      return const SizedBox();
-    }
     return BlocBuilder<GameCubit, GameState>(
       builder: (context, state) {
+        if (!state.playingState.isPlaying) {
+          return const SizedBox();
+        }
+        if (!kDebugMode) {
+          return const SizedBox();
+        }
         return DefaultTextStyle(
           style: const TextStyle(
             color: Colors.white,
@@ -60,7 +60,8 @@ class DebugPanel extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text('spawnEvery: ${state.spawnOrbsEvery.toStringAsFixed(2)}'),
+                  Text(
+                      'spawnEvery: ${state.spawnOrbsEvery.toStringAsFixed(2)}'),
                   const SizedBox(height: 4),
                   Row(
                     mainAxisSize: MainAxisSize.min,
