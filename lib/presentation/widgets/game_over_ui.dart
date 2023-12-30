@@ -6,6 +6,7 @@ import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:save_the_potato/domain/game_configs.dart';
 import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 
+import 'game_round_button.dart';
 import 'game_timer.dart';
 
 class GameOverUI extends StatefulWidget {
@@ -79,35 +80,13 @@ class _GameOverUIState extends State<GameOverUI>
                   ),
                   FormattedGameTime(time: state.timePassed),
                   const SizedBox(height: 40),
-                  TextButton(
-                    style: ButtonStyle(
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18.0),
-                          side: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                      backgroundColor: MaterialStateProperty.all<Color>(
-                        Theme.of(context).colorScheme.primary,
-                      ),
+                  SizedBox(
+                    width: 240,
+                    child: GameRoundButton(
+                      title: 'TRY AGAIN!',
+                      onPressed: () => Phoenix.rebirth(context),
                     ),
-                    onPressed: () => Phoenix.rebirth(context),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'TRY AGAIN!',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall!
-                            .copyWith(
-                              letterSpacing: 1,
-                              color: Theme.of(context).colorScheme.onPrimary,
-                            ),
-                      ),
-                    ),
-                  )
+                  ),
                 ],
               ),
             ),
