@@ -97,8 +97,8 @@ class _MainPageState extends State<MainPage>
                 if (state.playingState.isPaused) const GamePausedUI(),
                 if (state.showGameOverUI) const GameOverUI(),
                 const Align(
-                  alignment: Alignment.topLeft,
-                  child: TopLeftIcon(),
+                  alignment: Alignment.topRight,
+                  child: SettingsPauseIcon(),
                 ),
               ],
             ),
