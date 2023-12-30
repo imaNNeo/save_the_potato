@@ -13,7 +13,7 @@ import 'package:save_the_potato/presentation/widgets/game_paused_ui.dart';
 import 'package:save_the_potato/presentation/widgets/leaderboard_widget.dart';
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
 import 'package:save_the_potato/presentation/widgets/rotating_controls.dart';
-import 'package:save_the_potato/presentation/widgets/top_left_icon.dart';
+import 'package:save_the_potato/presentation/widgets/settings_pause_icon.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
