@@ -11,28 +11,30 @@ class TopLeftIcon extends StatelessWidget {
     final gameCubit = context.read<GameCubit>();
     return BlocBuilder<GameCubit, GameState>(
       builder: (context, state) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: switch (state.playingState) {
-            PlayingState.none => const SizedBox(),
-            PlayingState.playing => IconButton(
-                onPressed: gameCubit.pauseGame,
-                icon: const Icon(
-                  Icons.pause,
-                  size: 36,
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: switch (state.playingState) {
+              PlayingState.none => const SizedBox(),
+              PlayingState.playing => IconButton(
+                  onPressed: gameCubit.pauseGame,
+                  icon: const Icon(
+                    Icons.pause,
+                    size: 36,
+                  ),
                 ),
-              ),
-            PlayingState.paused ||
-            PlayingState.gameOver ||
-            PlayingState.guide =>
-              IconButton(
-                onPressed: () => BaseDialog.showSettingsDialog(context),
-                icon: const Icon(
-                  Icons.settings,
-                  size: 36,
+              PlayingState.paused ||
+              PlayingState.gameOver ||
+              PlayingState.guide =>
+                IconButton(
+                  onPressed: () => BaseDialog.showSettingsDialog(context),
+                  icon: const Icon(
+                    Icons.settings,
+                    size: 36,
+                  ),
                 ),
-              ),
-          },
+            },
+          ),
         );
       },
     );
