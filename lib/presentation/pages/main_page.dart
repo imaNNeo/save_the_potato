@@ -64,38 +64,47 @@ class _MainPageState extends State<MainPage>
         );
       },
     );
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: BlocBuilder<GameCubit, GameState>(
-        builder: (context, state) {
-          return Stack(
-            children: [
-              gameWidget,
-              const Align(
-                alignment: Alignment.topCenter,
-                child: PotatoTopBar(),
-              ),
-              const Align(
-                alignment: Alignment.bottomLeft,
-                child: DebugPanel(),
-              ),
-              RotationControls(
-                showGuide: state.playingState.isGuide,
-                onLeftDown: _gameCubit.onLeftTapDown,
-                onLeftUp: _gameCubit.onLeftTapUp,
-                onRightDown: _gameCubit.onRightTapDown,
-                onRightUp: _gameCubit.onRightTapUp,
-              ),
-              if (state.playingState.isPaused) const GamePausedUI(),
-              if (state.showGameOverUI) const GameOverUI(),
-              const Align(
-                alignment: Alignment.topLeft,
-                child: TopLeftIcon(),
-              ),
-            ],
-          );
-        },
-      ),
+    return BlocBuilder<GameCubit, GameState>(
+      builder: (context, state) {
+        return PopScope(
+          canPop: !state.playingState.isPlaying,
+          onPopInvoked: (didPop) async {
+            if (didPop) {
+              return;
+            }
+            _gameCubit.pauseGame();
+          },
+          child: Scaffold(
+            backgroundColor: Colors.black,
+            body: Stack(
+              children: [
+                gameWidget,
+                const Align(
+                  alignment: Alignment.topCenter,
+                  child: PotatoTopBar(),
+                ),
+                const Align(
+                  alignment: Alignment.bottomLeft,
+                  child: DebugPanel(),
+                ),
+                RotationControls(
+                  showGuide: state.playingState.isGuide,
+                  onLeftDown: _gameCubit.onLeftTapDown,
+                  onLeftUp: _gameCubit.onLeftTapUp,
+                  onRightDown: _gameCubit.onRightTapDown,
+                  onRightUp: _gameCubit.onRightTapUp,
+                ),
+                if (state.playingState.isPaused) const GamePausedUI(),
+                if (state.showGameOverUI) const GameOverUI(),
+                const Align(
+                  alignment: Alignment.topLeft,
+                  child: TopLeftIcon(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -121,14 +130,14 @@ class BackgroundGradient extends StatelessWidget {
     final gradientFrom = isNeutral
         ? GameConfigs.neutralGradientFrom
         : heatLevel > 0
-            ? ColorTween(
-                begin: GameConfigs.neutralGradientFrom,
-                end: GameConfigs.heatGradientFrom,
-              ).lerp(heatLevel / GameConfigs.maxHeatLevel)!
-            : ColorTween(
-                begin: GameConfigs.neutralGradientFrom,
-                end: GameConfigs.coldGradientFrom,
-              ).lerp(heatLevel.abs() / GameConfigs.maxHeatLevel)!;
+        ? ColorTween(
+      begin: GameConfigs.neutralGradientFrom,
+      end: GameConfigs.heatGradientFrom,
+    ).lerp(heatLevel / GameConfigs.maxHeatLevel)!
+        : ColorTween(
+      begin: GameConfigs.neutralGradientFrom,
+      end: GameConfigs.coldGradientFrom,
+    ).lerp(heatLevel.abs() / GameConfigs.maxHeatLevel)!;
     return Container(
       decoration: BoxDecoration(
         gradient: RadialGradient(
