@@ -1,9 +1,9 @@
-class HighScoreBundle {
+class HighScoreBundleEntity {
   final int version;
   final int highScore;
   final int timeStamp;
 
-  HighScoreBundle({
+  HighScoreBundleEntity({
     required this.version,
     required this.highScore,
     required this.timeStamp,
@@ -11,9 +11,15 @@ class HighScoreBundle {
 
   String serialize() => '$version:$highScore:$timeStamp';
 
-  static HighScoreBundle deserialize(String bundleText) {
+  String get representation {
+    final minutes = highScore ~/ 60000;
+    final seconds = (highScore % 60000) ~/ 1000;
+    return '$minutes:$seconds';
+  }
+
+  static HighScoreBundleEntity deserialize(String bundleText) {
     final bundle = bundleText.split(":");
-    return HighScoreBundle(
+    return HighScoreBundleEntity(
       version: int.parse(bundle[0]),
       highScore: int.parse(bundle[1]),
       timeStamp: int.parse(bundle[2]),

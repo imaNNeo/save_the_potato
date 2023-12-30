@@ -9,12 +9,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_configs.dart';
 import 'package:save_the_potato/domain/models/double_range.dart';
 import 'package:save_the_potato/domain/repository/auth_repository.dart';
+import 'package:save_the_potato/domain/repository/scores_repository.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 
 part 'game_state.dart';
 
 class GameCubit extends Cubit<GameState> {
-  GameCubit(this._audioHelper, this._authRepository,) : super(const GameState()) {
+  GameCubit(
+    this._audioHelper,
+    this._authRepository,
+    this._scoresRepository,
+  ) : super(const GameState()) {
     FlameAudio.bgm.initialize();
   }
 
@@ -25,6 +30,7 @@ class GameCubit extends Cubit<GameState> {
 
   final AudioHelper _audioHelper;
   final AuthRepository _authRepository;
+  final ScoresRepository _scoresRepository;
 
   void startGame() async {
     emit(const GameState().copyWith(
@@ -65,7 +71,13 @@ class GameCubit extends Cubit<GameState> {
 
   void _gameOver() async {
     emit(state.copyWith(playingState: PlayingState.gameOver));
+    _scoresRepository.saveScore((state.timePassed * 1000).toInt());
+    await _fadeBackgroundVolume();
+    emit(state.copyWith(showGameOverUI: true));
+    FlameAudio.bgm.stop();
+  }
 
+  Future<void> _fadeBackgroundVolume() async {
     final currentVolume = FlameAudio.bgm.audioPlayer.volume;
     const targetVolume = 0.0;
     final volumeTween = Tween<double>(
@@ -81,8 +93,6 @@ class GameCubit extends Cubit<GameState> {
       await Future.delayed(Duration(milliseconds: stepDelay.inMilliseconds));
     }
     await FlameAudio.bgm.audioPlayer.setVolume(targetVolume);
-    emit(state.copyWith(showGameOverUI: true));
-    FlameAudio.bgm.stop();
   }
 
   void onLeftTapDown() {

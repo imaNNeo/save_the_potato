@@ -10,7 +10,7 @@ import 'package:save_the_potato/presentation/my_game.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/game_paused_ui.dart';
-import 'package:save_the_potato/presentation/widgets/leaderboard_widget.dart';
+import 'package:save_the_potato/presentation/widgets/high_score_widget.dart';
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
 import 'package:save_the_potato/presentation/widgets/rotating_controls.dart';
 import 'package:save_the_potato/presentation/widgets/settings_pause_icon.dart';
@@ -103,7 +103,7 @@ class _MainPageState extends State<MainPage>
                 ),
                 const Align(
                   alignment: Alignment.topLeft,
-                  child: LeaderboardWidget(),
+                  child: HighScoreWidget(),
                 ),
               ],
             ),
@@ -135,14 +135,14 @@ class BackgroundGradient extends StatelessWidget {
     final gradientFrom = isNeutral
         ? GameConfigs.neutralGradientFrom
         : heatLevel > 0
-        ? ColorTween(
-      begin: GameConfigs.neutralGradientFrom,
-      end: GameConfigs.heatGradientFrom,
-    ).lerp(heatLevel / GameConfigs.maxHeatLevel)!
-        : ColorTween(
-      begin: GameConfigs.neutralGradientFrom,
-      end: GameConfigs.coldGradientFrom,
-    ).lerp(heatLevel.abs() / GameConfigs.maxHeatLevel)!;
+            ? ColorTween(
+                begin: GameConfigs.neutralGradientFrom,
+                end: GameConfigs.heatGradientFrom,
+              ).lerp(heatLevel / GameConfigs.maxHeatLevel)!
+            : ColorTween(
+                begin: GameConfigs.neutralGradientFrom,
+                end: GameConfigs.coldGradientFrom,
+              ).lerp(heatLevel.abs() / GameConfigs.maxHeatLevel)!;
     return Container(
       decoration: BoxDecoration(
         gradient: RadialGradient(

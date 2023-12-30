@@ -6,7 +6,9 @@ import 'package:save_the_potato/data/sources/auth_data_source.dart';
 import 'package:save_the_potato/data/sources/settings_data_source.dart';
 import 'package:save_the_potato/domain/repository/settings_repository.dart';
 
+import 'data/sources/scores_local_data_source.dart';
 import 'domain/repository/auth_repository.dart';
+import 'domain/repository/scores_repository.dart';
 import 'presentation/helpers/audio_helper.dart';
 
 Future<void> setupServiceLocator() async {
@@ -24,8 +26,11 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<SettingsDataSource>(
     () => SettingsDataSource(getIt.get<KeyValueStorage>()),
   );
-  getIt.registerLazySingleton<AuthDataSource>(
-    () => AuthDataSource(),
+  getIt.registerLazySingleton<AuthDataSource>(() => AuthDataSource());
+  getIt.registerLazySingleton<ScoresLocalDataSource>(
+    () => ScoresLocalDataSource(
+      getIt.get<KeyValueStorage>(),
+    ),
   );
 
   // Repositories
@@ -34,6 +39,9 @@ Future<void> setupServiceLocator() async {
   );
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepository(getIt.get<AuthDataSource>()),
+  );
+  getIt.registerLazySingleton<ScoresRepository>(
+    () => ScoresRepository(getIt.get<ScoresLocalDataSource>()),
   );
 }
 
