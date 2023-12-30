@@ -1,3 +1,9 @@
+## 0.8.0
+* Implement settings (to mute/unMute the audio)
+* Implement pause/resume functionality
+* Implement offline scoring (online scoring comes the next version)
+* Add firebase core and anonymous sign-in (for online scoring in the next release)
+
 ## 0.7.0
 * Improved touch behaviour
 * Fixed shields issue when game starts
