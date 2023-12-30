@@ -30,30 +30,32 @@ class GamePausedUI extends StatelessWidget {
                   color: Colors.white,
                 ),
               ),
-              IconButton(
-                icon: const Icon(
-                  Icons.play_arrow,
-                  color: Colors.white,
-                  size: 120,
+              const SizedBox(height: 38),
+              SizedBox(
+                width: 300,
+                child: GameRoundButton(
+                  title: 'TAP TO CONTINUE',
+                  onPressed: gameCubit.resumeGame,
                 ),
-                onPressed: gameCubit.resumeGame,
               ),
               const SizedBox(height: 24),
               Expanded(
                 flex: 3,
                 child: Container(),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GameRoundButton(
-                    title: 'HOME',
-                    icon: const Icon(Icons.home),
-                    onPressed: () {
-                      Phoenix.rebirth(context);
-                    },
+              TextButton(
+                onPressed: () => Phoenix.rebirth(context),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
+                  child: Text(
+                    'BACK TO HOME',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      letterSpacing: 1,
+                    ),
                   ),
-                ],
+                ),
               ),
               const SizedBox(height: 24),
             ],

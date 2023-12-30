@@ -14,7 +14,13 @@ class SettingsDialogContent extends StatelessWidget {
           children: [
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Audio'),
+              title: const Text(
+                'Audio',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+              ),
               trailing: Switch(
                 value: state.audioEnabled,
                 onChanged: (bool? newValue) {

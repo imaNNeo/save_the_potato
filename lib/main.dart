@@ -32,10 +32,11 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Save the Potato',
-        theme: ThemeData.dark().copyWith(
+        theme: ThemeData.dark(useMaterial3: true).copyWith(
           textTheme: ThemeData.dark().textTheme.apply(
                 fontFamily: 'Cookies',
               ),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         ),
         home: const MainPage(),
       ),

@@ -14,26 +14,35 @@ class GameRoundButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const height = 48.0;
     return SizedBox(
-      height: 48,
-      child: OutlinedButton(
+      height: height,
+      child: ElevatedButton(
         onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          shape: const StadiumBorder(),
-        ),
-        child: Row(
-          children: [
-            if (icon != null) ...[
-              icon!,
-              const SizedBox(width: 8),
-            ],
-            Text(
-              title,
-              style: const TextStyle(
-                letterSpacing: 2,
-              ),
+        style: ButtonStyle(
+          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(height / 2),
             ),
-          ],
+          ),
+        ),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                icon!,
+                const SizedBox(width: 8),
+              ],
+              Text(
+                title,
+                style: const TextStyle(
+                  letterSpacing: 2,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
