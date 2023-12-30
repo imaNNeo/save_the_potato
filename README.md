@@ -30,5 +30,7 @@ To do that, you have to setup the below environment variables (these are on the 
 
 Also, we run `fastlane match appstore` to get the certificates and profiles for the publish process (it handled in the CI/CD)
 
+Run `flutterfire configure --project=save-the-potato` to setup the firebase project
+
 # Release
 Here is the [release guide](./docs/RELEASE_GUIDE.md)

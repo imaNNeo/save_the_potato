@@ -48,6 +48,7 @@ dependencies:
   get_it: ^7.6.4
   flutter_animate: ^4.3.0
   flutter_secure_storage: ^9.0.0
+  firebase_core: ^2.24.2
 
 dev_dependencies:
   flutter_test:
