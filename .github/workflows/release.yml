@@ -131,7 +131,7 @@ jobs:
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           mappingFile: build/app/outputs/mapping/release/mapping.txt
           debugSymbols: build/app/intermediates/merged_native_libs/release/out/lib
-          track: production
+          track: internal
           status: draft
 #          whatsNewDirectory: distribution/
       - name: Build Android APKs (just for keeping them as artifacts)
