@@ -13,7 +13,7 @@ class SettingsPauseIcon extends StatelessWidget {
       builder: (context, state) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.only(right: 12.0, top: 8.0),
             child: switch (state.playingState) {
               PlayingState.none => const SizedBox(),
               PlayingState.playing => IconButton(

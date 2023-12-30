@@ -10,40 +10,50 @@ class HighScoreWidget extends StatelessWidget {
     return BlocBuilder<ScoresCubit, ScoresState>(
       builder: (context, state) {
         return SafeArea(
-          child: InkWell(
-            onTap: () {
-              print('asdf');
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.emoji_events_outlined,
-                    size: 36,
-                    color: Colors.yellow,
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Best:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontFamily: 'Roboto',
-                          fontWeight: FontWeight.bold,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 12.0,
+                  top: 12.0,
+                  bottom: 12.0,
+                  right: 20.0,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.emoji_events_outlined,
+                      size: 36,
+                      color: Colors.yellow,
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Best:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontFamily: 'Roboto',
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Text(
-                        state.highScore?.representation ?? '',
-                        style: const TextStyle(
-                          fontSize: 16,
+                        Text(
+                          state.highScore?.representation ?? '',
+                          style: const TextStyle(
+                            fontSize: 16,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
