@@ -32,7 +32,7 @@ class GuideTitle extends PositionComponent
       ),
     );
     add(_textComponent = TextComponent(
-      text: 'Save The Potato!',
+      text: 'SAVE THE POTATO',
       anchor: Anchor.center,
       textRenderer: _textPaint,
     ));
