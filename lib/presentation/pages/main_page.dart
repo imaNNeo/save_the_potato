@@ -10,6 +10,7 @@ import 'package:save_the_potato/presentation/my_game.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/game_paused_ui.dart';
+import 'package:save_the_potato/presentation/widgets/leaderboard_widget.dart';
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
 import 'package:save_the_potato/presentation/widgets/rotating_controls.dart';
 import 'package:save_the_potato/presentation/widgets/top_left_icon.dart';
@@ -99,6 +100,10 @@ class _MainPageState extends State<MainPage>
                 const Align(
                   alignment: Alignment.topRight,
                   child: SettingsPauseIcon(),
+                ),
+                const Align(
+                  alignment: Alignment.topLeft,
+                  child: LeaderboardWidget(),
                 ),
               ],
             ),
