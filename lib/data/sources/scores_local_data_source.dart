@@ -9,10 +9,10 @@ class ScoresLocalDataSource {
   ScoresLocalDataSource(this._keyValueStorage);
 
   final StreamController<HighScoreBundleEntity> _highScoreStreamController =
-      StreamController<HighScoreBundleEntity>();
+      StreamController<HighScoreBundleEntity>.broadcast();
 
   Stream<HighScoreBundleEntity> getHighScoreStream() =>
-      _highScoreStreamController.stream.asBroadcastStream();
+      _highScoreStreamController.stream;
 
   Future<HighScoreBundleEntity?> getHighScore() async {
     final String? highScoreStr = await _keyValueStorage.getString('high_score');

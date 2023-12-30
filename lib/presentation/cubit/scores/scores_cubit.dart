@@ -20,13 +20,13 @@ class ScoresCubit extends Cubit<ScoresState> {
   late StreamSubscription _highScoreSubscription;
 
   Future<void> initialize() async {
-    await reloadHighScore();
     _highScoreSubscription =
         _scoreRepository.getHighScoreStream().listen((event) {
-      emit(state.copyWith(
-        highScore: ValueWrapper(event),
-      ));
-    });
+          emit(state.copyWith(
+            highScore: ValueWrapper(event),
+          ));
+        });
+    await reloadHighScore();
   }
 
   Future<void> reloadHighScore() async {
