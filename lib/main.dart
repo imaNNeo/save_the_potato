@@ -55,6 +55,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         BlocProvider<AuthCubit>(
+          lazy: false,
           create: (context) => AuthCubit(
             getIt.get<AuthRepository>(),
           ),
