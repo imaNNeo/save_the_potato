@@ -44,7 +44,7 @@ class HighScoreWidget extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          state.highScore?.representation ?? '',
+                          state.highScore?.representation ?? '00:00',
                           style: const TextStyle(
                             fontSize: 16,
                           ),
