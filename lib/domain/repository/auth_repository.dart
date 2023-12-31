@@ -16,4 +16,8 @@ class AuthRepository {
   UserEntity? getCurrentUser() => _authDataSource.getCurrentUser();
 
   bool isSignedIn() => _authDataSource.isSignedIn();
+
+  Future<UserEntity> signInWithGoogle() => _authDataSource.signInWithGoogle();
+
+  Future<UserEntity> signInWithApple() => _authDataSource.signInWithApple();
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:save_the_potato/presentation/dialogs/settings_dialog.dart';
+import 'package:save_the_potato/presentation/dialogs/leaderboard_dialog_content.dart';
+import 'package:save_the_potato/presentation/dialogs/settings_dialog_content.dart';
 
 class BaseDialog extends AlertDialog {
   BaseDialog({
     super.key,
+    required BuildContext context,
     required String title,
     required Widget content,
   }) : super(
@@ -12,7 +14,17 @@ class BaseDialog extends AlertDialog {
               Radius.circular(28.0),
             ),
           ),
-          title: Text(title),
+          title: Row(
+            children: [
+              Text(title),
+              Expanded(child: Container()),
+              IconButton(
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          ),
           content: content,
         );
 
@@ -20,8 +32,20 @@ class BaseDialog extends AlertDialog {
     showDialog(
       context: context,
       builder: (BuildContext context) => BaseDialog(
+        context: context,
         title: 'Settings',
         content: const SettingsDialogContent(),
+      ),
+    );
+  }
+
+  static void showLeaderboardDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => BaseDialog(
+        context: context,
+        title: 'LEADERBOARD',
+        content: const LeaderboardDialogContent(),
       ),
     );
   }

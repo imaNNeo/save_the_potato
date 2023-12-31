@@ -15,4 +15,18 @@ class AuthDataSource {
         );
 
   bool isSignedIn() => getCurrentUser() != null;
+
+  Future<UserEntity> signInWithGoogle() async {
+    final userCredential = await FirebaseAuth.instance.signInWithProvider(
+      GoogleAuthProvider(),
+    );
+    return UserEntity(userCredential.user!);
+  }
+
+  Future<UserEntity> signInWithApple() async {
+    final userCredential = await FirebaseAuth.instance.signInWithProvider(
+      AppleAuthProvider(),
+    );
+    return UserEntity(userCredential.user!);
+  }
 }

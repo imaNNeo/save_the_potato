@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
 import 'package:save_the_potato/domain/repository/settings_repository.dart';
+import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/service_locator.dart';
 import 'domain/repository/auth_repository.dart';
@@ -45,13 +46,17 @@ class MyApp extends StatelessWidget {
         BlocProvider<GameCubit>(
           create: (context) => GameCubit(
             getIt.get<AudioHelper>(),
-            getIt.get<AuthRepository>(),
             getIt.get<ScoresRepository>(),
           ),
         ),
         BlocProvider<ScoresCubit>(
           create: (context) => ScoresCubit(
             getIt.get<ScoresRepository>(),
+          ),
+        ),
+        BlocProvider<AuthCubit>(
+          create: (context) => AuthCubit(
+            getIt.get<AuthRepository>(),
           ),
         ),
       ],
