@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/models/user_entity.dart';
+import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/auth_repository.dart';
 
 part 'auth_state.dart';
@@ -16,7 +18,16 @@ class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _authRepository;
 
   void initialize() async {
-    await _authRepository.anonymousLogin();
+    try {
+      final user = await _authRepository.getCurrentUser();
+      emit(
+        state.copyWith(
+          user: ValueWrapper(user),
+        ),
+      );
+    } catch (e) {
+      print(e);
+    }
   }
 
   void login() async {

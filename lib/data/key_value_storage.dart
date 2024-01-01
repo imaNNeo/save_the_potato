@@ -18,6 +18,8 @@ abstract class KeyValueStorage {
   Future<int?> getInt(String key);
 
   Future<void> setInt(String key, int value);
+
+  Future<void> remove(String key);
 }
 
 class SecureKeyValueStorage extends KeyValueStorage {
@@ -74,6 +76,9 @@ class SecureKeyValueStorage extends KeyValueStorage {
   @override
   Future<void> setString(String key, String value) =>
       _secureStorage.write(key: key, value: value);
+
+  @override
+  Future<void> remove(String key) => _secureStorage.delete(key: key);
 }
 
 class SharedPrefKeyValueStorage extends KeyValueStorage {
@@ -123,5 +128,11 @@ class SharedPrefKeyValueStorage extends KeyValueStorage {
   Future<void> setString(String key, String value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(key, value);
+  }
+
+  @override
+  Future<void> remove(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(key);
   }
 }

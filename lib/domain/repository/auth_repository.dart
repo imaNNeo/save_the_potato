@@ -1,23 +1,31 @@
-import 'package:save_the_potato/data/sources/auth_data_source.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:save_the_potato/data/sources/auth_local_data_source.dart';
+import 'package:save_the_potato/data/sources/auth_remote_data_source.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 
 class AuthRepository {
-  final AuthDataSource _authDataSource;
+  final AuthLocalDataSource _authLocalDataSource;
+  final AuthRemoteDataSource _authRemoteDataSource;
 
-  AuthRepository(this._authDataSource);
+  AuthRepository(this._authLocalDataSource, this._authRemoteDataSource);
 
-  Future<void> anonymousLogin() async {
-    if (_authDataSource.isSignedIn()) {
-      return;
+  Future<UserEntity> getCurrentUser() async {
+    final currentUser = await _authLocalDataSource.getUser();
+    if (currentUser != null) {
+     await _authLocalDataSource.signOut();
+     await FirebaseAuth.instance.signOut();
+      return currentUser;
     }
-    await _authDataSource.anonymousSignIn();
+    final anonymousUser = await _authRemoteDataSource.anonymousSignIn();
+    await _authLocalDataSource.saveUser(anonymousUser);
+    return anonymousUser;
   }
 
-  UserEntity? getCurrentUser() => _authDataSource.getCurrentUser();
+  Future<bool> isSignedIn() => _authLocalDataSource.isSignedIn();
 
-  bool isSignedIn() => _authDataSource.isSignedIn();
+  Future<UserEntity> signInWithGoogle() =>
+      _authRemoteDataSource.signInWithGoogle();
 
-  Future<UserEntity> signInWithGoogle() => _authDataSource.signInWithGoogle();
-
-  Future<UserEntity> signInWithApple() => _authDataSource.signInWithApple();
+  Future<UserEntity> signInWithApple() =>
+      _authRemoteDataSource.signInWithApple();
 }

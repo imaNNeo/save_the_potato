@@ -1,22 +1,81 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
-class UserEntity {
-  final User _firebaseUser;
+enum UserType {
+  anonymous,
+  signedIn,
+}
 
-  UserEntity(this._firebaseUser);
+sealed class UserEntity {
+  abstract final String uid;
+  abstract final String nickname;
+  abstract final UserType type;
 
-  bool get isAnonymous => _firebaseUser.isAnonymous;
+  Map<String, dynamic> toJson();
 
-  String get uid => _firebaseUser.uid;
+  static UserEntity fromJson(Map<String, dynamic> json) {
+    final type = UserType.values.firstWhere(
+      (element) => element.name == json['type'] as String,
+    );
+    return switch (type) {
+      UserType.anonymous => AnonymousUserEntity(
+          uid: json['uid'] as String,
+          nickname: json['nickname'] as String,
+        ),
+      UserType.signedIn => SignedInUserEntity(
+          uid: json['uid'] as String,
+          nickname: json['nickname'] as String,
+          email: json['email'] as String,
+        ),
+    };
+  }
+}
 
-  String get displayName => _firebaseUser.displayName ?? '';
+class AnonymousUserEntity extends UserEntity {
+  AnonymousUserEntity({
+    required this.uid,
+    required this.nickname,
+  });
 
-  String get email => _firebaseUser.email ?? '';
+  @override
+  final String uid;
 
-  String get photoUrl => _firebaseUser.photoURL ?? '';
+  @override
+  final String nickname;
 
-  String get providerId => _firebaseUser.providerData.first.providerId;
+  @override
+  final UserType type = UserType.anonymous;
 
-  String get providerDisplayName =>
-      _firebaseUser.providerData.first.displayName ?? '';
+  @override
+  Map<String, dynamic> toJson() => {
+        'uid': uid,
+        'nickname': nickname,
+        'type': type.name,
+      };
+}
+
+class SignedInUserEntity extends UserEntity {
+  SignedInUserEntity({
+    required this.uid,
+    required this.nickname,
+    required this.email,
+  });
+
+  @override
+  final String uid;
+
+  @override
+  final String nickname;
+
+  @override
+  final UserType type = UserType.signedIn;
+
+  final String email;
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'uid': uid,
+        'nickname': nickname,
+        'email': email,
+        'type': type.name,
+      };
 }
