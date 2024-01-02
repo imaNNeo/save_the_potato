@@ -1,3 +1,7 @@
+## 0.9.0
+* Implement authentication
+* Add high-score (leaderboard) button on the top-left of the page
+
 ## 0.8.0
 * Implement settings (to mute/unMute the audio)
 * Implement pause/resume functionality
