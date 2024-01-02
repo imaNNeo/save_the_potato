@@ -24,8 +24,9 @@ class FirebaseFunctionsWrapper {
       debugPrint('\n-> firebase functions ($name):');
       debugPrint('$parameters');
     }
-    final response =
-        await FirebaseFunctions.instanceFor(region: _region).httpsCallable(name).call(parameters);
+    final response = await FirebaseFunctions.instanceFor(region: _region)
+        .httpsCallable(name)
+        .call(parameters);
     final parsedResponse = _FirebaseFunctionsResponseParser.parseResponse(
       response.data,
     );
@@ -40,20 +41,14 @@ class FirebaseFunctionsWrapper {
     return parsedResponse;
   }
 
-  Future<AnonymousUserEntity> registerAnonymousUser(String token) async {
+  Future<UserEntity> registerUser(String token) async {
     final response = await _callFunction(
-      name: 'registerAnonymousUser',
+      name: 'registerUser',
       parameters: <String, dynamic>{
         'token': token,
       },
     );
-    final user = UserEntity.fromJson(response['data']);
-    if (user is! AnonymousUserEntity) {
-      throw StateError(
-        'User with id(${user.uid}) is not anonymous. Why?',
-      );
-    }
-    return user;
+    return UserEntity.fromJson(response['data']);
   }
 }
 

@@ -15,3 +15,6 @@ runTests:
 
 sure:
 	make checkstyle && make runTests
+
+firebaseConfigs:
+	flutterfire configure --project=save-the-potato

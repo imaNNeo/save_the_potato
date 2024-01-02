@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:save_the_potato/data/sources/firebase_functions_wrapper.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 
@@ -11,29 +12,29 @@ class AuthRemoteDataSource {
     final UserCredential userCredential =
         await FirebaseAuth.instance.signInAnonymously();
     final idToken = (await userCredential.user!.getIdToken())!;
-    final user = await _functions.registerAnonymousUser(
-      idToken,
-    );
+    final user = await _functions.registerUser(idToken);
     return user;
   }
 
-  Future<UserEntity> signInWithGoogle() =>
-      _signInOrLinkWithProvider(GoogleAuthProvider());
+  Future<UserEntity> signInWithGoogle() => _signInOrLinkWithProvider(
+        GoogleAuthProvider().addScope('email'),
+      );
 
-  Future<UserEntity> signInWithApple() =>
-      _signInOrLinkWithProvider(AppleAuthProvider());
+  Future<UserEntity> signInWithApple() => _signInOrLinkWithProvider(
+        AppleAuthProvider().addScope('email'),
+      );
 
   Future<UserEntity> _signInOrLinkWithProvider(AuthProvider provider) async {
     final currentAnonymousUser = FirebaseAuth.instance.currentUser;
     UserCredential credential;
-    if (currentAnonymousUser != null) {
+    if (currentAnonymousUser != null && currentAnonymousUser.isAnonymous) {
       credential = await currentAnonymousUser.linkWithProvider(provider);
     } else {
       credential = await FirebaseAuth.instance.signInWithProvider(provider);
     }
-    // TODO: 12/31/23 We have to store it somewhere
-    // print(credential.credential);
-    // return UserEntity(credential.user!);
-    return AnonymousUserEntity(uid: 'asdf', nickname: 'adsf');
+    final email = credential.user!.email ?? 'email was empty';
+    await Clipboard.setData(ClipboardData(text: email));
+    final idToken = (await credential.user!.getIdToken())!;
+    return _functions.registerUser(idToken);
   }
 }

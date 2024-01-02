@@ -20,9 +20,15 @@ class AuthRepository {
 
   Future<bool> isSignedIn() => _authLocalDataSource.isSignedIn();
 
-  Future<UserEntity> signInWithGoogle() =>
-      _authRemoteDataSource.signInWithGoogle();
+  Future<UserEntity> signInWithGoogle() async {
+    final user = await _authRemoteDataSource.signInWithGoogle();
+    await _authLocalDataSource.saveUser(user);
+    return user;
+  }
 
-  Future<UserEntity> signInWithApple() =>
-      _authRemoteDataSource.signInWithApple();
+  Future<UserEntity> signInWithApple() async {
+    final user = await _authRemoteDataSource.signInWithApple();
+    await _authLocalDataSource.saveUser(user);
+    return user;
+  }
 }
