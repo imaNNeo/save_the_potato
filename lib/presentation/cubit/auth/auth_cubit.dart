@@ -31,12 +31,16 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   void login() async {
-    if (Platform.isAndroid) {
-      await _authRepository.signInWithGoogle();
-    } else if (Platform.isIOS) {
-      await _authRepository.signInWithApple();
-    } else {
-      throw Exception('Unsupported platform');
+    try {
+      if (Platform.isAndroid) {
+        await _authRepository.signInWithGoogle();
+      } else if (Platform.isIOS) {
+        await _authRepository.signInWithApple();
+      } else {
+        throw Exception('Unsupported platform');
+      }
+    } catch (e) {
+      print(e);
     }
   }
 }
