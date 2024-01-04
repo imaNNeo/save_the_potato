@@ -74,7 +74,8 @@ class MyApp extends StatelessWidget {
             titleTextStyle: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              letterSpacing: 4,
+              letterSpacing: 8,
+              fontFamily: 'Cookies',
             ),
             iconTheme: IconThemeData(
               color: Colors.white,

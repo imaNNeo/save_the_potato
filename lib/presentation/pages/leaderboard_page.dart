@@ -11,8 +11,7 @@ class LeaderboardPage extends StatefulWidget {
   const LeaderboardPage({super.key}) : super();
 
   @override
-  State<LeaderboardPage> createState() =>
-      _LeaderboardPageState();
+  State<LeaderboardPage> createState() => _LeaderboardPageState();
 }
 
 class _LeaderboardPageState extends State<LeaderboardPage> {
@@ -128,16 +127,20 @@ class ScoreRow extends StatelessWidget {
   Widget build(BuildContext context) {
     const height = 68.0;
     final isMine = scoreEntity.isMine;
+    final mineBorderColor = scoreEntity.rank <= 3
+        ? _getRankBgColor(scoreEntity.rank)
+        : Theme.of(context).colorScheme.primary;
+    final normalBorderColor = Theme.of(context).dividerColor.withOpacity(0.3);
     return Container(
       height: height,
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary,
-          width: isMine ? 3 : 1,
+          color: isMine ? mineBorderColor : normalBorderColor,
+          width: isMine ? 2 : 1,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
