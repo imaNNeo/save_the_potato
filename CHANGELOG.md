@@ -1,3 +1,6 @@
+## 0.11.0
+* Fixed leaderboard logic issues
+
 ## 0.10.0
 * Implement leaderboard
 
