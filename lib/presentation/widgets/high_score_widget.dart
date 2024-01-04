@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
-import 'package:save_the_potato/presentation/pages/leaderboard_page.dart';
+import 'package:save_the_potato/presentation/pages/leaderboard/leaderboard_page.dart';
 
 class HighScoreWidget extends StatelessWidget {
   const HighScoreWidget({super.key});

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:save_the_potato/presentation/pages/leaderboard_page.dart';
+import 'package:save_the_potato/presentation/pages/leaderboard/leaderboard_page.dart';
 import 'package:save_the_potato/presentation/dialogs/settings_dialog_content.dart';
 
 class BaseDialog extends AlertDialog {
