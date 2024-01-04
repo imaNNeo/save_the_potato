@@ -8,14 +8,6 @@ class AuthRemoteDataSource {
 
   AuthRemoteDataSource(this._functions);
 
-  Future<UserEntity> anonymousSignIn() async {
-    final UserCredential userCredential =
-        await FirebaseAuth.instance.signInAnonymously();
-    final idToken = (await userCredential.user!.getIdToken())!;
-    final user = await _functions.registerUser(idToken);
-    return user;
-  }
-
   Future<UserEntity> signInWithGoogle() => _signInOrLinkWithProvider(
         GoogleAuthProvider().addScope('email'),
       );
@@ -37,4 +29,6 @@ class AuthRemoteDataSource {
     final idToken = (await credential.user!.getIdToken())!;
     return _functions.registerUser(idToken);
   }
+
+  Future<UserEntity> registerAnonymously() => _functions.registerAnonymousUser();
 }

@@ -5,6 +5,7 @@ import 'package:save_the_potato/data/key_value_storage.dart';
 import 'package:save_the_potato/data/sources/auth_local_data_source.dart';
 import 'package:save_the_potato/data/sources/auth_remote_data_source.dart';
 import 'package:save_the_potato/data/sources/firebase_functions_wrapper.dart';
+import 'package:save_the_potato/data/sources/scores_remote_data_source.dart';
 import 'package:save_the_potato/data/sources/settings_data_source.dart';
 import 'package:save_the_potato/domain/repository/settings_repository.dart';
 
@@ -48,6 +49,11 @@ Future<void> setupServiceLocator() async {
       getIt.get<KeyValueStorage>(),
     ),
   );
+  getIt.registerLazySingleton<ScoresRemoteDataSource>(
+    () => ScoresRemoteDataSource(
+      getIt.get<FirebaseFunctionsWrapper>(),
+    ),
+  );
 
   // Repositories
   getIt.registerLazySingleton<SettingsRepository>(
@@ -60,7 +66,10 @@ Future<void> setupServiceLocator() async {
     ),
   );
   getIt.registerLazySingleton<ScoresRepository>(
-    () => ScoresRepository(getIt.get<ScoresLocalDataSource>()),
+    () => ScoresRepository(
+      getIt.get<ScoresLocalDataSource>(),
+      getIt.get<ScoresRemoteDataSource>(),
+    ),
   );
 }
 

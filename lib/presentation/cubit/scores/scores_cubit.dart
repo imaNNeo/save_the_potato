@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/models/high_score_bundle.dart';
+import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
 
@@ -22,26 +23,36 @@ class ScoresCubit extends Cubit<ScoresState> {
   Future<void> initialize() async {
     _highScoreSubscription =
         _scoreRepository.getHighScoreStream().listen((event) {
-          emit(state.copyWith(
-            highScore: ValueWrapper(event),
-          ));
-        });
+      emit(state.copyWith(
+        highScore: ValueWrapper(event),
+      ));
+    });
     await reloadHighScore();
   }
 
   Future<void> reloadHighScore() async {
-    final highScore = await _scoreRepository.getHighScore();
+    final highScore = await _scoreRepository.syncHighScore();
     emit(state.copyWith(
       highScore: ValueWrapper(highScore),
     ));
   }
 
-  void updateHighScore(int newScoreMilliseconds) async {
-    if (newScoreMilliseconds <= (state.highScore?.highScore ?? 0)) {
-      return;
+  void tryToRefreshLeaderboard() async {
+    try {
+      emit(state.copyWith(
+        leaderboardLoading: true,
+      ));
+      final leaderboard = await _scoreRepository.getLeaderboard();
+      emit(state.copyWith(
+        leaderboard: ValueWrapper(leaderboard),
+        leaderboardLoading: false,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        leaderBoardError: e.toString(),
+        leaderboardLoading: false,
+      ));
     }
-    await _scoreRepository.saveScore(newScoreMilliseconds);
-    await reloadHighScore();
   }
 
   @override

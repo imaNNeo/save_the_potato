@@ -23,7 +23,7 @@ class ScoresLocalDataSource {
     }
   }
 
-  Future<void> setHighScore(int highScoreMilliseconds) async {
+  Future<HighScoreBundleEntity> setHighScore(int highScoreMilliseconds) async {
     final bundle = HighScoreBundleEntity(
       version: 1,
       highScore: highScoreMilliseconds,
@@ -34,5 +34,6 @@ class ScoresLocalDataSource {
       'high_score',
       bundle.serialize(),
     );
+    return bundle;
   }
 }

@@ -2,71 +2,95 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/app_utils.dart';
+import 'package:save_the_potato/domain/extensions/string_extensions.dart';
+import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
+import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 
-class LeaderboardDialogContent extends StatelessWidget {
+class LeaderboardDialogContent extends StatefulWidget {
   const LeaderboardDialogContent({super.key}) : super();
 
   @override
+  State<LeaderboardDialogContent> createState() =>
+      _LeaderboardDialogContentState();
+}
+
+class _LeaderboardDialogContentState extends State<LeaderboardDialogContent> {
+  @override
+  void initState() {
+    context.read<ScoresCubit>().tryToRefreshLeaderboard();
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
-      builder: (context, state) {
-        return Container(
-          constraints: BoxConstraints(
-            maxWidth: 400,
-            maxHeight: state.isAnonymous ? 320 : 680,
-          ),
-          width: double.infinity,
-          child: Stack(
-            children: [
-              // ListView.builder(
-              //   itemBuilder: (context, index) {
-              //     return ScoreRow(
-              //       playerName: 'Player $index',
-              //       playerScore: '00:0$index',
-              //       isMe: index == 0,
-              //     );
-              //   },
-              //   itemCount: 10,
-              // ),
-              ClipRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-                  child: Container(
-                    color: Colors.transparent,
-                  ),
-                ),
+    return BlocBuilder<ScoresCubit, ScoresState>(
+      builder: (context, scoresState) {
+        final leaderboard = scoresState.leaderboard;
+        return BlocBuilder<AuthCubit, AuthState>(
+          builder: (context, authState) {
+            return Container(
+              constraints: BoxConstraints(
+                maxWidth: 400,
+                maxHeight: authState.isAnonymous ? 320 : 680,
               ),
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 24,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.emoji_events_outlined,
-                        size: 104,
-                        color: Colors.yellow,
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'LOGIN TO SAVE YOUR SCORE',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: context.read<AuthCubit>().login,
-                        child: const Text('LOGIN'),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            ],
-          ),
+              width: double.infinity,
+              child: Stack(
+                children: [
+                  if (scoresState.leaderBoardError.isNotBlank)
+                    Text(scoresState.leaderBoardError),
+                  if (leaderboard != null)
+                    ListView.builder(
+                      itemBuilder: (context, index) {
+                        return ScoreRow(
+                          scoreEntity: leaderboard.scores[index],
+                        );
+                      },
+                      itemCount: leaderboard.scores.length,
+                    ),
+                  if (leaderboard != null &&
+                      leaderboard.scores.isEmpty &&
+                      !scoresState.leaderboardLoading)
+                    const Center(
+                      child: Text('No score found!'),
+                    ),
+                  // Center(
+                  //   child: Padding(
+                  //     padding: const EdgeInsets.symmetric(
+                  //       horizontal: 16.0,
+                  //       vertical: 24,
+                  //     ),
+                  //     child: Column(
+                  //       mainAxisSize: MainAxisSize.min,
+                  //       children: [
+                  //         const Icon(
+                  //           Icons.emoji_events_outlined,
+                  //           size: 104,
+                  //           color: Colors.yellow,
+                  //         ),
+                  //         const SizedBox(height: 16),
+                  //         const Text(
+                  //           'LOGIN TO SAVE YOUR SCORE',
+                  //           style: TextStyle(color: Colors.white, fontSize: 16),
+                  //         ),
+                  //         const SizedBox(height: 16),
+                  //         ElevatedButton(
+                  //           onPressed: context.read<AuthCubit>().login,
+                  //           child: const Text('LOGIN'),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  // ),
+                  if (scoresState.leaderboardLoading)
+                    const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
@@ -76,14 +100,10 @@ class LeaderboardDialogContent extends StatelessWidget {
 class ScoreRow extends StatelessWidget {
   const ScoreRow({
     super.key,
-    required this.playerName,
-    required this.playerScore,
-    required this.isMe,
+    required this.scoreEntity,
   }) : super();
 
-  final String playerName;
-  final String playerScore;
-  final bool isMe;
+  final ScoreEntity scoreEntity;
 
   @override
   Widget build(BuildContext context) {
@@ -94,26 +114,32 @@ class ScoreRow extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border.all(
           color: Theme.of(context).colorScheme.primary,
-          width: isMe ? 4 : 1,
+          width: scoreEntity.isMine ? 4 : 1,
         ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
           Text(
-            playerName,
+            scoreEntity.nickname,
             style: TextStyle(
-              color: isMe ? Colors.white : Colors.white.withOpacity(0.8),
-              fontWeight: isMe ? FontWeight.bold : FontWeight.normal,
+              color: scoreEntity.isMine
+                  ? Colors.white
+                  : Colors.white.withOpacity(0.8),
+              fontWeight:
+                  scoreEntity.isMine ? FontWeight.bold : FontWeight.normal,
               fontSize: 16,
             ),
           ),
           Expanded(child: Container()),
           Text(
-            playerScore,
+            AppUtils.getHighScoreRepresentation(scoreEntity.score),
             style: TextStyle(
-              color: isMe ? Colors.white : Colors.white.withOpacity(0.8),
-              fontWeight: isMe ? FontWeight.bold : FontWeight.normal,
+              color: scoreEntity.isMine
+                  ? Colors.white
+                  : Colors.white.withOpacity(0.8),
+              fontWeight:
+                  scoreEntity.isMine ? FontWeight.bold : FontWeight.normal,
               fontSize: 16,
             ),
           ),

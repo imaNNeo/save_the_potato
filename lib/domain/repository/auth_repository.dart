@@ -13,9 +13,7 @@ class AuthRepository {
     if (currentUser != null) {
       return currentUser;
     }
-    final anonymousUser = await _authRemoteDataSource.anonymousSignIn();
-    await _authLocalDataSource.saveUser(anonymousUser);
-    return anonymousUser;
+    return _authRemoteDataSource.registerAnonymously();
   }
 
   Future<bool> isSignedIn() => _authLocalDataSource.isSignedIn();

@@ -1,18 +1,47 @@
+import 'dart:convert';
+
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:save_the_potato/data/key_value_storage.dart';
 import 'package:save_the_potato/domain/extensions/map_entries_list_extensions.dart';
+import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
+import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 
 class FirebaseFunctionsWrapper {
   final KeyValueStorage _storage;
   static const _region = 'us-central1';
+  static const userKey = 'user';
 
   FirebaseFunctionsWrapper(this._storage) {
     // if (kDebugMode) {
     //   /// Use the emulator for Cloud Functions if running locally
     //   FirebaseFunctions.instance.useFunctionsEmulator('localhost', 5001);
     // }
+  }
+
+  Future<UserEntity> registerAnonymousUser() async {
+    final UserCredential userCredential =
+        await FirebaseAuth.instance.signInAnonymously();
+    final idToken = (await userCredential.user!.getIdToken())!;
+    final user = await registerUser(idToken);
+    await _storage.setString(userKey, jsonEncode(user.toJson()));
+    return user;
+  }
+
+  Future<String> _getAuthToken() async {
+    if (FirebaseAuth.instance.currentUser == null ||
+        (await _storage.getString(userKey)) == null) {
+      await registerAnonymousUser();
+    }
+    final token = await FirebaseAuth.instance.currentUser!.getIdToken();
+    if (token == null) {
+      await FirebaseAuth.instance.signOut();
+      await _storage.remove(userKey);
+      throw StateError('User token is null? why?');
+    }
+    return token;
   }
 
   Future<dynamic> _callFunction<T>({
@@ -23,6 +52,12 @@ class FirebaseFunctionsWrapper {
     if (kDebugMode) {
       debugPrint('\n-> firebase functions ($name):');
       debugPrint('$parameters');
+    }
+    try {
+      parameters ??= <String, dynamic>{};
+      parameters['token'] = await _getAuthToken();
+    } catch (e) {
+      debugPrint('Error getting auth token: $e');
     }
     final response = await FirebaseFunctions.instanceFor(region: _region)
         .httpsCallable(name)
@@ -42,13 +77,34 @@ class FirebaseFunctionsWrapper {
   }
 
   Future<UserEntity> registerUser(String token) async {
+    final response = await _callFunction(name: 'registerUser', parameters: {
+      'token': token,
+    });
+    return UserEntity.fromJson(response['data']);
+  }
+
+  Future<ScoreEntity> submitScore(int score) async {
     final response = await _callFunction(
-      name: 'registerUser',
+      name: 'submitScore',
       parameters: <String, dynamic>{
-        'token': token,
+        'score': score,
       },
     );
-    return UserEntity.fromJson(response['data']);
+    return ScoreEntity.fromJson(response['data']);
+  }
+
+  Future<ScoreEntity?> getScore() async {
+    try {
+      final response = await _callFunction(name: 'getScore');
+      return ScoreEntity.fromJson(response['data']);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<LeaderboardEntity> getLeaderboard() async {
+    final response = await _callFunction(name: 'getLeaderboard');
+    return LeaderboardEntity.fromJson(response['data']);
   }
 }
 

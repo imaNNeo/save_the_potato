@@ -6,6 +6,8 @@ extension StringExtensions on String {
   int get asInt => int.parse(this);
 
   bool get isBlank => trim().isEmpty;
+
+  bool get isNotBlank => isBlank;
 }
 
 extension NullableStringExtension on String? {
