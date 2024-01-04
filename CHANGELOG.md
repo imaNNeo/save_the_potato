@@ -1,3 +1,6 @@
+## 0.10.0
+* Implement leaderboard
+
 ## 0.9.0
 * Implement authentication
 * Add high-score (leaderboard) button on the top-left of the page
