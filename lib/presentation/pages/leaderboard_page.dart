@@ -59,34 +59,6 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                     const Center(
                       child: Text('No score found!'),
                     ),
-                  // Center(
-                  //   child: Padding(
-                  //     padding: const EdgeInsets.symmetric(
-                  //       horizontal: 16.0,
-                  //       vertical: 24,
-                  //     ),
-                  //     child: Column(
-                  //       mainAxisSize: MainAxisSize.min,
-                  //       children: [
-                  //         const Icon(
-                  //           Icons.emoji_events_outlined,
-                  //           size: 104,
-                  //           color: Colors.yellow,
-                  //         ),
-                  //         const SizedBox(height: 16),
-                  //         const Text(
-                  //           'LOGIN TO SAVE YOUR SCORE',
-                  //           style: TextStyle(color: Colors.white, fontSize: 16),
-                  //         ),
-                  //         const SizedBox(height: 16),
-                  //         ElevatedButton(
-                  //           onPressed: context.read<AuthCubit>().login,
-                  //           child: const Text('LOGIN'),
-                  //         ),
-                  //       ],
-                  //     ),
-                  //   ),
-                  // ),
                   if (scoresState.leaderboardLoading)
                     const Center(
                       child: CircularProgressIndicator(),
