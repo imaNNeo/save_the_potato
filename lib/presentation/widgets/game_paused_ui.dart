@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 import 'package:save_the_potato/presentation/widgets/game_round_button.dart';
 
@@ -20,7 +21,28 @@ class GamePausedUI extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Expanded(
-                flex: 4,
+                flex: 8,
+                child: Container(),
+              ),
+              const Text(
+                'Current Score',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  letterSpacing: 2,
+                ),
+              ),
+              Text(
+                AppUtils.getHighScoreRepresentation(
+                    (gameCubit.state.timePassed * 1000).toInt()),
+                style: const TextStyle(
+                  fontSize: 38,
+                  color: Colors.white,
+                ),
+              ),
+              Expanded(
+                flex: 2,
                 child: Container(),
               ),
               const Text(
@@ -40,7 +62,7 @@ class GamePausedUI extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Expanded(
-                flex: 3,
+                flex: 8,
                 child: Container(),
               ),
               TextButton(
