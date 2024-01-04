@@ -50,18 +50,35 @@ class FirebaseFunctionsWrapper {
     return user;
   }
 
+  Completer<String>? _authTokenCompleter;
   Future<String> _getAuthToken() async {
-    if (FirebaseAuth.instance.currentUser == null ||
-        (await _storage.getString(userKey)) == null) {
-      await tryToRegisterAnonymousUser();
+    if (_authTokenCompleter != null && !_authTokenCompleter!.isCompleted) {
+      return _authTokenCompleter!.future;
     }
-    final token = await FirebaseAuth.instance.currentUser!.getIdToken();
-    if (token == null) {
-      await FirebaseAuth.instance.signOut();
-      await _storage.remove(userKey);
-      throw StateError('User token is null? why?');
+    _authTokenCompleter = Completer();
+    try {
+      if (FirebaseAuth.instance.currentUser == null ||
+          (await _storage.getString(userKey)) == null) {
+        await tryToRegisterAnonymousUser();
+      }
+      String? token;
+      try {
+        token = await FirebaseAuth.instance.currentUser!.getIdToken();
+      } catch (e) {
+        await tryToRegisterAnonymousUser();
+        token = await FirebaseAuth.instance.currentUser!.getIdToken();
+      }
+      if (token == null) {
+        await FirebaseAuth.instance.signOut();
+        await _storage.remove(userKey);
+        throw StateError('User token is null? why?');
+      }
+      _authTokenCompleter!.complete(token);
+      return token;
+    } catch (e) {
+      _authTokenCompleter!.completeError(e);
+      rethrow;
     }
-    return token;
   }
 
   Future<dynamic> _callFunction<T>({
@@ -83,6 +100,7 @@ class FirebaseFunctionsWrapper {
         debugPrint('Error getting auth token: $e');
       }
     }
+
     final response = await FirebaseFunctions.instanceFor(region: _region)
         .httpsCallable(name)
         .call(parameters);

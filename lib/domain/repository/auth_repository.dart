@@ -8,7 +8,11 @@ class AuthRepository {
 
   AuthRepository(this._authLocalDataSource, this._authRemoteDataSource);
 
+  Stream<UserEntity?> getUserStream() =>
+      _authLocalDataSource.getUserStream();
+      
   Future<UserEntity> getCurrentUser() async {
+    await _authRemoteDataSource.reloadUser();
     final currentUser = await _authLocalDataSource.getUser();
     if (currentUser != null) {
       return currentUser;

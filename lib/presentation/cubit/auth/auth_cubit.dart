@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
@@ -18,6 +19,8 @@ class AuthCubit extends Cubit<AuthState> {
 
   final AuthRepository _authRepository;
 
+  late StreamSubscription _userStreamSubscription;
+
   void initialize() async {
     try {
       final user = await _authRepository.getCurrentUser();
@@ -29,6 +32,14 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       debugPrint(e.toString());
     }
+
+    _userStreamSubscription = _authRepository.getUserStream().listen((event) {
+      emit(
+        state.copyWith(
+          user: ValueWrapper(event),
+        ),
+      );
+    });
   }
 
   void login() async {
@@ -43,5 +54,11 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       debugPrint(e.toString());
     }
+  }
+
+  @override
+  Future<void> close() {
+    _userStreamSubscription.cancel();
+    return super.close();
   }
 }

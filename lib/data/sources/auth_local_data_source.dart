@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:save_the_potato/data/key_value_storage.dart';
 import 'package:save_the_potato/data/sources/firebase_functions_wrapper.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
@@ -12,6 +13,17 @@ class AuthLocalDataSource {
 
   Future<void> saveUser(UserEntity user) async {
     await _storage.setString(userKey, jsonEncode(user.toJson()));
+  }
+
+  Stream<UserEntity?> getUserStream() {
+    return _storage.watch(userKey).map((value) {
+      try {
+        final userMap = jsonDecode(value) as Map<String, dynamic>;
+        return UserEntity.fromJson(userMap);
+      } catch (e) {
+        return null;
+      }
+    });
   }
 
   Future<UserEntity?> getUser() async {
