@@ -35,6 +35,13 @@ class MyScore extends StatelessWidget {
           top: borderSide,
           right: borderSide,
         ),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black38,
+            blurRadius: 40,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: SafeArea(
         child: Padding(
@@ -50,13 +57,19 @@ class MyScore extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: Text(
-                  scoreEntity.nickname,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    fontFamily: 'RobotoMono',
+                child: InkWell(
+                  child: Row(
+                    children: [
+                      Text(
+                        scoreEntity.nickname,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          fontFamily: 'RobotoMono',
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

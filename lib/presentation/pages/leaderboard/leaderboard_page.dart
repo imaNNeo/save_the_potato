@@ -18,6 +18,9 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
   @override
   void initState() {
     context.read<ScoresCubit>().tryToRefreshLeaderboard();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ScoresCubit>().tryToRefreshLeaderboard();
+    });
     super.initState();
   }
 
@@ -44,14 +47,21 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                   if (scoresState.leaderBoardError.isNotBlank)
                     Text(scoresState.leaderBoardError),
                   if (leaderboard != null)
-                    ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemBuilder: (context, index) {
-                        return ScoreRow(
-                          scoreEntity: leaderboard.scores[index],
-                        );
-                      },
-                      itemCount: leaderboard.scores.length,
+                    SafeArea(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.only(
+                          left: 16,
+                          top: 16.0,
+                          right: 16.0,
+                          bottom: 96,
+                        ),
+                        itemBuilder: (context, index) {
+                          return ScoreRow(
+                            scoreEntity: leaderboard.scores[index],
+                          );
+                        },
+                        itemCount: leaderboard.scores.length,
+                      ),
                     ),
                   if (leaderboard != null &&
                       leaderboard.scores.isEmpty &&
