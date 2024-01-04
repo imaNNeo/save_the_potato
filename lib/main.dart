@@ -67,7 +67,22 @@ class MyApp extends StatelessWidget {
           textTheme: ThemeData.dark().textTheme.apply(
                 fontFamily: 'Cookies',
               ),
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            titleTextStyle: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 4,
+            ),
+            iconTheme: IconThemeData(
+              color: Colors.white,
+            ),
+          ),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.blue,
+          ),
         ),
         home: const MainPage(),
       ),

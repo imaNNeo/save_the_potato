@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
+import 'package:save_the_potato/presentation/pages/leaderboard_page.dart';
 
 class HighScoreWidget extends StatelessWidget {
   const HighScoreWidget({super.key});
@@ -14,7 +16,14 @@ class HighScoreWidget extends StatelessWidget {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => BaseDialog.showLeaderboardDialog(context),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const LeaderboardPage(),
+                  ),
+                );
+                context.read<GameCubit>().pauseGame();
+              },
               borderRadius: BorderRadius.circular(16),
               child: Padding(
                 padding: const EdgeInsets.only(
