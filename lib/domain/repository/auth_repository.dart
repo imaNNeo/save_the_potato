@@ -13,7 +13,7 @@ class AuthRepository {
     if (currentUser != null) {
       return currentUser;
     }
-    return _authRemoteDataSource.registerAnonymously();
+    return _authRemoteDataSource.tryToRegisterAnonymously();
   }
 
   Future<bool> isSignedIn() => _authLocalDataSource.isSignedIn();

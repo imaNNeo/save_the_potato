@@ -30,5 +30,6 @@ class AuthRemoteDataSource {
     return _functions.registerUser(idToken);
   }
 
-  Future<UserEntity> registerAnonymously() => _functions.registerAnonymousUser();
+  Future<UserEntity> tryToRegisterAnonymously() =>
+      _functions.tryToRegisterAnonymousUser();
 }

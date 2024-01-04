@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_functions/cloud_functions.dart';
@@ -21,7 +22,26 @@ class FirebaseFunctionsWrapper {
     // }
   }
 
-  Future<UserEntity> registerAnonymousUser() async {
+  // I need to synchronize this function (locking it) because there might be a situation where we have duplicate calls
+  Completer<UserEntity>? _registerAnonymousUserCompleter;
+  Future<UserEntity> tryToRegisterAnonymousUser() async {
+    if (_registerAnonymousUserCompleter != null &&
+        !_registerAnonymousUserCompleter!.isCompleted) {
+      return _registerAnonymousUserCompleter!.future;
+    }
+    _registerAnonymousUserCompleter = Completer();
+    _registerAnonymousUser()
+        .then((user) => _registerAnonymousUserCompleter!.complete(user))
+        .onError(
+          (error, stackTrace) => _registerAnonymousUserCompleter!.completeError(
+            error ?? StateError('Unknown error'),
+            stackTrace,
+          ),
+        );
+    return _registerAnonymousUserCompleter!.future;
+  }
+
+  Future<UserEntity> _registerAnonymousUser() async {
     final UserCredential userCredential =
         await FirebaseAuth.instance.signInAnonymously();
     final idToken = (await userCredential.user!.getIdToken())!;
@@ -33,7 +53,7 @@ class FirebaseFunctionsWrapper {
   Future<String> _getAuthToken() async {
     if (FirebaseAuth.instance.currentUser == null ||
         (await _storage.getString(userKey)) == null) {
-      await registerAnonymousUser();
+      await tryToRegisterAnonymousUser();
     }
     final token = await FirebaseAuth.instance.currentUser!.getIdToken();
     if (token == null) {
@@ -46,18 +66,22 @@ class FirebaseFunctionsWrapper {
 
   Future<dynamic> _callFunction<T>({
     required String name,
-    dynamic parameters,
+    Map<String, dynamic>? parameters,
     bool returnFullResponse = false,
   }) async {
     if (kDebugMode) {
       debugPrint('\n-> firebase functions ($name):');
       debugPrint('$parameters');
     }
-    try {
-      parameters ??= <String, dynamic>{};
-      parameters['token'] = await _getAuthToken();
-    } catch (e) {
-      debugPrint('Error getting auth token: $e');
+    parameters ??= <String, dynamic>{};
+
+    const tokenKey = 'token';
+    if (!parameters.containsKey(tokenKey)) {
+      try {
+        parameters['token'] = await _getAuthToken();
+      } catch (e) {
+        debugPrint('Error getting auth token: $e');
+      }
     }
     final response = await FirebaseFunctions.instanceFor(region: _region)
         .httpsCallable(name)
