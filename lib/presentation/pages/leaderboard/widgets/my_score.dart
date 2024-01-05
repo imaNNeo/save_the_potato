@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
+import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
 
 import 'score_rank_number.dart';
@@ -23,12 +24,13 @@ class MyScore extends StatelessWidget {
       ),
       width: 2,
     );
+    const borderRadius = Radius.circular(16);
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
+          topLeft: borderRadius,
+          topRight: borderRadius,
         ),
         border: Border(
           left: borderSide,
@@ -44,44 +46,54 @@ class MyScore extends StatelessWidget {
         ],
       ),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 18.0,
-            vertical: 18.0,
-          ),
-          child: Row(
-            children: [
-              ScoreRankNumber(
-                rank: scoreEntity.rank,
-                size: 48,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: const BorderRadius.only(
+              topLeft: borderRadius,
+              topRight: borderRadius,
+            ),
+            onTap: () => BaseDialog.showNicknameDialog(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 18.0,
+                vertical: 18.0,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: InkWell(
-                  child: Row(
-                    children: [
-                      Text(
-                        scoreEntity.nickname,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          fontFamily: 'RobotoMono',
-                        ),
-                      ),
-                    ],
+              child: Row(
+                children: [
+                  ScoreRankNumber(
+                    rank: scoreEntity.rank,
+                    size: 48,
                   ),
-                ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: InkWell(
+                      child: Row(
+                        children: [
+                          Text(
+                            scoreEntity.nickname,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              fontFamily: 'RobotoMono',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Text(
+                    AppUtils.getHighScoreRepresentation(scoreEntity.score),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                AppUtils.getHighScoreRepresentation(scoreEntity.score),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

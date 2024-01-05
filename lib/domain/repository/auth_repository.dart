@@ -33,4 +33,10 @@ class AuthRepository {
     await _authLocalDataSource.saveUser(user);
     return user;
   }
+
+  Future<UserEntity> updateUserNickname(String nickname) async {
+    final user = await _authRemoteDataSource.updateUserNickname(nickname);
+    await _authLocalDataSource.saveUser(user);
+    return user;
+  }
 }

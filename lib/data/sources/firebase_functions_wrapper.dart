@@ -148,6 +148,16 @@ class FirebaseFunctionsWrapper {
     final response = await _callFunction(name: 'getLeaderboard');
     return LeaderboardEntity.fromJson(response['data']);
   }
+
+  Future<UserEntity> updateUserNickname(String nickname) async {
+    final response = await _callFunction(
+      name: 'updateUserNickname',
+      parameters: <String, dynamic>{
+        'nickname': nickname,
+      },
+    );
+    return UserEntity.fromJson(response['data']);
+  }
 }
 
 class _FirebaseFunctionsResponseParser {

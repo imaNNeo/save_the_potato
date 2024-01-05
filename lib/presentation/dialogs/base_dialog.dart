@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:save_the_potato/presentation/dialogs/nickname_dialog_content.dart';
 import 'package:save_the_potato/presentation/pages/leaderboard/leaderboard_page.dart';
 import 'package:save_the_potato/presentation/dialogs/settings_dialog_content.dart';
 
@@ -35,6 +36,17 @@ class BaseDialog extends AlertDialog {
         context: context,
         title: 'Settings',
         content: const SettingsDialogContent(),
+      ),
+    );
+  }
+
+  static void showNicknameDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => BaseDialog(
+        context: context,
+        title: 'Nickname:',
+        content: const NicknameDialogContent(),
       ),
     );
   }

@@ -61,4 +61,33 @@ class AuthCubit extends Cubit<AuthState> {
     _userStreamSubscription.cancel();
     return super.close();
   }
+
+  void updateNickname(String newNickname) async {
+    if (newNickname == state.user?.nickname) {
+      return;
+    }
+    emit(state.copyWith(updateUserLoading: true));
+    try {
+      final user = await _authRepository.updateUserNickname(
+        newNickname,
+      );
+      emit(
+        state.copyWith(
+          user: ValueWrapper(user),
+          updateUserLoading: false,
+          updateUserSucceeds: 'Nickname updated',
+        ),
+      );
+      emit(state.copyWith(updateUserSucceeds: ''));
+    } catch (e) {
+      debugPrint(e.toString());
+      emit(
+        state.copyWith(
+          updateUserLoading: false,
+          updateUserError: 'Nickname update failed, please try again later!',
+        ),
+      );
+      emit(state.copyWith(updateUserError: ''));
+    }
+  }
 }
