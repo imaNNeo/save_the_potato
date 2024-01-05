@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
+import 'package:toastification/toastification.dart';
+
 
 class NicknameDialogContent extends StatefulWidget {
   const NicknameDialogContent({super.key}) : super();
@@ -23,12 +24,19 @@ class _NicknameDialogContentState extends State<NicknameDialogContent> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthCubit, AuthState>(
-      listener: (context, state) {
+      listener: (_, state) {
         if (state.updateUserError.isNotEmpty) {
-          AppUtils.showWarningToast(context, state.updateUserError);
+          state.updateUserError.showAsToast(
+            context,
+            alignment: Alignment.topCenter,
+            type: ToastificationType.warning,
+          );
         }
         if (state.updateUserSucceeds.isNotEmpty) {
-          AppUtils.showSuccessToast(context, state.updateUserSucceeds);
+          state.updateUserSucceeds.showAsToast(
+            context,
+            type: ToastificationType.success,
+          );
           Navigator.of(context).pop();
         }
       },

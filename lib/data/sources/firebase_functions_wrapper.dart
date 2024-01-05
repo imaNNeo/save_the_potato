@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:save_the_potato/data/key_value_storage.dart';
 import 'package:save_the_potato/domain/extensions/map_entries_list_extensions.dart';
+import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
@@ -86,36 +87,40 @@ class FirebaseFunctionsWrapper {
     Map<String, dynamic>? parameters,
     bool returnFullResponse = false,
   }) async {
-    if (kDebugMode) {
-      debugPrint('\n-> firebase functions ($name):');
-      debugPrint('$parameters');
-    }
-    parameters ??= <String, dynamic>{};
-
-    const tokenKey = 'token';
-    if (!parameters.containsKey(tokenKey)) {
-      try {
-        parameters['token'] = await _getAuthToken();
-      } catch (e) {
-        debugPrint('Error getting auth token: $e');
+    try {
+      if (kDebugMode) {
+        debugPrint('\n-> firebase functions ($name):');
+        debugPrint('$parameters');
       }
-    }
+      parameters ??= <String, dynamic>{};
 
-    final response = await FirebaseFunctions.instanceFor(region: _region)
-        .httpsCallable(name)
-        .call(parameters);
-    final parsedResponse = _FirebaseFunctionsResponseParser.parseResponse(
-      response.data,
-    );
-    if (kDebugMode) {
-      debugPrint('\n<- firebase functions ($name):');
-      debugPrint('$parsedResponse');
-    }
-    if (parsedResponse is! Map<String, dynamic>) {
-      // Primitive types maybe?
+      const tokenKey = 'token';
+      if (!parameters.containsKey(tokenKey)) {
+        try {
+          parameters['token'] = await _getAuthToken();
+        } catch (e) {
+          debugPrint('Error getting auth token: $e');
+        }
+      }
+
+      final response = await FirebaseFunctions.instanceFor(region: _region)
+          .httpsCallable(name)
+          .call(parameters);
+      final parsedResponse = _FirebaseFunctionsResponseParser.parseResponse(
+        response.data,
+      );
+      if (kDebugMode) {
+        debugPrint('\n<- firebase functions ($name):');
+        debugPrint('$parsedResponse');
+      }
+      if (parsedResponse is! Map<String, dynamic>) {
+        // Primitive types maybe?
+        return parsedResponse;
+      }
       return parsedResponse;
+    } catch (e) {
+      throw _mapToDomainError(e);
     }
-    return parsedResponse;
   }
 
   Future<UserEntity> registerUser(String token) async {
@@ -216,4 +221,23 @@ class _FirebaseFunctionsResponseParser {
       })
       .toList()
       .toMap();
+}
+
+DomainError _mapToDomainError(exception) {
+  if (exception is DomainError) {
+    return exception;
+  }
+  if (exception is FirebaseFunctionsException) {
+    /// I don't know why it is -1004, but it is for network connection error
+    if (exception.code == '-1004') {
+      return NetworkError();
+    }
+    return ServerError(
+      errorEntry: ServerErrorEntry(
+        exception.message,
+        exception.details,
+      ),
+    );
+  }
+  return UnknownError();
 }

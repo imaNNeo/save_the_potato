@@ -4,22 +4,22 @@ class AuthState extends Equatable {
   const AuthState({
     this.user,
     this.updateUserLoading = false,
-    this.updateUserError = '',
-    this.updateUserSucceeds = '',
+    this.updateUserError = PresentationMessage.empty,
+    this.updateUserSucceeds = PresentationMessage.empty,
   });
 
   final UserEntity? user;
   final bool updateUserLoading;
-  final String updateUserError;
-  final String updateUserSucceeds;
+  final PresentationMessage updateUserError;
+  final PresentationMessage updateUserSucceeds;
 
   bool get isAnonymous => user == null || user!.type == UserType.anonymous;
 
   AuthState copyWith({
     ValueWrapper<UserEntity>? user,
     bool? updateUserLoading,
-    String? updateUserError,
-    String? updateUserSucceeds,
+    PresentationMessage? updateUserError,
+    PresentationMessage? updateUserSucceeds,
   }) {
     return AuthState(
       user: user != null ? user.value : this.user,

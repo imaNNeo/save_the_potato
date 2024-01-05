@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/models/presentation_message.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/auth_repository.dart';
@@ -75,19 +76,23 @@ class AuthCubit extends Cubit<AuthState> {
         state.copyWith(
           user: ValueWrapper(user),
           updateUserLoading: false,
-          updateUserSucceeds: 'Nickname updated',
+          updateUserSucceeds: PresentationMessage.raw('Nickname updated'),
         ),
       );
-      emit(state.copyWith(updateUserSucceeds: ''));
+      emit(state.copyWith(
+        updateUserSucceeds: PresentationMessage.empty,
+      ));
     } catch (e) {
       debugPrint(e.toString());
       emit(
         state.copyWith(
           updateUserLoading: false,
-          updateUserError: 'Nickname update failed, please try again later!',
+          updateUserError: PresentationMessage.fromError(e),
         ),
       );
-      emit(state.copyWith(updateUserError: ''));
+      emit(state.copyWith(
+        updateUserError: PresentationMessage.empty,
+      ));
     }
   }
 }
