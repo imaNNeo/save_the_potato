@@ -6,7 +6,7 @@ import 'package:flame/extensions.dart';
 import 'package:flame/particles.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:save_the_potato/domain/game_configs.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/extensions/list_extension.dart';
 import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 
@@ -35,8 +35,8 @@ class Orb extends PositionComponent
   double get radius => size.x / 2;
 
   List<Color> get colors => switch (type) {
-        TemperatureType.hot => GameConfigs.hotColors,
-        TemperatureType.cold => GameConfigs.coldColors,
+        TemperatureType.hot => GameConstants.hotColors,
+        TemperatureType.cold => GameConstants.coldColors,
       };
 
   List<Sprite> _sparkleSprites = [];

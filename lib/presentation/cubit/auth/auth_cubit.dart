@@ -7,6 +7,7 @@ import 'package:save_the_potato/domain/models/presentation_message.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/auth_repository.dart';
+import 'package:save_the_potato/domain/repository/configs_repository.dart';
 
 part 'auth_state.dart';
 
@@ -15,11 +16,13 @@ typedef _AuthFunction = Future<UserEntity> Function();
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit(
     this._authRepository,
+    this._configsRepository,
   ) : super(const AuthState()) {
     initialize();
   }
 
   final AuthRepository _authRepository;
+  final ConfigsRepository _configsRepository;
 
   late StreamSubscription _userStreamSubscription;
 
@@ -75,16 +78,32 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  @override
-  Future<void> close() {
-    _userStreamSubscription.cancel();
-    return super.close();
-  }
-
   void updateNickname(String newNickname) async {
     if (newNickname == state.user?.nickname) {
       return;
     }
+
+    final config = await _configsRepository.getGameConfig();
+    if (newNickname.length < config.nicknameMinLength ) {
+      emit(state.copyWith(
+        updateUserError: PresentationMessage.raw('Nickname is too short'),
+      ));
+      emit(state.copyWith(
+        updateUserError: PresentationMessage.empty,
+      ));
+      return;
+    }
+
+    if (newNickname.length > config.nicknameMaxLength) {
+      emit(state.copyWith(
+        updateUserError: PresentationMessage.raw('Nickname is too long'),
+      ));
+      emit(state.copyWith(
+        updateUserError: PresentationMessage.empty,
+      ));
+      return;
+    }
+
     emit(state.copyWith(updateUserLoading: true));
     try {
       final user = await _authRepository.updateUserNickname(
@@ -112,5 +131,11 @@ class AuthCubit extends Cubit<AuthState> {
         updateUserError: PresentationMessage.empty,
       ));
     }
+  }
+
+  @override
+  Future<void> close() {
+    _userStreamSubscription.cancel();
+    return super.close();
   }
 }

@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/domain/models/double_range.dart';
 
-class GameConfigs {
+class GameConstants {
   static const int initialHeatLevel = 0;
   static const int minHeatLevel = -3;
   static const int maxHeatLevel = 3;

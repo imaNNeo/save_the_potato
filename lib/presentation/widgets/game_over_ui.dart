@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
-import 'package:save_the_potato/domain/game_configs.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 
 import 'game_round_button.dart';
@@ -72,7 +72,7 @@ class _GameOverUIState extends State<GameOverUI>
                       shadows: [
                         Shadow(
                           blurRadius: 8.0,
-                          color: GameConfigs.hotColors.last,
+                          color: GameConstants.hotColors.last,
                           offset: const Offset(2.0, 2.0),
                         ),
                       ],

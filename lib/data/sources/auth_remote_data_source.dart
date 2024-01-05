@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/services.dart';
 import 'package:save_the_potato/data/sources/firebase_functions_wrapper.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 

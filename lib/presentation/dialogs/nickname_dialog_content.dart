@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
+import 'package:save_the_potato/presentation/cubit/configs/configs_cubit.dart';
 import 'package:toastification/toastification.dart';
-
+import 'package:flutter/services.dart';
 
 class NicknameDialogContent extends StatefulWidget {
   const NicknameDialogContent({super.key}) : super();
@@ -23,69 +24,82 @@ class _NicknameDialogContentState extends State<NicknameDialogContent> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<AuthCubit, AuthState>(
-      listener: (_, state) {
-        if (state.updateUserError.isNotEmpty) {
-          state.updateUserError.showAsToast(
-            context,
-            alignment: Alignment.topCenter,
-            type: ToastificationType.warning,
-          );
-        }
-        if (state.updateUserSucceeds.isNotEmpty) {
-          state.updateUserSucceeds.showAsToast(
-            context,
-            type: ToastificationType.success,
-          );
-          Navigator.of(context).pop();
-        }
-      },
-      builder: (context, state) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
+    return BlocBuilder<ConfigsCubit, ConfigsState>(
+      builder: (context, configsState) {
+        return BlocConsumer<AuthCubit, AuthState>(
+          listener: (_, authState) {
+            if (authState.updateUserError.isNotEmpty) {
+              authState.updateUserError.showAsToast(
+                context,
+                alignment: Alignment.topCenter,
+                type: ToastificationType.warning,
+              );
+            }
+            if (authState.updateUserSucceeds.isNotEmpty) {
+              authState.updateUserSucceeds.showAsToast(
+                context,
+                type: ToastificationType.success,
+              );
+              Navigator.of(context).pop();
+            }
+          },
+          builder: (context, state) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _controller,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    filled: true,
+                    hintStyle: TextStyle(color: Colors.grey[800]),
+                    hintText: 'Your nickname',
+                    fillColor: Colors.transparent,
+                    counterText: '',
+                  ),
+                  maxLength: configsState.gameConfig.nicknameMaxLength,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(configsState.gameConfig.nicknameAllowedRegex),
+                    ),
+                  ],
                 ),
-                filled: true,
-                hintStyle: TextStyle(color: Colors.grey[800]),
-                hintText: "Your nickname",
-                fillColor: Colors.transparent,
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            SizedBox(
-              width: 118,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (_controller.text.isEmpty ||
-                      _controller.text == state.user!.nickname) {
-                    Navigator.of(context).pop();
-                    return;
-                  }
-                  context.read<AuthCubit>().updateNickname(_controller.text);
-                },
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
+                const SizedBox(height: 16.0),
+                SizedBox(
+                  width: 118,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_controller.text.isEmpty ||
+                          _controller.text == state.user!.nickname) {
+                        Navigator.of(context).pop();
+                        return;
+                      }
+                      context
+                          .read<AuthCubit>()
+                          .updateNickname(_controller.text);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                    child: state.updateUserLoading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(),
+                          )
+                        : const Text(
+                            'Save',
+                            style: TextStyle(fontSize: 20),
+                          ),
                   ),
                 ),
-                child: state.updateUserLoading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(),
-                      )
-                    : const Text(
-                        'Save',
-                        style: TextStyle(fontSize: 20),
-                      ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         );
       },
     );

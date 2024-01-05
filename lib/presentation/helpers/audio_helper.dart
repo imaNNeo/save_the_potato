@@ -1,10 +1,10 @@
 import 'package:flame_audio/flame_audio.dart';
-import 'package:save_the_potato/domain/game_configs.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 
 class AudioHelper {
   late bool audioEnabled;
 
-  double get bgVolume => audioEnabled ? GameConfigs.bgmVolume : 0;
+  double get bgVolume => audioEnabled ? GameConstants.bgmVolume : 0;
 
   void setAudioEnabled(bool enabled) {
     audioEnabled = enabled;

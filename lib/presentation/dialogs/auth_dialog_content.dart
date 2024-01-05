@@ -4,7 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
-import 'package:save_the_potato/domain/game_configs.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:toastification/toastification.dart';
@@ -68,7 +68,7 @@ class AuthDialogContent extends StatelessWidget {
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () =>
-                            AppUtils.tryToLaunchUrl(GameConfigs.privacyPolicy),
+                            AppUtils.tryToLaunchUrl(GameConstants.privacyPolicy),
                     ),
                   ],
                 ),

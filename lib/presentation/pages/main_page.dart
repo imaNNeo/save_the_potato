@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:save_the_potato/domain/game_configs.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
@@ -133,16 +133,16 @@ class BackgroundGradient extends StatelessWidget {
     final isNeutral = heatLevel == 0;
 
     final gradientFrom = isNeutral
-        ? GameConfigs.neutralGradientFrom
+        ? GameConstants.neutralGradientFrom
         : heatLevel > 0
             ? ColorTween(
-                begin: GameConfigs.neutralGradientFrom,
-                end: GameConfigs.heatGradientFrom,
-              ).lerp(heatLevel / GameConfigs.maxHeatLevel)!
+                begin: GameConstants.neutralGradientFrom,
+                end: GameConstants.heatGradientFrom,
+              ).lerp(heatLevel / GameConstants.maxHeatLevel)!
             : ColorTween(
-                begin: GameConfigs.neutralGradientFrom,
-                end: GameConfigs.coldGradientFrom,
-              ).lerp(heatLevel.abs() / GameConfigs.maxHeatLevel)!;
+                begin: GameConstants.neutralGradientFrom,
+                end: GameConstants.coldGradientFrom,
+              ).lerp(heatLevel.abs() / GameConstants.maxHeatLevel)!;
     return Container(
       decoration: BoxDecoration(
         gradient: RadialGradient(

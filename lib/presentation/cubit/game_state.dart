@@ -9,7 +9,7 @@ class GameState extends Equatable {
     this.shieldsAngleRotationSpeed = 0,
   });
 
-  /// Between [GameConfigs.minHeatLevel] and [GameConfigs.maxHeatLevel]
+  /// Between [GameConstants.minHeatLevel] and [GameConstants.maxHeatLevel]
   final int heatLevel;
 
   final double timePassed;
@@ -23,22 +23,22 @@ class GameState extends Equatable {
   /// Between 0.0 and 1.0
   double get difficulty => Curves.easeOutCubic.transform(min(
         1.0,
-        timePassed / GameConfigs.difficultyInitialToPeakDuration,
+        timePassed / GameConstants.difficultyInitialToPeakDuration,
       ));
 
-  /// Between [GameConfigs.orbsSpawnEveryInitial] and [GameConfigs.orbsSpawnEveryPeak]
+  /// Between [GameConstants.orbsSpawnEveryInitial] and [GameConstants.orbsSpawnEveryPeak]
   /// based on [difficulty]
   double get spawnOrbsEvery => lerpDouble(
-        GameConfigs.orbsSpawnEveryInitial,
-        GameConfigs.orbsSpawnEveryPeak,
+        GameConstants.orbsSpawnEveryInitial,
+        GameConstants.orbsSpawnEveryPeak,
         difficulty,
       )!;
 
-  /// Between [GameConfigs.orbsMoveSpeedInitial] and [GameConfigs.orbsMoveSpeedPeak]
+  /// Between [GameConstants.orbsMoveSpeedInitial] and [GameConstants.orbsMoveSpeedPeak]
   /// based on [difficulty]
   DoubleRange get spawnOrbsMoveSpeedRange => DoubleRange.lerp(
-        GameConfigs.orbsMoveSpeedInitial,
-        GameConfigs.orbsMoveSpeedPeak,
+        GameConstants.orbsMoveSpeedInitial,
+        GameConstants.orbsMoveSpeedPeak,
         difficulty,
       );
 
@@ -51,7 +51,7 @@ class GameState extends Equatable {
       if (showGameOverUI) {
         return 0.0;
       } else {
-        return GameConfigs.gameOverTimeScale;
+        return GameConstants.gameOverTimeScale;
       }
     }
 
@@ -108,12 +108,12 @@ enum TemperatureType {
   cold;
 
   Color get baseColor => switch (this) {
-        TemperatureType.hot => GameConfigs.hotColors.first,
-        TemperatureType.cold => GameConfigs.coldColors.first,
+        TemperatureType.hot => GameConstants.hotColors.first,
+        TemperatureType.cold => GameConstants.coldColors.first,
       };
 
   List<Color> get colors => switch (this) {
-        TemperatureType.hot => GameConfigs.hotColors,
-        TemperatureType.cold => GameConfigs.coldColors,
+        TemperatureType.hot => GameConstants.hotColors,
+        TemperatureType.cold => GameConstants.coldColors,
       };
 }

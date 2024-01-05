@@ -4,9 +4,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
 import 'package:save_the_potato/domain/repository/settings_repository.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
+import 'package:save_the_potato/presentation/cubit/configs/configs_cubit.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/service_locator.dart';
 import 'domain/repository/auth_repository.dart';
@@ -37,6 +39,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<ConfigsCubit>(
+          lazy: false,
+          create: (context) => ConfigsCubit(
+            getIt.get<ConfigsRepository>(),
+          ),
+        ),
         BlocProvider<SettingsCubit>(
           create: (context) => SettingsCubit(
             getIt.get<SettingsRepository>(),
@@ -59,6 +67,7 @@ class MyApp extends StatelessWidget {
           lazy: false,
           create: (context) => AuthCubit(
             getIt.get<AuthRepository>(),
+            getIt.get<ConfigsRepository>(),
           ),
         ),
       ],

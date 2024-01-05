@@ -6,7 +6,7 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:save_the_potato/domain/game_configs.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/double_range.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
@@ -59,8 +59,8 @@ class GameCubit extends Cubit<GameState> {
     emit(state.copyWith(
       heatLevel: newHeatLevel,
     ));
-    if (newHeatLevel <= GameConfigs.minHeatLevel ||
-        newHeatLevel >= GameConfigs.maxHeatLevel) {
+    if (newHeatLevel <= GameConstants.minHeatLevel ||
+        newHeatLevel >= GameConstants.maxHeatLevel) {
       _gameOver();
     }
   }
@@ -81,7 +81,7 @@ class GameCubit extends Cubit<GameState> {
       end: targetVolume,
     ).chain(CurveTween(curve: Curves.fastOutSlowIn));
     int stepCount = 30;
-    final stepDelay = GameConfigs.showRetryAfterGameOverDelay ~/ stepCount;
+    final stepDelay = GameConstants.showRetryAfterGameOverDelay ~/ stepCount;
     for (int i = 0; i < stepCount; i++) {
       await FlameAudio.bgm.audioPlayer.setVolume(
         volumeTween.transform((i + 1) / stepCount),

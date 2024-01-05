@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rive/rive.dart';
-import 'package:save_the_potato/domain/game_configs.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 
 import 'game_timer.dart';
@@ -22,7 +22,7 @@ class _PotatoTopBarState extends State<PotatoTopBar> {
   late GameState _previousGameState;
   double ratio = 1.0;
 
-  double opacity = GameConfigs.topBarNonPlayingOpacity;
+  double opacity = GameConstants.topBarNonPlayingOpacity;
 
   @override
   void initState() {
@@ -103,8 +103,8 @@ class _PotatoTopBarState extends State<PotatoTopBar> {
   void playingStateChanged(PlayingState playingState) {
     setState(() {
       opacity = playingState.isPlaying
-          ? GameConfigs.topBarPlayingOpacity
-          : GameConfigs.topBarNonPlayingOpacity;
+          ? GameConstants.topBarPlayingOpacity
+          : GameConstants.topBarNonPlayingOpacity;
     });
   }
 

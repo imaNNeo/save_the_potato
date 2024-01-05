@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:save_the_potato/data/key_value_storage.dart';
 import 'package:save_the_potato/domain/extensions/map_entries_list_extensions.dart';
 import 'package:save_the_potato/domain/models/errors/domain_error.dart';
+import 'package:save_the_potato/domain/models/game_config_entity.dart';
 import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
@@ -162,6 +163,11 @@ class FirebaseFunctionsWrapper {
       },
     );
     return UserEntity.fromJson(response['data']);
+  }
+
+  Future<GameConfigEntity> getGameConfig() async {
+    final response = await _callFunction(name: 'getGameConfig');
+    return GameConfigEntity.fromJson(response['data']);
   }
 }
 

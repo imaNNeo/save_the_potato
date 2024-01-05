@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:save_the_potato/domain/game_configs.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 
@@ -51,7 +51,7 @@ class DebugPanel extends StatelessWidget {
                           'timePassed: ${gameState.timePassed.toStringAsFixed(2)}'),
                       const SizedBox(height: 12),
                       Text(
-                          'difficulty (${GameConfigs.difficultyInitialToPeakDuration}s): %${(gameState.difficulty * 100).toInt()}'),
+                          'difficulty (${GameConstants.difficultyInitialToPeakDuration}s): %${(gameState.difficulty * 100).toInt()}'),
                       const SizedBox(height: 4),
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -74,20 +74,20 @@ class DebugPanel extends StatelessWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('${GameConfigs.orbsSpawnEveryInitial}'),
+                          const Text('${GameConstants.orbsSpawnEveryInitial}'),
                           const SizedBox(width: 4),
                           SizedBox(
                             width: 200,
                             child: LinearProgressIndicator(
                               value: 1 -
                                   ((gameState.spawnOrbsEvery -
-                                          GameConfigs.orbsSpawnEveryPeak) /
-                                      (GameConfigs.orbsSpawnEveryInitial -
-                                          GameConfigs.orbsSpawnEveryPeak)),
+                                          GameConstants.orbsSpawnEveryPeak) /
+                                      (GameConstants.orbsSpawnEveryInitial -
+                                          GameConstants.orbsSpawnEveryPeak)),
                             ),
                           ),
                           const SizedBox(width: 4),
-                          const Text('${GameConfigs.orbsSpawnEveryPeak}'),
+                          const Text('${GameConstants.orbsSpawnEveryPeak}'),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -97,18 +97,18 @@ class DebugPanel extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                              GameConfigs.orbsMoveSpeedInitial.simpleFormatInt),
+                              GameConstants.orbsMoveSpeedInitial.simpleFormatInt),
                           const SizedBox(width: 4),
                           SizedBox(
                             width: 200,
                             child: RangeProgressIndicator(
-                              min: GameConfigs.orbsMoveSpeedInitial.min,
-                              max: GameConfigs.orbsMoveSpeedPeak.max,
+                              min: GameConstants.orbsMoveSpeedInitial.min,
+                              max: GameConstants.orbsMoveSpeedPeak.max,
                               range: gameState.spawnOrbsMoveSpeedRange,
                             ),
                           ),
                           const SizedBox(width: 4),
-                          Text(GameConfigs.orbsMoveSpeedPeak.simpleFormatInt),
+                          Text(GameConstants.orbsMoveSpeedPeak.simpleFormatInt),
                         ],
                       ),
                     ],

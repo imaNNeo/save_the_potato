@@ -1,7 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:save_the_potato/data/sources/auth_local_data_source.dart';
 import 'package:save_the_potato/data/sources/auth_remote_data_source.dart';
-import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 
 class AuthRepository {

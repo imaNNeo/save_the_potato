@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:save_the_potato/data/key_value_storage.dart';
 import 'package:save_the_potato/data/sources/firebase_functions_wrapper.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
