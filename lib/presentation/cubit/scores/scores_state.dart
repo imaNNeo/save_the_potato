@@ -6,26 +6,33 @@ class ScoresState extends Equatable {
     this.leaderboard,
     this.leaderboardLoading = false,
     this.leaderBoardError = '',
+    this.showAuthDialog = false,
+    this.showNicknameDialog = false,
   });
 
   final HighScoreBundleEntity? highScore;
   final LeaderboardEntity? leaderboard;
   final bool leaderboardLoading;
   final String leaderBoardError;
+  final bool showAuthDialog;
+  final bool showNicknameDialog;
 
   ScoresState copyWith({
     ValueWrapper<HighScoreBundleEntity>? highScore,
     ValueWrapper<LeaderboardEntity>? leaderboard,
     bool? leaderboardLoading,
     String? leaderBoardError,
-  }) {
-    return ScoresState(
-      highScore: highScore != null ? highScore.value : this.highScore,
-      leaderboard: leaderboard != null ? leaderboard.value : this.leaderboard,
-      leaderboardLoading: leaderboardLoading ?? this.leaderboardLoading,
-      leaderBoardError: leaderBoardError ?? this.leaderBoardError,
-    );
-  }
+    bool? showAuthDialog,
+    bool? showNicknameDialog,
+  }) =>
+      ScoresState(
+        highScore: highScore != null ? highScore.value : this.highScore,
+        leaderboard: leaderboard != null ? leaderboard.value : this.leaderboard,
+        leaderboardLoading: leaderboardLoading ?? this.leaderboardLoading,
+        leaderBoardError: leaderBoardError ?? this.leaderBoardError,
+        showAuthDialog: showAuthDialog ?? this.showAuthDialog,
+        showNicknameDialog: showNicknameDialog ?? this.showNicknameDialog,
+      );
 
   @override
   List<Object?> get props => [
@@ -33,5 +40,7 @@ class ScoresState extends Equatable {
         leaderboard,
         leaderboardLoading,
         leaderBoardError,
+        showAuthDialog,
+        showNicknameDialog,
       ];
 }

@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:save_the_potato/data/sources/auth_local_data_source.dart';
 import 'package:save_the_potato/data/sources/auth_remote_data_source.dart';
+import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 
 class AuthRepository {
@@ -8,9 +10,8 @@ class AuthRepository {
 
   AuthRepository(this._authLocalDataSource, this._authRemoteDataSource);
 
-  Stream<UserEntity?> getUserStream() =>
-      _authLocalDataSource.getUserStream();
-      
+  Stream<UserEntity?> getUserStream() => _authLocalDataSource.getUserStream();
+
   Future<UserEntity> getCurrentUser() async {
     await _authRemoteDataSource.reloadUser();
     final currentUser = await _authLocalDataSource.getUser();
@@ -18,6 +19,12 @@ class AuthRepository {
       return currentUser;
     }
     return _authRemoteDataSource.tryToRegisterAnonymously();
+  }
+
+  Future<bool> isUserAnonymous() async {
+    final currentUser = await getCurrentUser();
+    return currentUser.type == UserType.anonymous ||
+        _authRemoteDataSource.isUserAnonymous();
   }
 
   Future<bool> isSignedIn() => _authLocalDataSource.isSignedIn();

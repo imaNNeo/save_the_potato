@@ -52,6 +52,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<ScoresCubit>(
           create: (context) => ScoresCubit(
             getIt.get<ScoresRepository>(),
+            getIt.get<AuthRepository>(),
           ),
         ),
         BlocProvider<AuthCubit>(

@@ -12,6 +12,8 @@ class GameColors {
   static const leaderboardOtherColor = Color(0xFF4B4B4B);
   static const leaderboardOtherColorText = Color(0xFFFFFFFF);
 
+  static const linkBlueColor = Colors.blue;
+
   static Color getRankBgColor(int rank) => switch (rank) {
         1 => GameColors.leaderboardGoldenColor,
         2 => GameColors.leaderboardSilverColor,

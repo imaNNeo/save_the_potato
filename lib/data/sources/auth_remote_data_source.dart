@@ -24,8 +24,6 @@ class AuthRemoteDataSource {
     } else {
       credential = await FirebaseAuth.instance.signInWithProvider(provider);
     }
-    final email = credential.user!.email ?? 'email was empty';
-    await Clipboard.setData(ClipboardData(text: email));
     final idToken = (await credential.user!.getIdToken())!;
     return _functions.registerUser(idToken);
   }
@@ -41,4 +39,6 @@ class AuthRemoteDataSource {
     await user.reload();
     return _functions.updateUserNickname(nickname);
   }
+
+  bool isUserAnonymous() => FirebaseAuth.instance.currentUser!.isAnonymous;
 }

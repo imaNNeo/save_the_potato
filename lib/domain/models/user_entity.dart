@@ -1,6 +1,10 @@
 enum UserType {
-  anonymous,
-  signedIn,
+  anonymous('anonymous'),
+  google('google.com'),
+  apple('apple.com');
+
+  final String key;
+  const UserType(this.key);
 }
 
 sealed class UserEntity {
@@ -12,15 +16,18 @@ sealed class UserEntity {
 
   static UserEntity fromJson(Map<String, dynamic> json) {
     final type = UserType.values.firstWhere(
-      (element) => element.name == json['type'] as String,
+      (element) => element.key == json['type'] as String,
     );
     return switch (type) {
       UserType.anonymous => AnonymousUserEntity(
           uid: json['uid'] as String,
           nickname: json['nickname'] as String,
         ),
-      UserType.signedIn => SignedInUserEntity(
+      UserType.google || UserType.apple => SignedInUserEntity(
           uid: json['uid'] as String,
+          type: UserType.values.firstWhere(
+            (element) => element.key == json['type'] as String,
+          ),
           nickname: json['nickname'] as String,
           email: json['email'] as String,
         ),
@@ -55,6 +62,7 @@ class SignedInUserEntity extends UserEntity {
   SignedInUserEntity({
     required this.uid,
     required this.nickname,
+    required this.type,
     required this.email,
   });
 
@@ -65,7 +73,7 @@ class SignedInUserEntity extends UserEntity {
   final String nickname;
 
   @override
-  final UserType type = UserType.signedIn;
+  final UserType type;
 
   final String email;
 
@@ -73,7 +81,7 @@ class SignedInUserEntity extends UserEntity {
   Map<String, dynamic> toJson() => {
         'uid': uid,
         'nickname': nickname,
+        'type': type.key,
         'email': email,
-        'type': type.name,
       };
 }

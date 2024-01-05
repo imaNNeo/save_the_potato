@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +9,8 @@ import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/auth_repository.dart';
 
 part 'auth_state.dart';
+
+typedef _AuthFunction = Future<UserEntity> Function();
 
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit(
@@ -43,17 +44,34 @@ class AuthCubit extends Cubit<AuthState> {
     });
   }
 
-  void login() async {
+  void loginWithApple() => _sharedLoginLogic(
+        _authRepository.signInWithApple,
+      );
+
+  void loginWithGoogle() => _sharedLoginLogic(
+        _authRepository.signInWithGoogle,
+      );
+
+  void _sharedLoginLogic(_AuthFunction loginFunction) async {
+    emit(state.copyWith(authLoading: true));
     try {
-      if (Platform.isAndroid) {
-        await _authRepository.signInWithGoogle();
-      } else if (Platform.isIOS) {
-        await _authRepository.signInWithApple();
-      } else {
-        throw Exception('Unsupported platform');
-      }
+      final user = await loginFunction();
+      emit(state.copyWith(
+        authLoading: false,
+        user: ValueWrapper(user),
+        authSucceeds: PresentationMessage.raw('Successfully logged in'),
+      ));
+      emit(state.copyWith(
+        authSucceeds: PresentationMessage.empty,
+      ));
     } catch (e) {
-      debugPrint(e.toString());
+      emit(state.copyWith(
+        authLoading: false,
+        authError: PresentationMessage.fromError(e),
+      ));
+      emit(state.copyWith(
+        authError: PresentationMessage.empty,
+      ));
     }
   }
 

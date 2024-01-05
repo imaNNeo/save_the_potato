@@ -44,4 +44,7 @@ class GameConfigs {
     Color(0xFF00AFFF),
     Color(0xFF008BFF),
   ];
+
+  static const String domain = 'https://savethepotato.com';
+  static const String privacyPolicy = '$domain/privacy';
 }
