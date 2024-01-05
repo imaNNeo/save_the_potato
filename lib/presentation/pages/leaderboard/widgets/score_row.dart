@@ -40,16 +40,19 @@ class ScoreRow extends StatelessWidget {
             size: height * 0.55,
           ),
           const SizedBox(width: 16),
-          Text(
-            scoreEntity.nickname,
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: isMine ? FontWeight.w700 : FontWeight.w500,
-              fontSize: 18,
-              fontFamily: 'RobotoMono',
+          Expanded(
+            child: Text(
+              scoreEntity.nickname,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: isMine ? FontWeight.w700 : FontWeight.w500,
+                fontSize: 18,
+                fontFamily: 'RobotoMono',
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
-          Expanded(child: Container()),
+          const SizedBox(width: 4),
           Text(
             AppUtils.getHighScoreRepresentation(scoreEntity.score),
             style: TextStyle(

@@ -28,4 +28,19 @@ class ScoreEntity {
         isMine: json['is_mine'],
         rank: json['rank'],
       );
+
+  ScoreEntity copyWith({
+    int? score,
+    String? userId,
+    String? nickname,
+    bool? isMine,
+    int? rank,
+  }) =>
+      ScoreEntity(
+        score: score ?? this.score,
+        userId: userId ?? this.userId,
+        nickname: nickname ?? this.nickname,
+        isMine: isMine ?? this.isMine,
+        rank: rank ?? this.rank,
+      );
 }

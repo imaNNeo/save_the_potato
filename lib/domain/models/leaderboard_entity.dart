@@ -38,4 +38,19 @@ class LeaderboardEntity {
         pageData: PaginationPageDataEntity.fromJson(
             json['page_data'] as Map<String, dynamic>),
       );
+
+  LeaderboardEntity copyWith({
+    List<ScoreEntity>? scores,
+    ScoreEntity? myScore,
+    String? leaderboardId,
+    String? leaderboardTitle,
+    PaginationPageDataEntity? pageData,
+  }) =>
+      LeaderboardEntity(
+        scores: scores ?? this.scores,
+        myScore: myScore ?? this.myScore,
+        leaderboardId: leaderboardId ?? this.leaderboardId,
+        leaderboardTitle: leaderboardTitle ?? this.leaderboardTitle,
+        pageData: pageData ?? this.pageData,
+      );
 }

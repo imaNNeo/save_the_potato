@@ -80,7 +80,7 @@ class MyScore extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: InkWell(
-                        child: Row(
+                        child: Wrap(
                           children: [
                             Text(
                               scoreEntity.nickname,
@@ -91,10 +91,21 @@ class MyScore extends StatelessWidget {
                                 fontFamily: 'RobotoMono',
                               ),
                             ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              '(edit)',
+                              style: TextStyle(
+                                color: GameColors.linkBlueColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                fontFamily: 'RobotoMono',
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ),
+                    const SizedBox(width: 16),
                     Text(
                       AppUtils.getHighScoreRepresentation(scoreEntity.score),
                       style: const TextStyle(
