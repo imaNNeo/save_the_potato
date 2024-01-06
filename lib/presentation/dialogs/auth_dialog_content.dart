@@ -45,6 +45,7 @@ class AuthDialogContent extends StatelessWidget {
             type: ToastificationType.success,
           );
           Navigator.of(context).pop(true);
+          BaseDialog.showNicknameDialog(context);
         }
         if (state.accountAlreadyExistsError != null) {
           Navigator.of(context).pop(true);
