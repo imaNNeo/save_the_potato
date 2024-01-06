@@ -1,3 +1,6 @@
+## 0.13.0
+* Add Firebase crashlytics
+
 ## 0.12.0
 * Finalized Authentication and leaderboard
 * Allow to update nickname
