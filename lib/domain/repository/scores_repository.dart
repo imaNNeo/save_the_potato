@@ -1,6 +1,5 @@
 import 'package:save_the_potato/data/sources/scores_local_data_source.dart';
 import 'package:save_the_potato/data/sources/scores_remote_data_source.dart';
-import 'package:save_the_potato/domain/models/high_score_bundle.dart';
 import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 
@@ -14,12 +13,13 @@ class ScoresRepository {
   );
 
   Future<ScoreEntity> saveScore(int scoreMilliseconds) async {
+    _scoresLocalDataSource.getHighScore();
     await _scoresLocalDataSource.setHighScore(scoreMilliseconds);
     final score = await _scoresRemoteDataSource.submitScore(scoreMilliseconds);
     return score;
   }
 
-  Future<HighScoreBundleEntity?> syncHighScore() async {
+  Future<int?> syncHighScore() async {
     final myRemoteScore = await _scoresRemoteDataSource.getScore();
     final myLocalScore = await _scoresLocalDataSource.getHighScore();
 
@@ -30,7 +30,7 @@ class ScoresRepository {
 
     // One is null
     if (myRemoteScore == null && myLocalScore != null) {
-      await _scoresRemoteDataSource.submitScore(myLocalScore.highScore);
+      await _scoresRemoteDataSource.submitScore(myLocalScore);
       return myLocalScore;
     }
 
@@ -41,19 +41,22 @@ class ScoresRepository {
     }
 
     // Both are not null
-    if (myRemoteScore!.score == myLocalScore!.highScore) {
+    if (myRemoteScore!.score == myLocalScore!) {
       return myLocalScore;
-    } else if (myRemoteScore.score > myLocalScore.highScore) {
+    } else if (myRemoteScore.score > myLocalScore) {
       return await _scoresLocalDataSource.setHighScore(
         myRemoteScore.score,
       );
     } else {
-      await _scoresRemoteDataSource.submitScore(myLocalScore.highScore);
+      await _scoresRemoteDataSource.submitScore(myLocalScore);
       return myLocalScore;
     }
   }
 
-  Stream<HighScoreBundleEntity> getHighScoreStream() =>
+  Future<int> getHighScore() async =>
+      (await _scoresLocalDataSource.getHighScore()) ?? 0;
+
+  Stream<int> getHighScoreStream() =>
       _scoresLocalDataSource.getHighScoreStream();
 
   Future<LeaderboardEntity> getLeaderboard() =>

@@ -10,7 +10,7 @@ class ScoresState extends Equatable {
     this.showNicknameDialog = false,
   });
 
-  final HighScoreBundleEntity? highScore;
+  final int? highScore;
   final LeaderboardEntity? leaderboard;
   final bool leaderboardLoading;
   final String leaderBoardError;
@@ -18,7 +18,7 @@ class ScoresState extends Equatable {
   final bool showNicknameDialog;
 
   ScoresState copyWith({
-    ValueWrapper<HighScoreBundleEntity>? highScore,
+    ValueWrapper<int>? highScore,
     ValueWrapper<LeaderboardEntity>? leaderboard,
     bool? leaderboardLoading,
     String? leaderBoardError,

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:save_the_potato/domain/models/high_score_bundle.dart';
 import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
@@ -27,6 +26,9 @@ class ScoresCubit extends Cubit<ScoresState> {
 
   UserEntity? lastUser;
   Future<void> initialize() async {
+    emit(state.copyWith(
+      highScore: ValueWrapper(await _scoreRepository.getHighScore()),
+    ));
     _highScoreSubscription =
         _scoreRepository.getHighScoreStream().listen((event) {
       emit(state.copyWith(
@@ -40,7 +42,7 @@ class ScoresCubit extends Cubit<ScoresState> {
           /// User changed, reload leaderboard and everything
           tryToRefreshLeaderboard();
         } else {
-          /// It's just a minor change such as nickname, 
+          /// It's just a minor change such as nickname,
           /// we update it offline and locally (without fetching everything again)
           _updateUserInShowingData(user);
         }

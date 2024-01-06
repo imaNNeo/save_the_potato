@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/pages/leaderboard/leaderboard_page.dart';
@@ -52,7 +53,11 @@ class HighScoreWidget extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          state.highScore?.representation ?? '00:00',
+                          state.highScore != null
+                              ? AppUtils.getHighScoreRepresentation(
+                                  state.highScore!,
+                                )
+                              : '00:00',
                           style: const TextStyle(
                             fontSize: 16,
                           ),

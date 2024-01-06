@@ -1,40 +1,26 @@
 import 'dart:async';
 
 import 'package:save_the_potato/data/key_value_storage.dart';
-import 'package:save_the_potato/domain/models/high_score_bundle.dart';
 
 class ScoresLocalDataSource {
   final KeyValueStorage _keyValueStorage;
 
   ScoresLocalDataSource(this._keyValueStorage);
 
-  final StreamController<HighScoreBundleEntity> _highScoreStreamController =
-      StreamController<HighScoreBundleEntity>.broadcast();
+  final StreamController<int> _highScoreStreamController =
+      StreamController<int>.broadcast();
 
-  Stream<HighScoreBundleEntity> getHighScoreStream() =>
-      _highScoreStreamController.stream;
+  Stream<int> getHighScoreStream() => _highScoreStreamController.stream;
 
-  Future<HighScoreBundleEntity?> getHighScore() async {
-    final String? highScoreStr = await _keyValueStorage.getString('high_score');
-    try {
-      return HighScoreBundleEntity.deserialize(highScoreStr!);
-    } catch (e) {
-      return null;
-    }
-  }
+  Future<int?> getHighScore() => _keyValueStorage.getInt('high_score');
 
-  Future<HighScoreBundleEntity> setHighScore(int highScoreMilliseconds) async {
-    final bundle = HighScoreBundleEntity(
-      version: 1,
-      highScore: highScoreMilliseconds,
-      timeStamp: DateTime.now().millisecondsSinceEpoch,
-    );
-    _highScoreStreamController.sink.add(bundle);
-    await _keyValueStorage.setString(
+  Future<int> setHighScore(int highScoreMilliseconds) async {
+    _highScoreStreamController.sink.add(highScoreMilliseconds);
+    await _keyValueStorage.setInt(
       'high_score',
-      bundle.serialize(),
+      highScoreMilliseconds,
     );
-    return bundle;
+    return highScoreMilliseconds;
   }
 
   Future<void> clearHighScore() async {
