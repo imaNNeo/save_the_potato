@@ -1,3 +1,8 @@
+## 0.14.0
+* Send userDeviceInfo to the back-end (on register function)
+* Set 0 high-score when user opens the app app for the first time
+* Show update nickname dialog after successfull login 
+
 ## 0.13.0
 * Add Firebase crashlytics
 
