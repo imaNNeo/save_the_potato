@@ -13,11 +13,13 @@ import 'package:save_the_potato/domain/models/game_config_entity.dart';
 import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
+import 'package:uuid/uuid.dart';
 
 class FirebaseFunctionsWrapper {
   final KeyValueStorage _storage;
   static const _region = 'us-central1';
   static const userKey = 'user';
+  static const deviceIdKey = 'deviceId';
 
   FirebaseFunctionsWrapper(this._storage) {
     // if (kDebugMode) {
@@ -140,10 +142,23 @@ class FirebaseFunctionsWrapper {
       name: 'registerUser',
       parameters: {
         'token': token,
+        'deviceId': await getDeviceId(),
         'deviceInfo': deviceInfoStr,
       },
     );
     return UserEntity.fromJson(response['data']);
+  }
+
+
+  Future<String> getDeviceId() async {
+    String? deviceId = await _storage.getString(deviceIdKey);
+    if (deviceId != null) {
+      return deviceId;
+    }
+    final newDeviceId = const Uuid().v4();
+    await _storage.setString(deviceIdKey, newDeviceId);
+    assert((await _storage.getString(deviceIdKey)) == newDeviceId);
+    return newDeviceId;
   }
 
   Future<ScoreEntity> submitScore(int score) async {

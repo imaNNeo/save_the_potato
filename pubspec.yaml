@@ -55,6 +55,7 @@ dependencies:
   url_launcher: ^6.2.2
   firebase_crashlytics: ^3.4.9
   device_info_plus: ^9.1.1
+  uuid: ^4.2.2
 
 dev_dependencies:
   flutter_test:
