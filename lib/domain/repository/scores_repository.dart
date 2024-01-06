@@ -25,7 +25,9 @@ class ScoresRepository {
 
     // Both are null
     if (myRemoteScore == null && myLocalScore == null) {
-      return null;
+      final scoreEntity = await _scoresRemoteDataSource.submitScore(0);
+      await _scoresLocalDataSource.setHighScore(scoreEntity.score);
+      return scoreEntity.score;
     }
 
     // One is null
