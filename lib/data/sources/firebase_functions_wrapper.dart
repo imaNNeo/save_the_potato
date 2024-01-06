@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:save_the_potato/data/key_value_storage.dart';
@@ -125,10 +127,20 @@ class FirebaseFunctionsWrapper {
   }
 
   Future<UserEntity> registerUser(String token) async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    late String deviceInfoStr;
+    if (Platform.isAndroid) {
+      deviceInfoStr = jsonEncode((await deviceInfo.androidInfo).data);
+    } else if (Platform.isIOS) {
+      deviceInfoStr = jsonEncode((await deviceInfo.iosInfo).data);
+    } else {
+      deviceInfoStr = '';
+    }
     final response = await _callFunction(
       name: 'registerUser',
       parameters: {
         'token': token,
+        'deviceInfo': deviceInfoStr,
       },
     );
     return UserEntity.fromJson(response['data']);
