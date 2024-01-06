@@ -1,3 +1,6 @@
+## 0.15.0
+* Add deviceId concept to keep track of user devices (later we will have push notif ID per device)
+
 ## 0.14.0
 * Send userDeviceInfo to the back-end (on register function)
 * Set 0 high-score when user opens the app app for the first time
