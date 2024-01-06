@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:save_the_potato/domain/models/errors/domain_error.dart';
+import 'package:save_the_potato/presentation/dialogs/account_already_exists.dart';
 import 'package:save_the_potato/presentation/dialogs/nickname_dialog_content.dart';
 import 'package:save_the_potato/presentation/dialogs/settings_dialog_content.dart';
 
@@ -59,6 +61,22 @@ class BaseDialog extends AlertDialog {
         context: context,
         title: 'Sign in',
         content: const AuthDialogContent(),
+      ),
+    );
+  }
+
+  static void showAccountAlreadyExistsDialog(
+    BuildContext context,
+    AccountAlreadyExistsError error,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => BaseDialog(
+        context: context,
+        title: 'Account Exists',
+        content: AccountAlreadyExistsDialogContent(
+          error: error,
+        ),
       ),
     );
   }

@@ -35,7 +35,15 @@ class ScoresCubit extends Cubit<ScoresState> {
     });
     _userSubscription = _authRepository.getUserStream().listen((user) {
       if (lastUser != user && user != null) {
-        _updateUserInShowingData(user);
+        final userChanged = lastUser?.uid != user.uid;
+        if (userChanged) {
+          /// User changed, reload leaderboard and everything
+          tryToRefreshLeaderboard();
+        } else {
+          /// It's just a minor change such as nickname, 
+          /// we update it offline and locally (without fetching everything again)
+          _updateUserInShowingData(user);
+        }
       }
       lastUser = user;
     });

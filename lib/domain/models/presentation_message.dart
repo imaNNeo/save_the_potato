@@ -53,7 +53,9 @@ abstract class PresentationMessage with EquatableMixin {
             ? PresentationMessage.raw(error.detailsOrMessage!)
             : PresentationMessage.raw('Server error'),
       ServerError(errorEntry: null) => PresentationMessage.raw('Server error'),
-      UnknownError() => const RawTextMessage('Unknown error'),
+      AccountAlreadyExistsError() ||
+      UnknownError() =>
+        const RawTextMessage('Unknown error'),
     };
   }
 }

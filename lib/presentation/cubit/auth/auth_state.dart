@@ -9,6 +9,7 @@ class AuthState extends Equatable {
     this.authLoading = false,
     this.authError = PresentationMessage.empty,
     this.authSucceeds = PresentationMessage.empty,
+    this.accountAlreadyExistsError,
   });
 
   final UserEntity? user;
@@ -18,6 +19,7 @@ class AuthState extends Equatable {
   final bool authLoading;
   final PresentationMessage authError;
   final PresentationMessage authSucceeds;
+  final AccountAlreadyExistsError? accountAlreadyExistsError;
 
   bool get isAnonymous => user == null || user!.type == UserType.anonymous;
 
@@ -29,6 +31,7 @@ class AuthState extends Equatable {
     bool? authLoading,
     PresentationMessage? authError,
     PresentationMessage? authSucceeds,
+    ValueWrapper<AccountAlreadyExistsError>? accountAlreadyExistsError,
   }) {
     return AuthState(
       user: user != null ? user.value : this.user,
@@ -38,6 +41,9 @@ class AuthState extends Equatable {
       authLoading: authLoading ?? this.authLoading,
       authError: authError ?? this.authError,
       authSucceeds: authSucceeds ?? this.authSucceeds,
+      accountAlreadyExistsError: accountAlreadyExistsError != null
+          ? accountAlreadyExistsError.value
+          : this.accountAlreadyExistsError,
     );
   }
 
@@ -50,5 +56,6 @@ class AuthState extends Equatable {
         authLoading,
         authError,
         authSucceeds,
+        accountAlreadyExistsError,
       ];
 }

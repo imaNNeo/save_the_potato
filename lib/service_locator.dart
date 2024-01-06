@@ -76,6 +76,8 @@ Future<void> setupServiceLocator() async {
     () => AuthRepository(
       getIt.get<AuthLocalDataSource>(),
       getIt.get<AuthRemoteDataSource>(),
+      getIt.get<ScoresLocalDataSource>(),
+      getIt.get<ScoresRemoteDataSource>(),
     ),
   );
   getIt.registerLazySingleton<ScoresRepository>(

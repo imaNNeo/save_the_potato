@@ -125,9 +125,12 @@ class FirebaseFunctionsWrapper {
   }
 
   Future<UserEntity> registerUser(String token) async {
-    final response = await _callFunction(name: 'registerUser', parameters: {
-      'token': token,
-    });
+    final response = await _callFunction(
+      name: 'registerUser',
+      parameters: {
+        'token': token,
+      },
+    );
     return UserEntity.fromJson(response['data']);
   }
 

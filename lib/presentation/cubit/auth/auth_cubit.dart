@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/domain/models/presentation_message.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
@@ -11,7 +12,7 @@ import 'package:save_the_potato/domain/repository/configs_repository.dart';
 
 part 'auth_state.dart';
 
-typedef _AuthFunction = Future<UserEntity> Function();
+typedef _AuthFunction = Future<UserEntity> Function(bool forceToReplace);
 
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit(
@@ -47,18 +48,26 @@ class AuthCubit extends Cubit<AuthState> {
     });
   }
 
-  void loginWithApple() => _sharedLoginLogic(
+  void loginWithApple({
+    bool forceToReplace = false,
+  }) =>
+      _sharedLoginLogic(
         _authRepository.signInWithApple,
+        forceToReplace,
       );
 
-  void loginWithGoogle() => _sharedLoginLogic(
+  void loginWithGoogle({
+    bool forceToReplace = false,
+  }) =>
+      _sharedLoginLogic(
         _authRepository.signInWithGoogle,
+        forceToReplace,
       );
 
-  void _sharedLoginLogic(_AuthFunction loginFunction) async {
+  void _sharedLoginLogic(_AuthFunction loginFunction, bool forceToReplace) async {
     emit(state.copyWith(authLoading: true));
     try {
-      final user = await loginFunction();
+      final user = await loginFunction(forceToReplace);
       emit(state.copyWith(
         authLoading: false,
         user: ValueWrapper(user),
@@ -68,6 +77,16 @@ class AuthCubit extends Cubit<AuthState> {
         authSucceeds: PresentationMessage.empty,
       ));
     } catch (e) {
+      if (e is AccountAlreadyExistsError) {
+        emit(state.copyWith(
+          authLoading: false,
+          accountAlreadyExistsError: ValueWrapper(e),
+        ));
+        emit(state.copyWith(
+          accountAlreadyExistsError: const ValueWrapper(null),
+        ));
+        return;
+      }
       emit(state.copyWith(
         authLoading: false,
         authError: PresentationMessage.fromError(e),
@@ -84,7 +103,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
 
     final config = await _configsRepository.getGameConfig();
-    if (newNickname.length < config.nicknameMinLength ) {
+    if (newNickname.length < config.nicknameMinLength) {
       emit(state.copyWith(
         updateUserError: PresentationMessage.raw('Nickname is too short'),
       ));

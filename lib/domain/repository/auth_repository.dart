@@ -1,12 +1,23 @@
 import 'package:save_the_potato/data/sources/auth_local_data_source.dart';
 import 'package:save_the_potato/data/sources/auth_remote_data_source.dart';
+import 'package:save_the_potato/data/sources/scores_local_data_source.dart';
+import 'package:save_the_potato/data/sources/scores_remote_data_source.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
+
+typedef _AuthFunction = Future<UserEntity> Function(bool forceToReplace);
 
 class AuthRepository {
   final AuthLocalDataSource _authLocalDataSource;
   final AuthRemoteDataSource _authRemoteDataSource;
+  final ScoresLocalDataSource _scoresLocalDataSource;
+  final ScoresRemoteDataSource _scoresRemoteDataSource;
 
-  AuthRepository(this._authLocalDataSource, this._authRemoteDataSource);
+  AuthRepository(
+    this._authLocalDataSource,
+    this._authRemoteDataSource,
+    this._scoresLocalDataSource,
+    this._scoresRemoteDataSource,
+  );
 
   Stream<UserEntity?> getUserStream() => _authLocalDataSource.getUserStream();
 
@@ -27,14 +38,29 @@ class AuthRepository {
 
   Future<bool> isSignedIn() => _authLocalDataSource.isSignedIn();
 
-  Future<UserEntity> signInWithGoogle() async {
-    final user = await _authRemoteDataSource.signInWithGoogle();
-    await _authLocalDataSource.saveUser(user);
-    return user;
-  }
+  Future<UserEntity> signInWithGoogle(bool forceToReplace) =>
+      _signInSharedLogic(
+        _authRemoteDataSource.signInWithGoogle,
+        forceToReplace,
+      );
 
-  Future<UserEntity> signInWithApple() async {
-    final user = await _authRemoteDataSource.signInWithApple();
+  Future<UserEntity> signInWithApple(bool forceToReplace) => _signInSharedLogic(
+        _authRemoteDataSource.signInWithApple,
+        forceToReplace,
+      );
+
+  Future<UserEntity> _signInSharedLogic(
+    _AuthFunction authFunction,
+    bool forceToReplace,
+  ) async {
+    final user = await authFunction(forceToReplace);
+    if (forceToReplace) {
+      await _scoresLocalDataSource.clearHighScore();
+      final scoreEntity = await _scoresRemoteDataSource.getScore();
+      if (scoreEntity != null) {
+        await _scoresLocalDataSource.setHighScore(scoreEntity.score);
+      }
+    }
     await _authLocalDataSource.saveUser(user);
     return user;
   }

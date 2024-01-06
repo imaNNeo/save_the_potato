@@ -36,4 +36,8 @@ class ScoresLocalDataSource {
     );
     return bundle;
   }
+
+  Future<void> clearHighScore() async {
+    await setHighScore(0);
+  }
 }

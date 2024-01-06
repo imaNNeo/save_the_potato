@@ -1,32 +1,18 @@
 import 'dart:io';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:save_the_potato/domain/app_utils.dart';
-import 'package:save_the_potato/domain/game_constants.dart';
+import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
-import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
-import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:toastification/toastification.dart';
 
-class AuthDialogContent extends StatelessWidget {
-  const AuthDialogContent({super.key}) : super();
+class AccountAlreadyExistsDialogContent extends StatelessWidget {
+  const AccountAlreadyExistsDialogContent({
+    super.key,
+    required this.error,
+  }) : super();
 
-  String get _buttonText {
-    if (Platform.isIOS) {
-      return 'Sign in with Apple';
-    }
-    return 'Sign in with Google';
-  }
-
-  void _signInClicked(BuildContext context) {
-    if (Platform.isIOS) {
-      context.read<AuthCubit>().loginWithApple();
-    } else {
-      context.read<AuthCubit>().loginWithGoogle();
-    }
-  }
+  final AccountAlreadyExistsError error;
 
   @override
   Widget build(BuildContext context) {
@@ -46,13 +32,6 @@ class AuthDialogContent extends StatelessWidget {
           );
           Navigator.of(context).pop(true);
         }
-        if (state.accountAlreadyExistsError != null) {
-          Navigator.of(context).pop(true);
-          BaseDialog.showAccountAlreadyExistsDialog(
-            context,
-            state.accountAlreadyExistsError!,
-          );
-        }
       },
       builder: (context, state) {
         return DefaultTextStyle(
@@ -62,30 +41,23 @@ class AuthDialogContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                  "Sign in to:\n1. Be able to change your nickname\n2. Save your high score"),
-              const SizedBox(height: 16.0),
-              RichText(
-                text: TextSpan(
-                  text: 'By signing in you agree to our ',
-                  children: <TextSpan>[
-                    TextSpan(
-                      text: 'Privacy Policy',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: GameColors.linkBlueColor,
-                      ),
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () => AppUtils.tryToLaunchUrl(
-                            GameConstants.privacyPolicy),
-                    ),
-                  ],
-                ),
+                'An account with this email already exists. If you continiue with the new account, your current data (such as high-score) will be lost and replaced with the new one.',
               ),
-              const SizedBox(height: 32.0),
+              const SizedBox(height: 16.0),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => _signInClicked(context),
+                  onPressed: () {
+                    if (Platform.isIOS) {
+                      context
+                          .read<AuthCubit>()
+                          .loginWithApple(forceToReplace: true);
+                    } else {
+                      context
+                          .read<AuthCubit>()
+                          .loginWithGoogle(forceToReplace: true);
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
@@ -97,9 +69,9 @@ class AuthDialogContent extends StatelessWidget {
                           height: 18,
                           child: CircularProgressIndicator(),
                         )
-                      : Text(
-                          _buttonText,
-                          style: const TextStyle(
+                      : const Text(
+                          'Continiue',
+                          style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Roboto',
