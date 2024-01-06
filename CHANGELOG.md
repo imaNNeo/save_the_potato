@@ -1,3 +1,8 @@
+## 0.12.0
+* Finalized Authentication and leaderboard
+* Allow to update nickname
+* Show current score when game is paused
+
 ## 0.11.0
 * Fixed leaderboard logic issues
 
