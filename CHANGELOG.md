@@ -1,3 +1,7 @@
+## 0.16.0
+* Load maximum 20 items in leaderboard
+* Implement shimmer effect in leaderboard page
+
 ## 0.15.0
 * Add deviceId concept to keep track of user devices (later we will have push notif ID per device)
 
