@@ -61,6 +61,6 @@ class ScoresRepository {
   Stream<int> getHighScoreStream() =>
       _scoresLocalDataSource.getHighScoreStream();
 
-  Future<LeaderboardEntity> getLeaderboard() =>
-      _scoresRemoteDataSource.getLeaderboard();
+  Future<LeaderboardEntity> getLeaderboard(int pageLimit) =>
+      _scoresRemoteDataSource.getLeaderboard(pageLimit);
 }

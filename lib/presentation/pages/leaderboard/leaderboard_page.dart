@@ -56,11 +56,20 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                           bottom: 96,
                         ),
                         itemBuilder: (context, index) {
+                          if (index == 0) {
+                            return const Padding(
+                              padding: EdgeInsets.only(
+                                left: 6.0,
+                                bottom: 8.0,
+                              ),
+                              child: Text('Top ${ScoresCubit.maxItemsToLoad}:'),
+                            );
+                          }
                           return ScoreRow(
-                            scoreEntity: leaderboard.scores[index],
+                            scoreEntity: leaderboard.scores[index - 1],
                           );
                         },
-                        itemCount: leaderboard.scores.length,
+                        itemCount: leaderboard.scores.length + 1,
                       ),
                     ),
                   if (leaderboard != null &&

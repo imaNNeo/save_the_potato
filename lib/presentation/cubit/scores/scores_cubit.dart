@@ -11,6 +11,7 @@ import 'package:save_the_potato/domain/repository/scores_repository.dart';
 part 'scores_state.dart';
 
 class ScoresCubit extends Cubit<ScoresState> {
+  static const int maxItemsToLoad = 20;
   ScoresCubit(
     this._scoreRepository,
     this._authRepository,
@@ -85,7 +86,9 @@ class ScoresCubit extends Cubit<ScoresState> {
       emit(state.copyWith(
         leaderboardLoading: true,
       ));
-      final leaderboard = await _scoreRepository.getLeaderboard();
+      final leaderboard = await _scoreRepository.getLeaderboard(
+        maxItemsToLoad,
+      );
       emit(state.copyWith(
         leaderboard: ValueWrapper(leaderboard),
         leaderboardLoading: false,

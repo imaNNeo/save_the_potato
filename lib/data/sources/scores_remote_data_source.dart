@@ -8,8 +8,8 @@ class ScoresRemoteDataSource {
 
   ScoresRemoteDataSource(this._functions);
 
-  Future<LeaderboardEntity> getLeaderboard() =>
-      _functions.getLeaderboard();
+  Future<LeaderboardEntity> getLeaderboard(int pageLimit) =>
+      _functions.getLeaderboard(pageLimit);
 
   Future<ScoreEntity> submitScore(int score) =>
       _functions.submitScore(score);

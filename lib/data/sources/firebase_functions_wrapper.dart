@@ -149,7 +149,6 @@ class FirebaseFunctionsWrapper {
     return UserEntity.fromJson(response['data']);
   }
 
-
   Future<String> getDeviceId() async {
     String? deviceId = await _storage.getString(deviceIdKey);
     if (deviceId != null) {
@@ -180,8 +179,13 @@ class FirebaseFunctionsWrapper {
     }
   }
 
-  Future<LeaderboardEntity> getLeaderboard() async {
-    final response = await _callFunction(name: 'getLeaderboard');
+  Future<LeaderboardEntity> getLeaderboard(int pageLimit) async {
+    final response = await _callFunction(
+      name: 'getLeaderboard',
+      parameters: {
+        'page_limit': pageLimit,
+      },
+    );
     return LeaderboardEntity.fromJson(response['data']);
   }
 
