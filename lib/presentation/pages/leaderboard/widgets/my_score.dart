@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
@@ -9,12 +10,14 @@ import 'package:save_the_potato/presentation/game_colors.dart';
 import 'score_rank_number.dart';
 
 class MyScore extends StatelessWidget {
-  final ScoreEntity scoreEntity;
-
   const MyScore({
     super.key,
     required this.scoreEntity,
+    required this.loading,
   });
+
+  final ScoreEntity scoreEntity;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -27,16 +30,7 @@ class MyScore extends StatelessWidget {
       width: 2,
     );
     const borderRadius = Radius.circular(16);
-    return BlocListener<ScoresCubit, ScoresState>(
-      listener: (context, state) {
-        if (state.showAuthDialog) {
-          BaseDialog.showAuthDialog(context);
-        }
-        if (state.showNicknameDialog) {
-          BaseDialog.showNicknameDialog(context);
-        }
-      },
-      child: Container(
+    final rawChild = Container(
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
           borderRadius: const BorderRadius.only(
@@ -119,7 +113,25 @@ class MyScore extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
+    return BlocListener<ScoresCubit, ScoresState>(
+      listener: (context, state) {
+        if (state.showAuthDialog) {
+          BaseDialog.showAuthDialog(context);
+        }
+        if (state.showNicknameDialog) {
+          BaseDialog.showNicknameDialog(context);
+        }
+      },
+      child: loading ? rawChild.animate(
+          onPlay: (controller) => controller.repeat(),
+        )
+        .shimmer(
+          color: Colors.white,
+          blendMode: BlendMode.dstOut,
+          duration: const Duration(seconds: 2),
+          angle: 45,
+        ) : rawChild,
+      );
   }
 }

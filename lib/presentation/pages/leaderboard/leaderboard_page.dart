@@ -46,6 +46,15 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                 children: [
                   if (scoresState.leaderBoardError.isNotBlank)
                     Text(scoresState.leaderBoardError),
+                  if (leaderboard == null && scoresState.leaderboardLoading)
+                    SafeArea(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: ScoresCubit.maxItemsToLoad,
+                        itemBuilder: (_, __) => const ScoreRowShimmer(),
+                      ),
+                    ),
                   if (leaderboard != null)
                     SafeArea(
                       child: ListView.builder(
@@ -67,6 +76,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                           }
                           return ScoreRow(
                             scoreEntity: leaderboard.scores[index - 1],
+                            loading: scoresState.leaderboardLoading,
                           );
                         },
                         itemCount: leaderboard.scores.length + 1,
@@ -78,15 +88,12 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                     const Center(
                       child: Text('No score found!'),
                     ),
-                  if (scoresState.leaderboardLoading)
-                    const Center(
-                      child: CircularProgressIndicator(),
-                    ),
                   if (scoresState.leaderboard?.myScore != null)
                     Align(
                       alignment: Alignment.bottomCenter,
                       child: MyScore(
                         scoreEntity: scoresState.leaderboard!.myScore!,
+                        loading: scoresState.leaderboardLoading,
                       ),
                     ),
                 ],
