@@ -32,8 +32,7 @@ class ScoresRepository {
 
     // One is null
     if (myRemoteScore == null && myLocalScore != null) {
-      await _scoresRemoteDataSource.submitScore(myLocalScore);
-      return myLocalScore;
+      return null;
     }
 
     if (myRemoteScore != null && myLocalScore == null) {
