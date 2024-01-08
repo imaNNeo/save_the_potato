@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
-import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
+import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
 import 'range_progress_indicator/range_progress_indicator.dart';
 

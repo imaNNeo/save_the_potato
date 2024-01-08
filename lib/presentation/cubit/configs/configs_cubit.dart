@@ -8,9 +8,7 @@ import 'package:save_the_potato/domain/repository/configs_repository.dart';
 part 'configs_state.dart';
 
 class ConfigsCubit extends Cubit<ConfigsState> {
-  ConfigsCubit(this._configsRepository) : super(const ConfigsState()) {
-    initialize();
-  }
+  ConfigsCubit(this._configsRepository) : super(const ConfigsState());
 
   final ConfigsRepository _configsRepository;
   late StreamSubscription _configsSubscription;

@@ -17,7 +17,7 @@ import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
 
 import 'components/orb.dart';
 import 'components/potato.dart';
-import 'cubit/game_cubit.dart';
+import 'cubit/game/game_cubit.dart';
 
 class MyGame extends FlameGame<MyWorld>
     with HasCollisionDetection, KeyboardEvents {

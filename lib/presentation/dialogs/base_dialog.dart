@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/domain/models/errors/domain_error.dart';
+import 'package:save_the_potato/presentation/cubit/splash/splash_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/account_already_exists.dart';
 import 'package:save_the_potato/presentation/dialogs/nickname_dialog_content.dart';
 import 'package:save_the_potato/presentation/dialogs/settings_dialog_content.dart';
 
 import 'auth_dialog_content.dart';
+import 'update_dialog_content.dart';
 
 class BaseDialog extends AlertDialog {
   BaseDialog({
@@ -12,6 +14,7 @@ class BaseDialog extends AlertDialog {
     required BuildContext context,
     required String title,
     required Widget content,
+    bool showCloseButton = true,
   }) : super(
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(
@@ -22,11 +25,12 @@ class BaseDialog extends AlertDialog {
             children: [
               Text(title),
               Expanded(child: Container()),
-              IconButton(
-                tooltip: 'Close',
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.close),
-              ),
+              if (showCloseButton)
+                IconButton(
+                  tooltip: 'Close',
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close),
+                ),
             ],
           ),
           content: content,
@@ -77,6 +81,23 @@ class BaseDialog extends AlertDialog {
         content: AccountAlreadyExistsDialogContent(
           error: error,
         ),
+      ),
+    );
+  }
+
+  static Future<T?> showUpdateDialog<T>(
+    BuildContext context,
+    UpdateInfo info,
+  ) {
+    final title = info.forced ? 'Update Required' : 'Update Available';
+    return showDialog(
+      barrierDismissible: !info.forced,
+      context: context,
+      builder: (BuildContext context) => BaseDialog(
+        context: context,
+        title: title,
+        content: UpdateDialogContent(info: info),
+        showCloseButton: !info.forced,
       ),
     );
   }

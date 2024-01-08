@@ -47,4 +47,6 @@ class GameConstants {
 
   static const String domain = 'https://savethepotato.com';
   static const String privacyPolicy = '$domain/privacy';
+
+  static const double splashDuration = 2.0;
 }

@@ -25,8 +25,8 @@ class ConfigsRepository {
     GameConfigEntity? remoteConfigs;
     try {
       remoteConfigs = await _configsRemoteDataSource.getGameConfig();
-    } catch (e) {
-      debugPrint(e.toString());
+    } catch (e, stackTrace) {
+      debugPrint('configs error: ${e.toString()}, \n$stackTrace');
     }
 
     if (remoteConfigs != null && localConfigs != remoteConfigs) {

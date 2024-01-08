@@ -94,8 +94,10 @@ class FirebaseFunctionsWrapper {
   }) async {
     try {
       if (kDebugMode) {
-        debugPrint('\n-> firebase functions ($name):');
-        debugPrint('$parameters');
+        debugPrint('-> firebase functions ($name):');
+        if (parameters != null) {
+          debugPrint('params: $parameters');
+        }
       }
       parameters ??= <String, dynamic>{};
 
@@ -115,7 +117,7 @@ class FirebaseFunctionsWrapper {
         response.data,
       );
       if (kDebugMode) {
-        debugPrint('\n<- firebase functions ($name):');
+        debugPrint('<- firebase functions ($name):');
         debugPrint('$parsedResponse');
       }
       if (parsedResponse is! Map<String, dynamic>) {

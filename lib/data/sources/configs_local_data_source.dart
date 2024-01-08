@@ -2,11 +2,9 @@ import 'dart:convert';
 
 import 'package:save_the_potato/data/key_value_storage.dart';
 import 'package:save_the_potato/domain/models/game_config_entity.dart';
-import 'package:uuid/uuid.dart';
 
 class ConfigsLocalDataSource {
   static const String _gameConfigKey = 'gameConfig';
-  static const String _deviceIdKey = 'deviceId';
 
   ConfigsLocalDataSource(this._keyValueStorage);
   final KeyValueStorage _keyValueStorage;

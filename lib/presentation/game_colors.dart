@@ -37,4 +37,6 @@ class GameColors {
     final normalBorderColor = Theme.of(context).dividerColor.withOpacity(0.3);
     return isMine ? mineBorderColor : normalBorderColor;
   }
+
+  static const Color versionColor = Color(0xB2FFFFFF);
 }

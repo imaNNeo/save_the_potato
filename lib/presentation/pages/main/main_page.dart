@@ -4,7 +4,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
-import 'package:save_the_potato/presentation/cubit/game_cubit.dart';
+import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';

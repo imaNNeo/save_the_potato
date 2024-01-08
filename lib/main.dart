@@ -12,13 +12,14 @@ import 'package:save_the_potato/domain/repository/settings_repository.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/configs/configs_cubit.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/presentation/pages/splash/splash_page.dart';
 import 'package:save_the_potato/service_locator.dart';
 import 'domain/repository/auth_repository.dart';
 import 'firebase_options.dart';
-import 'presentation/cubit/game_cubit.dart';
+import 'presentation/cubit/game/game_cubit.dart';
 import 'presentation/cubit/scores/scores_cubit.dart';
 import 'presentation/cubit/settings/settings_cubit.dart';
-import 'presentation/pages/main_page.dart';
+import 'presentation/cubit/splash/splash_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,7 +48,6 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<ConfigsCubit>(
-          lazy: false,
           create: (context) => ConfigsCubit(
             getIt.get<ConfigsRepository>(),
           ),
@@ -71,9 +71,13 @@ class MyApp extends StatelessWidget {
           ),
         ),
         BlocProvider<AuthCubit>(
-          lazy: false,
           create: (context) => AuthCubit(
             getIt.get<AuthRepository>(),
+            getIt.get<ConfigsRepository>(),
+          ),
+        ),
+        BlocProvider<SplashCubit>(
+          create: (context) => SplashCubit(
             getIt.get<ConfigsRepository>(),
           ),
         ),
@@ -102,7 +106,7 @@ class MyApp extends StatelessWidget {
             seedColor: Colors.blue,
           ),
         ),
-        home: const MainPage(),
+        home: const SplashPage(),
       ),
     );
   }

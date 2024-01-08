@@ -18,9 +18,7 @@ class AuthCubit extends Cubit<AuthState> {
   AuthCubit(
     this._authRepository,
     this._configsRepository,
-  ) : super(const AuthState()) {
-    initialize();
-  }
+  ) : super(const AuthState());
 
   final AuthRepository _authRepository;
   final ConfigsRepository _configsRepository;
@@ -36,7 +34,7 @@ class AuthCubit extends Cubit<AuthState> {
         ),
       );
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint('auth error: ${e.toString()}');
     }
 
     _userStreamSubscription = _authRepository.getUserStream().listen((event) {
@@ -139,7 +137,7 @@ class AuthCubit extends Cubit<AuthState> {
         updateUserSucceeds: PresentationMessage.empty,
       ));
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint('auth error 2: ${e.toString()}');
       emit(
         state.copyWith(
           updateUserLoading: false,
