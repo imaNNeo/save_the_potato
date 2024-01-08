@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
@@ -84,7 +83,7 @@ class _GameOverUIState extends State<GameOverUI>
                     width: 240,
                     child: GameRoundButton(
                       title: 'TRY AGAIN!',
-                      onPressed: () => Phoenix.rebirth(context),
+                      onPressed: () => context.read<GameCubit>().restartGame(),
                     ),
                   ),
                 ],

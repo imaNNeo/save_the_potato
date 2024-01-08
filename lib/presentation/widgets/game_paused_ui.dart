@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/widgets/game_round_button.dart';
@@ -66,7 +65,7 @@ class GamePausedUI extends StatelessWidget {
                 child: Container(),
               ),
               TextButton(
-                onPressed: () => Phoenix.rebirth(context),
+                onPressed: () => context.read<GameCubit>().restartGame(),
                 child: const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
                   child: Text(

@@ -24,6 +24,8 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage>
     with SingleTickerProviderStateMixin {
+  late Key pageRootKey;
+
   late MyGame _game;
 
   late GameCubit _gameCubit;
@@ -35,6 +37,7 @@ class _MainPageState extends State<MainPage>
 
   @override
   void initState() {
+    pageRootKey = UniqueKey();
     _gameCubit = context.read<GameCubit>();
     _settingsCubit = context.read<SettingsCubit>();
     _gameCubit.startGame();
@@ -52,6 +55,13 @@ class _MainPageState extends State<MainPage>
     super.initState();
   }
 
+  void _restartGameWidgets() {
+    setState(() {
+      pageRootKey = UniqueKey();
+      _game = MyGame(_gameCubit, _settingsCubit);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final gameWidget = GameWidget(
@@ -65,7 +75,13 @@ class _MainPageState extends State<MainPage>
         );
       },
     );
-    return BlocBuilder<GameCubit, GameState>(
+    return BlocConsumer<GameCubit, GameState>(
+      key: pageRootKey,
+      listener: (context, state) {
+        if (state.restartGame) {
+          _restartGameWidgets();
+        }
+      },
       builder: (context, state) {
         return PopScope(
           canPop: !state.playingState.isPlaying,

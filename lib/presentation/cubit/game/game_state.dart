@@ -7,6 +7,7 @@ class GameState extends Equatable {
     this.playingState = PlayingState.none,
     this.showGameOverUI = false,
     this.shieldsAngleRotationSpeed = 0,
+    this.restartGame = false,
   });
 
   /// Between [GameConstants.minHeatLevel] and [GameConstants.maxHeatLevel]
@@ -19,6 +20,8 @@ class GameState extends Equatable {
   final bool showGameOverUI;
 
   final double shieldsAngleRotationSpeed;
+
+  final bool restartGame;
 
   /// Between 0.0 and 1.0
   double get difficulty => Curves.easeOutCubic.transform(min(
@@ -64,6 +67,7 @@ class GameState extends Equatable {
     PlayingState? playingState,
     bool? showGameOverUI,
     double? shieldsAngleRotationSpeed,
+    bool? restartGame,
   }) {
     return GameState(
       heatLevel: heatLevel ?? this.heatLevel,
@@ -72,6 +76,7 @@ class GameState extends Equatable {
       showGameOverUI: showGameOverUI ?? this.showGameOverUI,
       shieldsAngleRotationSpeed:
           shieldsAngleRotationSpeed ?? this.shieldsAngleRotationSpeed,
+      restartGame: restartGame ?? this.restartGame,
     );
   }
 
@@ -82,6 +87,7 @@ class GameState extends Equatable {
         playingState,
         showGameOverUI,
         shieldsAngleRotationSpeed,
+        restartGame,
       ];
 }
 

@@ -178,4 +178,12 @@ class GameCubit extends Cubit<GameState> {
     emit(state.copyWith(playingState: PlayingState.playing));
     FlameAudio.bgm.resume();
   }
+
+  void restartGame() {
+    emit(const GameState().copyWith(
+      playingState: PlayingState.guide,
+      restartGame: true,
+    ));
+    emit(state.copyWith(restartGame: false));
+  }
 }

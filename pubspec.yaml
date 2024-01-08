@@ -43,7 +43,6 @@ dependencies:
   flame_audio: ^2.1.5
   flame_rive: ^1.9.8
   rive: ^0.12.3
-  flutter_phoenix: ^1.1.1
   shared_preferences: ^2.2.2
   get_it: ^7.6.4
   flutter_animate: ^4.3.0
