@@ -1,3 +1,8 @@
+## 0.17.0
+* Added Splash page to handle some initial checks, such as version check (force-update or normal-update)
+* Smooth transition for pages and dialogs
+* Error-handling in leaderboard
+
 ## 0.16.0
 * Load maximum 20 items in leaderboard
 * Implement shimmer effect in leaderboard page
