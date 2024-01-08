@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/models/errors/domain_error.dart';
@@ -33,7 +34,8 @@ class AuthCubit extends Cubit<AuthState> {
           user: ValueWrapper(user),
         ),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      FirebaseCrashlytics.instance.recordError(e, stackTrace);
       debugPrint('auth error: ${e.toString()}');
     }
 

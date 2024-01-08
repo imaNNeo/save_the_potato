@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
 import 'package:save_the_potato/domain/models/presentation_message.dart';
@@ -121,7 +122,8 @@ class ScoresCubit extends Cubit<ScoresState> {
 
       emit(state.copyWith(showNicknameDialog: true));
       emit(state.copyWith(showNicknameDialog: false));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      FirebaseCrashlytics.instance.recordError(e, stackTrace);
       emit(state.copyWith(
         leaderBoardError: PresentationMessage.fromError(e),
       ));
