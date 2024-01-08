@@ -6,6 +6,7 @@ import 'package:save_the_potato/presentation/cubit/configs/configs_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/splash/splash_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
+import 'package:save_the_potato/presentation/pages/fade_route.dart';
 import 'package:save_the_potato/presentation/pages/main/main_page.dart';
 import 'package:save_the_potato/presentation/widgets/potato_idle.dart';
 
@@ -28,7 +29,7 @@ class _SplashPageState extends State<SplashPage> {
 
   void _openHomePage(BuildContext context) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const MainPage()),
+      FadeRoute(page: const MainPage()),
     );
   }
 

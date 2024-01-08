@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
+import 'package:save_the_potato/presentation/pages/fade_route.dart';
 import 'package:save_the_potato/presentation/pages/leaderboard/leaderboard_page.dart';
 
 class HighScoreWidget extends StatelessWidget {
@@ -18,8 +19,8 @@ class HighScoreWidget extends StatelessWidget {
             child: InkWell(
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const LeaderboardPage(),
+                  FadeRoute(
+                    page: const LeaderboardPage(),
                   ),
                 );
                 context.read<GameCubit>().pauseGame();

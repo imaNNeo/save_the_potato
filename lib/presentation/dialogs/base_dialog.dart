@@ -36,8 +36,35 @@ class BaseDialog extends AlertDialog {
           content: content,
         );
 
+  static Future<T?> _showSimpleDialog<T>({
+    required BuildContext context,
+    required WidgetBuilder builder,
+    bool barrierDismissible = true,
+  }) {
+    return showGeneralDialog(
+      context: context,
+      barrierLabel: 'Barrier',
+      barrierDismissible: barrierDismissible,
+      barrierColor: Colors.black.withOpacity(0.7),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (_, __, ___) {
+        return builder(context);
+      },
+      transitionBuilder: (_, anim, __, child) {
+        Tween<double> scaleTween = Tween(begin: 0.0, end: 1.0);
+        return ScaleTransition(
+          scale: scaleTween.animate(anim),
+          child: FadeTransition(
+            opacity: anim,
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
   static void showSettingsDialog(BuildContext context) {
-    showDialog(
+    _showSimpleDialog(
       context: context,
       builder: (BuildContext context) => BaseDialog(
         context: context,
@@ -48,7 +75,7 @@ class BaseDialog extends AlertDialog {
   }
 
   static void showNicknameDialog(BuildContext context) {
-    showDialog(
+    _showSimpleDialog(
       context: context,
       builder: (BuildContext context) => BaseDialog(
         context: context,
@@ -59,7 +86,7 @@ class BaseDialog extends AlertDialog {
   }
 
   static void showAuthDialog(BuildContext context) {
-    showDialog(
+    _showSimpleDialog(
       context: context,
       builder: (BuildContext context) => BaseDialog(
         context: context,
@@ -73,7 +100,7 @@ class BaseDialog extends AlertDialog {
     BuildContext context,
     AccountAlreadyExistsError error,
   ) {
-    showDialog(
+    _showSimpleDialog(
       context: context,
       builder: (BuildContext context) => BaseDialog(
         context: context,
@@ -90,7 +117,7 @@ class BaseDialog extends AlertDialog {
     UpdateInfo info,
   ) {
     final title = info.forced ? 'Update Required' : 'Update Available';
-    return showDialog(
+    return _showSimpleDialog(
       barrierDismissible: !info.forced,
       context: context,
       builder: (BuildContext context) => BaseDialog(
