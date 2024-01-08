@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/repository/settings_repository.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 
@@ -17,6 +19,12 @@ class SettingsCubit extends Cubit<SettingsState> {
   final AudioHelper _audioHelper;
 
   void initialize() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    emit(state.copyWith(
+      versionName: AppUtils.formatVersionName(
+        packageInfo.version,
+      ),
+    ));
     emit(state.copyWith(audioEnabled: await _repository.audioEnabled()));
     _audioHelper.setAudioEnabled(state.audioEnabled);
   }

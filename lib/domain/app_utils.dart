@@ -14,4 +14,6 @@ class AppUtils {
       throw Exception('Could not launch $uri');
     }
   }
+
+  static String formatVersionName(String versionName) => 'v$versionName';
 }

@@ -111,9 +111,9 @@ class _SplashPageState extends State<SplashPage> {
                       width: 100,
                     ),
                     const SizedBox(height: 20),
-                    const Text(
-                      'v1.0.0',
-                      style: TextStyle(
+                    Text(
+                      state.showingVersion,
+                      style: const TextStyle(
                         color: GameColors.versionColor,
                         fontSize: 12,
                         fontFamily: 'RobotoMono',

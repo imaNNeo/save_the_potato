@@ -29,6 +29,12 @@ class SettingsDialogContent extends StatelessWidget {
                 },
               ),
             ),
+            Text(
+              state.versionName,
+              style: const TextStyle(
+                fontFamily: 'Roboto',
+              ),
+            ),
           ],
         );
       },

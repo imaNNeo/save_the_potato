@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
@@ -34,11 +35,15 @@ class SplashCubit extends Cubit<SplashState> {
 
   Future<bool> _initialChecks() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    final currentVersionCode = int.parse(packageInfo.buildNumber);
+    emit(state.copyWith(
+      showingVersion: AppUtils.formatVersionName(
+        packageInfo.version,
+      ),
+    ));
 
     final (minVersion, latestVersion, storeLink) =
         await _getMinAndLatestVersion();
-
-    final currentVersionCode = int.parse(packageInfo.buildNumber);
 
     final forceUpdate = currentVersionCode < minVersion;
 
