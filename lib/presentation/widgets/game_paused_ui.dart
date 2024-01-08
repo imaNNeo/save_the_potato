@@ -70,7 +70,7 @@ class GamePausedUI extends StatelessWidget {
                 child: const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
                   child: Text(
-                    'BACK TO HOME',
+                    'RESTART',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,

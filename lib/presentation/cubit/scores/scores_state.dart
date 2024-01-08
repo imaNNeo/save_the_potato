@@ -5,7 +5,7 @@ class ScoresState extends Equatable {
     this.highScore,
     this.leaderboard,
     this.leaderboardLoading = false,
-    this.leaderBoardError = '',
+    this.leaderBoardError = PresentationMessage.empty,
     this.showAuthDialog = false,
     this.showNicknameDialog = false,
   });
@@ -13,7 +13,7 @@ class ScoresState extends Equatable {
   final int? highScore;
   final LeaderboardEntity? leaderboard;
   final bool leaderboardLoading;
-  final String leaderBoardError;
+  final PresentationMessage leaderBoardError;
   final bool showAuthDialog;
   final bool showNicknameDialog;
 
@@ -21,7 +21,7 @@ class ScoresState extends Equatable {
     ValueWrapper<int>? highScore,
     ValueWrapper<LeaderboardEntity>? leaderboard,
     bool? leaderboardLoading,
-    String? leaderBoardError,
+    PresentationMessage? leaderBoardError,
     bool? showAuthDialog,
     bool? showNicknameDialog,
   }) =>

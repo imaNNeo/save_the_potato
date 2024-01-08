@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:save_the_potato/domain/extensions/string_extensions.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 
@@ -26,7 +25,14 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ScoresCubit, ScoresState>(
+    return BlocConsumer<ScoresCubit, ScoresState>(
+      listener: (context, scoresState) {
+        if (scoresState.leaderBoardError.isNotEmpty) {
+          scoresState.leaderBoardError.showAsToast(
+            context,
+          );
+        }
+      },
       builder: (context, scoresState) {
         final leaderboard = scoresState.leaderboard;
         return BlocBuilder<AuthCubit, AuthState>(
@@ -44,8 +50,6 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
               ),
               body: Stack(
                 children: [
-                  if (scoresState.leaderBoardError.isNotBlank)
-                    Text(scoresState.leaderBoardError),
                   if (leaderboard == null && scoresState.leaderboardLoading)
                     SafeArea(
                       child: ListView.builder(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
+import 'package:save_the_potato/domain/models/presentation_message.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/auth_repository.dart';
@@ -82,6 +83,9 @@ class ScoresCubit extends Cubit<ScoresState> {
   }
 
   void tryToRefreshLeaderboard() async {
+    if (state.leaderboardLoading) {
+      return;
+    }
     try {
       emit(state.copyWith(
         leaderboardLoading: true,
@@ -95,24 +99,36 @@ class ScoresCubit extends Cubit<ScoresState> {
       ));
     } catch (e) {
       emit(state.copyWith(
-        leaderBoardError: e.toString(),
+        leaderBoardError: PresentationMessage.fromError(e),
         leaderboardLoading: false,
+      ));
+      emit(state.copyWith(
+        leaderBoardError: PresentationMessage.empty,
       ));
     }
   }
 
   void onUserScoreClicked() async {
-    final isUserAnonymous = await _authRepository.isUserAnonymous();
+    try {
+      final isUserAnonymous = await _authRepository.isUserAnonymous();
 
-    // Anonymous user cannot update nickname
-    if (isUserAnonymous) {
-      emit(state.copyWith(showAuthDialog: true));
-      emit(state.copyWith(showAuthDialog: false));
-      return;
+      // Anonymous user cannot update nickname
+      if (isUserAnonymous) {
+        emit(state.copyWith(showAuthDialog: true));
+        emit(state.copyWith(showAuthDialog: false));
+        return;
+      }
+
+      emit(state.copyWith(showNicknameDialog: true));
+      emit(state.copyWith(showNicknameDialog: false));
+    } catch (e) {
+      emit(state.copyWith(
+        leaderBoardError: PresentationMessage.fromError(e),
+      ));
+      emit(state.copyWith(
+        leaderBoardError: PresentationMessage.empty,
+      ));
     }
-
-    emit(state.copyWith(showNicknameDialog: true));
-    emit(state.copyWith(showNicknameDialog: false));
   }
 
   @override
