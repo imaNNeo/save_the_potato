@@ -1,3 +1,6 @@
+## 0.18.0
+* Show a captcha when app opens (before everything)
+
 ## 0.17.0
 * Added Splash page to handle some initial checks, such as version check (force-update or normal-update)
 * Smooth transition for pages and dialogs
