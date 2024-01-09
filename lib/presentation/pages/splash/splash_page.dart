@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/models/presentation_message.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/configs/configs_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/splash/splash_cubit.dart';
@@ -9,6 +10,7 @@ import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
 import 'package:save_the_potato/presentation/pages/main/main_page.dart';
 import 'package:save_the_potato/presentation/widgets/potato_idle.dart';
+import 'package:toastification/toastification.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -23,8 +25,27 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   void initState() {
-    context.read<SplashCubit>().pageOpen();
     super.initState();
+    _initialize();
+  }
+
+  void _initialize() async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!(await BaseDialog.showCaptchaDialog(context))) {
+        if (!mounted) {
+          return;
+        }
+        PresentationMessage.raw('Oh, you are a bot!').showAsToast(
+          context,
+          type: ToastificationType.error,
+        );
+        return;
+      }
+      if (!mounted) {
+        return;
+      }
+      context.read<SplashCubit>().pageOpen();
+    });
   }
 
   void _openHomePage(BuildContext context) {
