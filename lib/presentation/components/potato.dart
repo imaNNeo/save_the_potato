@@ -73,7 +73,7 @@ class Potato extends PositionComponent
     fireDieTrigger = controller.findInput<bool>('fire-die') as SMITrigger;
     iceDieTrigger = controller.findInput<bool>('ice-die') as SMITrigger;
     potatoArtBoard.addController(controller);
-    add(CustomRiveComponent(
+    add(RiveComponent(
       artboard: potatoArtBoard,
       size: Vector2.all(152),
       anchor: Anchor.center,
@@ -116,25 +116,5 @@ class Potato extends PositionComponent
       }
       other.removeFromParent();
     }
-  }
-}
-
-class CustomRiveComponent extends RiveComponent {
-  CustomRiveComponent({
-    required super.artboard,
-    super.size,
-    super.anchor,
-    super.position,
-  });
-
-  @override
-  void render(Canvas canvas) {
-    canvas.save();
-    canvas.clipRect(Rect.fromCircle(
-      center: (size / 2).toOffset(),
-      radius: size.x / 3,
-    ));
-    super.render(canvas);
-    canvas.restore();
   }
 }
