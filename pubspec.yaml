@@ -96,19 +96,11 @@ flutter:
     - assets/rive/
 
 flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  remove_alpha_ios: true
-  image_path: "assets/logo.png"
+  android: false
+  ios: false
+  remove_alpha_ios: false
+  image_path: "assets/logo-1024.png"
   min_sdk_android: 21
-  web:
-    generate: true
-    image_path: "assets/logo.png"
-    background_color: "#FFFFFF"
-  windows:
-    generate: true
-    image_path: "assets/logo.png"
-    icon_size: 48
   macos:
     generate: true
-    image_path: "assets/logo.png"
+    image_path: "assets/logo-1024.png"
