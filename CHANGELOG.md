@@ -1,3 +1,7 @@
+## 0.20.0
+* Regenerate iOS, Android and macOS icons
+* Disable captcha
+
 ## 0.18.0
 * Show a captcha when app opens (before everything)
 
