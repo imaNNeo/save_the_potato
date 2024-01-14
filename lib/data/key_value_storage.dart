@@ -33,10 +33,10 @@ class SecureKeyValueStorage extends KeyValueStorage {
       StreamController<(String key, dynamic data)>.broadcast();
 
   @override
-  Future<bool> getBool(String key) async {
+  Future<bool?> getBool(String key) async {
     final value = await _secureStorage.read(key: key);
     if (value == null) {
-      return Future.value(false);
+      return null;
     }
     return value.asBool;
   }
