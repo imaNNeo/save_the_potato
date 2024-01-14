@@ -1,3 +1,6 @@
+## 0.21.0
+* Add iOS minVersion 12.0
+
 ## 0.20.0
 * Regenerate iOS, Android and macOS icons
 * Disable captcha
