@@ -97,10 +97,7 @@ flutter:
 
 flutter_launcher_icons:
   android: false
-  ios: false
-  remove_alpha_ios: false
+  ios: true
+  remove_alpha_ios: true
   image_path: "assets/logo-1024.png"
   min_sdk_android: 21
-  macos:
-    generate: true
-    image_path: "assets/logo-1024.png"
