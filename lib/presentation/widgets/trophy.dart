@@ -16,6 +16,9 @@ class Trophy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     int? rank = score is OnlineScoreEntity ? (score as OnlineScoreEntity).rank : null;
+    if (rank != null && rank > 99) {
+      rank = 99;
+    }
     return SizedBox(
       width: size,
       height: size,
