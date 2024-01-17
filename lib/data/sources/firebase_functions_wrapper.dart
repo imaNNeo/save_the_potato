@@ -164,20 +164,20 @@ class FirebaseFunctionsWrapper {
     return newDeviceId;
   }
 
-  Future<ScoreEntity> submitScore(int score) async {
+  Future<OnlineScoreEntity> submitScore(int score) async {
     final response = await _callFunction(
       name: 'submitScore',
       parameters: <String, dynamic>{
         'score': score,
       },
     );
-    return ScoreEntity.fromJson(response['data']);
+    return OnlineScoreEntity.fromJson(response['data']);
   }
 
-  Future<ScoreEntity?> getScore() async {
+  Future<OnlineScoreEntity?> getScore() async {
     try {
       final response = await _callFunction(name: 'getScore');
-      return ScoreEntity.fromJson(response['data']);
+      return OnlineScoreEntity.fromJson(response['data']);
     } catch (e) {
       return null;
     }

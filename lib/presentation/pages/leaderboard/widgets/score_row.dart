@@ -14,7 +14,7 @@ class ScoreRow extends StatelessWidget {
     required this.loading,
   }) : super();
 
-  final ScoreEntity scoreEntity;
+  final OnlineScoreEntity scoreEntity;
   final bool loading;
 
   @override

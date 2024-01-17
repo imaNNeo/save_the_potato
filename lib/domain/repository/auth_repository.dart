@@ -58,7 +58,7 @@ class AuthRepository {
       await _scoresLocalDataSource.clearHighScore();
       final scoreEntity = await _scoresRemoteDataSource.getScore();
       if (scoreEntity != null) {
-        await _scoresLocalDataSource.setHighScore(scoreEntity.score);
+        await _scoresLocalDataSource.setHighScore(scoreEntity);
       }
     }
     await _authLocalDataSource.saveUser(user);

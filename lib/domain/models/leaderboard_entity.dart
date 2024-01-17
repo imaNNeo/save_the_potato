@@ -3,8 +3,8 @@ import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'pagination_page_data_entity.dart';
 
 class LeaderboardEntity {
-  final List<ScoreEntity> scores;
-  final ScoreEntity? myScore;
+  final List<OnlineScoreEntity> scores;
+  final OnlineScoreEntity? myScore;
   final String leaderboardId;
   final String leaderboardTitle;
   final PaginationPageDataEntity pageData;
@@ -28,11 +28,11 @@ class LeaderboardEntity {
   factory LeaderboardEntity.fromJson(Map<String, dynamic> json) =>
       LeaderboardEntity(
         scores: (json['scores'] as List<dynamic>)
-            .map((e) => ScoreEntity.fromJson(e as Map<String, dynamic>))
+            .map((e) => OnlineScoreEntity.fromJson(e as Map<String, dynamic>))
             .toList(),
         myScore: json['my_score'] == null
             ? null
-            : ScoreEntity.fromJson(json['my_score'] as Map<String, dynamic>),
+            : OnlineScoreEntity.fromJson(json['my_score'] as Map<String, dynamic>),
         leaderboardId: json['leaderboard_id'],
         leaderboardTitle: json['leaderboard_title'],
         pageData: PaginationPageDataEntity.fromJson(
@@ -40,8 +40,8 @@ class LeaderboardEntity {
       );
 
   LeaderboardEntity copyWith({
-    List<ScoreEntity>? scores,
-    ScoreEntity? myScore,
+    List<OnlineScoreEntity>? scores,
+    OnlineScoreEntity? myScore,
     String? leaderboardId,
     String? leaderboardTitle,
     PaginationPageDataEntity? pageData,

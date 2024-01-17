@@ -5,6 +5,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
 import 'package:save_the_potato/domain/models/presentation_message.dart';
+import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/auth_repository.dart';
@@ -17,9 +18,7 @@ class ScoresCubit extends Cubit<ScoresState> {
   ScoresCubit(
     this._scoreRepository,
     this._authRepository,
-  ) : super(const ScoresState()) {
-    initialize();
-  }
+  ) : super(const ScoresState());
 
   final ScoresRepository _scoreRepository;
   final AuthRepository _authRepository;
@@ -30,12 +29,13 @@ class ScoresCubit extends Cubit<ScoresState> {
   UserEntity? lastUser;
   Future<void> initialize() async {
     emit(state.copyWith(
-      highScore: ValueWrapper(await _scoreRepository.getHighScore()),
+      myScore: ValueWrapper(await _scoreRepository.getHighScore()),
     ));
+    tryToRefreshLeaderboard();
     _highScoreSubscription =
-        _scoreRepository.getHighScoreStream().listen((event) {
+        _scoreRepository.getHighScoreStream().distinct().listen((event) {
       emit(state.copyWith(
-        highScore: ValueWrapper(event),
+        myScore: ValueWrapper(event),
       ));
     });
     _userSubscription = _authRepository.getUserStream().listen((user) {
@@ -79,7 +79,7 @@ class ScoresCubit extends Cubit<ScoresState> {
   Future<void> reloadHighScore() async {
     final highScore = await _scoreRepository.syncHighScore();
     emit(state.copyWith(
-      highScore: ValueWrapper(highScore),
+      myScore: ValueWrapper(highScore),
     ));
   }
 

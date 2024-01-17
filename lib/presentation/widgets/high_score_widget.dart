@@ -5,6 +5,7 @@ import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
 import 'package:save_the_potato/presentation/pages/leaderboard/leaderboard_page.dart';
+import 'package:save_the_potato/presentation/widgets/trophy.dart';
 
 class HighScoreWidget extends StatelessWidget {
   const HighScoreWidget({super.key});
@@ -36,17 +37,16 @@ class HighScoreWidget extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.emoji_events_outlined,
-                      size: 36,
-                      color: Colors.yellow,
+                    Trophy(
+                      score: state.myScore,
+                      size: 38,
                     ),
                     const SizedBox(width: 8),
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
-                          'Best:',
+                          'Score:',
                           style: TextStyle(
                             fontSize: 14,
                             fontFamily: 'Roboto',
@@ -54,9 +54,9 @@ class HighScoreWidget extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          state.highScore != null
+                          state.myScore != null
                               ? AppUtils.getHighScoreRepresentation(
-                                  state.highScore!,
+                                  state.myScore!.score,
                                 )
                               : '00:00',
                           style: const TextStyle(

@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/configs/configs_cubit.dart';
+import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/splash/splash_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
@@ -40,6 +41,7 @@ class _SplashPageState extends State<SplashPage> {
         if (state.versionIsAllowed) {
           context.read<ConfigsCubit>().initialize();
           context.read<AuthCubit>().initialize();
+          context.read<ScoresCubit>().initialize();
         }
 
         if (state.showUpdatePopup != null) {

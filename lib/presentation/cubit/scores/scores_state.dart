@@ -2,7 +2,7 @@ part of 'scores_cubit.dart';
 
 class ScoresState extends Equatable {
   const ScoresState({
-    this.highScore,
+    this.myScore,
     this.leaderboard,
     this.leaderboardLoading = false,
     this.leaderBoardError = PresentationMessage.empty,
@@ -10,7 +10,7 @@ class ScoresState extends Equatable {
     this.showNicknameDialog = false,
   });
 
-  final int? highScore;
+  final ScoreEntity? myScore;
   final LeaderboardEntity? leaderboard;
   final bool leaderboardLoading;
   final PresentationMessage leaderBoardError;
@@ -18,25 +18,29 @@ class ScoresState extends Equatable {
   final bool showNicknameDialog;
 
   ScoresState copyWith({
-    ValueWrapper<int>? highScore,
+    ValueWrapper<ScoreEntity>? myScore,
     ValueWrapper<LeaderboardEntity>? leaderboard,
     bool? leaderboardLoading,
     PresentationMessage? leaderBoardError,
     bool? showAuthDialog,
     bool? showNicknameDialog,
-  }) =>
-      ScoresState(
-        highScore: highScore != null ? highScore.value : this.highScore,
-        leaderboard: leaderboard != null ? leaderboard.value : this.leaderboard,
-        leaderboardLoading: leaderboardLoading ?? this.leaderboardLoading,
-        leaderBoardError: leaderBoardError ?? this.leaderBoardError,
-        showAuthDialog: showAuthDialog ?? this.showAuthDialog,
-        showNicknameDialog: showNicknameDialog ?? this.showNicknameDialog,
-      );
+  }) {
+    if (leaderboard != null && leaderboard.value != null && myScore == null) {
+      myScore = ValueWrapper(leaderboard.value!.myScore);
+    }
+    return ScoresState(
+      myScore: myScore != null ? myScore.value : this.myScore,
+      leaderboard: leaderboard != null ? leaderboard.value : this.leaderboard,
+      leaderboardLoading: leaderboardLoading ?? this.leaderboardLoading,
+      leaderBoardError: leaderBoardError ?? this.leaderBoardError,
+      showAuthDialog: showAuthDialog ?? this.showAuthDialog,
+      showNicknameDialog: showNicknameDialog ?? this.showNicknameDialog,
+    );
+  }
 
   @override
   List<Object?> get props => [
-        highScore,
+        myScore,
         leaderboard,
         leaderboardLoading,
         leaderBoardError,

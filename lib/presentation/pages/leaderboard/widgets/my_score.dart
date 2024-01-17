@@ -16,7 +16,7 @@ class MyScore extends StatelessWidget {
     required this.loading,
   });
 
-  final ScoreEntity scoreEntity;
+  final OnlineScoreEntity scoreEntity;
   final bool loading;
 
   @override

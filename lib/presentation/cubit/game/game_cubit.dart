@@ -67,10 +67,19 @@ class GameCubit extends Cubit<GameState> {
 
   void _gameOver() async {
     emit(state.copyWith(playingState: PlayingState.gameOver));
-    _scoresRepository.saveScore((state.timePassed * 1000).toInt());
+    _submitScore();
     await _fadeBackgroundVolume();
     emit(state.copyWith(showGameOverUI: true));
     FlameAudio.bgm.stop();
+  }
+
+  void _submitScore() async {
+    final score = (state.timePassed * 1000).toInt();
+    final previousScore = await _scoresRepository.getHighScore();
+    if (score > previousScore.score) {
+      print('High score! $score');
+      await _scoresRepository.saveScore(score);
+    }
   }
 
   Future<void> _fadeBackgroundVolume() async {

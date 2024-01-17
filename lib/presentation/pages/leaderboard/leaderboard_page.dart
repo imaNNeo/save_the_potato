@@ -17,9 +17,6 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
   @override
   void initState() {
     context.read<ScoresCubit>().tryToRefreshLeaderboard();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ScoresCubit>().tryToRefreshLeaderboard();
-    });
     super.initState();
   }
 
