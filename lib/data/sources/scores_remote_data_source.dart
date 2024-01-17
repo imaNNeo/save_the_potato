@@ -11,8 +11,8 @@ class ScoresRemoteDataSource {
   Future<LeaderboardEntity> getLeaderboard(int pageLimit) =>
       _functions.getLeaderboard(pageLimit);
 
-  Future<ScoreEntity> submitScore(int score) =>
+  Future<OnlineScoreEntity> submitScore(int score) =>
       _functions.submitScore(score);
 
-  Future<ScoreEntity?> getScore() => _functions.getScore();
+  Future<OnlineScoreEntity?> getScore() => _functions.getScore();
 }

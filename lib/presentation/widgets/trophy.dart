@@ -15,7 +15,8 @@ class Trophy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int? rank = score is OnlineScoreEntity ? (score as OnlineScoreEntity).rank : null;
+    int? rank =
+        score is OnlineScoreEntity ? (score as OnlineScoreEntity).rank : null;
     if (rank != null && rank > 99) {
       rank = 99;
     }
@@ -46,6 +47,29 @@ class Trophy extends StatelessWidget {
                 fontFamily: 'Roboto',
                 letterSpacing: -2,
                 color: GameColors.leaderboardGoldenColorText,
+              ),
+            ),
+          ),
+          Align(
+            alignment: const Alignment(0, 0.75),
+            child: SizedBox(
+              width: size * 0.50,
+              height: size * 0.12,
+              child: FittedBox(
+                child: Center(
+                  child: Text(
+                    score == null
+                        ? ''
+                        : score is OnlineScoreEntity
+                            ? (score as OnlineScoreEntity).nickname
+                            : '',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'Roboto',
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

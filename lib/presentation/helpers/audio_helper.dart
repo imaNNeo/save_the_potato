@@ -14,4 +14,8 @@ class AudioHelper {
   void playBackgroundMusic() {
     FlameAudio.bgm.play('bg.mp3', volume: bgVolume);
   }
+
+  void playVictorySound() {
+    FlameAudio.play('victory.mp3', volume: bgVolume);
+  }
 }

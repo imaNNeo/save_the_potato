@@ -12,7 +12,7 @@ class ScoresRepository {
     this._scoresRemoteDataSource,
   );
 
-  Future<ScoreEntity> saveScore(int scoreMilliseconds) async {
+  Future<OnlineScoreEntity> saveScore(int scoreMilliseconds) async {
     final currentLocalScore = await _scoresLocalDataSource.getHighScore();
     if (currentLocalScore != null) {
       final newLocalScore = switch (currentLocalScore) {

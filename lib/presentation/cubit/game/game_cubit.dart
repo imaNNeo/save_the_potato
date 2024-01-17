@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/double_range.dart';
+import 'package:save_the_potato/domain/models/score_entity.dart';
+import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 
@@ -77,8 +79,14 @@ class GameCubit extends Cubit<GameState> {
     final score = (state.timePassed * 1000).toInt();
     final previousScore = await _scoresRepository.getHighScore();
     if (score > previousScore.score) {
-      print('High score! $score');
-      await _scoresRepository.saveScore(score);
+      final newScore = await _scoresRepository.saveScore(score);
+      if (previousScore is OnlineScoreEntity &&
+          newScore.rank < previousScore.rank) {
+        // Let's celebrate!
+        _audioHelper.playVictorySound();
+        emit(state.copyWith(onNewHighScore: ValueWrapper(newScore)));
+        emit(state.copyWith(onNewHighScore: const ValueWrapper(null)));
+      }
     }
   }
 
