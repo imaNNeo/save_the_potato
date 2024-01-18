@@ -13,6 +13,7 @@ class MyScore extends StatelessWidget {
   const MyScore({
     super.key,
     required this.onTap,
+    required this.onLongPress,
     required this.scoreEntity,
     required this.loading,
   });
@@ -20,6 +21,7 @@ class MyScore extends StatelessWidget {
   final OnlineScoreEntity scoreEntity;
   final bool loading;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +63,7 @@ class MyScore extends StatelessWidget {
                 topRight: borderRadius,
               ),
               onTap: onTap,
+              onLongPress: onLongPress,
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 18.0,

@@ -95,8 +95,8 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                     Align(
                       alignment: Alignment.bottomCenter,
                       child: MyScore(
-                        onTap: () {
-                          // context.read<ScoresCubit>().onUserScoreClicked();
+                        onTap: () => context.read<ScoresCubit>().onUserScoreClicked(),
+                        onLongPress: () {
                           Navigator.of(context).push(
                             FadeRoute(
                               page: NewRankCelebrationPage(
