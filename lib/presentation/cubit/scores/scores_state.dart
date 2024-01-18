@@ -8,6 +8,8 @@ class ScoresState extends Equatable {
     this.leaderBoardError = PresentationMessage.empty,
     this.showAuthDialog = false,
     this.showNicknameDialog = false,
+    this.scoreShareLoading = false,
+    this.scoreShareError = PresentationMessage.empty,
   });
 
   final ScoreEntity? myScore;
@@ -16,6 +18,8 @@ class ScoresState extends Equatable {
   final PresentationMessage leaderBoardError;
   final bool showAuthDialog;
   final bool showNicknameDialog;
+  final bool scoreShareLoading;
+  final PresentationMessage scoreShareError;
 
   ScoresState copyWith({
     ValueWrapper<ScoreEntity>? myScore,
@@ -24,6 +28,8 @@ class ScoresState extends Equatable {
     PresentationMessage? leaderBoardError,
     bool? showAuthDialog,
     bool? showNicknameDialog,
+    bool? scoreShareLoading,
+    PresentationMessage? scoreShareError,
   }) {
     if (leaderboard != null && leaderboard.value != null && myScore == null) {
       myScore = ValueWrapper(leaderboard.value!.myScore);
@@ -35,6 +41,8 @@ class ScoresState extends Equatable {
       leaderBoardError: leaderBoardError ?? this.leaderBoardError,
       showAuthDialog: showAuthDialog ?? this.showAuthDialog,
       showNicknameDialog: showNicknameDialog ?? this.showNicknameDialog,
+      scoreShareLoading: scoreShareLoading ?? this.scoreShareLoading,
+      scoreShareError: scoreShareError ?? this.scoreShareError,
     );
   }
 
@@ -46,5 +54,7 @@ class ScoresState extends Equatable {
         leaderBoardError,
         showAuthDialog,
         showNicknameDialog,
+        scoreShareLoading,
+        scoreShareError,
       ];
 }

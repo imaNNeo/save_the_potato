@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class GameConfigEntity with EquatableMixin {
-  /// This is the hard-coded instance for when user opens the app for the 
+  /// This is the hard-coded instance for when user opens the app for the
   /// first time without internet.
   /// We will update it later when user connects to internet.
   static const initialOfflineConfigs = GameConfigEntity(
@@ -12,8 +12,15 @@ class GameConfigEntity with EquatableMixin {
     minVersionIos: 0,
     latestVersionAndroid: 0,
     latestVersionIos: 0,
-    androidStoreUrl: 'https://play.google.com/store/apps/details?id=dev.app2pack.ttg',
-    iosStoreUrl: 'https://apps.apple.com/app/ttg-through-the-galaxy/id6444870791',
+    androidStoreUrl:
+        'https://play.google.com/store/apps/details?id=dev.app2pack.ttg',
+    iosStoreUrl:
+        'https://apps.apple.com/app/ttg-through-the-galaxy/id6444870791',
+    shareTextWithRank:
+        "🌟 I'm in the top 10! Just hit a new high score of {{score}} on Save The Potato and secured the #{{rank}} spot! 🏆 Can you climb higher? Grab the game at savethepotato.com and take on the challenge! 🥔🛡️ #SaveThePotato #HighScore",
+    shareTextWithoutRank:
+        "🏆 New High Score on Save The Potato! 🎉 Just hit a new high score of {{score}} on Save The Potato! 🥔🛡️ Can you climb higher? Grab the game at savethepotato.com and take on the challenge! #SaveThePotato #HighScore",
+    shareTextWithRankThreshold: 10,
   );
 
   final int nicknameMaxLength;
@@ -25,6 +32,9 @@ class GameConfigEntity with EquatableMixin {
   final int latestVersionIos;
   final String androidStoreUrl;
   final String iosStoreUrl;
+  final String shareTextWithRank;
+  final String shareTextWithoutRank;
+  final int shareTextWithRankThreshold;
 
   const GameConfigEntity({
     required this.nicknameMaxLength,
@@ -36,6 +46,9 @@ class GameConfigEntity with EquatableMixin {
     required this.latestVersionIos,
     required this.androidStoreUrl,
     required this.iosStoreUrl,
+    required this.shareTextWithRank,
+    required this.shareTextWithoutRank,
+    required this.shareTextWithRankThreshold,
   });
 
   Map<String, dynamic> toJson() => {
@@ -48,6 +61,9 @@ class GameConfigEntity with EquatableMixin {
         'latestVersionIos': latestVersionIos,
         'androidStoreUrl': androidStoreUrl,
         'iosStoreUrl': iosStoreUrl,
+        'shareTextWithRank': shareTextWithRank,
+        'shareTextWithoutRank': shareTextWithoutRank,
+        'shareTextWithRankThreshold': shareTextWithRankThreshold,
       };
 
   factory GameConfigEntity.fromJson(Map<String, dynamic> json) =>
@@ -61,6 +77,9 @@ class GameConfigEntity with EquatableMixin {
         latestVersionIos: json['latestVersionIos'] as int,
         androidStoreUrl: json['androidStoreUrl'] as String,
         iosStoreUrl: json['iosStoreUrl'] as String,
+        shareTextWithRank: json['shareTextWithRank'] as String,
+        shareTextWithoutRank: json['shareTextWithoutRank'] as String,
+        shareTextWithRankThreshold: json['shareTextWithRankThreshold'] as int,
       );
 
   @override
@@ -74,5 +93,8 @@ class GameConfigEntity with EquatableMixin {
         latestVersionIos,
         androidStoreUrl,
         iosStoreUrl,
+        shareTextWithRank,
+        shareTextWithoutRank,
+        shareTextWithRankThreshold,
       ];
 }

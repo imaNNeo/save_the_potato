@@ -20,7 +20,7 @@ class ScoresLocalDataSource {
     if (scoreJsonStr == null || scoreJsonStr.isEmpty) {
       return null;
     }
-    return ScoreEntity.fromJson(jsonDecode(scoreJsonStr!));
+    return ScoreEntity.fromJson(jsonDecode(scoreJsonStr));
   }
 
   Future<ScoreEntity> setHighScore(ScoreEntity scoreEntity) async {

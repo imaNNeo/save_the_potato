@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
 import 'package:save_the_potato/domain/models/presentation_message.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/auth_repository.dart';
+import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
 
 part 'scores_state.dart';
@@ -17,10 +19,12 @@ class ScoresCubit extends Cubit<ScoresState> {
   static const int maxItemsToLoad = 20;
   ScoresCubit(
     this._scoreRepository,
+    this._configsRepository,
     this._authRepository,
   ) : super(const ScoresState());
 
   final ScoresRepository _scoreRepository;
+  final ConfigsRepository _configsRepository;
   final AuthRepository _authRepository;
 
   late StreamSubscription _highScoreSubscription;
@@ -109,7 +113,7 @@ class ScoresCubit extends Cubit<ScoresState> {
     }
   }
 
-  void onUserScoreClicked() async {
+  void updateNickname() async {
     try {
       final isUserAnonymous = await _authRepository.isUserAnonymous();
 
@@ -133,6 +137,29 @@ class ScoresCubit extends Cubit<ScoresState> {
     }
   }
 
+  void shareScore(OnlineScoreEntity scoreEntity) async {
+    emit(state.copyWith(
+      scoreShareLoading: true,
+    ));
+    try {
+      await AppUtils.shareScore(
+        score: scoreEntity,
+        gameConfig: await _configsRepository.getGameConfig(),
+      );
+      emit(state.copyWith(
+        scoreShareLoading: false,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        scoreShareLoading: false,
+        scoreShareError: PresentationMessage.fromError(e),
+      ));
+      emit(state.copyWith(
+        scoreShareError: PresentationMessage.empty,
+      ));
+    }
+  }
+  
   @override
   Future<void> close() {
     _highScoreSubscription.cancel();

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
-import 'package:save_the_potato/presentation/pages/fade_route.dart';
-import 'package:save_the_potato/presentation/widgets/new_rank_celebration_page.dart';
 
 import 'widgets/my_score.dart';
 import 'widgets/score_row.dart';
@@ -28,6 +26,11 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
       listener: (context, scoresState) {
         if (scoresState.leaderBoardError.isNotEmpty) {
           scoresState.leaderBoardError.showAsToast(
+            context,
+          );
+        }
+        if (scoresState.scoreShareError.isNotEmpty) {
+          scoresState.scoreShareError.showAsToast(
             context,
           );
         }
@@ -95,18 +98,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                     Align(
                       alignment: Alignment.bottomCenter,
                       child: MyScore(
-                        onTap: () => context.read<ScoresCubit>().onUserScoreClicked(),
-                        onLongPress: () {
-                          Navigator.of(context).push(
-                            FadeRoute(
-                              page: NewRankCelebrationPage(
-                                scoreEntity: scoresState.leaderboard!.myScore!,
-                              ),
-                            ),
-                          );
-                        },
                         scoreEntity: scoresState.leaderboard!.myScore!,
-                        loading: scoresState.leaderboardLoading,
                       ),
                     ),
                 ],

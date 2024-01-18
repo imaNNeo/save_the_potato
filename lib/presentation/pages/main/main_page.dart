@@ -5,14 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
+import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
-import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/game_paused_ui.dart';
 import 'package:save_the_potato/presentation/widgets/high_score_widget.dart';
+import 'package:save_the_potato/presentation/widgets/loading_overlay.dart';
 import 'package:save_the_potato/presentation/widgets/new_rank_celebration_page.dart';
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
 import 'package:save_the_potato/presentation/widgets/rotating_controls.dart';
@@ -38,6 +39,10 @@ class _MainPageState extends State<MainPage>
 
   late PlayingState _previousState;
 
+  OverlayEntry? _generalLoadingEntry;
+
+  late StreamSubscription _generalLoadingSubscription;
+
   @override
   void initState() {
     pageRootKey = UniqueKey();
@@ -54,6 +59,20 @@ class _MainPageState extends State<MainPage>
         });
       }
       _previousState = state.playingState;
+    });
+
+    _generalLoadingSubscription = context.read<ScoresCubit>().stream.listen((event) {
+      if (event.scoreShareLoading) {
+        if (_generalLoadingEntry == null) {
+          _generalLoadingEntry = OverlayEntry(
+              builder: (context) => const LoadingOverlay(),
+            );
+          Overlay.of(context).insert(_generalLoadingEntry!);
+        }
+      } else {
+        _generalLoadingEntry?.remove();
+        _generalLoadingEntry = null;
+      }
     });
     super.initState();
   }
@@ -144,6 +163,7 @@ class _MainPageState extends State<MainPage>
   @override
   void dispose() {
     _streamSubscription.cancel();
+    _generalLoadingSubscription.cancel();
     super.dispose();
   }
 }

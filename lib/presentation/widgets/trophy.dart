@@ -8,10 +8,12 @@ class Trophy extends StatelessWidget {
     super.key,
     required this.score,
     this.size = 38,
+    this.showNickname = true,
   });
 
   final ScoreEntity? score;
   final double size;
+  final bool showNickname;
 
   @override
   Widget build(BuildContext context) {
@@ -50,29 +52,30 @@ class Trophy extends StatelessWidget {
               ),
             ),
           ),
-          Align(
-            alignment: const Alignment(0, 0.75),
-            child: SizedBox(
-              width: size * 0.50,
-              height: size * 0.12,
-              child: FittedBox(
-                child: Center(
-                  child: Text(
-                    score == null
-                        ? ''
-                        : score is OnlineScoreEntity
-                            ? (score as OnlineScoreEntity).nickname
-                            : '',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontFamily: 'Roboto',
-                      color: Colors.black,
+          if (showNickname)
+            Align(
+              alignment: const Alignment(0, 0.75),
+              child: SizedBox(
+                width: size * 0.50,
+                height: size * 0.12,
+                child: FittedBox(
+                  child: Center(
+                    child: Text(
+                      score == null
+                          ? ''
+                          : score is OnlineScoreEntity
+                              ? (score as OnlineScoreEntity).nickname
+                              : '',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Roboto',
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

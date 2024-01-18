@@ -55,7 +55,7 @@ class _SplashPageState extends State<SplashPage> {
           }
           isUpdateDialogShowing = false;
           if (shouldOpenNextPage) {
-            await await Future.delayed(Duration(milliseconds: 300));
+            await await Future.delayed(const Duration(milliseconds: 300));
             if (!mounted) {
               return;
             }

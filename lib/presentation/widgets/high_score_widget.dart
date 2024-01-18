@@ -40,6 +40,7 @@ class HighScoreWidget extends StatelessWidget {
                     Trophy(
                       score: state.myScore,
                       size: 38,
+                      showNickname: false,
                     ),
                     const SizedBox(width: 8),
                     Column(

@@ -1,27 +1,23 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
+import 'package:save_the_potato/presentation/pages/fade_route.dart';
+import 'package:save_the_potato/presentation/widgets/new_rank_celebration_page.dart';
 
 import 'score_rank_number.dart';
 
 class MyScore extends StatelessWidget {
   const MyScore({
     super.key,
-    required this.onTap,
-    required this.onLongPress,
     required this.scoreEntity,
-    required this.loading,
   });
 
   final OnlineScoreEntity scoreEntity;
-  final bool loading;
-  final VoidCallback onTap;
-  final VoidCallback onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +30,16 @@ class MyScore extends StatelessWidget {
       width: 2,
     );
     const borderRadius = Radius.circular(16);
-    final rawChild = Container(
+    return BlocListener<ScoresCubit, ScoresState>(
+      listener: (context, state) {
+        if (state.showAuthDialog) {
+          BaseDialog.showAuthDialog(context);
+        }
+        if (state.showNicknameDialog) {
+          BaseDialog.showNicknameDialog(context);
+        }
+      },
+      child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
           borderRadius: const BorderRadius.only(
@@ -57,13 +62,40 @@ class MyScore extends StatelessWidget {
         child: SafeArea(
           child: Material(
             color: Colors.transparent,
-            child: InkWell(
-              borderRadius: const BorderRadius.only(
-                topLeft: borderRadius,
-                topRight: borderRadius,
-              ),
-              onTap: onTap,
-              onLongPress: onLongPress,
+            child: PopupMenuButton<int>(
+              onSelected: (item) async {
+                switch (item) {
+                  case 0:
+                    context.read<ScoresCubit>().updateNickname();
+                  case 1:
+                    context.read<ScoresCubit>().shareScore(scoreEntity);
+                  case 2:
+                    Navigator.of(context).push(
+                      FadeRoute(
+                        page: NewRankCelebrationPage(
+                          scoreEntity: scoreEntity,
+                        ),
+                      ),
+                    );
+                  case _:
+                    throw Exception('Unknown menu item: $item');
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem<int>(
+                  value: 0,
+                  child: Text('Rename Nickname'),
+                ),
+                const PopupMenuItem<int>(
+                  value: 1,
+                  child: Text('Share Score'),
+                ),
+                if (kDebugMode)
+                  const PopupMenuItem<int>(
+                    value: 2,
+                    child: Text('Celebrate New Rank'),
+                  ),
+              ],
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 18.0,
@@ -118,25 +150,7 @@ class MyScore extends StatelessWidget {
             ),
           ),
         ),
-      );
-    return BlocListener<ScoresCubit, ScoresState>(
-      listener: (context, state) {
-        if (state.showAuthDialog) {
-          BaseDialog.showAuthDialog(context);
-        }
-        if (state.showNicknameDialog) {
-          BaseDialog.showNicknameDialog(context);
-        }
-      },
-      child: loading ? rawChild.animate(
-          onPlay: (controller) => controller.repeat(),
-        )
-        .shimmer(
-          color: Colors.white,
-          blendMode: BlendMode.dstOut,
-          duration: const Duration(seconds: 2),
-          angle: 45,
-        ) : rawChild,
-      );
+      ),
+    );
   }
 }
