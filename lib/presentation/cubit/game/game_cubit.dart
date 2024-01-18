@@ -188,12 +188,12 @@ class GameCubit extends Cubit<GameState> {
 
   void pauseGame() {
     emit(state.copyWith(playingState: PlayingState.paused));
-    FlameAudio.bgm.pause();
+    _audioHelper.pauseBackgroundMusic();
   }
 
   void resumeGame() {
     emit(state.copyWith(playingState: PlayingState.playing));
-    FlameAudio.bgm.resume();
+    _audioHelper.resumeBackgroundMusic();
   }
 
   void restartGame() {
