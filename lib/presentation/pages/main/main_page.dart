@@ -113,6 +113,7 @@ class _MainPageState extends State<MainPage>
           _restartGameWidgets();
         }
         if (state.onNewHighScore != null) {
+          context.read<ScoresCubit>().tryToRefreshLeaderboard();
           Navigator.of(context).push(
             FadeRoute(
               page: NewRankCelebrationPage(
