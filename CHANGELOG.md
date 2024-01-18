@@ -1,3 +1,11 @@
+## 0.23.0
+* Finalize share score functionality
+* Update app name in Android
+* Fix offline score issue
+* Fix audio issues
+* Reload leaderboard after a high-score
+* Upload firebase symbols for iOS
+
 ## 0.22.0
 * Implement share high-score functionality
 * Implement celeberate high-score page
