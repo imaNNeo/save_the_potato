@@ -118,6 +118,8 @@ PODS:
   - RecaptchaInterop (100.0.0)
   - rive_common (0.0.1):
     - Flutter
+  - share_plus (0.0.1):
+    - Flutter
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -136,6 +138,7 @@ DEPENDENCIES:
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - rive_common (from `.symlinks/plugins/rive_common/ios`)
+  - share_plus (from `.symlinks/plugins/share_plus/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
@@ -185,6 +188,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   rive_common:
     :path: ".symlinks/plugins/rive_common/ios"
+  share_plus:
+    :path: ".symlinks/plugins/share_plus/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
   url_launcher_ios:
@@ -222,6 +227,7 @@ SPEC CHECKSUMS:
   PromisesSwift: 28dca69a9c40779916ac2d6985a0192a5cb4a265
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
   rive_common: 3a4c254c6e4db7e4b9e05daeb3d1f47ae4f7bf76
+  share_plus: c3fef564749587fc939ef86ffb283ceac0baf9f5
   shared_preferences_foundation: 5b919d13b803cadd15ed2dc053125c68730e5126
   url_launcher_ios: bf5ce03e0e2088bad9cc378ea97fa0ed5b49673b
 

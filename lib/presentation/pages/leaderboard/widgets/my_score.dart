@@ -12,12 +12,14 @@ import 'score_rank_number.dart';
 class MyScore extends StatelessWidget {
   const MyScore({
     super.key,
+    required this.onTap,
     required this.scoreEntity,
     required this.loading,
   });
 
   final OnlineScoreEntity scoreEntity;
   final bool loading;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +60,7 @@ class MyScore extends StatelessWidget {
                 topLeft: borderRadius,
                 topRight: borderRadius,
               ),
-              onTap: context.read<ScoresCubit>().onUserScoreClicked,
+              onTap: onTap,
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 18.0,

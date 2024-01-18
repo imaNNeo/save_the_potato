@@ -57,6 +57,8 @@ dependencies:
   uuid: ^4.3.3
   package_info_plus: ^5.0.1
   flutter_svg: ^2.0.9
+  screenshot: ^2.1.0
+  share_plus: ^7.2.1
 
 dev_dependencies:
   flutter_test:
@@ -96,6 +98,7 @@ flutter:
     - assets/fonts/
     - assets/audio/
     - assets/rive/
+    - assets/logo/
 
 flutter_launcher_icons:
   android: false

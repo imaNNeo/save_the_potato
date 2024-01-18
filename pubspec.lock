@@ -177,6 +177,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.1"
+  cross_file:
+    dependency: transitive
+    description:
+      name: cross_file
+      sha256: fedaadfa3a6996f75211d835aaeb8fede285dae94262485698afd832371b9a5e
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.3+8"
   crypto:
     dependency: transitive
     description:
@@ -560,6 +568,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.0"
+  mime:
+    dependency: transitive
+    description:
+      name: mime
+      sha256: e4ff8e8564c03f255408decd16e7899da1733852a9110a58fe6d1b817684a63e
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.4"
   nested:
     dependency: transitive
     description:
@@ -720,6 +736,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.8"
+  screenshot:
+    dependency: "direct main"
+    description:
+      name: screenshot
+      sha256: "455284ff1f5b911d94a43c25e1385485cf6b4f288293eba68f15dad711c7b81c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
+  share_plus:
+    dependency: "direct main"
+    description:
+      name: share_plus
+      sha256: f74fc3f1cbd99f39760182e176802f693fa0ec9625c045561cfad54681ea93dd
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.2.1"
+  share_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: share_plus_platform_interface
+      sha256: df08bc3a07d01f5ea47b45d03ffcba1fa9cd5370fb44b3f38c70e42cced0f956
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.3.1"
   shared_preferences:
     dependency: "direct main"
     description:

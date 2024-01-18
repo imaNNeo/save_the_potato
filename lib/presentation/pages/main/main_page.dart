@@ -13,7 +13,7 @@ import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/game_paused_ui.dart';
 import 'package:save_the_potato/presentation/widgets/high_score_widget.dart';
-import 'package:save_the_potato/presentation/widgets/new_rank_celebration_overlay.dart';
+import 'package:save_the_potato/presentation/widgets/new_rank_celebration_page.dart';
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
 import 'package:save_the_potato/presentation/widgets/rotating_controls.dart';
 import 'package:save_the_potato/presentation/widgets/settings_pause_icon.dart';
@@ -87,10 +87,8 @@ class _MainPageState extends State<MainPage>
         if (state.onNewHighScore != null) {
           Navigator.of(context).push(
             FadeRoute(
-              page: Scaffold(
-                body: NewRankCelebrationOverlay(
-                  scoreEntity: state.onNewHighScore!,
-                ),
+              page: NewRankCelebrationPage(
+                scoreEntity: state.onNewHighScore!,
               ),
             ),
           );
