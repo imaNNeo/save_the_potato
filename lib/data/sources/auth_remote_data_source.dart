@@ -54,7 +54,9 @@ class AuthRemoteDataSource {
   Future<UserEntity> tryToRegisterAnonymously() =>
       _functions.tryToRegisterAnonymousUser();
 
-  Future<void> reloadUser() => FirebaseAuth.instance.currentUser!.reload();
+  Future<void> reloadUser() async {
+    FirebaseAuth.instance.currentUser?.reload();
+  }
 
   Future<UserEntity> updateUserNickname(String nickname) async {
     final user = FirebaseAuth.instance.currentUser!;
