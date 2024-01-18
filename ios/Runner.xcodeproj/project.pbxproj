@@ -337,7 +337,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$PODS_ROOT/FirebaseCrashlytics/upload-symbols\" --flutter-project \"$PROJECT_DIR/firebase_app_id_file.json\" ";
+			shellScript = "$PODS_ROOT/FirebaseCrashlytics/upload-symbols --build-phase --validate -ai 1:952681537119:ios:d60bbd5bf6f62232b205ea -- $DWARF_DSYM_FOLDER_PATH/App.framework.dSYM\n\n$PODS_ROOT/FirebaseCrashlytics/upload-symbols --build-phase -ai 1:952681537119:ios:d60bbd5bf6f62232b205ea -- $DWARF_DSYM_FOLDER_PATH/App.framework.dSYM \n";
 		};
 		9121DE2C3E7F5E718F63F6A5 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
