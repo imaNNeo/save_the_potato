@@ -4,9 +4,11 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
+import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
+import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
@@ -61,12 +63,19 @@ class _MainPageState extends State<MainPage>
       _previousState = state.playingState;
     });
 
-    _generalLoadingSubscription = context.read<ScoresCubit>().stream.listen((event) {
-      if (event.scoreShareLoading) {
+    _generalLoadingSubscription =
+        context.read<ScoresCubit>().stream.listen((state) {
+      if (state.showAuthDialog) {
+        BaseDialog.showAuthDialog(context);
+      }
+      if (state.showNicknameDialog) {
+        BaseDialog.showNicknameDialog(context);
+      }
+      if (state.scoreShareLoading) {
         if (_generalLoadingEntry == null) {
           _generalLoadingEntry = OverlayEntry(
-              builder: (context) => const LoadingOverlay(),
-            );
+            builder: (context) => const LoadingOverlay(),
+          );
           Overlay.of(context).insert(_generalLoadingEntry!);
         }
       } else {

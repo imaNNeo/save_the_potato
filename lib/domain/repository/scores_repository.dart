@@ -14,15 +14,14 @@ class ScoresRepository {
 
   Future<OnlineScoreEntity> saveScore(int scoreMilliseconds) async {
     final currentLocalScore = await _scoresLocalDataSource.getHighScore();
-    if (currentLocalScore != null) {
-      final newLocalScore = switch (currentLocalScore) {
-        OfflineScoreEntity() =>
-          currentLocalScore.copyWith(score: scoreMilliseconds),
-        OnlineScoreEntity() =>
-          currentLocalScore.copyWith(score: scoreMilliseconds),
-      };
-      await _scoresLocalDataSource.setHighScore(newLocalScore);
-    }
+    final newLocalScore = switch (currentLocalScore) {
+      null => OfflineScoreEntity(score: scoreMilliseconds),
+      OfflineScoreEntity() =>
+        currentLocalScore.copyWith(score: scoreMilliseconds),
+      OnlineScoreEntity() =>
+        currentLocalScore.copyWith(score: scoreMilliseconds),
+    };
+    await _scoresLocalDataSource.setHighScore(newLocalScore);
     final score = await _scoresRemoteDataSource.submitScore(scoreMilliseconds);
     await _scoresLocalDataSource.setHighScore(score);
     return score;
@@ -62,14 +61,16 @@ class ScoresRepository {
         myRemoteScore,
       );
     } else {
-      final newRemoteScore = await _scoresRemoteDataSource.submitScore(myLocalScore.score);
+      final newRemoteScore =
+          await _scoresRemoteDataSource.submitScore(myLocalScore.score);
       await _scoresLocalDataSource.setHighScore(newRemoteScore);
       return newRemoteScore;
     }
   }
 
   Future<ScoreEntity> getHighScore() async =>
-      (await _scoresLocalDataSource.getHighScore()) ?? OfflineScoreEntity(score: 0);
+      (await _scoresLocalDataSource.getHighScore()) ??
+      OfflineScoreEntity(score: 0);
 
   Stream<ScoreEntity> getHighScoreStream() =>
       _scoresLocalDataSource.getHighScoreStream();

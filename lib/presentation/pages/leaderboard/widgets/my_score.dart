@@ -30,122 +30,112 @@ class MyScore extends StatelessWidget {
       width: 2,
     );
     const borderRadius = Radius.circular(16);
-    return BlocListener<ScoresCubit, ScoresState>(
-      listener: (context, state) {
-        if (state.showAuthDialog) {
-          BaseDialog.showAuthDialog(context);
-        }
-        if (state.showNicknameDialog) {
-          BaseDialog.showNicknameDialog(context);
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.only(
-            topLeft: borderRadius,
-            topRight: borderRadius,
-          ),
-          border: Border(
-            left: borderSide,
-            top: borderSide,
-            right: borderSide,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black38,
-              blurRadius: 40,
-              offset: Offset(0, 2),
-            ),
-          ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.only(
+          topLeft: borderRadius,
+          topRight: borderRadius,
         ),
-        child: SafeArea(
-          child: Material(
-            color: Colors.transparent,
-            child: PopupMenuButton<int>(
-              onSelected: (item) async {
-                switch (item) {
-                  case 0:
-                    context.read<ScoresCubit>().updateNickname();
-                  case 1:
-                    context.read<ScoresCubit>().shareScore(scoreEntity);
-                  case 2:
-                    Navigator.of(context).push(
-                      FadeRoute(
-                        page: NewRankCelebrationPage(
-                          scoreEntity: scoreEntity,
-                        ),
+        border: Border(
+          left: borderSide,
+          top: borderSide,
+          right: borderSide,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black38,
+            blurRadius: 40,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Material(
+          color: Colors.transparent,
+          child: PopupMenuButton<int>(
+            onSelected: (item) async {
+              switch (item) {
+                case 0:
+                  context.read<ScoresCubit>().updateNickname();
+                case 1:
+                  context.read<ScoresCubit>().shareScore(scoreEntity);
+                case 2:
+                  Navigator.of(context).push(
+                    FadeRoute(
+                      page: NewRankCelebrationPage(
+                        scoreEntity: scoreEntity,
                       ),
-                    );
-                  case _:
-                    throw Exception('Unknown menu item: $item');
-                }
-              },
-              itemBuilder: (context) => [
+                    ),
+                  );
+                case _:
+                  throw Exception('Unknown menu item: $item');
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem<int>(
+                value: 0,
+                child: Text('Rename Nickname'),
+              ),
+              const PopupMenuItem<int>(
+                value: 1,
+                child: Text('Share Score'),
+              ),
+              if (kDebugMode)
                 const PopupMenuItem<int>(
-                  value: 0,
-                  child: Text('Rename Nickname'),
+                  value: 2,
+                  child: Text('Celebrate New Rank'),
                 ),
-                const PopupMenuItem<int>(
-                  value: 1,
-                  child: Text('Share Score'),
-                ),
-                if (kDebugMode)
-                  const PopupMenuItem<int>(
-                    value: 2,
-                    child: Text('Celebrate New Rank'),
+            ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 18.0,
+                vertical: 18.0,
+              ),
+              child: Row(
+                children: [
+                  ScoreRankNumber(
+                    rank: scoreEntity.rank,
+                    size: 48,
                   ),
-              ],
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18.0,
-                  vertical: 18.0,
-                ),
-                child: Row(
-                  children: [
-                    ScoreRankNumber(
-                      rank: scoreEntity.rank,
-                      size: 48,
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: InkWell(
-                        child: Wrap(
-                          children: [
-                            Text(
-                              scoreEntity.nickname,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                fontFamily: 'RobotoMono',
-                              ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: InkWell(
+                      child: Wrap(
+                        children: [
+                          Text(
+                            scoreEntity.nickname,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              fontFamily: 'RobotoMono',
                             ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              '(edit)',
-                              style: TextStyle(
-                                color: GameColors.linkBlueColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                                fontFamily: 'RobotoMono',
-                              ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            '(edit)',
+                            style: TextStyle(
+                              color: GameColors.linkBlueColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              fontFamily: 'RobotoMono',
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Text(
-                      AppUtils.getHighScoreRepresentation(scoreEntity.score),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    AppUtils.getHighScoreRepresentation(scoreEntity.score),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
