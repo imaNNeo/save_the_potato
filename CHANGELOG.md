@@ -1,3 +1,8 @@
+## 0.22.0
+* Implement share high-score functionality
+* Implement celeberate high-score page
+* Show rank in the trophy icon on the top left (with max 99 number)
+
 ## 0.21.0
 * Add iOS minVersion 12.0
 
