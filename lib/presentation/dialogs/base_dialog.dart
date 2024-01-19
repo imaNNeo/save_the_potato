@@ -105,7 +105,7 @@ class BaseDialog extends AlertDialog {
   ) {
     _showSimpleDialog(
       context: context,
-      builder: (BuildContext _) => BaseDialog(
+      builder: (BuildContext context) => BaseDialog(
         title: 'Account Exists',
         content: AccountAlreadyExistsDialogContent(
           error: error,

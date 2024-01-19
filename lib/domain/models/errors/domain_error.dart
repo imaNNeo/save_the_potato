@@ -4,15 +4,23 @@ sealed class DomainError implements Exception {}
 
 class NetworkError extends DomainError {}
 
-class ServerError extends DomainError {
+class ServerError extends DomainError with EquatableMixin {
   final ServerErrorEntry? errorEntry;
 
   ServerError({
     this.errorEntry,
   });
+
+  @override
+  bool get stringify => true;
+
+  @override
+  List<Object?> get props => [
+        errorEntry,
+      ];
 }
 
-class ServerErrorEntry {
+class ServerErrorEntry with EquatableMixin {
   final String? message;
   final String? details;
 
@@ -22,6 +30,15 @@ class ServerErrorEntry {
   );
 
   String? get detailsOrMessage => details ?? message;
+
+  @override
+  bool? get stringify => true;
+
+  @override
+  List<Object?> get props => [
+        message,
+        details,
+      ];
 }
 
 class AccountAlreadyExistsError extends DomainError with EquatableMixin {
