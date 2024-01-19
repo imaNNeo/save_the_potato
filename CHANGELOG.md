@@ -1,3 +1,9 @@
+## 0.30.0
+* Ready for the release
+* Disable android backup
+* Remove subject from shared image
+* Fix navigator pop issue
+
 ## 0.23.0
 * Finalize share score functionality
 * Update app name in Android
