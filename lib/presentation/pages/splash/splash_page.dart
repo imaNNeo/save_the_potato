@@ -29,7 +29,7 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   void _openHomePage(BuildContext context) {
-    Navigator.of(context).push(
+    Navigator.of(context).pushReplacement(
       FadeRoute(page: const MainPage()),
     );
   }
