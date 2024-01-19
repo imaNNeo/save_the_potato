@@ -36,6 +36,6 @@ desc "[Developer] Get certificates"
       scheme: "Runner",
     )
     upload_to_testflight(skip_waiting_for_build_processing: true)
-#     upload_to_app_store(skip_metadata: true, skip_screenshots: true)
+    upload_symbols_to_crashlytics
   end
 end
