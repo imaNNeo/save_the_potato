@@ -155,7 +155,6 @@ class BaseDialog extends AlertDialog {
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) => BaseDialog(
-        context: context,
         title: 'Are you a Robot?',
         content: const CaptchaDialogContent(),
         showCloseButton: false,

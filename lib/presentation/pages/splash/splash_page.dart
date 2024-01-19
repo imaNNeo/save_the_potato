@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,9 +33,26 @@ class _SplashPageState extends State<SplashPage> {
     _initialize();
   }
 
+  Future<bool> _isSuspiciousDevice() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    if (Platform.isAndroid) {
+      final info = await deviceInfo.androidInfo;
+      return !info.isPhysicalDevice || info.host.contains('ubuntu');
+    } else if (Platform.isIOS) {
+      final info = await deviceInfo.iosInfo;
+      return !info.isPhysicalDevice;
+    } else {
+      return false;
+    }
+  }
+
   void _initialize() async {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!(await BaseDialog.showCaptchaDialog(context))) {
+      bool showCaptcha = await _isSuspiciousDevice();
+      if (!mounted) {
+        return;
+      }
+      if (showCaptcha && !(await BaseDialog.showCaptchaDialog(context))) {
         if (!mounted) {
           return;
         }
