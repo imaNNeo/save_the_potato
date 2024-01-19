@@ -1,3 +1,10 @@
+## 0.31.0
+* Use pushReplacement instead of push when moving from splash to home
+* Add user.id into the firebase crashlytics
+* Show captcha for suspicious devices
+* Add a temporary code to migrate the old score value
+* Update Fastfile to upload the ios symbols
+
 ## 0.30.0
 * Ready for the release
 * Disable android backup
