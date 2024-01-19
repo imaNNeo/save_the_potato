@@ -20,6 +20,17 @@ class ScoresLocalDataSource {
     if (scoreJsonStr == null || scoreJsonStr.isEmpty) {
       return null;
     }
+
+    /// Todo:
+    /// In iOS I couldn't delete the app data,
+    /// We can delete this code in the 1.0.0 version
+    int? oldNumber = int.tryParse(scoreJsonStr);
+    if (oldNumber != null) {
+      final newScore = OfflineScoreEntity(score: oldNumber);
+      await setHighScore(newScore);
+      return newScore;
+    }
+
     return ScoreEntity.fromJson(jsonDecode(scoreJsonStr));
   }
 
