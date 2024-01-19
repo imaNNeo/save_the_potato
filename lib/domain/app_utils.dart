@@ -52,11 +52,7 @@ class AppUtils {
       final shareText = score.rank <= gameConfig.shareTextWithRankThreshold
           ? shareTextWithRank
           : shareTextWithoutRank;
-      await Share.shareXFiles(
-        [imageFile],
-        subject: '🏆 New High Score on Save The Potato!',
-        text: shareText,
-      );
+      await Share.shareXFiles([imageFile], text: shareText);
     } catch (e) {
       debugPrint(e.toString());
       FirebaseCrashlytics.instance.recordError(e, StackTrace.current);
