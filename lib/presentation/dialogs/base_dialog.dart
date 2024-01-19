@@ -4,6 +4,7 @@ import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 import 'package:save_the_potato/presentation/cubit/splash/splash_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/account_already_exists.dart';
+import 'package:save_the_potato/presentation/dialogs/captcha_dialog_content.dart';
 import 'package:save_the_potato/presentation/dialogs/nickname_dialog_content.dart';
 import 'package:save_the_potato/presentation/dialogs/settings_dialog_content.dart';
 
@@ -145,5 +146,21 @@ class BaseDialog extends AlertDialog {
         showCloseButton: !info.forced,
       ),
     );
+  }
+
+  static Future<bool> showCaptchaDialog<T>(
+    BuildContext context,
+  ) async {
+    final result = await _showSimpleDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) => BaseDialog(
+        context: context,
+        title: 'Are you a Robot?',
+        content: const CaptchaDialogContent(),
+        showCloseButton: false,
+      ),
+    );
+    return result == true;
   }
 }
