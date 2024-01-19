@@ -29,6 +29,7 @@ class AuthCubit extends Cubit<AuthState> {
   void initialize() async {
     try {
       final user = await _authRepository.getCurrentUser();
+      FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
       emit(
         state.copyWith(
           user: ValueWrapper(user),
@@ -39,10 +40,13 @@ class AuthCubit extends Cubit<AuthState> {
       debugPrint('auth error: ${e.toString()}');
     }
 
-    _userStreamSubscription = _authRepository.getUserStream().listen((event) {
+    _userStreamSubscription = _authRepository.getUserStream().listen((user) {
+      if (user != null) {
+        FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
+      }
       emit(
         state.copyWith(
-          user: ValueWrapper(event),
+          user: ValueWrapper(user),
         ),
       );
     });
