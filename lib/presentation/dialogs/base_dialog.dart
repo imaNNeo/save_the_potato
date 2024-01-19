@@ -14,7 +14,6 @@ import 'update_dialog_content.dart';
 class BaseDialog extends AlertDialog {
   BaseDialog({
     super.key,
-    required BuildContext context,
     required String title,
     required Widget content,
     bool showCloseButton = true,
@@ -29,10 +28,14 @@ class BaseDialog extends AlertDialog {
               Text(title),
               Expanded(child: Container()),
               if (showCloseButton)
-                IconButton(
-                  tooltip: 'Close',
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
+                Builder(
+                  builder: (context) {
+                    return IconButton(
+                      tooltip: 'Close',
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close),
+                    );
+                  }
                 ),
             ],
           ),
@@ -70,7 +73,6 @@ class BaseDialog extends AlertDialog {
     _showSimpleDialog(
       context: context,
       builder: (BuildContext context) => BaseDialog(
-        context: context,
         title: 'Settings',
         content: const SettingsDialogContent(),
       ),
@@ -81,7 +83,6 @@ class BaseDialog extends AlertDialog {
     _showSimpleDialog(
       context: context,
       builder: (BuildContext context) => BaseDialog(
-        context: context,
         title: 'Nickname:',
         content: const NicknameDialogContent(),
       ),
@@ -92,7 +93,6 @@ class BaseDialog extends AlertDialog {
     _showSimpleDialog(
       context: context,
       builder: (BuildContext context) => BaseDialog(
-        context: context,
         title: 'Sign in',
         content: const AuthDialogContent(),
       ),
@@ -105,8 +105,7 @@ class BaseDialog extends AlertDialog {
   ) {
     _showSimpleDialog(
       context: context,
-      builder: (BuildContext context) => BaseDialog(
-        context: context,
+      builder: (BuildContext _) => BaseDialog(
         title: 'Account Exists',
         content: AccountAlreadyExistsDialogContent(
           error: error,
@@ -123,7 +122,6 @@ class BaseDialog extends AlertDialog {
     _showSimpleDialog(
       context: context,
       builder: (BuildContext context) => BaseDialog(
-        context: context,
         title: 'Share Score',
         content: ShareScoreDialogContent(
           userEntity: userEntity,
@@ -142,7 +140,6 @@ class BaseDialog extends AlertDialog {
       barrierDismissible: !info.forced,
       context: context,
       builder: (BuildContext context) => BaseDialog(
-        context: context,
         title: title,
         content: UpdateDialogContent(info: info),
         showCloseButton: !info.forced,
