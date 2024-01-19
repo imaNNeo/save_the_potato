@@ -31,7 +31,7 @@ class AuthDialogContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthCubit, AuthState>(
-      listener: (_, state) {
+      listener: (context, state) {
         if (state.authError.isNotEmpty) {
           state.authError.showAsToast(
             context,
