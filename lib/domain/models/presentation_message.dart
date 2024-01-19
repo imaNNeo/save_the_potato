@@ -23,7 +23,7 @@ abstract class PresentationMessage with EquatableMixin {
       toastification.show(
         context: context,
         autoCloseDuration: duration,
-        title: parse(context),
+        title: Text(parse(context)),
         type: type,
         alignment: alignment,
         style: style,
