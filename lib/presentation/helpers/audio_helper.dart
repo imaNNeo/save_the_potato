@@ -1,12 +1,14 @@
 import 'package:flame_audio/flame_audio.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
+import 'package:save_the_potato/domain/models/lazy_value.dart';
 
 class AudioHelper {
-  late bool audioEnabled;
   bool isPaused = false;
 
+  final _audioEnabled = LazyValue<bool>();
+
   void setAudioEnabled(bool enabled) {
-    audioEnabled = enabled;
+    _audioEnabled.setValue(enabled);
   }
 
   void pauseBackgroundMusic() {
@@ -17,8 +19,8 @@ class AudioHelper {
     isPaused = true;
   }
 
-  void resumeBackgroundMusic() {
-    if (!audioEnabled) {
+  void resumeBackgroundMusic() async {
+    if (!(await _audioEnabled.value)) {
       return;
     }
     if (isPaused) {
@@ -29,8 +31,8 @@ class AudioHelper {
     isPaused = false;
   }
 
-  void playBackgroundMusic() {
-    if (!audioEnabled) {
+  void playBackgroundMusic() async {
+    if (!(await _audioEnabled.value)) {
       return;
     }
     FlameAudio.bgm.play(
@@ -39,8 +41,8 @@ class AudioHelper {
     );
   }
 
-  void playVictorySound() {
-    if (!audioEnabled) {
+  void playVictorySound() async {
+    if (!(await _audioEnabled.value)) {
       return;
     }
     FlameAudio.play(
