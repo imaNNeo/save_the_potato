@@ -1,3 +1,12 @@
+## 1.0.0
+* 🚀Initial Release!
+* Use Cookies font for the trophy and shareable score image
+* MaxWidth 300 for all dialogs
+* Fix audio enabled crash
+* Override remote rank with the local when score is the same
+* Fix captcha_dialog int parse crash
+* Add more icon in the my_score widget
+
 ## 0.31.0
 * Use pushReplacement instead of push when moving from splash to home
 * Add user.id into the firebase crashlytics
