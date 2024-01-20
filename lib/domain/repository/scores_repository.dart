@@ -55,6 +55,9 @@ class ScoresRepository {
 
     // Both are not null
     if (myRemoteScore!.score == myLocalScore!.score) {
+      /// We override the remote score with the local score
+      /// Because rank might be changed on the server
+      await _scoresLocalDataSource.setHighScore(myRemoteScore);
       return myRemoteScore;
     } else if (myRemoteScore.score > myLocalScore.score) {
       return await _scoresLocalDataSource.setHighScore(
