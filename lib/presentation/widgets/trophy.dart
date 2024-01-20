@@ -36,7 +36,7 @@ class Trophy extends StatelessWidget {
             ),
           ),
           Align(
-            alignment: const Alignment(0, -0.9),
+            alignment: const Alignment(0, -0.7),
             child: Text(
               rank == null ? '' : rank.toString(),
               style: TextStyle(
@@ -44,9 +44,9 @@ class Trophy extends StatelessWidget {
                 fontWeight: rank == null
                     ? null
                     : rank < 10
-                        ? FontWeight.w900
-                        : FontWeight.w400,
-                fontFamily: 'Roboto',
+                        ? FontWeight.w400
+                        : FontWeight.w100,
+                fontFamily: 'Cookies',
                 letterSpacing: -2,
                 color: GameColors.leaderboardGoldenColorText,
               ),
