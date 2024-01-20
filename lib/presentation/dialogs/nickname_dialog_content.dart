@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/configs/configs_cubit.dart';
+import 'package:save_the_potato/presentation/formatters/custom_regex_formatter.dart';
 import 'package:toastification/toastification.dart';
-import 'package:flutter/services.dart';
 
 class NicknameDialogContent extends StatefulWidget {
   const NicknameDialogContent({super.key}) : super();
@@ -59,10 +59,12 @@ class _NicknameDialogContentState extends State<NicknameDialogContent> {
                     fillColor: Colors.transparent,
                     counterText: '',
                   ),
+                  autocorrect: false,
+                  enableSuggestions: false,
                   maxLength: configsState.gameConfig.nicknameMaxLength,
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      RegExp(configsState.gameConfig.nicknameAllowedRegex),
+                    CustomRegexFormatter(
+                      configsState.gameConfig.nicknameAllowedRegex,
                     ),
                   ],
                 ),

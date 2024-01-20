@@ -7,7 +7,7 @@ class GameConfigEntity with EquatableMixin {
   static const initialOfflineConfigs = GameConfigEntity(
     nicknameMaxLength: 25,
     nicknameMinLength: 3,
-    nicknameAllowedRegex: '^[0-9a-zA-Z]+\$',
+    nicknameAllowedRegex: '[0-9a-zA-Z ]',
     minVersionAndroid: 0,
     minVersionIos: 0,
     latestVersionAndroid: 0,
