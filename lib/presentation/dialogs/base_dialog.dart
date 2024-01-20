@@ -40,7 +40,12 @@ class BaseDialog extends AlertDialog {
                 ),
             ],
           ),
-          content: content,
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 300,
+            ),
+            child: content,
+          ),
         );
 
   static Future<T?> _showSimpleDialog<T>({
