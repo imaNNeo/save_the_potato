@@ -48,7 +48,7 @@ class _CaptchaDialogContentState extends State<CaptchaDialogContent> {
           width: 118,
           child: ElevatedButton(
             onPressed: () => Navigator.of(context)
-                .pop(int.parse(_controller.text) == result),
+                .pop(int.tryParse(_controller.text) == result),
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10.0),
