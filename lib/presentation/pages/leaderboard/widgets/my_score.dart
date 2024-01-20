@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
-import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
 import 'package:save_the_potato/presentation/widgets/new_rank_celebration_page.dart';
@@ -88,12 +87,15 @@ class MyScore extends StatelessWidget {
                 ),
             ],
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18.0,
-                vertical: 18.0,
+              padding: const EdgeInsets.only(
+                left: 8.0,
+                right: 18.0,
+                top: 18.0,
+                bottom: 18.0,
               ),
               child: Row(
                 children: [
+                  const Icon(Icons.more_vert),
                   ScoreRankNumber(
                     rank: scoreEntity.rank,
                     size: 48,
@@ -109,16 +111,6 @@ class MyScore extends StatelessWidget {
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
-                              fontFamily: 'RobotoMono',
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            '(edit)',
-                            style: TextStyle(
-                              color: GameColors.linkBlueColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
                               fontFamily: 'RobotoMono',
                             ),
                           ),
