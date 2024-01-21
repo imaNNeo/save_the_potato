@@ -5,6 +5,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
 import 'package:save_the_potato/domain/repository/settings_repository.dart';
@@ -61,6 +62,7 @@ class MyApp extends StatelessWidget {
           create: (context) => GameCubit(
             getIt.get<AudioHelper>(),
             getIt.get<ScoresRepository>(),
+            getIt.get<AnalyticsHelper>(),
           ),
         ),
         BlocProvider<ScoresCubit>(
@@ -68,6 +70,7 @@ class MyApp extends StatelessWidget {
             getIt.get<ScoresRepository>(),
             getIt.get<ConfigsRepository>(),
             getIt.get<AuthRepository>(),
+            getIt.get<AnalyticsHelper>(),
           ),
         ),
         BlocProvider<AuthCubit>(

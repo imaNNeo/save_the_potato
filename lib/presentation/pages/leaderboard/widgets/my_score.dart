@@ -1,22 +1,27 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
+import 'package:save_the_potato/domain/models/user_entity.dart';
+import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
 import 'package:save_the_potato/presentation/widgets/new_rank_celebration_page.dart';
+import 'package:save_the_potato/service_locator.dart';
 
 import 'score_rank_number.dart';
 
 class MyScore extends StatelessWidget {
-  const MyScore({
+  MyScore({
     super.key,
     required this.scoreEntity,
   });
 
   final OnlineScoreEntity scoreEntity;
+  final analyticsHelper = getIt.get<AnalyticsHelper>();
 
   @override
   Widget build(BuildContext context) {
@@ -53,11 +58,19 @@ class MyScore extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: PopupMenuButton<int>(
+            onOpened: () {
+              final user = context.read<AuthCubit>().state.user;
+              bool isAnonymous =
+                  user == null || user.type == UserType.anonymous;
+              analyticsHelper.logLeaderboardMyScoreClick(isAnonymous);
+            },
             onSelected: (item) async {
               switch (item) {
                 case 0:
+                  analyticsHelper.logRenameNickname(EventSource.leaderboard);
                   context.read<ScoresCubit>().updateNickname();
                 case 1:
+                  analyticsHelper.logShareMyScore(EventSource.leaderboard);
                   context.read<ScoresCubit>().shareScore(scoreEntity);
                 case 2:
                   Navigator.of(context).push(

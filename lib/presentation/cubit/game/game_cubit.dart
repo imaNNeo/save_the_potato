@@ -6,6 +6,7 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/double_range.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
@@ -19,6 +20,7 @@ class GameCubit extends Cubit<GameState> {
   GameCubit(
     this._audioHelper,
     this._scoresRepository,
+    this._analyticsHelper,
   ) : super(const GameState()) {
     FlameAudio.bgm.initialize();
   }
@@ -30,8 +32,13 @@ class GameCubit extends Cubit<GameState> {
 
   final AudioHelper _audioHelper;
   final ScoresRepository _scoresRepository;
+  final AnalyticsHelper _analyticsHelper;
 
-  void startGame() async {
+  late int gameShowGuideTimestamp;
+  late int gameStartedTimestamp;
+
+  void startToShowGuide() async {
+    gameShowGuideTimestamp = DateTime.now().millisecondsSinceEpoch;
     emit(const GameState().copyWith(
       playingState: PlayingState.guide,
     ));
@@ -41,6 +48,9 @@ class GameCubit extends Cubit<GameState> {
     if (!state.playingState.isGuide) {
       return;
     }
+    final afterGuideDurationMills =
+        DateTime.now().millisecondsSinceEpoch - gameShowGuideTimestamp;
+    _analyticsHelper.logLevelStart(afterGuideDurationMills);
     emit(state.copyWith(playingState: PlayingState.playing));
     _audioHelper.playBackgroundMusic();
   }
@@ -68,16 +78,24 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void _gameOver() async {
+    final score = (state.timePassed * 1000).toInt();
+    final previousScore = await _scoresRepository.getHighScore();
+
+    _analyticsHelper.logLevelEnd(
+      durationMills:
+          (DateTime.now().millisecondsSinceEpoch - gameStartedTimestamp),
+      isHighScore: score > previousScore.score,
+      heatLevel: state.heatLevel,
+    );
     emit(state.copyWith(playingState: PlayingState.gameOver));
-    _submitScore();
+    _submitScore(previousScore);
     await _fadeBackgroundVolume();
     emit(state.copyWith(showGameOverUI: true));
     FlameAudio.bgm.stop();
   }
 
-  void _submitScore() async {
+  void _submitScore(ScoreEntity previousScore) async {
     final score = (state.timePassed * 1000).toInt();
-    final previousScore = await _scoresRepository.getHighScore();
     if (score > previousScore.score) {
       final newScore = await _scoresRepository.saveScore(score);
       if (previousScore is OnlineScoreEntity &&
@@ -187,16 +205,19 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void pauseGame() {
+    _analyticsHelper.logLevelPause();
     emit(state.copyWith(playingState: PlayingState.paused));
     _audioHelper.pauseBackgroundMusic();
   }
 
   void resumeGame() {
+    _analyticsHelper.logLevelResume();
     emit(state.copyWith(playingState: PlayingState.playing));
     _audioHelper.resumeBackgroundMusic();
   }
 
   void restartGame() {
+    _analyticsHelper.logLevelRestart();
     emit(const GameState().copyWith(
       playingState: PlayingState.guide,
       restartGame: true,

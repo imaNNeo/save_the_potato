@@ -120,7 +120,7 @@ class BaseDialog extends AlertDialog {
     );
   }
 
-  static void showShareScoreDialog(
+  static void showHighScoreShareDialog(
     BuildContext context,
     UserEntity userEntity,
     OnlineScoreEntity scoreEntity,
@@ -129,7 +129,7 @@ class BaseDialog extends AlertDialog {
       context: context,
       builder: (BuildContext context) => BaseDialog(
         title: 'Share Score',
-        content: ShareScoreDialogContent(
+        content: HighScoreShareDialogContent(
           userEntity: userEntity,
           scoreEntity: scoreEntity,
         ),

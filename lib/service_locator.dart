@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:get_it/get_it.dart';
+import 'package:save_the_potato/data/firebase_analytics_helper.dart';
 import 'package:save_the_potato/data/key_value_storage.dart';
 import 'package:save_the_potato/data/sources/auth_local_data_source.dart';
 import 'package:save_the_potato/data/sources/auth_remote_data_source.dart';
@@ -9,6 +10,7 @@ import 'package:save_the_potato/data/sources/configs_remote_data_source.dart';
 import 'package:save_the_potato/data/sources/firebase_functions_wrapper.dart';
 import 'package:save_the_potato/data/sources/scores_remote_data_source.dart';
 import 'package:save_the_potato/data/sources/settings_data_source.dart';
+import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/settings_repository.dart';
 
@@ -31,6 +33,9 @@ Future<void> setupServiceLocator() async {
     () => FirebaseFunctionsWrapper(
       getIt.get<KeyValueStorage>(),
     ),
+  );
+  getIt.registerLazySingleton<AnalyticsHelper>(
+    () => FirebaseAnalyticsHelper(),
   );
 
   // Data sources

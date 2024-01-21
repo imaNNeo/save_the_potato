@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
@@ -9,13 +10,14 @@ import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:save_the_potato/presentation/widgets/game_round_button.dart';
+import 'package:save_the_potato/service_locator.dart';
 import 'trophy.dart';
 import 'victory_lines.dart';
 
 class NewRankCelebrationPage extends StatelessWidget {
+  NewRankCelebrationPage({super.key, required this.scoreEntity});
   final OnlineScoreEntity scoreEntity;
-
-  const NewRankCelebrationPage({super.key, required this.scoreEntity});
+  final analyticsHelper = getIt.get<AnalyticsHelper>();
 
   @override
   Widget build(Object context) {
@@ -106,7 +108,7 @@ class NewRankCelebrationPage extends StatelessWidget {
                                 child: GameRoundButton(
                                   title: 'SHARE SCORE',
                                   onPressed: () {
-                                    BaseDialog.showShareScoreDialog(
+                                    BaseDialog.showHighScoreShareDialog(
                                       context,
                                       context.read<AuthCubit>().state.user!,
                                       freshScore,

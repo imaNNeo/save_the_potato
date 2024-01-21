@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/domain/models/presentation_message.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
@@ -23,6 +24,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   final AuthRepository _authRepository;
   final ConfigsRepository _configsRepository;
+  final AnalyticsHelper _analyticsHelper;
 
   late StreamSubscription _userStreamSubscription;
 
@@ -54,19 +56,23 @@ class AuthCubit extends Cubit<AuthState> {
 
   void loginWithApple({
     bool forceToReplace = false,
-  }) =>
-      _sharedLoginLogic(
+  }) {
+    _analyticsHelper.logLogin(loginMethod: 'apple');
+    _sharedLoginLogic(
         _authRepository.signInWithApple,
         forceToReplace,
       );
+  };
 
   void loginWithGoogle({
     bool forceToReplace = false,
-  }) =>
-      _sharedLoginLogic(
+  }) {
+    _analyticsHelper.logLogin(loginMethod: 'apple');
+    _sharedLoginLogic(
         _authRepository.signInWithGoogle,
         forceToReplace,
       );
+  }
 
   void _sharedLoginLogic(_AuthFunction loginFunction, bool forceToReplace) async {
     emit(state.copyWith(authLoading: true));

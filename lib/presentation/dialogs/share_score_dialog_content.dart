@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
+import 'package:save_the_potato/service_locator.dart';
 
-class ShareScoreDialogContent extends StatelessWidget {
-  const ShareScoreDialogContent({
+class HighScoreShareDialogContent extends StatelessWidget {
+  HighScoreShareDialogContent({
     super.key,
     required this.userEntity,
     required this.scoreEntity,
@@ -14,6 +16,8 @@ class ShareScoreDialogContent extends StatelessWidget {
 
   final UserEntity userEntity;
   final OnlineScoreEntity scoreEntity;
+
+  final analyticsHelper = getIt.get<AnalyticsHelper>();
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +63,7 @@ class ShareScoreDialogContent extends StatelessWidget {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
+                    analyticsHelper.logRenameNickname(EventSource.celebrateHighScore);
                     Navigator.of(context).pop();
                     context.read<ScoresCubit>().updateNickname();
                   },
@@ -81,6 +86,7 @@ class ShareScoreDialogContent extends StatelessWidget {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
+                    analyticsHelper.logShareMyScore(EventSource.celebrateHighScore);
                     Navigator.of(context).pop();
                     context.read<ScoresCubit>().shareScore(scoreEntity);
                   },

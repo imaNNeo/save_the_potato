@@ -4,7 +4,6 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
-import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
@@ -50,7 +49,7 @@ class _MainPageState extends State<MainPage>
     pageRootKey = UniqueKey();
     _gameCubit = context.read<GameCubit>();
     _settingsCubit = context.read<SettingsCubit>();
-    _gameCubit.startGame();
+    _gameCubit.startToShowGuide();
     _game = MyGame(_gameCubit, _settingsCubit);
     _previousState = _gameCubit.state.playingState;
     _streamSubscription = _gameCubit.stream.listen((state) {

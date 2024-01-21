@@ -16,7 +16,7 @@ class LeaderboardPage extends StatefulWidget {
 class _LeaderboardPageState extends State<LeaderboardPage> {
   @override
   void initState() {
-    context.read<ScoresCubit>().tryToRefreshLeaderboard();
+    context.read<ScoresCubit>().onLeaderboardPageOpen();
     super.initState();
   }
 

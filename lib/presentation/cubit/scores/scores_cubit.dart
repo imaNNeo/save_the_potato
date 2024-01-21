@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
 import 'package:save_the_potato/domain/models/presentation_message.dart';
@@ -21,11 +22,13 @@ class ScoresCubit extends Cubit<ScoresState> {
     this._scoreRepository,
     this._configsRepository,
     this._authRepository,
+    this._analyticsHelper,
   ) : super(const ScoresState());
 
   final ScoresRepository _scoreRepository;
   final ConfigsRepository _configsRepository;
   final AuthRepository _authRepository;
+  final AnalyticsHelper _analyticsHelper;
 
   late StreamSubscription _highScoreSubscription;
   late StreamSubscription _userSubscription;
@@ -87,9 +90,9 @@ class ScoresCubit extends Cubit<ScoresState> {
     ));
   }
 
-  void tryToRefreshLeaderboard() async {
+  Future<bool> tryToRefreshLeaderboard() async {
     if (state.leaderboardLoading) {
-      return;
+      return false;
     }
     try {
       emit(state.copyWith(
@@ -102,6 +105,7 @@ class ScoresCubit extends Cubit<ScoresState> {
         leaderboard: ValueWrapper(leaderboard),
         leaderboardLoading: false,
       ));
+      return true;
     } catch (e) {
       emit(state.copyWith(
         leaderBoardError: PresentationMessage.fromError(e),
@@ -110,6 +114,16 @@ class ScoresCubit extends Cubit<ScoresState> {
       emit(state.copyWith(
         leaderBoardError: PresentationMessage.empty,
       ));
+      return false;
+    }
+  }
+
+  void onLeaderboardPageOpen() async {
+    _analyticsHelper.logLeaderboardPageOpen();
+    final int startTime = DateTime.now().millisecondsSinceEpoch;
+    if (await tryToRefreshLeaderboard()) {
+      final int duration = DateTime.now().millisecondsSinceEpoch - startTime;
+      _analyticsHelper.logLeaderboardPageLoad(duration);
     }
   }
 
@@ -159,7 +173,7 @@ class ScoresCubit extends Cubit<ScoresState> {
       ));
     }
   }
-  
+
   @override
   Future<void> close() {
     _highScoreSubscription.cancel();
