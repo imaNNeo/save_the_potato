@@ -1,3 +1,6 @@
+## 1.0.1
+* Add firebase analytics
+
 ## 1.0.0
 * 🚀Initial Release!
 * Use Cookies font for the trophy and shareable score image
