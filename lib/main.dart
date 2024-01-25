@@ -77,6 +77,7 @@ class MyApp extends StatelessWidget {
           create: (context) => AuthCubit(
             getIt.get<AuthRepository>(),
             getIt.get<ConfigsRepository>(),
+            getIt.get<AnalyticsHelper>(),
           ),
         ),
         BlocProvider<SplashCubit>(

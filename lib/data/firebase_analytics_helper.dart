@@ -7,6 +7,12 @@ class FirebaseAnalyticsHelper extends AnalyticsHelper {
     required String name,
     Map<String, dynamic>? parameters,
   }) {
+    parameters = parameters?.map((key, value) {
+      if (value is bool) {
+        return MapEntry(key, value.toString());
+      }
+      return MapEntry(key, value);
+    });
     debugPrint('AnalyticsEvent: $name, $parameters');
     FirebaseAnalytics.instance.logEvent(
       name: name,
@@ -40,7 +46,12 @@ class FirebaseAnalyticsHelper extends AnalyticsHelper {
       );
 
   @override
-  void logLevelPause() => _logEvent(name: 'level_pause');
+  void logLevelPause(bool manually) => _logEvent(
+        name: 'level_pause',
+        parameters: {
+          'manually': manually,
+        },
+      );
 
   @override
   void logLevelResume() => _logEvent(name: 'level_resume');

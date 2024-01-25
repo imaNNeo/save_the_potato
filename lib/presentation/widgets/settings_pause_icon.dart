@@ -17,7 +17,9 @@ class SettingsPauseIcon extends StatelessWidget {
             child: switch (state.playingState) {
               PlayingState.none => const SizedBox(),
               PlayingState.playing => IconButton(
-                  onPressed: gameCubit.pauseGame,
+                  onPressed: () => gameCubit.pauseGame(
+                    manually: true,
+                  ),
                   icon: const Icon(
                     Icons.pause,
                     size: 36,

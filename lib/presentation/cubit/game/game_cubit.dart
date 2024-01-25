@@ -48,8 +48,8 @@ class GameCubit extends Cubit<GameState> {
     if (!state.playingState.isGuide) {
       return;
     }
-    final afterGuideDurationMills =
-        DateTime.now().millisecondsSinceEpoch - gameShowGuideTimestamp;
+    gameStartedTimestamp = DateTime.now().millisecondsSinceEpoch;
+    final afterGuideDurationMills = gameStartedTimestamp - gameShowGuideTimestamp;
     _analyticsHelper.logLevelStart(afterGuideDurationMills);
     emit(state.copyWith(playingState: PlayingState.playing));
     _audioHelper.playBackgroundMusic();
@@ -204,8 +204,8 @@ class GameCubit extends Cubit<GameState> {
     ));
   }
 
-  void pauseGame() {
-    _analyticsHelper.logLevelPause();
+  void pauseGame({required bool manually}) {
+    _analyticsHelper.logLevelPause(manually);
     emit(state.copyWith(playingState: PlayingState.paused));
     _audioHelper.pauseBackgroundMusic();
   }

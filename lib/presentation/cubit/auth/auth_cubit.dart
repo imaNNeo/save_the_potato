@@ -19,7 +19,8 @@ typedef _AuthFunction = Future<UserEntity> Function(bool forceToReplace);
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit(
     this._authRepository,
-    this._configsRepository,
+    this._configsRepository, 
+    this._analyticsHelper,
   ) : super(const AuthState());
 
   final AuthRepository _authRepository;
@@ -62,12 +63,12 @@ class AuthCubit extends Cubit<AuthState> {
         _authRepository.signInWithApple,
         forceToReplace,
       );
-  };
+  }
 
   void loginWithGoogle({
     bool forceToReplace = false,
   }) {
-    _analyticsHelper.logLogin(loginMethod: 'apple');
+    _analyticsHelper.logLogin(loginMethod: 'google');
     _sharedLoginLogic(
         _authRepository.signInWithGoogle,
         forceToReplace,

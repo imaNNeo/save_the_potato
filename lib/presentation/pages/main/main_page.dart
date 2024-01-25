@@ -129,7 +129,7 @@ class _MainPageState extends State<MainPage>
             if (didPop) {
               return;
             }
-            _gameCubit.pauseGame();
+            _gameCubit.pauseGame(manually: true);
           },
           child: Scaffold(
             backgroundColor: Colors.black,

@@ -7,7 +7,7 @@ abstract class AnalyticsHelper {
     required int heatLevel,
   });
 
-  void logLevelPause();
+  void logLevelPause(bool manually);
 
   void logLevelResume();
 

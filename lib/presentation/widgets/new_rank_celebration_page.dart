@@ -108,6 +108,9 @@ class NewRankCelebrationPage extends StatelessWidget {
                                 child: GameRoundButton(
                                   title: 'SHARE SCORE',
                                   onPressed: () {
+                                    analyticsHelper.logShareMyScore(
+                                      EventSource.celebrateHighScore,
+                                    );
                                     BaseDialog.showHighScoreShareDialog(
                                       context,
                                       context.read<AuthCubit>().state.user!,
