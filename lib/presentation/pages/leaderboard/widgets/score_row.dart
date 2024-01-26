@@ -80,6 +80,7 @@ class ScoreRow extends StatelessWidget {
           color: Colors.white,
           blendMode: BlendMode.dstOut,
           duration: const Duration(seconds: 2),
+          padding: 0,
           angle: 45,
         );
   }
