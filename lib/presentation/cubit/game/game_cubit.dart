@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/double_range.dart';
+import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
@@ -95,15 +96,24 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void _submitScore(ScoreEntity previousScore) async {
-    final score = (state.timePassed * 1000).toInt();
-    if (score > previousScore.score) {
-      final newScore = await _scoresRepository.saveScore(score);
-      if (previousScore is OnlineScoreEntity &&
-          newScore.rank < previousScore.rank) {
-        // Let's celebrate!
-        _audioHelper.playVictorySound();
-        emit(state.copyWith(onNewHighScore: ValueWrapper(newScore)));
-        emit(state.copyWith(onNewHighScore: const ValueWrapper(null)));
+    try {
+      final score = (state.timePassed * 1000).toInt();
+      if (score > previousScore.score) {
+            final newScore = await _scoresRepository.saveScore(score);
+            if (previousScore is OnlineScoreEntity &&
+                newScore.rank < previousScore.rank) {
+              // Let's celebrate!
+              _audioHelper.playVictorySound();
+              emit(state.copyWith(onNewHighScore: ValueWrapper(newScore)));
+              emit(state.copyWith(onNewHighScore: const ValueWrapper(null)));
+            }
+          }
+    } catch (e) {
+      if (e is NetworkError) {
+        // Do nothing, we don't want to show the error to the user,
+        // we just retry later for example when user opens the app
+      } else {
+        rethrow;
       }
     }
   }

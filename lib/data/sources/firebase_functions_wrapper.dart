@@ -273,7 +273,7 @@ DomainError _mapToDomainError(exception) {
   }
   if (exception is FirebaseFunctionsException) {
     /// I don't know why it is -1004, but it is for network connection error
-    if (exception.code == '-1004') {
+    if (exception.code == '-1004' || exception.message == 'DEADLINE_EXCEEDED') {
       return NetworkError();
     }
     return ServerError(
