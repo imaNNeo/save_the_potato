@@ -1,3 +1,8 @@
+## 1.0.2
+* Fix missing libflutter.so issue
+* Fix some typos in the game
+* Add AD_ID permission in the android manifest (used by firebase_analytics)
+
 ## 1.0.1
 * Add firebase analytics
 
