@@ -55,67 +55,71 @@ class MyScore extends StatelessWidget {
         ],
       ),
       child: SafeArea(
-        child: Material(
-          color: Colors.transparent,
-          child: PopupMenuButton<int>(
-            onOpened: () {
-              final user = context.read<AuthCubit>().state.user;
-              bool isAnonymous =
-                  user == null || user.type == UserType.anonymous;
-              analyticsHelper.logLeaderboardMyScoreClick(isAnonymous);
-            },
-            onSelected: (item) async {
-              switch (item) {
-                case 0:
-                  analyticsHelper.logRenameNickname(EventSource.leaderboard);
-                  context.read<ScoresCubit>().updateNickname();
-                case 1:
-                  analyticsHelper.logShareMyScore(EventSource.leaderboard);
-                  context.read<ScoresCubit>().shareScore(scoreEntity);
-                case 2:
-                  Navigator.of(context).push(
-                    FadeRoute(
-                      page: NewRankCelebrationPage(
-                        scoreEntity: scoreEntity,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: borderRadius,
+            topRight: borderRadius,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: PopupMenuButton<int>(
+              onOpened: () {
+                final user = context.read<AuthCubit>().state.user;
+                bool isAnonymous =
+                    user == null || user.type == UserType.anonymous;
+                analyticsHelper.logLeaderboardMyScoreClick(isAnonymous);
+              },
+              onSelected: (item) async {
+                switch (item) {
+                  case 0:
+                    analyticsHelper.logRenameNickname(EventSource.leaderboard);
+                    context.read<ScoresCubit>().updateNickname();
+                  case 1:
+                    analyticsHelper.logShareMyScore(EventSource.leaderboard);
+                    context.read<ScoresCubit>().shareScore(scoreEntity);
+                  case 2:
+                    Navigator.of(context).push(
+                      FadeRoute(
+                        page: NewRankCelebrationPage(
+                          scoreEntity: scoreEntity,
+                        ),
                       ),
-                    ),
-                  );
-                case _:
-                  throw Exception('Unknown menu item: $item');
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem<int>(
-                value: 0,
-                child: Text('Rename Nickname'),
-              ),
-              const PopupMenuItem<int>(
-                value: 1,
-                child: Text('Share Score'),
-              ),
-              if (kDebugMode)
+                    );
+                  case _:
+                    throw Exception('Unknown menu item: $item');
+                }
+              },
+              itemBuilder: (context) => [
                 const PopupMenuItem<int>(
-                  value: 2,
-                  child: Text('Celebrate New Rank'),
+                  value: 0,
+                  child: Text('Rename Nickname'),
                 ),
-            ],
-            child: Padding(
-              padding: const EdgeInsets.only(
-                left: 8.0,
-                right: 18.0,
-                top: 18.0,
-                bottom: 18.0,
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.more_vert),
-                  ScoreRankNumber(
-                    rank: scoreEntity.rank,
-                    size: 48,
+                const PopupMenuItem<int>(
+                  value: 1,
+                  child: Text('Share Score'),
+                ),
+                if (kDebugMode)
+                  const PopupMenuItem<int>(
+                    value: 2,
+                    child: Text('Celebrate New Rank'),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: InkWell(
+              ],
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 8.0,
+                  right: 18.0,
+                  top: 18.0,
+                  bottom: 18.0,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.more_vert),
+                    ScoreRankNumber(
+                      rank: scoreEntity.rank,
+                      size: 48,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
                       child: Wrap(
                         children: [
                           Text(
@@ -130,17 +134,17 @@ class MyScore extends StatelessWidget {
                         ],
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    AppUtils.getHighScoreRepresentation(scoreEntity.score),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                    const SizedBox(width: 16),
+                    Text(
+                      AppUtils.getHighScoreRepresentation(scoreEntity.score),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
