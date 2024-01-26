@@ -85,8 +85,8 @@ class SplashCubit extends Cubit<SplashState> {
 
   void pageOpen() async {
     final startTimestamp = DateTime.now().millisecondsSinceEpoch;
-    final allowedToContiniue = await _initialChecks();
-    if (!allowedToContiniue) {
+    final allowedToContinue = await _initialChecks();
+    if (!allowedToContinue) {
       return;
     }
     final endTimestamp = DateTime.now().millisecondsSinceEpoch;

@@ -41,7 +41,7 @@ class AccountAlreadyExistsDialogContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'An account with this email already exists. If you continiue with the new account, your current data (such as high-score) will be lost and replaced with the new one.',
+                'An account with this email already exists. If you continue with the new account, your current data (such as high-score) will be lost and replaced with the new one.',
               ),
               const SizedBox(height: 16.0),
               SizedBox(
@@ -70,7 +70,7 @@ class AccountAlreadyExistsDialogContent extends StatelessWidget {
                           child: CircularProgressIndicator(),
                         )
                       : const Text(
-                          'Continiue',
+                          'Continue',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
