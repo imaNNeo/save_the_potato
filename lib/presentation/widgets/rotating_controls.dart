@@ -24,7 +24,7 @@ class RotationControls extends StatelessWidget {
     const iconSize = 88.0;
     const startOpacity = 0.3;
     const endOpacity = 1.0;
-    const tapAndHoldText = 'TAPE & HOLD';
+    const tapAndHoldText = 'TAP & HOLD';
     return Row(
       children: [
         Expanded(
