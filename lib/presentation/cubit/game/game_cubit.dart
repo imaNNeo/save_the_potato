@@ -215,6 +215,11 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void pauseGame({required bool manually}) {
+    if (!state.playingState.isPlaying) {
+      throw StateError(
+        'State is not playing, how could you call this function?',
+      );
+    }
     _analyticsHelper.logLevelPause(manually);
     emit(state.copyWith(playingState: PlayingState.paused));
     _audioHelper.pauseBackgroundMusic();

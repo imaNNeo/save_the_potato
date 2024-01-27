@@ -24,9 +24,6 @@ class HighScoreWidget extends StatelessWidget {
                     page: const LeaderboardPage(),
                   ),
                 );
-                context.read<GameCubit>().pauseGame(
-                  manually: false,
-                );
               },
               borderRadius: BorderRadius.circular(16),
               child: Padding(

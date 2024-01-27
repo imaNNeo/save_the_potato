@@ -21,6 +21,8 @@ import 'presentation/cubit/scores/scores_cubit.dart';
 import 'presentation/cubit/settings/settings_cubit.dart';
 import 'presentation/cubit/splash/splash_cubit.dart';
 
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isAndroid || Platform.isIOS) {
@@ -111,6 +113,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         home: const SplashPage(),
+        navigatorObservers: [routeObserver],
       ),
     );
   }

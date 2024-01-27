@@ -4,6 +4,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
+import 'package:save_the_potato/main.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
@@ -28,7 +29,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, RouteAware {
   late Key pageRootKey;
 
   late MyGame _game;
@@ -170,7 +171,30 @@ class _MainPageState extends State<MainPage>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(
+      this,
+      ModalRoute.of(context) as PageRoute<dynamic>,
+    );
+  }
+
+  @override
+  void didPushNext() {
+    /// this page is not visible anymore,
+    /// we need to pause the game if it is playing
+    _pauseIfPlaying();
+  }
+
+  void _pauseIfPlaying() {
+    if (_gameCubit.state.playingState.isPlaying) {
+      _gameCubit.pauseGame(manually: false);
+    }
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _streamSubscription.cancel();
     _generalLoadingSubscription.cancel();
     super.dispose();
