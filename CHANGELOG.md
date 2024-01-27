@@ -1,3 +1,8 @@
+## 1.0.3
+* Fix infinite game bug
+* Fix shimmer padding issue in the leaderboard
+* Fix my_score tap feedback radius
+
 ## 1.0.2
 * Fix missing libflutter.so issue
 * Fix some typos in the game
