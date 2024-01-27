@@ -1,6 +1,6 @@
 import 'package:save_the_potato/data/sources/scores_local_data_source.dart';
 import 'package:save_the_potato/data/sources/scores_remote_data_source.dart';
-import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
+import 'package:save_the_potato/domain/models/leaderboard_response_entity.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 
 class ScoresRepository {
@@ -78,6 +78,9 @@ class ScoresRepository {
   Stream<ScoreEntity> getHighScoreStream() =>
       _scoresLocalDataSource.getHighScoreStream();
 
-  Future<LeaderboardEntity> getLeaderboard(int pageLimit) =>
-      _scoresRemoteDataSource.getLeaderboard(pageLimit);
+  Future<LeaderboardResponseEntity> getLeaderboard(
+    int pageLimit,
+    String? pageLastId,
+  ) =>
+      _scoresRemoteDataSource.getLeaderboard(pageLimit, pageLastId);
 }

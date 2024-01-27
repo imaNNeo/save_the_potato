@@ -1,60 +1,76 @@
 part of 'scores_cubit.dart';
 
 class ScoresState extends Equatable {
+  static const int maxItemsToLoad = 20;
+
   const ScoresState({
     this.myScore,
-    this.leaderboard,
+    this.allShowingScores = const [],
     this.leaderboardLoading = false,
-    this.leaderBoardError = PresentationMessage.empty,
+    this.leaderBoardFirstPageError = PresentationMessage.empty,
+    this.leaderBoardNextPageError = PresentationMessage.empty,
+    this.updateNicknameError = PresentationMessage.empty,
     this.showAuthDialog = false,
     this.showNicknameDialog = false,
     this.scoreShareLoading = false,
     this.scoreShareError = PresentationMessage.empty,
+    this.nextPageCountToLoad = maxItemsToLoad,
   });
 
   final ScoreEntity? myScore;
-  final LeaderboardEntity? leaderboard;
+  final List<LeaderboardScoreItem> allShowingScores;
   final bool leaderboardLoading;
-  final PresentationMessage leaderBoardError;
+  final PresentationMessage leaderBoardFirstPageError;
+  final PresentationMessage leaderBoardNextPageError;
+  final PresentationMessage updateNicknameError;
   final bool showAuthDialog;
   final bool showNicknameDialog;
   final bool scoreShareLoading;
   final PresentationMessage scoreShareError;
+  final int nextPageCountToLoad;
 
   ScoresState copyWith({
     ValueWrapper<ScoreEntity>? myScore,
-    ValueWrapper<LeaderboardEntity>? leaderboard,
+    List<LeaderboardScoreItem>? allShowingScores,
     bool? leaderboardLoading,
-    PresentationMessage? leaderBoardError,
+    PresentationMessage? leaderBoardFirstPageError,
+    PresentationMessage? leaderBoardNextPageError,
+    PresentationMessage? updateNicknameError,
     bool? showAuthDialog,
     bool? showNicknameDialog,
     bool? scoreShareLoading,
     PresentationMessage? scoreShareError,
+    int? nextPageCountToLoad,
   }) {
-    if (leaderboard != null && leaderboard.value != null && myScore == null) {
-      myScore = ValueWrapper(leaderboard.value!.myScore);
-    }
     return ScoresState(
       myScore: myScore != null ? myScore.value : this.myScore,
-      leaderboard: leaderboard != null ? leaderboard.value : this.leaderboard,
+      allShowingScores: allShowingScores ?? this.allShowingScores,
       leaderboardLoading: leaderboardLoading ?? this.leaderboardLoading,
-      leaderBoardError: leaderBoardError ?? this.leaderBoardError,
+      leaderBoardFirstPageError:
+          leaderBoardFirstPageError ?? this.leaderBoardFirstPageError,
+      leaderBoardNextPageError:
+          leaderBoardNextPageError ?? this.leaderBoardNextPageError,
+      updateNicknameError: updateNicknameError ?? this.updateNicknameError,
       showAuthDialog: showAuthDialog ?? this.showAuthDialog,
       showNicknameDialog: showNicknameDialog ?? this.showNicknameDialog,
       scoreShareLoading: scoreShareLoading ?? this.scoreShareLoading,
       scoreShareError: scoreShareError ?? this.scoreShareError,
+      nextPageCountToLoad: nextPageCountToLoad ?? this.nextPageCountToLoad,
     );
   }
 
   @override
   List<Object?> get props => [
         myScore,
-        leaderboard,
+        allShowingScores,
         leaderboardLoading,
-        leaderBoardError,
+        leaderBoardFirstPageError,
+        leaderBoardNextPageError,
+        updateNicknameError,
         showAuthDialog,
         showNicknameDialog,
         scoreShareLoading,
         scoreShareError,
+        nextPageCountToLoad,
       ];
 }

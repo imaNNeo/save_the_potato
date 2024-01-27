@@ -54,6 +54,9 @@ class OnlineScoreEntity extends ScoreEntity {
   final bool isMine;
   final int rank;
 
+  /// id is the same as [userId] in the database
+  String get id => userId;
+
   OnlineScoreEntity({
     required this.score,
     required this.userId,

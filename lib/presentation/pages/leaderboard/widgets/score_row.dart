@@ -86,17 +86,20 @@ class ScoreRow extends StatelessWidget {
   }
 }
 
-class ScoreRowShimmer extends StatelessWidget {
-  const ScoreRowShimmer({
+class ScoreRowTemplateShimmer extends StatelessWidget {
+  const ScoreRowTemplateShimmer({
     super.key,
+    this.showShimmer = true,
   }) : super();
+
+  final bool showShimmer;
 
   @override
   Widget build(BuildContext context) {
     const height = ScoreRow.height;
     final color = Colors.white.withOpacity(0.5);
 
-    return Container(
+    final template = Container(
       height: height,
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -132,7 +135,11 @@ class ScoreRowShimmer extends StatelessWidget {
           ),
         ],
       ),
-    )
+    );
+    if (!showShimmer) {
+      return template;
+    }
+    return template
         .animate(
           onPlay: (controller) => controller.repeat(),
         )

@@ -1,4 +1,4 @@
-import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
+import 'package:save_the_potato/domain/models/leaderboard_response_entity.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 
 import 'firebase_functions_wrapper.dart';
@@ -8,8 +8,14 @@ class ScoresRemoteDataSource {
 
   ScoresRemoteDataSource(this._functions);
 
-  Future<LeaderboardEntity> getLeaderboard(int pageLimit) =>
-      _functions.getLeaderboard(pageLimit);
+  Future<LeaderboardResponseEntity> getLeaderboard(
+    int pageLimit,
+    String? pageLastId,
+  ) =>
+      _functions.getLeaderboard(
+        pageLimit,
+        pageLastId,
+      );
 
   Future<OnlineScoreEntity> submitScore(int score) =>
       _functions.submitScore(score);

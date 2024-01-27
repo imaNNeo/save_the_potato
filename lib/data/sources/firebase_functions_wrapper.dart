@@ -12,7 +12,7 @@ import 'package:save_the_potato/domain/extensions/map_entries_list_extensions.da
 import 'package:save_the_potato/domain/extensions/map_extensions.dart';
 import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/domain/models/game_config_entity.dart';
-import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
+import 'package:save_the_potato/domain/models/leaderboard_response_entity.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 import 'package:uuid/uuid.dart';
@@ -184,14 +184,18 @@ class FirebaseFunctionsWrapper {
     }
   }
 
-  Future<LeaderboardEntity> getLeaderboard(int pageLimit) async {
+  Future<LeaderboardResponseEntity> getLeaderboard(
+    int pageLimit,
+    String? pageLastId,
+  ) async {
     final response = await _callFunction(
       name: 'getLeaderboard',
       parameters: {
         'page_limit': pageLimit,
-      },
+        'page_last_id': pageLastId
+      }
     );
-    return LeaderboardEntity.fromJson(response['data']);
+    return LeaderboardResponseEntity.fromJson(response['data']);
   }
 
   Future<UserEntity> updateUserNickname(String nickname) async {
