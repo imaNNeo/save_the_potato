@@ -34,6 +34,7 @@ class ScoresCubit extends Cubit<ScoresState> {
   late StreamSubscription _userSubscription;
 
   UserEntity? lastUser;
+
   Future<void> initialize() async {
     emit(state.copyWith(
       myScore: ValueWrapper(await _scoreRepository.getHighScore()),
@@ -41,10 +42,10 @@ class ScoresCubit extends Cubit<ScoresState> {
     tryToRefreshLeaderboard();
     _highScoreSubscription =
         _scoreRepository.getHighScoreStream().distinct().listen((event) {
-          emit(state.copyWith(
-            myScore: ValueWrapper(event),
-          ));
-        });
+      emit(state.copyWith(
+        myScore: ValueWrapper(event),
+      ));
+    });
     _userSubscription = _authRepository.getUserStream().listen((user) {
       if (lastUser != user && user != null) {
         final userChanged = lastUser?.uid != user.uid;
@@ -78,8 +79,8 @@ class ScoresCubit extends Cubit<ScoresState> {
     }).toList();
     final newMyScore = state.myScore is OnlineScoreEntity
         ? (state.myScore as OnlineScoreEntity).copyWith(
-      nickname: user.nickname,
-    )
+            nickname: user.nickname,
+          )
         : state.myScore;
     emit(state.copyWith(
       allShowingScores: newShowingItems,
@@ -116,7 +117,7 @@ class ScoresCubit extends Cubit<ScoresState> {
         leaderBoardFirstPageError: PresentationMessage.empty,
         allShowingScores: List.generate(
           ScoresState.maxItemsToLoad,
-              (index) => LeaderboardLoadingScoreItem(),
+          (index) => LeaderboardLoadingScoreItem(),
         ),
       ));
     } else {
@@ -139,7 +140,7 @@ class ScoresCubit extends Cubit<ScoresState> {
       }
       newShowingItems.addAll([
         ...newLoadedItems,
-        LeaderboardLoadingScoreItem(),
+        if (leaderboardResponse.pageData.hasMore) LeaderboardLoadingScoreItem(),
       ]);
 
       emit(state.copyWith(
@@ -176,13 +177,9 @@ class ScoresCubit extends Cubit<ScoresState> {
   }
 
   Future<void> _tryToLoadFirstPage() async {
-    final int startTime = DateTime
-        .now()
-        .millisecondsSinceEpoch;
+    final int startTime = DateTime.now().millisecondsSinceEpoch;
     if (await tryToRefreshLeaderboard()) {
-      final int duration = DateTime
-          .now()
-          .millisecondsSinceEpoch - startTime;
+      final int duration = DateTime.now().millisecondsSinceEpoch - startTime;
       _analyticsHelper.logLeaderboardPageLoad(duration);
     }
   }
@@ -238,15 +235,18 @@ class ScoresCubit extends Cubit<ScoresState> {
     if (state.leaderboardLoading) {
       return;
     }
+    final hasMore = state.allShowingScores.last is LeaderboardLoadingScoreItem;
+    if (!hasMore) {
+      return;
+    }
+
     _loadNextPage();
   }
 
   void _loadNextPage() async {
     assert(!state.leaderboardLoading);
     final lastLoadedItem =
-        state.allShowingScores
-            .whereType<LeaderboardLoadedScoreItem>()
-            .last;
+        state.allShowingScores.whereType<LeaderboardLoadedScoreItem>().last;
     await _getLeaderboardItems(pageLastId: lastLoadedItem.score.userId);
   }
 
