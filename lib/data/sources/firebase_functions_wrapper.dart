@@ -9,6 +9,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:save_the_potato/data/key_value_storage.dart';
 import 'package:save_the_potato/domain/extensions/map_entries_list_extensions.dart';
+import 'package:save_the_potato/domain/extensions/map_extensions.dart';
 import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/domain/models/game_config_entity.dart';
 import 'package:save_the_potato/domain/models/leaderboard_entity.dart';
@@ -114,7 +115,7 @@ class FirebaseFunctionsWrapper {
 
       final response = await FirebaseFunctions.instanceFor(region: _region)
           .httpsCallable(name)
-          .call(parameters);
+          .call(parameters.removeNullValues());
       final parsedResponse = _FirebaseFunctionsResponseParser.parseResponse(
         response.data,
       );
