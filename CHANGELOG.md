@@ -1,3 +1,6 @@
+## 1.1.0
+* Implement pagination in the leaderboard
+
 ## 1.0.3
 * Fix infinite game bug
 * Fix shimmer padding issue in the leaderboard
