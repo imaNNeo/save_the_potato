@@ -94,7 +94,16 @@ class _GameOverUIState extends State<GameOverUI>
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      FormattedGameTime(time: state.timePassed),
+                      FormattedGameTime(
+                        time: state.timePassed,
+                        textStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                          color: gameOverState.isHighScore
+                              ? GameColors.leaderboardGoldenColor
+                              : Colors.white,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 40),
