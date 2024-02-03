@@ -64,6 +64,7 @@ class MyApp extends StatelessWidget {
           create: (context) => GameCubit(
             getIt.get<AudioHelper>(),
             getIt.get<ScoresRepository>(),
+            getIt.get<ConfigsRepository>(),
             getIt.get<AnalyticsHelper>(),
           ),
         ),

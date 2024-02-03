@@ -12,6 +12,7 @@ import 'package:save_the_potato/domain/models/double_range.dart';
 import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
+import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 
@@ -21,6 +22,7 @@ class GameCubit extends Cubit<GameState> {
   GameCubit(
     this._audioHelper,
     this._scoresRepository,
+    this._configsRepository,
     this._analyticsHelper,
   ) : super(const GameState()) {
     FlameAudio.bgm.initialize();
@@ -33,6 +35,7 @@ class GameCubit extends Cubit<GameState> {
 
   final AudioHelper _audioHelper;
   final ScoresRepository _scoresRepository;
+  final ConfigsRepository _configsRepository;
   final AnalyticsHelper _analyticsHelper;
 
   late int gameShowGuideTimestamp;
@@ -103,11 +106,13 @@ class GameCubit extends Cubit<GameState> {
 
   void _submitScore(ScoreEntity previousScore) async {
     try {
+      final gameConfigs = await _configsRepository.getGameConfig();
       final score = (state.timePassed * 1000).toInt();
       if (score > previousScore.score) {
         final newScore = await _scoresRepository.saveScore(score);
         if (previousScore is OnlineScoreEntity &&
-            newScore.rank < previousScore.rank) {
+            newScore.rank < previousScore.rank &&
+            newScore.rank <= gameConfigs.showNewScoreCelebrationRankThreshold) {
           // Let's celebrate!
           _audioHelper.playVictorySound();
           emit(state.copyWith(onNewHighScore: ValueWrapper(newScore)));

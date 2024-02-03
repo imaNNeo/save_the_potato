@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
+import 'package:save_the_potato/presentation/game_colors.dart';
 
 import 'game_round_button.dart';
 import 'game_timer.dart';
@@ -40,6 +41,8 @@ class _GameOverUIState extends State<GameOverUI>
   Widget build(BuildContext context) {
     return BlocBuilder<GameCubit, GameState>(
       builder: (context, state) {
+        assert(state.playingState.isGameOver);
+        final gameOverState = state.playingState as PlayingStateGameOver;
         return Stack(
           children: [
             BackdropFilter(
@@ -77,7 +80,23 @@ class _GameOverUIState extends State<GameOverUI>
                       ],
                     ),
                   ),
-                  FormattedGameTime(time: state.timePassed),
+                  if (gameOverState.isHighScore) ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: 78.0,
+                      child: Image.asset(
+                        'assets/images/new-score.png',
+                        color: GameColors.leaderboardGoldenColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FormattedGameTime(time: state.timePassed),
+                    ],
+                  ),
                   const SizedBox(height: 40),
                   SizedBox(
                     width: 240,

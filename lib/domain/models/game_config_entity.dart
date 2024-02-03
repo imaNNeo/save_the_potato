@@ -21,6 +21,7 @@ class GameConfigEntity with EquatableMixin {
     shareTextWithoutRank:
         "🏆 New High Score on Save The Potato! 🎉 Just hit a new high score of {{score}} on Save The Potato! 🥔🛡️ Can you climb higher? Grab the game at savethepotato.com and take on the challenge! #SaveThePotato #HighScore",
     shareTextWithRankThreshold: 10,
+    showNewScoreCelebrationRankThreshold: 20,
   );
 
   final int nicknameMaxLength;
@@ -35,6 +36,7 @@ class GameConfigEntity with EquatableMixin {
   final String shareTextWithRank;
   final String shareTextWithoutRank;
   final int shareTextWithRankThreshold;
+  final int showNewScoreCelebrationRankThreshold;
 
   const GameConfigEntity({
     required this.nicknameMaxLength,
@@ -49,6 +51,7 @@ class GameConfigEntity with EquatableMixin {
     required this.shareTextWithRank,
     required this.shareTextWithoutRank,
     required this.shareTextWithRankThreshold,
+    required this.showNewScoreCelebrationRankThreshold,
   });
 
   Map<String, dynamic> toJson() => {
@@ -64,6 +67,8 @@ class GameConfigEntity with EquatableMixin {
         'shareTextWithRank': shareTextWithRank,
         'shareTextWithoutRank': shareTextWithoutRank,
         'shareTextWithRankThreshold': shareTextWithRankThreshold,
+        'showNewScoreCelebrationRankThreshold':
+            showNewScoreCelebrationRankThreshold,
       };
 
   factory GameConfigEntity.fromJson(Map<String, dynamic> json) =>
@@ -80,6 +85,8 @@ class GameConfigEntity with EquatableMixin {
         shareTextWithRank: json['shareTextWithRank'] as String,
         shareTextWithoutRank: json['shareTextWithoutRank'] as String,
         shareTextWithRankThreshold: json['shareTextWithRankThreshold'] as int,
+        showNewScoreCelebrationRankThreshold:
+            json['showNewScoreCelebrationRankThreshold'] as int,
       );
 
   @override
@@ -96,5 +103,6 @@ class GameConfigEntity with EquatableMixin {
         shareTextWithRank,
         shareTextWithoutRank,
         shareTextWithRankThreshold,
+        showNewScoreCelebrationRankThreshold,
       ];
 }
