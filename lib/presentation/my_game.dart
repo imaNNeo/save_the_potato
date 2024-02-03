@@ -106,7 +106,7 @@ class MyWorld extends World
   @override
   void onNewState(GameState state) {
     super.onNewState(state);
-    if (state.playingState == PlayingState.gameOver) {
+    if (state.playingState is PlayingStateGameOver) {
       add(GameOverCameraZoomEffect());
     } else {
       add(CameraZoomEffect(
@@ -129,7 +129,7 @@ class MyWorld extends World
   }
 
   void spawnOrb() {
-    if (game.playingState != PlayingState.playing) {
+    if (game.playingState != const PlayingStatePlaying()) {
       return;
     }
 

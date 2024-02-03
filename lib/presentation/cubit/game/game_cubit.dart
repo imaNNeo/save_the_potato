@@ -41,7 +41,7 @@ class GameCubit extends Cubit<GameState> {
   void startToShowGuide() async {
     gameShowGuideTimestamp = DateTime.now().millisecondsSinceEpoch;
     emit(const GameState().copyWith(
-      playingState: PlayingState.guide,
+      playingState: const PlayingStateGuide(),
     ));
   }
 
@@ -50,9 +50,10 @@ class GameCubit extends Cubit<GameState> {
       return;
     }
     gameStartedTimestamp = DateTime.now().millisecondsSinceEpoch;
-    final afterGuideDurationMills = gameStartedTimestamp - gameShowGuideTimestamp;
+    final afterGuideDurationMills =
+        gameStartedTimestamp - gameShowGuideTimestamp;
     _analyticsHelper.logLevelStart(afterGuideDurationMills);
-    emit(state.copyWith(playingState: PlayingState.playing));
+    emit(state.copyWith(playingState: const PlayingStatePlaying()));
     _audioHelper.playBackgroundMusic();
   }
 
@@ -81,14 +82,19 @@ class GameCubit extends Cubit<GameState> {
   void _gameOver() async {
     final score = (state.timePassed * 1000).toInt();
     final previousScore = await _scoresRepository.getHighScore();
-
+    final bool isHighScore = score > previousScore.score;
     _analyticsHelper.logLevelEnd(
       durationMills:
           (DateTime.now().millisecondsSinceEpoch - gameStartedTimestamp),
-      isHighScore: score > previousScore.score,
+      isHighScore: isHighScore,
       heatLevel: state.heatLevel,
     );
-    emit(state.copyWith(playingState: PlayingState.gameOver));
+    emit(state.copyWith(
+      playingState: PlayingStateGameOver(
+        score: score,
+        isHighScore: isHighScore,
+      ),
+    ));
     _submitScore(previousScore);
     await _fadeBackgroundVolume();
     emit(state.copyWith(showGameOverUI: true));
@@ -99,15 +105,15 @@ class GameCubit extends Cubit<GameState> {
     try {
       final score = (state.timePassed * 1000).toInt();
       if (score > previousScore.score) {
-            final newScore = await _scoresRepository.saveScore(score);
-            if (previousScore is OnlineScoreEntity &&
-                newScore.rank < previousScore.rank) {
-              // Let's celebrate!
-              _audioHelper.playVictorySound();
-              emit(state.copyWith(onNewHighScore: ValueWrapper(newScore)));
-              emit(state.copyWith(onNewHighScore: const ValueWrapper(null)));
-            }
-          }
+        final newScore = await _scoresRepository.saveScore(score);
+        if (previousScore is OnlineScoreEntity &&
+            newScore.rank < previousScore.rank) {
+          // Let's celebrate!
+          _audioHelper.playVictorySound();
+          emit(state.copyWith(onNewHighScore: ValueWrapper(newScore)));
+          emit(state.copyWith(onNewHighScore: const ValueWrapper(null)));
+        }
+      }
     } catch (e) {
       if (e is NetworkError) {
         // Do nothing, we don't want to show the error to the user,
@@ -221,20 +227,20 @@ class GameCubit extends Cubit<GameState> {
       );
     }
     _analyticsHelper.logLevelPause(manually);
-    emit(state.copyWith(playingState: PlayingState.paused));
+    emit(state.copyWith(playingState: const PlayingStatePaused()));
     _audioHelper.pauseBackgroundMusic();
   }
 
   void resumeGame() {
     _analyticsHelper.logLevelResume();
-    emit(state.copyWith(playingState: PlayingState.playing));
+    emit(state.copyWith(playingState: const PlayingStatePlaying()));
     _audioHelper.resumeBackgroundMusic();
   }
 
   void restartGame() {
     _analyticsHelper.logLevelRestart();
     emit(const GameState().copyWith(
-      playingState: PlayingState.guide,
+      playingState: const PlayingStateGuide(),
       restartGame: true,
     ));
     emit(state.copyWith(restartGame: false));

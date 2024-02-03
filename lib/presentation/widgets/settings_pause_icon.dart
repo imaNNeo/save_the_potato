@@ -15,8 +15,8 @@ class SettingsPauseIcon extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(right: 12.0, top: 8.0),
             child: switch (state.playingState) {
-              PlayingState.none => const SizedBox(),
-              PlayingState.playing => IconButton(
+              PlayingStateNone() => const SizedBox(),
+              PlayingStatePlaying() => IconButton(
                   onPressed: () => gameCubit.pauseGame(
                     manually: true,
                   ),
@@ -25,9 +25,9 @@ class SettingsPauseIcon extends StatelessWidget {
                     size: 36,
                   ),
                 ),
-              PlayingState.paused ||
-              PlayingState.gameOver ||
-              PlayingState.guide =>
+              PlayingStatePaused() ||
+              PlayingStateGameOver() ||
+              PlayingStateGuide() =>
                 IconButton(
                   onPressed: () => BaseDialog.showSettingsDialog(context),
                   icon: const Icon(

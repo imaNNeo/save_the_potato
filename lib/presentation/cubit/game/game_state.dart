@@ -4,7 +4,7 @@ class GameState extends Equatable {
   const GameState({
     this.heatLevel = 0,
     this.timePassed = 0,
-    this.playingState = PlayingState.none,
+    this.playingState = const PlayingStateNone(),
     this.showGameOverUI = false,
     this.shieldsAngleRotationSpeed = 0,
     this.restartGame = false,
@@ -100,22 +100,44 @@ class GameState extends Equatable {
       ];
 }
 
-enum PlayingState {
-  none,
-  guide,
-  playing,
-  paused,
-  gameOver;
+sealed class PlayingState {
+  const PlayingState();
 
-  bool get isGuide => this == PlayingState.guide;
+  bool get isGuide => this is PlayingStateGuide;
 
-  bool get isNone => this == PlayingState.none;
+  bool get isNone => this is PlayingStateNone;
 
-  bool get isGameOver => this == PlayingState.gameOver;
+  bool get isGameOver => this is PlayingStateGameOver;
 
-  bool get isPlaying => this == PlayingState.playing;
+  bool get isPlaying => this is PlayingStatePlaying;
 
-  bool get isPaused => this == PlayingState.paused;
+  bool get isPaused => this is PlayingStatePaused;
+}
+
+class PlayingStateNone extends PlayingState {
+  const PlayingStateNone();
+}
+
+class PlayingStateGuide extends PlayingState {
+  const PlayingStateGuide();
+}
+
+class PlayingStatePlaying extends PlayingState {
+  const PlayingStatePlaying();
+}
+
+class PlayingStatePaused extends PlayingState {
+  const PlayingStatePaused();
+}
+
+class PlayingStateGameOver extends PlayingState {
+  final int score;
+  final bool isHighScore;
+
+  const PlayingStateGameOver({
+    required this.score,
+    required this.isHighScore,
+  });
 }
 
 enum TemperatureType {
