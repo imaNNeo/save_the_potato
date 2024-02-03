@@ -31,23 +31,10 @@ class Potato extends PositionComponent
 
   late SMITrigger fireHitTrigger;
   late SMITrigger iceHitTrigger;
-  late SMITrigger fireDieTrigger;
-  late SMITrigger iceDieTrigger;
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
       previousState.playingState != newState.playingState;
-
-  @override
-  void onNewState(GameState state) {
-    if (state.playingState.isGameOver) {
-      if (state.heatLevel > 0) {
-        fireDieTrigger.fire();
-      } else {
-        iceDieTrigger.fire();
-      }
-    }
-  }
 
   @override
   Future<void> onLoad() async {
@@ -69,8 +56,6 @@ class Potato extends PositionComponent
     )!;
     fireHitTrigger = controller.findInput<bool>('fire-hit') as SMITrigger;
     iceHitTrigger = controller.findInput<bool>('ice-hit') as SMITrigger;
-    fireDieTrigger = controller.findInput<bool>('fire-die') as SMITrigger;
-    iceDieTrigger = controller.findInput<bool>('ice-die') as SMITrigger;
     potatoArtBoard.addController(controller);
     add(RiveComponent(
       artboard: potatoArtBoard,

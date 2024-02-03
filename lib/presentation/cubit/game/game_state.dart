@@ -2,7 +2,7 @@ part of 'game_cubit.dart';
 
 class GameState extends Equatable {
   const GameState({
-    this.heatLevel = 0,
+    this.healthPoints = GameConstants.maxHealthPoints,
     this.timePassed = 0,
     this.playingState = const PlayingStateNone(),
     this.showGameOverUI = false,
@@ -11,8 +11,7 @@ class GameState extends Equatable {
     this.onNewHighScore,
   });
 
-  /// Between [GameConstants.minHeatLevel] and [GameConstants.maxHeatLevel]
-  final int heatLevel;
+  final int healthPoints;
 
   final double timePassed;
 
@@ -67,7 +66,7 @@ class GameState extends Equatable {
   }
 
   GameState copyWith({
-    int? heatLevel,
+    int? healthPoints,
     double? timePassed,
     PlayingState? playingState,
     bool? showGameOverUI,
@@ -76,7 +75,7 @@ class GameState extends Equatable {
     ValueWrapper<OnlineScoreEntity>? onNewHighScore,
   }) {
     return GameState(
-      heatLevel: heatLevel ?? this.heatLevel,
+      healthPoints: healthPoints ?? this.healthPoints,
       timePassed: timePassed ?? this.timePassed,
       playingState: playingState ?? this.playingState,
       showGameOverUI: showGameOverUI ?? this.showGameOverUI,
@@ -90,7 +89,7 @@ class GameState extends Equatable {
 
   @override
   List<Object?> get props => [
-        heatLevel,
+        healthPoints,
         timePassed,
         playingState,
         showGameOverUI,

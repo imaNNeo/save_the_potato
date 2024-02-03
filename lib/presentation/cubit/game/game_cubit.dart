@@ -69,16 +69,12 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void potatoOrbHit(TemperatureType type) {
-    final newHeatLevel = switch (type) {
-      TemperatureType.hot => state.heatLevel + 1,
-      TemperatureType.cold => state.heatLevel - 1,
-    };
     emit(state.copyWith(
-      heatLevel: newHeatLevel,
+      healthPoints: state.healthPoints - 1,
     ));
-    if (newHeatLevel <= GameConstants.minHeatLevel ||
-        newHeatLevel >= GameConstants.maxHeatLevel) {
+    if (state.healthPoints <= 0) {
       _gameOver();
+      return;
     }
   }
 
@@ -90,7 +86,6 @@ class GameCubit extends Cubit<GameState> {
       durationMills:
           (DateTime.now().millisecondsSinceEpoch - gameStartedTimestamp),
       isHighScore: isHighScore,
-      heatLevel: state.heatLevel,
     );
     emit(state.copyWith(
       playingState: PlayingStateGameOver(

@@ -40,4 +40,6 @@ class GameColors {
   }
 
   static const Color versionColor = Color(0xB2FFFFFF);
+
+  static const healthPointColor = Color(0xFFFF0058);
 }

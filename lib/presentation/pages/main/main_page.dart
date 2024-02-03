@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/main.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
@@ -95,17 +94,7 @@ class _MainPageState extends State<MainPage>
 
   @override
   Widget build(BuildContext context) {
-    final gameWidget = GameWidget(
-      game: _game,
-      backgroundBuilder: (context) {
-        return BlocBuilder<GameCubit, GameState>(
-          buildWhen: (prev, current) => prev.heatLevel != current.heatLevel,
-          builder: (context, state) {
-            return BackgroundGradient(heatLevel: state.heatLevel);
-          },
-        );
-      },
-    );
+    final gameWidget = GameWidget(game: _game);
     return BlocConsumer<GameCubit, GameState>(
       key: pageRootKey,
       listener: (context, state) {
@@ -198,41 +187,5 @@ class _MainPageState extends State<MainPage>
     _streamSubscription.cancel();
     _generalLoadingSubscription.cancel();
     super.dispose();
-  }
-}
-
-class BackgroundGradient extends StatelessWidget {
-  const BackgroundGradient({
-    super.key,
-    required this.heatLevel,
-  });
-
-  final int heatLevel;
-
-  @override
-  Widget build(BuildContext context) {
-    final isNeutral = heatLevel == 0;
-
-    final gradientFrom = isNeutral
-        ? GameConstants.neutralGradientFrom
-        : heatLevel > 0
-            ? ColorTween(
-                begin: GameConstants.neutralGradientFrom,
-                end: GameConstants.heatGradientFrom,
-              ).lerp(heatLevel / GameConstants.maxHeatLevel)!
-            : ColorTween(
-                begin: GameConstants.neutralGradientFrom,
-                end: GameConstants.coldGradientFrom,
-              ).lerp(heatLevel.abs() / GameConstants.maxHeatLevel)!;
-    return Container(
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          colors: [
-            gradientFrom,
-            const Color(0xFF000000),
-          ],
-        ),
-      ),
-    );
   }
 }

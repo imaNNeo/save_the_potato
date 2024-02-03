@@ -4,7 +4,6 @@ abstract class AnalyticsHelper {
   void logLevelEnd({
     required int durationMills,
     required bool isHighScore,
-    required int heatLevel,
   });
 
   void logLevelPause(bool manually);

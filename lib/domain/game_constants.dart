@@ -1,12 +1,8 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/domain/models/double_range.dart';
 
 class GameConstants {
-  static const int initialHeatLevel = 0;
-  static const int minHeatLevel = -3;
-  static const int maxHeatLevel = 3;
+  static const int maxHealthPoints = 3;
 
   static const double gameOverTimeScale = 0.1;
   static const showRetryAfterGameOverDelay = Duration(seconds: 3);
@@ -32,10 +28,6 @@ class GameConstants {
   static const double topBarNonPlayingOpacity = 0.2;
 
   static const double bgmVolume = 0.2;
-
-  static const heatGradientFrom = Color(0xFF290101);
-  static const neutralGradientFrom = Color(0xFF141414);
-  static const coldGradientFrom = Color(0xFF002140);
 
   static const hotColors = [
     Color(0xFFFF9362),

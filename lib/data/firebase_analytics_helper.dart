@@ -33,7 +33,6 @@ class FirebaseAnalyticsHelper extends AnalyticsHelper {
   void logLevelEnd({
     required int durationMills,
     required bool isHighScore,
-    required int heatLevel,
   }) =>
       _logEvent(
         name: 'level_end',
@@ -41,7 +40,6 @@ class FirebaseAnalyticsHelper extends AnalyticsHelper {
           'level_name': 'main',
           'duration_mills': durationMills,
           'is_high_score': isHighScore,
-          'heat_level': heatLevel,
         },
       );
 
