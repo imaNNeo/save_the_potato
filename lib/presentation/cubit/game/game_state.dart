@@ -27,10 +27,12 @@ class GameState extends Equatable {
   final OnlineScoreEntity? onNewHighScore;
 
   /// Between 0.0 and 1.0
-  double get difficulty => Curves.easeOutCubic.transform(min(
-        1.0,
-        timePassed / GameConstants.difficultyInitialToPeakDuration,
-      ));
+  double get difficulty => GameConstants.difficultyInitialToPeakCurve.transform(
+        min(
+          1.0,
+          timePassed / GameConstants.difficultyInitialToPeakDuration,
+        ),
+      );
 
   /// Between [GameConstants.orbsSpawnEveryInitial] and [GameConstants.orbsSpawnEveryPeak]
   /// based on [difficulty]
