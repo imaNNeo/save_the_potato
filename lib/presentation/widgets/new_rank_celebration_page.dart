@@ -24,8 +24,8 @@ class NewRankCelebrationPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       body: LayoutBuilder(
-        builder: (context, constrants) {
-          final width = constrants.maxWidth;
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
           final trophySize = min(width * 0.5, 200.0);
           return BlocBuilder<ScoresCubit, ScoresState>(
             builder: (context, scoreState) {
