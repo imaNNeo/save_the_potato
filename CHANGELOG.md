@@ -1,3 +1,7 @@
+## 1.1.1
+* Increase the difficulty of the game (specifically for the first minute)
+* Show newRank celebration with a rank threshold (20 at the moment). Also show a newScore badge in gameOver UI
+
 ## 1.1.0
 * Implement pagination in the leaderboard
 
