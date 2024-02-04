@@ -71,9 +71,23 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void potatoOrbHit(OrbType type) {
-    emit(state.copyWith(
-      healthPoints: state.healthPoints - 1,
-    ));
+    switch(type) {
+      case FireOrbType():
+      case IceOrbType():
+        emit(state.copyWith(
+          healthPoints: max(0, state.healthPoints - 1),
+        ));
+        break;
+      case HeartOrbType():
+        emit(state.copyWith(
+          healthPoints: min(
+            GameConstants.maxHealthPoints,
+            state.healthPoints + 1,
+          ),
+        ));
+        break;
+    }
+
     if (state.healthPoints <= 0) {
       _gameOver();
       return;

@@ -27,6 +27,7 @@ class GameConstants {
   static const double topBarPlayingOpacity = 1.0;
   static const double topBarNonPlayingOpacity = 0.2;
 
+  static const double chanceToSpawnHeartPerMissingHP = 0.02;
   static const double bgmVolume = 0.2;
 
   static const redColors = [
@@ -39,6 +40,12 @@ class GameConstants {
     Color(0xFFB4E6FF),
     Color(0xFF00AFFF),
     Color(0xFF008BFF),
+  ];
+
+  static const pinkColors = [
+    Color(0xFFFFB4CE),
+    Color(0xFFFF639F),
+    Color(0xFFFF006A),
   ];
 
   static const String domain = 'https://savethepotato.com';

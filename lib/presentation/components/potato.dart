@@ -97,6 +97,9 @@ class Potato extends PositionComponent
           case IceOrbType():
             iceHitTrigger.fire();
             break;
+          case HeartOrbType():
+            //heartHitTrigger.fire();
+            break;
         }
       }
       other.removeFromParent();

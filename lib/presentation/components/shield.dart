@@ -256,7 +256,8 @@ class Shield extends PositionComponent
     if (other is Orb) {
       bool isTheSame = (other.orbType.isFire() && type.isFire()) ||
           (other.orbType.isIce() && type.isIce());
-      if (isTheSame) {
+      bool otherIsHeart = other.orbType is HeartOrbType;
+      if (isTheSame || otherIsHeart) {
         other.disjoint();
       }
     }

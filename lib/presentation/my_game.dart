@@ -10,6 +10,7 @@ import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_noise/flame_noise.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
@@ -68,15 +69,23 @@ class MyGame extends FlameGame<MyWorld>
 
   void onOrbHit(OrbType type) {
     _gameCubit.potatoOrbHit(type);
-    camera.viewfinder.add(
-      MoveEffect.by(
-        Vector2(8, 8),
-        PerlinNoiseEffectController(
-          duration: 1,
-          frequency: 400,
-        ),
-      ),
-    );
+    switch (type) {
+      case FireOrbType():
+      case IceOrbType():
+        camera.viewfinder.add(
+          MoveEffect.by(
+            Vector2(8, 8),
+            PerlinNoiseEffectController(
+              duration: 1,
+              frequency: 400,
+            ),
+          ),
+        );
+        break;
+      case HeartOrbType():
+        // Nothing
+        break;
+    }
   }
 
   @override
@@ -138,8 +147,16 @@ class MyWorld extends World
     final position = Vector2(cos(angle), sin(angle)) * distance;
 
     final moveSpeed = bloc.state.spawnOrbsMoveSpeedRange.random();
+    OrbType? type;
+    final missingHP = GameConstants.maxHealthPoints - bloc.state.healthPoints;
+    if (missingHP > 0 &&
+        Random().nextDouble() <= GameConstants.chanceToSpawnHeartPerMissingHP) {
+      type = HeartOrbType();
+    } else {
+      type = Random().nextBool() ? FireOrbType() : IceOrbType();
+    }
     add(Orb(
-      orbType: Random().nextBool() ? FireOrbType() : IceOrbType(),
+      orbType: type,
       speed: moveSpeed,
       size: 16 + Random().nextDouble() * 2,
       target: game.world.player,

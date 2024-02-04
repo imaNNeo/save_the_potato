@@ -54,3 +54,21 @@ class IceOrbType extends OrbType {
   @override
   List<Sprite> get smallSparkleSprites => _smallSparkleSprites;
 }
+
+class HeartOrbType extends OrbType {
+  late List<Sprite> _smallSparkleSprites;
+
+  @override
+  Future<void> onLoad() async {
+    _smallSparkleSprites = await Future.wait(
+      List.generate(2, (i) => Sprite.load('heart/heart${i + 1}.png')),
+    );
+    return super.onLoad();
+  }
+
+  @override
+  List<Color> get colors => GameConstants.pinkColors;
+
+  @override
+  List<Sprite> get smallSparkleSprites => _smallSparkleSprites;
+}
