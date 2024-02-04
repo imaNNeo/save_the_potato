@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
+import 'package:save_the_potato/presentation/cubit/configs/configs_cubit.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
 
 class Trophy extends StatelessWidget {
@@ -19,9 +22,11 @@ class Trophy extends StatelessWidget {
   Widget build(BuildContext context) {
     int? rank =
         score is OnlineScoreEntity ? (score as OnlineScoreEntity).rank : null;
-    if (rank != null && rank > 99) {
-      rank = 99;
-    }
+    final threshold = context
+        .read<ConfigsCubit>()
+        .state
+        .gameConfig
+        .showNewScoreCelebrationRankThreshold;
     return SizedBox(
       width: size,
       height: size,
@@ -35,23 +40,20 @@ class Trophy extends StatelessWidget {
               BlendMode.srcATop,
             ),
           ),
-          Align(
-            alignment: const Alignment(0, -0.7),
-            child: Text(
-              rank == null ? '' : rank.toString(),
-              style: TextStyle(
-                fontSize: size * 0.4,
-                fontWeight: rank == null
-                    ? null
-                    : rank < 10
-                        ? FontWeight.w400
-                        : FontWeight.w100,
-                fontFamily: 'Cookies',
-                letterSpacing: -2,
-                color: GameColors.leaderboardGoldenColorText,
+          if (rank != null && rank <= threshold)
+            Align(
+              alignment: const Alignment(0, -0.7),
+              child: Text(
+                rank.toString(),
+                style: TextStyle(
+                  fontSize: size * 0.4,
+                  fontWeight: rank < 10 ? FontWeight.w400 : FontWeight.w100,
+                  fontFamily: 'Cookies',
+                  letterSpacing: -2,
+                  color: GameColors.leaderboardGoldenColorText,
+                ),
               ),
             ),
-          ),
           if (showNickname)
             Align(
               alignment: const Alignment(0, 0.75),
