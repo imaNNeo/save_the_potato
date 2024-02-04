@@ -68,7 +68,7 @@ class GameCubit extends Cubit<GameState> {
     emit(state.copyWith(timePassed: state.timePassed + dt));
   }
 
-  void potatoOrbHit(TemperatureType type) {
+  void potatoOrbHit(OrbType type) {
     emit(state.copyWith(
       healthPoints: state.healthPoints - 1,
     ));

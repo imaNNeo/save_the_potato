@@ -66,7 +66,7 @@ class MyGame extends FlameGame<MyWorld>
     super.update(dt);
   }
 
-  void onOrbHit(TemperatureType type) {
+  void onOrbHit(OrbType type) {
     _gameCubit.potatoOrbHit(type);
     camera.viewfinder.add(
       MoveEffect.by(
@@ -139,7 +139,7 @@ class MyWorld extends World
 
     final moveSpeed = bloc.state.spawnOrbsMoveSpeedRange.random();
     add(Orb(
-      type: TemperatureType.values.random(),
+      type: OrbType.values.random(),
       speed: moveSpeed,
       size: 16 + Random().nextDouble() * 2,
       target: game.world.player,

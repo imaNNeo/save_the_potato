@@ -29,13 +29,13 @@ class GameConstants {
 
   static const double bgmVolume = 0.2;
 
-  static const hotColors = [
+  static const redColors = [
     Color(0xFFFF9362),
     Color(0xFFFF5900),
     Color(0xFFFF2F00),
   ];
 
-  static const coldColors = [
+  static const blueColors = [
     Color(0xFFB4E6FF),
     Color(0xFF00AFFF),
     Color(0xFF008BFF),

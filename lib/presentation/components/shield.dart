@@ -29,7 +29,7 @@ class Shield extends PositionComponent
           anchor: Anchor.center,
         );
 
-  final TemperatureType type;
+  final OrbType type;
   final double shieldWidth;
   final double shieldSweep;
   final double offset;
@@ -195,8 +195,8 @@ class Shield extends PositionComponent
         ));
 
         final extraParticle = switch (type) {
-          TemperatureType.cold => _snowflakeSprites.random(),
-          TemperatureType.hot => _sparkleSprites.random(),
+          OrbType.blue => _snowflakeSprites.random(),
+          OrbType.red => _sparkleSprites.random(),
         };
         add(ParticleSystemComponent(
           position: localPos,

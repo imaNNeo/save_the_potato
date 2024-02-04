@@ -74,7 +74,7 @@ class _GameOverUIState extends State<GameOverUI>
                       shadows: [
                         Shadow(
                           blurRadius: 8.0,
-                          color: GameConstants.hotColors.last,
+                          color: GameConstants.redColors.last,
                           offset: const Offset(2.0, 2.0),
                         ),
                       ],

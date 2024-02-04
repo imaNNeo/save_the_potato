@@ -25,7 +25,7 @@ class Orb extends PositionComponent
     required super.position,
   }) : super(size: Vector2.all(size), priority: 1);
 
-  final TemperatureType type;
+  final OrbType type;
   final double speed;
   final PositionComponent target;
   late Timer _particleTimer;
@@ -35,8 +35,8 @@ class Orb extends PositionComponent
   double get radius => size.x / 2;
 
   List<Color> get colors => switch (type) {
-        TemperatureType.hot => GameConstants.hotColors,
-        TemperatureType.cold => GameConstants.coldColors,
+        OrbType.red => GameConstants.redColors,
+        OrbType.blue => GameConstants.blueColors,
       };
 
   List<Sprite> _sparkleSprites = [];
@@ -92,8 +92,8 @@ class Orb extends PositionComponent
             ),
         ]);
         final sprite = switch (type) {
-          TemperatureType.hot => _sparkleSprites.random(),
-          TemperatureType.cold => _snowflakeSprites.random(),
+          OrbType.red => _sparkleSprites.random(),
+          OrbType.blue => _snowflakeSprites.random(),
         };
         game.world.add(ParticleSystemComponent(
           position: positionOfAnchor(Anchor.center),
@@ -215,8 +215,8 @@ class Orb extends PositionComponent
         lifespan: 2,
         generator: (i) {
           final sprite = switch (type) {
-            TemperatureType.hot => _sparkleSprites.random(),
-            TemperatureType.cold => _snowflakeSprites.random(),
+            OrbType.red => _sparkleSprites.random(),
+            OrbType.blue => _snowflakeSprites.random(),
           };
           return AcceleratedParticle(
             speed: Vector2(

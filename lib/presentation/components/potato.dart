@@ -63,8 +63,8 @@ class Potato extends PositionComponent
       anchor: Anchor.center,
       position: size / 2,
     ));
-    add(fireShield = Shield(type: TemperatureType.hot));
-    add(iceShield = Shield(type: TemperatureType.cold));
+    add(fireShield = Shield(type: OrbType.red));
+    add(iceShield = Shield(type: OrbType.blue));
 
     if (game.playingState.isGuide) {
       add(GuideTitle());
@@ -90,10 +90,10 @@ class Potato extends PositionComponent
       game.onOrbHit(other.type);
       if (bloc.state.playingState.isPlaying) {
         switch (other.type) {
-          case TemperatureType.hot:
+          case OrbType.red:
             fireHitTrigger.fire();
             break;
-          case TemperatureType.cold:
+          case OrbType.blue:
             iceHitTrigger.fire();
             break;
         }

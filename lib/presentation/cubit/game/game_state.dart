@@ -139,17 +139,17 @@ class PlayingStateGameOver extends PlayingState {
   });
 }
 
-enum TemperatureType {
-  hot,
-  cold;
+enum OrbType {
+  red,
+  blue;
 
   Color get baseColor => switch (this) {
-        TemperatureType.hot => GameConstants.hotColors.first,
-        TemperatureType.cold => GameConstants.coldColors.first,
+        OrbType.red => GameConstants.redColors.first,
+        OrbType.blue => GameConstants.blueColors.first,
       };
 
   List<Color> get colors => switch (this) {
-        TemperatureType.hot => GameConstants.hotColors,
-        TemperatureType.cold => GameConstants.coldColors,
+        OrbType.red => GameConstants.redColors,
+        OrbType.blue => GameConstants.blueColors,
       };
 }
