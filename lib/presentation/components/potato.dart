@@ -9,7 +9,7 @@ import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
 import '../my_game.dart';
-import 'orb.dart';
+import 'orb/orb.dart';
 
 class Potato extends PositionComponent
     with

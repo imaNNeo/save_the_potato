@@ -15,7 +15,7 @@ import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart'
 import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
 
-import 'components/orb.dart';
+import 'components/orb/orb.dart';
 import 'components/potato.dart';
 import 'cubit/game/game_cubit.dart';
 
