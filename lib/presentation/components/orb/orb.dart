@@ -34,8 +34,9 @@ class Orb extends PositionComponent
 
   double get radius => size.x / 2;
 
-  late Paint headPaint;
   late Paint disjointParticlePaint;
+
+  late Sprite heartSprite;
 
   @override
   void onNewState(GameState state) {
@@ -46,8 +47,8 @@ class Orb extends PositionComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
+    heartSprite = await game.loadSprite('heart/heart1.png');
     await orbType.onLoad();
-    headPaint = Paint();
     disjointParticlePaint = Paint();
     add(CircleHitbox(collisionType: CollisionType.passive));
     add(OrbTailParticles());
@@ -64,43 +65,13 @@ class Orb extends PositionComponent
       target.position.x - position.x,
     );
     position += Vector2(cos(angle), sin(angle)) * speed * dt;
+    orbType.update(dt);
   }
 
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    final offset = (size / 2).toOffset();
-    final radius = size.x / 2;
-    canvas.drawCircle(
-      offset,
-      radius * 1.4,
-      headPaint
-        ..color = orbType.colors.last.withOpacity(0.25)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40),
-    );
-
-    canvas.drawCircle(
-      offset,
-      radius,
-      headPaint
-        ..color = orbType.colors.last.withOpacity(1)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30),
-    );
-
-    canvas.drawCircle(
-      offset,
-      radius,
-      headPaint
-        ..color = orbType.colors.last.withOpacity(1)
-        ..maskFilter = null,
-    );
-    canvas.drawCircle(
-      offset,
-      radius * 0.75,
-      headPaint
-        ..color = Colors.white.withOpacity(0.8)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
-    );
+    orbType.drawHead(canvas, size);
   }
 
   void disjoint() {
