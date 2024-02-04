@@ -11,6 +11,7 @@ import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
 
 import 'orb/orb.dart';
+import 'orb/orb_type.dart';
 
 class Shield extends PositionComponent
     with
@@ -36,8 +37,6 @@ class Shield extends PositionComponent
 
   late Timer _particleTimer;
   late List<Sprite> _flameSprites;
-  late List<Sprite> _sparkleSprites;
-  late List<Sprite> _snowflakeSprites;
 
   late Color shieldLineColor;
   late Color shieldTargetColor;
@@ -55,6 +54,7 @@ class Shield extends PositionComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
+    await type.onLoad();
     shieldLineColor = type.baseColor.withOpacity(0.0);
     shieldTargetColor = type.baseColor.withOpacity(0.8);
     size = parent.size + Vector2.all(shieldWidth * 2) + Vector2.all(offset * 2);
@@ -75,16 +75,6 @@ class Shield extends PositionComponent
     _flameSprites = [];
     for (int i = 1; i <= 8; i++) {
       _flameSprites.add(await Sprite.load('flame/flame$i.png'));
-    }
-
-    _sparkleSprites = [];
-    for (int i = 1; i <= 2; i++) {
-      _sparkleSprites.add(await Sprite.load('sparkle/sparkle$i.png'));
-    }
-
-    _snowflakeSprites = [];
-    for (int i = 1; i <= 2; i++) {
-      _snowflakeSprites.add(await Sprite.load('snow/snowflake$i.png'));
     }
 
     _addParticles();
@@ -194,10 +184,7 @@ class Shield extends PositionComponent
           ),
         ));
 
-        final extraParticle = switch (type) {
-          OrbType.blue => _snowflakeSprites.random(),
-          OrbType.red => _sparkleSprites.random(),
-        };
+        final extraParticle = type.smallSparkleSprites.random();
         add(ParticleSystemComponent(
           position: localPos,
           anchor: Anchor.center,
@@ -267,7 +254,9 @@ class Shield extends PositionComponent
       Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is Orb) {
-      if (other.type == type) {
+      bool isTheSame = (other.orbType.isFire() && type.isFire()) ||
+          (other.orbType.isIce() && type.isIce());
+      if (isTheSame) {
         other.disjoint();
       }
     }

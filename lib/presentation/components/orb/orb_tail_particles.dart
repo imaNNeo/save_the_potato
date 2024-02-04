@@ -27,8 +27,8 @@ class OrbTailParticles extends Component with HasGameRef<MyGame> {
       throw Exception('Parent must be of type Orb');
     }
     final obrParent = (parent as Orb);
-    final color = obrParent.colors.random();
-    final randomOrder = obrParent.colors.randomOrder();
+    final color = obrParent.orbType.colors.random();
+    final randomOrder = obrParent.orbType.colors.randomOrder();
     TweenSequence<Color?> colorTween = TweenSequence<Color?>([
       for (int i = 0; i < randomOrder.length - 1; i++)
         TweenSequenceItem(
@@ -39,7 +39,7 @@ class OrbTailParticles extends Component with HasGameRef<MyGame> {
           ),
         ),
     ]);
-    final sprite = obrParent.smallSparkleSprites.random();
+    final sprite = obrParent.orbType.smallSparkleSprites.random();
     final rnd = obrParent.rnd;
     game.world.add(ParticleSystemComponent(
       position: obrParent.positionOfAnchor(Anchor.center),

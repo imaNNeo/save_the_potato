@@ -6,12 +6,12 @@ import 'package:flame/extensions.dart';
 import 'package:flame/particles.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/extensions/list_extension.dart';
 import 'package:save_the_potato/presentation/components/orb/orb_tail_particles.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
 import '../../my_game.dart';
+import 'orb_type.dart';
 
 class Orb extends PositionComponent
     with
@@ -19,23 +19,20 @@ class Orb extends PositionComponent
         HasTimeScale,
         FlameBlocListenable<GameCubit, GameState> {
   Orb({
-    required this.type,
+    required this.orbType,
     required this.speed,
     required double size,
     required this.target,
     required super.position,
   }) : super(size: Vector2.all(size), priority: 1);
 
-  final OrbType type;
+  final OrbType orbType;
   final double speed;
   final PositionComponent target;
 
   Random get rnd => game.rnd;
 
   double get radius => size.x / 2;
-
-  late List<Color> colors;
-  late List<Sprite> smallSparkleSprites = [];
 
   late Paint headPaint;
   late Paint disjointParticlePaint;
@@ -49,17 +46,7 @@ class Orb extends PositionComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    colors = switch (type) {
-      OrbType.red => GameConstants.redColors,
-      OrbType.blue => GameConstants.blueColors,
-    };
-
-    smallSparkleSprites = await Future.wait(switch (type) {
-      OrbType.red =>
-        List.generate(2, (i) => Sprite.load('sparkle/sparkle${i + 1}.png')),
-      OrbType.blue =>
-        List.generate(2, (i) => Sprite.load('snow/snowflake${i + 1}.png')),
-    });
+    await orbType.onLoad();
     headPaint = Paint();
     disjointParticlePaint = Paint();
     add(CircleHitbox(collisionType: CollisionType.passive));
@@ -88,7 +75,7 @@ class Orb extends PositionComponent
       offset,
       radius * 1.4,
       headPaint
-        ..color = type.colors.last.withOpacity(0.25)
+        ..color = orbType.colors.last.withOpacity(0.25)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40),
     );
 
@@ -96,7 +83,7 @@ class Orb extends PositionComponent
       offset,
       radius,
       headPaint
-        ..color = type.colors.last.withOpacity(1)
+        ..color = orbType.colors.last.withOpacity(1)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30),
     );
 
@@ -104,7 +91,7 @@ class Orb extends PositionComponent
       offset,
       radius,
       headPaint
-        ..color = type.colors.last.withOpacity(1)
+        ..color = orbType.colors.last.withOpacity(1)
         ..maskFilter = null,
     );
     canvas.drawCircle(
@@ -118,8 +105,8 @@ class Orb extends PositionComponent
 
   void disjoint() {
     removeFromParent();
-    final color = colors.random();
-    final randomOrder = colors.randomOrder();
+    final color = orbType.colors.random();
+    final randomOrder = orbType.colors.randomOrder();
     TweenSequence<Color?> colorTween = TweenSequence<Color?>([
       for (int i = 0; i < randomOrder.length - 1; i++)
         TweenSequenceItem(
@@ -137,7 +124,7 @@ class Orb extends PositionComponent
         count: 30,
         lifespan: 2,
         generator: (i) {
-          final sprite = smallSparkleSprites.random();
+          final sprite = orbType.smallSparkleSprites.random();
           return AcceleratedParticle(
             speed: Vector2(
               (rnd.nextDouble() * 200) - 100,

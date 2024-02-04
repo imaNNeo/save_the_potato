@@ -99,17 +99,17 @@ class GameState extends Equatable {
       ];
 }
 
-enum OrbType {
-  red,
-  blue;
-
-  Color get baseColor => switch (this) {
-        OrbType.red => GameConstants.redColors.first,
-        OrbType.blue => GameConstants.blueColors.first,
-      };
-
-  List<Color> get colors => switch (this) {
-        OrbType.red => GameConstants.redColors,
-        OrbType.blue => GameConstants.blueColors,
-      };
-}
+// enum OrbType {
+//   red,
+//   blue;
+//
+//   Color get baseColor => switch (this) {
+//         OrbType.red => GameConstants.redColors.first,
+//         OrbType.blue => GameConstants.blueColors.first,
+//       };
+//
+//   List<Color> get colors => switch (this) {
+//         OrbType.red => GameConstants.redColors,
+//         OrbType.blue => GameConstants.blueColors,
+//       };
+// }

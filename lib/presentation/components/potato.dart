@@ -10,6 +10,7 @@ import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
 import '../my_game.dart';
 import 'orb/orb.dart';
+import 'orb/orb_type.dart';
 
 class Potato extends PositionComponent
     with
@@ -63,8 +64,8 @@ class Potato extends PositionComponent
       anchor: Anchor.center,
       position: size / 2,
     ));
-    add(fireShield = Shield(type: OrbType.red));
-    add(iceShield = Shield(type: OrbType.blue));
+    add(fireShield = Shield(type: FireOrbType()));
+    add(iceShield = Shield(type: IceOrbType()));
 
     if (game.playingState.isGuide) {
       add(GuideTitle());
@@ -87,13 +88,13 @@ class Potato extends PositionComponent
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
     if (other is Orb) {
-      game.onOrbHit(other.type);
+      game.onOrbHit(other.orbType);
       if (bloc.state.playingState.isPlaying) {
-        switch (other.type) {
-          case OrbType.red:
+        switch (other.orbType) {
+          case FireOrbType():
             fireHitTrigger.fire();
             break;
-          case OrbType.blue:
+          case IceOrbType():
             iceHitTrigger.fire();
             break;
         }

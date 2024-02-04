@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
-import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
@@ -16,6 +15,7 @@ import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
 
 import 'components/orb/orb.dart';
+import 'components/orb/orb_type.dart';
 import 'components/potato.dart';
 import 'cubit/game/game_cubit.dart';
 
@@ -139,7 +139,7 @@ class MyWorld extends World
 
     final moveSpeed = bloc.state.spawnOrbsMoveSpeedRange.random();
     add(Orb(
-      type: OrbType.values.random(),
+      orbType: Random().nextBool() ? FireOrbType() : IceOrbType(),
       speed: moveSpeed,
       size: 16 + Random().nextDouble() * 2,
       target: game.world.player,
