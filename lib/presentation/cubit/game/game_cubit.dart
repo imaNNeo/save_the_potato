@@ -17,6 +17,7 @@ import 'package:save_the_potato/domain/repository/scores_repository.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 
 part 'game_state.dart';
+part 'playing_state.dart';
 
 class GameCubit extends Cubit<GameState> {
   GameCubit(
