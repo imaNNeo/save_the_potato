@@ -9,8 +9,8 @@ import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
 import '../my_game.dart';
-import 'orb/orb.dart';
-import 'orb/orb_type.dart';
+import 'moving/moving_components.dart';
+import 'moving/orb/orb_type.dart';
 
 class Potato extends PositionComponent
     with
@@ -64,8 +64,8 @@ class Potato extends PositionComponent
       anchor: Anchor.center,
       position: size / 2,
     ));
-    add(fireShield = Shield(type: FireOrbType()));
-    add(iceShield = Shield(type: IceOrbType()));
+    add(fireShield = Shield(type: OrbType.fire));
+    add(iceShield = Shield(type: OrbType.ice));
 
     if (game.playingState.isGuide) {
       add(GuideTitle());
@@ -87,20 +87,16 @@ class Potato extends PositionComponent
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
-    if (other is Orb) {
-      game.onOrbHit(other.orbType);
-      if (bloc.state.playingState.isPlaying) {
-        switch (other.orbType) {
-          case FireOrbType():
-            fireHitTrigger.fire();
-            break;
-          case IceOrbType():
-            iceHitTrigger.fire();
-            break;
-          case HeartOrbType():
-            //heartHitTrigger.fire();
-            break;
-        }
+    if (other is MovingComponent) {
+      switch (other) {
+        case MovingHealth():
+          game.onHealthPointReceived();
+        case FireOrb():
+          game.onOrbHit();
+          fireHitTrigger.fire();
+        case IceOrb():
+          game.onOrbHit();
+          iceHitTrigger.fire();
       }
       other.removeFromParent();
     }

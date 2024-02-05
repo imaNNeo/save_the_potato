@@ -10,8 +10,8 @@ import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
 
-import 'orb/orb.dart';
-import 'orb/orb_type.dart';
+import 'moving/moving_components.dart';
+import 'moving/orb/orb_type.dart';
 
 class Shield extends PositionComponent
     with
@@ -37,6 +37,7 @@ class Shield extends PositionComponent
 
   late Timer _particleTimer;
   late List<Sprite> _flameSprites;
+  late List<Sprite> _smallSparkleSprites;
 
   late Color shieldLineColor;
   late Color shieldTargetColor;
@@ -54,7 +55,17 @@ class Shield extends PositionComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    await type.onLoad();
+    _smallSparkleSprites = switch (type) {
+      OrbType.fire => [
+          await Sprite.load('sparkle/sparkle1.png'),
+          await Sprite.load('sparkle/sparkle2.png'),
+        ],
+      OrbType.ice => [
+          await Sprite.load('snow/snowflake1.png'),
+          await Sprite.load('snow/snowflake2.png'),
+        ],
+    };
+
     shieldLineColor = type.baseColor.withOpacity(0.0);
     shieldTargetColor = type.baseColor.withOpacity(0.8);
     size = parent.size + Vector2.all(shieldWidth * 2) + Vector2.all(offset * 2);
@@ -184,7 +195,7 @@ class Shield extends PositionComponent
           ),
         ));
 
-        final extraParticle = type.smallSparkleSprites.random();
+        final extraParticle = _smallSparkleSprites.random();
         add(ParticleSystemComponent(
           position: localPos,
           anchor: Anchor.center,
@@ -253,12 +264,17 @@ class Shield extends PositionComponent
   void onCollisionStart(
       Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
-    if (other is Orb) {
-      bool isTheSame = (other.orbType.isFire() && type.isFire()) ||
-          (other.orbType.isIce() && type.isIce());
-      bool otherIsHeart = other.orbType is HeartOrbType;
-      if (isTheSame || otherIsHeart) {
-        other.disjoint();
+    if (other is MovingComponent) {
+      switch(other) {
+        case MovingHealth():
+          other.disjoint();
+        case FireOrb():
+        case IceOrb():
+          final orb = other as MovingOrb;
+          if ((orb.type.isFire && type.isFire) ||
+              (orb.type.isIce && type.isIce)) {
+            other.disjoint();
+          }
       }
     }
   }

@@ -14,7 +14,6 @@ import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
-import 'package:save_the_potato/presentation/components/orb/orb_type.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 
 part 'game_state.dart';
@@ -70,28 +69,23 @@ class GameCubit extends Cubit<GameState> {
     emit(state.copyWith(timePassed: state.timePassed + dt));
   }
 
-  void potatoOrbHit(OrbType type) {
-    switch(type) {
-      case FireOrbType():
-      case IceOrbType():
-        emit(state.copyWith(
-          healthPoints: max(0, state.healthPoints - 1),
-        ));
-        break;
-      case HeartOrbType():
-        emit(state.copyWith(
-          healthPoints: min(
-            GameConstants.maxHealthPoints,
-            state.healthPoints + 1,
-          ),
-        ));
-        break;
-    }
-
+  void potatoOrbHit() {
+    emit(state.copyWith(
+      healthPoints: max(0, state.healthPoints - 1),
+    ));
     if (state.healthPoints <= 0) {
       _gameOver();
       return;
     }
+  }
+
+  void onPotatoHealthPointReceived() {
+    emit(state.copyWith(
+      healthPoints: min(
+        GameConstants.maxHealthPoints,
+        state.healthPoints + 1,
+      ),
+    ));
   }
 
   void _gameOver() async {

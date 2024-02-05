@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
+import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
@@ -15,8 +16,8 @@ import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart'
 import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
 
-import 'components/orb/orb.dart';
-import 'components/orb/orb_type.dart';
+import 'components/moving/moving_components.dart';
+import 'components/moving/orb/orb_type.dart';
 import 'components/potato.dart';
 import 'cubit/game/game_cubit.dart';
 
@@ -67,25 +68,21 @@ class MyGame extends FlameGame<MyWorld>
     super.update(dt);
   }
 
-  void onOrbHit(OrbType type) {
-    _gameCubit.potatoOrbHit(type);
-    switch (type) {
-      case FireOrbType():
-      case IceOrbType():
-        camera.viewfinder.add(
-          MoveEffect.by(
-            Vector2(8, 8),
-            PerlinNoiseEffectController(
-              duration: 1,
-              frequency: 400,
-            ),
-          ),
-        );
-        break;
-      case HeartOrbType():
-        // Nothing
-        break;
-    }
+  void onOrbHit() {
+    _gameCubit.potatoOrbHit();
+    camera.viewfinder.add(
+      MoveEffect.by(
+        Vector2(8, 8),
+        PerlinNoiseEffectController(
+          duration: 1,
+          frequency: 400,
+        ),
+      ),
+    );
+  }
+
+  void onHealthPointReceived() {
+    _gameCubit.onPotatoHealthPointReceived();
   }
 
   @override
@@ -147,20 +144,38 @@ class MyWorld extends World
     final position = Vector2(cos(angle), sin(angle)) * distance;
 
     final moveSpeed = bloc.state.spawnOrbsMoveSpeedRange.random();
-    OrbType? type;
+    final size = 16 + Random().nextDouble() * 2;
+    final target = game.world.player;
+    final startPosition = position.clone();
+
     final missingHP = GameConstants.maxHealthPoints - bloc.state.healthPoints;
     if (missingHP > 0 &&
         Random().nextDouble() <= GameConstants.chanceToSpawnHeartPerMissingHP) {
-      type = HeartOrbType();
+      add(MovingHealth(
+        speed: moveSpeed,
+        size: size * 1.3,
+        target: target,
+        position: startPosition,
+      ));
     } else {
-      type = Random().nextBool() ? FireOrbType() : IceOrbType();
+      switch (OrbType.values.random()) {
+        case OrbType.fire:
+          add(FireOrb(
+            speed: moveSpeed,
+            size: size,
+            target: target,
+            position: startPosition,
+          ));
+          break;
+        case OrbType.ice:
+          add(IceOrb(
+            speed: moveSpeed,
+            size: size,
+            target: target,
+            position: startPosition,
+          ));
+          break;
+      }
     }
-    add(Orb(
-      orbType: type,
-      speed: moveSpeed,
-      size: 16 + Random().nextDouble() * 2,
-      target: game.world.player,
-      position: position.clone(),
-    ));
   }
 }

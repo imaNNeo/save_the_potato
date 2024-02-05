@@ -5,11 +5,10 @@ import 'package:flame/extensions.dart';
 import 'package:flame/particles.dart';
 import 'package:flutter/widgets.dart';
 import 'package:save_the_potato/domain/extensions/list_extension.dart';
+import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
 
-import 'orb.dart';
-
-class OrbTailParticles extends Component with HasGameRef<MyGame> {
+class MovingOrbTailParticles extends Component with HasGameRef<MyGame> {
   late Paint particlePaint;
 
   final double _showEvery = 0.04;
@@ -23,12 +22,12 @@ class OrbTailParticles extends Component with HasGameRef<MyGame> {
   }
 
   void _generateParticle() {
-    if (parent is! Orb) {
+    if (parent is! MovingOrb) {
       throw Exception('Parent must be of type Orb');
     }
-    final obrParent = (parent as Orb);
-    final color = obrParent.orbType.colors.random();
-    final randomOrder = obrParent.orbType.colors.randomOrder();
+    final obrParent = (parent as MovingOrb);
+    final color = obrParent.colors.random();
+    final randomOrder = obrParent.colors.randomOrder();
     TweenSequence<Color?> colorTween = TweenSequence<Color?>([
       for (int i = 0; i < randomOrder.length - 1; i++)
         TweenSequenceItem(
@@ -39,7 +38,7 @@ class OrbTailParticles extends Component with HasGameRef<MyGame> {
           ),
         ),
     ]);
-    final sprite = obrParent.orbType.smallSparkleSprites.random();
+    final sprite = obrParent.smallSparkleSprites.random();
     final rnd = obrParent.rnd;
     game.world.add(ParticleSystemComponent(
       position: obrParent.positionOfAnchor(Anchor.center),
