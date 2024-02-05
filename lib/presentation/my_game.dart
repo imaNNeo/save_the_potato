@@ -99,6 +99,7 @@ class MyWorld extends World
   late Potato player;
 
   double lastSpawnOrbTimer = 0.0;
+  MovingHealth? movingHealth;
 
   @override
   Future<void> onLoad() async {
@@ -128,7 +129,8 @@ class MyWorld extends World
   void update(double dt) {
     super.update(dt);
     lastSpawnOrbTimer += dt;
-    if (lastSpawnOrbTimer >= bloc.state.spawnOrbsEvery) {
+    if (lastSpawnOrbTimer >= bloc.state.spawnOrbsEvery &&
+        movingHealth == null) {
       lastSpawnOrbTimer = 0.0;
       spawnOrb();
     }
@@ -151,12 +153,20 @@ class MyWorld extends World
     final missingHP = GameConstants.maxHealthPoints - bloc.state.healthPoints;
     if (missingHP > 0 &&
         Random().nextDouble() <= GameConstants.chanceToSpawnHeartPerMissingHP) {
-      add(MovingHealth(
-        speed: moveSpeed,
-        size: size * 1.3,
+      final healthMoveSpeed =
+          (moveSpeed * GameConstants.movingHealthPointSpeedMultiplier).clamp(
+        GameConstants.movingHealthMinSpeed,
+        GameConstants.movingHealthMaxSpeed,
+      );
+      add(movingHealth = MovingHealth(
+        speed: healthMoveSpeed,
+        size: size * 1.5,
         target: target,
         position: startPosition,
       ));
+      movingHealth!.removed.then((value) {
+        movingHealth = null;
+      });
     } else {
       switch (OrbType.values.random()) {
         case OrbType.fire:
