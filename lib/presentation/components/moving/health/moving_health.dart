@@ -12,6 +12,8 @@ class MovingHealth extends MovingComponent {
 
   double rotation = 0;
 
+  List<Color> get colors => GameConstants.pinkColors;
+
   @override
   Future<void> onLoad() async {
     super.onLoad();
@@ -36,7 +38,7 @@ class MovingHealth extends MovingComponent {
       anchor: Anchor.center,
       overridePaint: Paint()
         ..colorFilter = ColorFilter.mode(
-          GameConstants.pinkColors.last,
+          colors.last,
           BlendMode.srcIn,
         ),
     );
@@ -55,5 +57,12 @@ class MovingHealth extends MovingComponent {
 
   void disjoint() {
     removeFromParent();
+    add(HealthDisjointParticleComponent(
+      colors: [...colors, Colors.white],
+      smallSparkleSprites: [
+        heartSprite1,
+        heartSprite2,
+      ],
+    ));
   }
 }

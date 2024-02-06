@@ -3,15 +3,15 @@ import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
-import 'package:flame/particles.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:save_the_potato/domain/extensions/list_extension.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
 import '../../my_game.dart';
+import 'health/health_disjoint_particle.dart';
 import 'orb/moving_orb_tail_particles.dart';
+import 'orb/orb_disjoint_particle.dart';
 import 'orb/orb_type.dart';
 
 part 'orb/moving_orb.dart';
