@@ -13,7 +13,7 @@ import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
 import 'package:save_the_potato/presentation/pages/main/main_page.dart';
-import 'package:save_the_potato/presentation/widgets/potato_idle.dart';
+import 'package:save_the_potato/presentation/widgets/potato_initialize.dart';
 import 'package:toastification/toastification.dart';
 
 class SplashPage extends StatefulWidget {
@@ -128,9 +128,7 @@ class _SplashPageState extends State<SplashPage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const PotatoIdle(
-                      size: 180,
-                    ),
+                    const SplashPotato(size: 180),
                   ].animate().fadeIn(
                         duration: const Duration(milliseconds: 600),
                         delay: const Duration(milliseconds: 300),
