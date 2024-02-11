@@ -18,7 +18,7 @@ class GameConstants {
   static const orbsMoveSpeedInitial = DoubleRange(min: 100, max: 120);
   static const orbsMoveSpeedPeak = DoubleRange(min: 190, max: 210);
 
-  static const difficultyInitialToPeakDuration = 340.0;
+  static const difficultyInitialToPeakDuration = 300.0;
 
   /// https://cubic-bezier.com/#.2,1.04,.38,.84
   /// Something like very vast in and very slow out
