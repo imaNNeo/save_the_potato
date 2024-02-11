@@ -20,9 +20,9 @@ class GameConstants {
 
   static const difficultyInitialToPeakDuration = 300.0;
 
-  /// https://cubic-bezier.com/#.2,1.04,.38,.84
+  /// https://cubic-bezier.com/#.23,1,.45,.87
   /// Something like very vast in and very slow out
-  static const difficultyInitialToPeakCurve = Cubic(0.2,1.04,0.38,0.84);
+  static const difficultyInitialToPeakCurve = Cubic(0.23,1.0,0.45,0.87);
 
   static const double topBarPlayingOpacity = 1.0;
   static const double topBarNonPlayingOpacity = 0.2;
