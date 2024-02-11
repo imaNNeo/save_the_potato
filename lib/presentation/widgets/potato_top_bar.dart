@@ -34,14 +34,34 @@ class _PotatoTopBarState extends State<PotatoTopBar> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
                 GameConstants.maxHealthPoints,
-                (index) => Icon(
-                  index + 1 <= state.healthPoints
-                      ? Icons.favorite
-                      : Icons.favorite_outline,
-                  color: GameColors.healthPointColor.withOpacity(
-                    state.playingState.isPlaying || state.playingState.isPaused
-                        ? 1.0
-                        : 0.2,
+                (index) => Padding(
+                  padding: const EdgeInsets.only(right: 4.0),
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (index + 1 <= state.healthPoints)
+                          Image.asset(
+                            'assets/images/heart/heart1.png',
+                            width: 20,
+                            color: GameColors.healthPointColor.withOpacity(
+                              state.playingState.isPlaying || state.playingState.isPaused
+                                  ? 1.0
+                                  : 0.2,
+                            ),
+                          ),
+                        Image.asset(
+                          'assets/images/heart/heart2.png',
+                          color: Colors.white.withOpacity(
+                            state.playingState.isPlaying || state.playingState.isPaused
+                                ? 1.0
+                                : 0.2,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
