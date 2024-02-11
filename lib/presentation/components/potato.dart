@@ -4,9 +4,11 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_rive/flame_rive.dart';
+import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/presentation/components/guide_title.dart';
 import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
+import 'package:save_the_potato/service_locator.dart';
 
 import '../my_game.dart';
 import 'moving/moving_components.dart';
@@ -106,6 +108,7 @@ class Potato extends PositionComponent
     if (other is MovingComponent) {
       switch (other) {
         case MovingHealth():
+          getIt.get<AnalyticsHelper>().heartReceived();
           game.onHealthPointReceived();
           heartHitTrigger.fire();
         case FireOrb():

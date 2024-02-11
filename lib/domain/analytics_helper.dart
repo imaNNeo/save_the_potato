@@ -27,6 +27,10 @@ abstract class AnalyticsHelper {
   void logSettingsPopupOpen();
 
   void logSettingsAudioChanged(bool enabled);
+
+  void heartDisjointed();
+
+  void heartReceived();
 }
 
 enum EventSource {
