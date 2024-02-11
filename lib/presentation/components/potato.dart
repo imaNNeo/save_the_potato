@@ -32,6 +32,7 @@ class Potato extends PositionComponent
 
   late SMITrigger fireHitTrigger;
   late SMITrigger iceHitTrigger;
+  late SMITrigger heartHitTrigger;
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
@@ -57,6 +58,7 @@ class Potato extends PositionComponent
     )!;
     fireHitTrigger = controller.findInput<bool>('fire-hit') as SMITrigger;
     iceHitTrigger = controller.findInput<bool>('ice-hit') as SMITrigger;
+    heartHitTrigger = controller.findInput<bool>('heart-hit') as SMITrigger;
     potatoArtBoard.addController(controller);
     add(RiveComponent(
       artboard: potatoArtBoard,
@@ -91,6 +93,7 @@ class Potato extends PositionComponent
       switch (other) {
         case MovingHealth():
           game.onHealthPointReceived();
+          heartHitTrigger.fire();
         case FireOrb():
           game.onOrbHit();
           fireHitTrigger.fire();

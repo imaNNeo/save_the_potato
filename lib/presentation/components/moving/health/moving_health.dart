@@ -17,25 +17,32 @@ class MovingHealth extends MovingComponent {
   @override
   Future<void> onLoad() async {
     super.onLoad();
+    anchor = Anchor.center;
     heartSprite1 = await Sprite.load('heart/heart1.png');
     heartSprite2 = await Sprite.load('heart/heart2.png');
-    add(CircleHitbox(collisionType: CollisionType.passive));
+    final radius = (min(size.x, size.y) / 2);
+    add(CircleHitbox(
+      collisionType: CollisionType.passive,
+      radius: radius * 0.6,
+      anchor: Anchor.center,
+      position: size / 2,
+    ));
   }
 
   @override
   void update(double dt) {
-    rotation += dt * 2;
+    angle += (pi / 2) * dt;
     super.update(dt);
   }
 
+
   @override
   void render(Canvas canvas) {
-    canvas.translate(size.x / 2, size.y / 2);
-    canvas.rotate(rotation);
     heartSprite1.render(
       canvas,
       size: size,
       anchor: Anchor.center,
+      position: size / 2,
       overridePaint: Paint()
         ..colorFilter = ColorFilter.mode(
           colors.last,
@@ -46,13 +53,13 @@ class MovingHealth extends MovingComponent {
       canvas,
       size: size * 1.2,
       anchor: Anchor.center,
+      position: size / 2,
       overridePaint: Paint()
         ..colorFilter = const ColorFilter.mode(
           Colors.white,
           BlendMode.srcIn,
         ),
     );
-    canvas.translate(0, 0);
   }
 
   void disjoint() {
