@@ -151,8 +151,11 @@ class MyWorld extends World
     final startPosition = position.clone();
 
     final missingHP = GameConstants.maxHealthPoints - bloc.state.healthPoints;
-    if (missingHP > 0 &&
-        Random().nextDouble() <= GameConstants.chanceToSpawnHeartPerMissingHP) {
+    final generateHealthChance = (!bloc.state.firstHealthReceived
+        ? GameConstants.chanceToSpawnHeartForFirstTime
+        : GameConstants.chanceToSpawnHeart);
+    print('firstHealthReceived: ${bloc.state.firstHealthReceived}, $generateHealthChance');
+    if (missingHP > 0 && Random().nextDouble() <= generateHealthChance) {
       final healthMoveSpeed =
           (moveSpeed * GameConstants.movingHealthPointSpeedMultiplier).clamp(
         GameConstants.movingHealthMinSpeed,

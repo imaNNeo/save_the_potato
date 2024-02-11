@@ -7,6 +7,7 @@ class ConfigsLocalDataSource {
   static const String _gameConfigKey = 'gameConfig';
 
   ConfigsLocalDataSource(this._keyValueStorage);
+
   final KeyValueStorage _keyValueStorage;
 
   Future<GameConfigEntity> getGameConfig() async {
@@ -25,5 +26,13 @@ class ConfigsLocalDataSource {
       _gameConfigKey,
       jsonEncode(gameConfig.toJson()),
     );
+  }
+
+  Future<bool> isFirstHealthReceived() async {
+    return (await _keyValueStorage.getBool('first_health_received')) ?? false;
+  }
+
+  Future<void> setFirstHealthReceived(bool received) async {
+    await _keyValueStorage.setBool('first_health_received', received);
   }
 }

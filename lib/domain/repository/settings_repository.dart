@@ -1,4 +1,4 @@
-import 'package:save_the_potato/data/sources/settings_data_source.dart';
+import 'package:save_the_potato/data/sources/local/settings_data_source.dart';
 
 class SettingsRepository {
   SettingsRepository(this._dataSource);

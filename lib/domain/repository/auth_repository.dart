@@ -1,7 +1,7 @@
-import 'package:save_the_potato/data/sources/auth_local_data_source.dart';
-import 'package:save_the_potato/data/sources/auth_remote_data_source.dart';
-import 'package:save_the_potato/data/sources/scores_local_data_source.dart';
-import 'package:save_the_potato/data/sources/scores_remote_data_source.dart';
+import 'package:save_the_potato/data/sources/local/auth_local_data_source.dart';
+import 'package:save_the_potato/data/sources/remote/auth_remote_data_source.dart';
+import 'package:save_the_potato/data/sources/local/scores_local_data_source.dart';
+import 'package:save_the_potato/data/sources/remote/scores_remote_data_source.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 
 typedef _AuthFunction = Future<UserEntity> Function(bool forceToReplace);

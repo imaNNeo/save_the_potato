@@ -1,5 +1,5 @@
-import 'package:save_the_potato/data/sources/scores_local_data_source.dart';
-import 'package:save_the_potato/data/sources/scores_remote_data_source.dart';
+import 'package:save_the_potato/data/sources/local/scores_local_data_source.dart';
+import 'package:save_the_potato/data/sources/remote/scores_remote_data_source.dart';
 import 'package:save_the_potato/domain/models/leaderboard_response_entity.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 

@@ -9,6 +9,7 @@ class GameState extends Equatable {
     this.shieldsAngleRotationSpeed = 0,
     this.restartGame = false,
     this.onNewHighScore,
+    this.firstHealthReceived = false,
   });
 
   final int healthPoints;
@@ -24,6 +25,8 @@ class GameState extends Equatable {
   final bool restartGame;
 
   final OnlineScoreEntity? onNewHighScore;
+
+  final bool firstHealthReceived;
 
   /// Between 0.0 and 1.0
   double get difficulty => GameConstants.difficultyInitialToPeakCurve.transform(
@@ -73,6 +76,7 @@ class GameState extends Equatable {
     double? shieldsAngleRotationSpeed,
     bool? restartGame,
     ValueWrapper<OnlineScoreEntity>? onNewHighScore,
+    bool? firstHealthReceived,
   }) {
     return GameState(
       healthPoints: healthPoints ?? this.healthPoints,
@@ -84,6 +88,7 @@ class GameState extends Equatable {
       restartGame: restartGame ?? this.restartGame,
       onNewHighScore:
           onNewHighScore != null ? onNewHighScore.value : this.onNewHighScore,
+      firstHealthReceived: firstHealthReceived ?? this.firstHealthReceived,
     );
   }
 
@@ -96,20 +101,6 @@ class GameState extends Equatable {
         shieldsAngleRotationSpeed,
         restartGame,
         onNewHighScore,
+        firstHealthReceived,
       ];
 }
-
-// enum OrbType {
-//   red,
-//   blue;
-//
-//   Color get baseColor => switch (this) {
-//         OrbType.red => GameConstants.redColors.first,
-//         OrbType.blue => GameConstants.blueColors.first,
-//       };
-//
-//   List<Color> get colors => switch (this) {
-//         OrbType.red => GameConstants.redColors,
-//         OrbType.blue => GameConstants.blueColors,
-//       };
-// }

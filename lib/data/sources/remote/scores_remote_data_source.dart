@@ -1,7 +1,7 @@
 import 'package:save_the_potato/domain/models/leaderboard_response_entity.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 
-import 'firebase_functions_wrapper.dart';
+import '../firebase_functions_wrapper.dart';
 
 class ScoresRemoteDataSource {
   final FirebaseFunctionsWrapper _functions;

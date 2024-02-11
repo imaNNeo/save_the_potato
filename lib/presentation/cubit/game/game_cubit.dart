@@ -47,6 +47,9 @@ class GameCubit extends Cubit<GameState> {
     emit(const GameState().copyWith(
       playingState: const PlayingStateGuide(),
     ));
+    emit(state.copyWith(
+      firstHealthReceived: await _configsRepository.isFirstHealthReceived(),
+    ));
   }
 
   void _guideInteracted() async {
@@ -85,7 +88,9 @@ class GameCubit extends Cubit<GameState> {
         GameConstants.maxHealthPoints,
         state.healthPoints + 1,
       ),
+      firstHealthReceived: true,
     ));
+    _configsRepository.setFirstHealthReceived(true);
   }
 
   void _gameOver() async {

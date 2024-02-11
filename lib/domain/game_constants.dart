@@ -27,7 +27,8 @@ class GameConstants {
   static const double topBarPlayingOpacity = 1.0;
   static const double topBarNonPlayingOpacity = 0.2;
 
-  static const double chanceToSpawnHeartPerMissingHP = 0.02;
+  static const double chanceToSpawnHeart = 0.02;
+  static const double chanceToSpawnHeartForFirstTime = 1.0;
   static const double movingHealthPointSpeedMultiplier = 0.9;
   static double movingHealthMinSpeed = orbsMoveSpeedInitial.max;
   static double movingHealthMaxSpeed = orbsMoveSpeedPeak.min * 0.8;

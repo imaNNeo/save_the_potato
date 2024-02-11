@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:save_the_potato/data/sources/auth_local_data_source.dart';
-import 'package:save_the_potato/data/sources/configs_local_data_source.dart';
-import 'package:save_the_potato/data/sources/configs_remote_data_source.dart';
+import 'package:save_the_potato/data/sources/local/auth_local_data_source.dart';
+import 'package:save_the_potato/data/sources/local/configs_local_data_source.dart';
+import 'package:save_the_potato/data/sources/remote/configs_remote_data_source.dart';
 import 'package:save_the_potato/domain/models/game_config_entity.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
 
@@ -51,4 +51,13 @@ class ConfigsRepository {
       lastUser = user;
     }
   }
+
+  /// Whether the user has received the first health point,
+  /// We use this to increase the chance of health generation to help the user
+  /// learn about the game mechanics
+  Future<void> setFirstHealthReceived(bool received) =>
+      _configsLocalDataSource.setFirstHealthReceived(received);
+
+  Future<bool> isFirstHealthReceived() =>
+      _configsLocalDataSource.isFirstHealthReceived();
 }
