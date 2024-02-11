@@ -30,13 +30,26 @@ class Potato extends PositionComponent
 
   double get radius => size.x / 2;
 
+  late StateMachineController _controller;
   late SMITrigger fireHitTrigger;
   late SMITrigger iceHitTrigger;
   late SMITrigger heartHitTrigger;
+  late SMITrigger dieTrigger;
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
       previousState.playingState != newState.playingState;
+
+
+  @override
+  void onNewState(GameState state) {
+    print('state.playingState: ${state.playingState}');
+    if (state.playingState is PlayingStateGameOver) {
+      print('[asdfasdfasdf] die trigger');
+      // (_controller.findInput<bool>('Die') as SMITrigger).fire();
+      dieTrigger.fire();
+    }
+  }
 
   @override
   Future<void> onLoad() async {
@@ -52,14 +65,15 @@ class Potato extends PositionComponent
       RiveFile.asset('assets/rive/potato.riv'),
     );
 
-    final controller = StateMachineController.fromArtboard(
+    _controller = StateMachineController.fromArtboard(
       potatoArtBoard,
       "State Machine 1",
     )!;
-    fireHitTrigger = controller.findInput<bool>('fire-hit') as SMITrigger;
-    iceHitTrigger = controller.findInput<bool>('ice-hit') as SMITrigger;
-    heartHitTrigger = controller.findInput<bool>('heart-hit') as SMITrigger;
-    potatoArtBoard.addController(controller);
+    fireHitTrigger = _controller.findInput<bool>('fire-hit') as SMITrigger;
+    iceHitTrigger = _controller.findInput<bool>('ice-hit') as SMITrigger;
+    heartHitTrigger = _controller.findInput<bool>('heart-hit') as SMITrigger;
+    dieTrigger = _controller.findInput<bool>('Die') as SMITrigger;
+    potatoArtBoard.addController(_controller);
     add(RiveComponent(
       artboard: potatoArtBoard,
       size: Vector2.all(152),
@@ -96,12 +110,22 @@ class Potato extends PositionComponent
           heartHitTrigger.fire();
         case FireOrb():
           game.onOrbHit();
-          fireHitTrigger.fire();
+          if (bloc.state.healthPoints > 0) {
+            fireHitTrigger.fire();
+          }
         case IceOrb():
           game.onOrbHit();
-          iceHitTrigger.fire();
+          if (bloc.state.healthPoints > 0) {
+            iceHitTrigger.fire();
+          }
       }
       other.removeFromParent();
     }
+  }
+
+  @override
+  void onRemove() {
+    _controller.dispose();
+    super.onRemove();
   }
 }
