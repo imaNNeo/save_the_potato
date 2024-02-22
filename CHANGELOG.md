@@ -1,3 +1,9 @@
+## 1.2.0
+* Introduce heart/health concept instead of temperature bar (hot & cold). Now you have 3 hearts when the game starts, decreases when an orb hits you, there are some hearts coming towards you, you can collect them to increase your health. When you lose all hearts, the game is over.
+* Don't show the rank in the trophy when it is larger than threshold
+* Make the game a little bit harder
+* Upgraded some dependencies
+
 ## 1.1.1
 * Increase the difficulty of the game (specifically for the first minute)
 * Show newRank celebration with a rank threshold (20 at the moment). Also show a newScore badge in gameOver UI
