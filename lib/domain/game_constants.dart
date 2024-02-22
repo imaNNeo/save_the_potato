@@ -15,8 +15,8 @@ class GameConstants {
 
   /// It takes [difficultyInitialToPeakDuration] seconds to
   /// go from [orbsMoveSpeedInitial] to [orbsMoveSpeedPeak]
-  static const orbsMoveSpeedInitial = DoubleRange(min: 100, max: 120);
-  static const orbsMoveSpeedPeak = DoubleRange(min: 190, max: 210);
+  static const orbsMoveSpeedInitial = DoubleRange(min: 105, max: 125);
+  static const orbsMoveSpeedPeak = DoubleRange(min: 195, max: 215);
 
   static const difficultyInitialToPeakDuration = 300.0;
 
