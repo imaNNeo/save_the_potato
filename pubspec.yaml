@@ -13,8 +13,8 @@ dependencies:
   cupertino_icons: ^1.0.6
   flame: ^1.16.0
   flame_noise: ^0.1.1+12
-  flutter_bloc: ^8.1.3
-  flame_bloc: ^1.10.9
+  flutter_bloc: ^8.1.4
+  flame_bloc: ^1.11.0
   equatable: ^2.0.5
   flame_audio: ^2.1.7
   flame_rive: ^1.9.10
