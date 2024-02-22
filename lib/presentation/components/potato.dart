@@ -45,10 +45,7 @@ class Potato extends PositionComponent
 
   @override
   void onNewState(GameState state) {
-    print('state.playingState: ${state.playingState}');
     if (state.playingState is PlayingStateGameOver) {
-      print('[asdfasdfasdf] die trigger');
-      // (_controller.findInput<bool>('Die') as SMITrigger).fire();
       dieTrigger.fire();
     }
   }
