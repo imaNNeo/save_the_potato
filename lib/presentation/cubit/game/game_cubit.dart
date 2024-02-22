@@ -188,7 +188,7 @@ class GameCubit extends Cubit<GameState> {
   }
 
   KeyEventResult handleKeyEvent(
-      RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+      KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     final containsLeftArrow = keysPressed.contains(
       LogicalKeyboardKey.arrowLeft,
     );

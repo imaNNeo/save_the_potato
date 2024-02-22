@@ -87,7 +87,7 @@ class MyGame extends FlameGame<MyWorld>
 
   @override
   KeyEventResult onKeyEvent(
-    RawKeyEvent event,
+    KeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
   ) {
     return _gameCubit.handleKeyEvent(event, keysPressed);
