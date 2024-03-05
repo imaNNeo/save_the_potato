@@ -14,6 +14,7 @@ import 'package:save_the_potato/presentation/cubit/configs/configs_cubit.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/pages/splash/splash_page.dart';
 import 'package:save_the_potato/service_locator.dart';
+import 'package:wiredash/wiredash.dart';
 import 'domain/repository/auth_repository.dart';
 import 'firebase_options.dart';
 import 'presentation/cubit/game/game_cubit.dart';
@@ -47,74 +48,78 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<ConfigsCubit>(
-          create: (context) => ConfigsCubit(
-            getIt.get<ConfigsRepository>(),
+    return Wiredash(
+      projectId: 'save-the-potato-4iu0ckj',
+      secret: const String.fromEnvironment('WIREDASH_SECRET'),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<ConfigsCubit>(
+            create: (context) => ConfigsCubit(
+              getIt.get<ConfigsRepository>(),
+            ),
           ),
-        ),
-        BlocProvider<SettingsCubit>(
-          create: (context) => SettingsCubit(
-            getIt.get<SettingsRepository>(),
-            getIt.get<AudioHelper>(),
+          BlocProvider<SettingsCubit>(
+            create: (context) => SettingsCubit(
+              getIt.get<SettingsRepository>(),
+              getIt.get<AudioHelper>(),
+            ),
           ),
-        ),
-        BlocProvider<GameCubit>(
-          create: (context) => GameCubit(
-            getIt.get<AudioHelper>(),
-            getIt.get<ScoresRepository>(),
-            getIt.get<ConfigsRepository>(),
-            getIt.get<AnalyticsHelper>(),
+          BlocProvider<GameCubit>(
+            create: (context) => GameCubit(
+              getIt.get<AudioHelper>(),
+              getIt.get<ScoresRepository>(),
+              getIt.get<ConfigsRepository>(),
+              getIt.get<AnalyticsHelper>(),
+            ),
           ),
-        ),
-        BlocProvider<ScoresCubit>(
-          create: (context) => ScoresCubit(
-            getIt.get<ScoresRepository>(),
-            getIt.get<ConfigsRepository>(),
-            getIt.get<AuthRepository>(),
-            getIt.get<AnalyticsHelper>(),
+          BlocProvider<ScoresCubit>(
+            create: (context) => ScoresCubit(
+              getIt.get<ScoresRepository>(),
+              getIt.get<ConfigsRepository>(),
+              getIt.get<AuthRepository>(),
+              getIt.get<AnalyticsHelper>(),
+            ),
           ),
-        ),
-        BlocProvider<AuthCubit>(
-          create: (context) => AuthCubit(
-            getIt.get<AuthRepository>(),
-            getIt.get<ConfigsRepository>(),
-            getIt.get<AnalyticsHelper>(),
+          BlocProvider<AuthCubit>(
+            create: (context) => AuthCubit(
+              getIt.get<AuthRepository>(),
+              getIt.get<ConfigsRepository>(),
+              getIt.get<AnalyticsHelper>(),
+            ),
           ),
-        ),
-        BlocProvider<SplashCubit>(
-          create: (context) => SplashCubit(
-            getIt.get<ConfigsRepository>(),
+          BlocProvider<SplashCubit>(
+            create: (context) => SplashCubit(
+              getIt.get<ConfigsRepository>(),
+            ),
           ),
-        ),
-      ],
-      child: MaterialApp(
-        title: 'Save the Potato',
-        theme: ThemeData.dark(useMaterial3: true).copyWith(
-          textTheme: ThemeData.dark().textTheme.apply(
+        ],
+        child: MaterialApp(
+          title: 'Save the Potato',
+          theme: ThemeData.dark(useMaterial3: true).copyWith(
+            textTheme: ThemeData.dark().textTheme.apply(
+                  fontFamily: 'Cookies',
+                ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              titleTextStyle: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 8,
                 fontFamily: 'Cookies',
               ),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            titleTextStyle: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 8,
-              fontFamily: 'Cookies',
+              iconTheme: IconThemeData(
+                color: Colors.white,
+              ),
             ),
-            iconTheme: IconThemeData(
-              color: Colors.white,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.blue,
             ),
           ),
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-          ),
+          home: const SplashPage(),
+          navigatorObservers: [routeObserver],
         ),
-        home: const SplashPage(),
-        navigatorObservers: [routeObserver],
       ),
     );
   }
