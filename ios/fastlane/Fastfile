@@ -31,6 +31,8 @@ desc "[Developer] Get certificates"
       keychain_name: keychain_name,
       keychain_password: keychain_password,
     )
+    # Add a step to build the Flutter app with dart-define
+    sh "flutter build ios --release --dart-define=WIREDASH_SECRET=#{ENV['WIREDASH_SECRET']}"
     build_app(
       workspace: "Runner.xcworkspace",
       scheme: "Runner",
