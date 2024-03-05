@@ -1,7 +1,7 @@
 name: save_the_potato
 description: "Save The Potato – Get ready for some non-stop, spin-tastic fun! Your goal? Keep our potato pal from turning into a hot tot or an ice cube."
 publish_to: 'none'
-version: 1.2.0+10200
+version: 1.2.1+10201
 
 environment:
   sdk: '>=3.2.3 <4.0.0'
