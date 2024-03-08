@@ -1,0 +1,28 @@
+name: Encrypt and Print GitHub Secrets
+
+on: [push]
+
+jobs:
+  encrypt_secrets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Encrypt and print secrets
+        env:
+          PUBLIC_KEY: ${{ secrets.TEST_PUBLIC_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}
+          ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          # Decode the public key from Base64 and save it to a file
+          echo "$PUBLIC_KEY" | base64 --decode > public.pem
+          
+          # Encrypt and print GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64
+          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64" | base64 --decode | openssl rsautl -encrypt -pubin -inkey public.pem | base64
+          echo "GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 encrypted and printed above."
+          
+          # Encrypt and print ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON
+          echo -n "$ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON" | openssl rsautl -encrypt -pubin -inkey public.pem | base64
+          echo "ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON encrypted and printed above."
