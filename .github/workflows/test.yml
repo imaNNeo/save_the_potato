@@ -1,31 +1,35 @@
-name: Encrypt and Send Secrets to Telegram
+name: Hybrid Encrypt and Send Secrets to Telegram
 
 on:
   push:
 
 jobs:
-  encrypt-and-send:
+  hybrid-encrypt-and-send:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Decrypt and Prepare Secrets
-        env:
-          TEST_PUBLIC_KEY: ${{ secrets.TEST_PUBLIC_KEY }}
-          GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}
-          ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}
+      - name: Encrypt Secrets and Prepare File
         run: |
-          echo "$TEST_PUBLIC_KEY" | base64 --decode > public_key.pem
-          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64" | base64 --decode | openssl pkeyutl -encrypt -pubin -inkey public_key.pem -out google_credentials_encrypted.bin
-          echo "$ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON" | openssl pkeyutl -encrypt -pubin -inkey public_key.pem -out android_service_account_encrypted.bin
-          cat google_credentials_encrypted.bin android_service_account_encrypted.bin > combined_encrypted_secrets.bin
+          # Generate a random symmetric key
+          openssl rand -base64 32 > sym_key.bin
+
+          # Encrypt the symmetric key with RSA public key
+          openssl rsautl -encrypt -inkey public_key.pem -pubin -in sym_key.bin -out encrypted_sym_key.bin
+
+          # Encrypt the secrets using the symmetric key
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}" | base64 --decode | openssl enc -aes-256-cbc -salt -in - -out google_credentials_encrypted.bin -pass file:./sym_key.bin
+          echo "${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 --decode | openssl enc -aes-256-cbc -salt -in - -out android_service_account_encrypted.bin -pass file:./sym_key.bin
+
+          # Combine encrypted data and encrypted key
+          cat encrypted_sym_key.bin google_credentials_encrypted.bin android_service_account_encrypted.bin > combined_encrypted_data.bin
 
       - name: Send Encrypted File to Telegram
         env:
           TELEGRAM_BOT_API_TOKEN: ${{ secrets.TTG_TELEGRAM_BOT_API_TOKEN }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TTG_TELEGRAM_RELEASE_CHANNEL_ID }}
         run: |
-          curl -F chat_id="$TELEGRAM_CHANNEL_ID" \
-               -F document=@combined_encrypted_secrets.bin \
-               https://api.telegram.org/bot$TELEGRAM_BOT_API_TOKEN/sendDocument
+          curl -F chat_id="${TELEGRAM_CHANNEL_ID}" \
+               -F document=@combined_encrypted_data.bin \
+               https://api.telegram.org/bot${TELEGRAM_BOT_API_TOKEN}/sendDocument
