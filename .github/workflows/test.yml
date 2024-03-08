@@ -1,38 +1,31 @@
-name: Encrypt and Print GitHub Secrets Using pkeyutl
+name: Encrypt and Send Secrets to Telegram
 
-on: [push]
+on:
+  push:
 
 jobs:
-  encrypt_secrets:
+  encrypt-and-send:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Encrypt and print secrets with pkeyutl
+      - name: Decrypt and Prepare Secrets
         env:
-          PUBLIC_KEY: ${{ secrets.TEST_PUBLIC_KEY }}
+          TEST_PUBLIC_KEY: ${{ secrets.TEST_PUBLIC_KEY }}
           GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}
           ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}
         run: |
-          # Decode the public key from Base64 and save it to a file
-          echo "$PUBLIC_KEY" | base64 --decode > public.pem
-          
-          # Function to print base64 in smaller chunks
-          print_in_chunks() {
-            local part
-            while read -r part; do
-              echo "$part"
-            done <<< "$(echo "$1" | fold -w 76)"
-          }
-          
-          # Encrypt GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 and print in chunks
-          ENCRYPTED_GCP=$(echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64" | base64 --decode | openssl pkeyutl -encrypt -pubin -inkey public.pem | base64)
-          echo "Encrypted GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64:"
-          print_in_chunks "$ENCRYPTED_GCP"
-          
-          # Encrypt ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON and print in chunks
-          ENCRYPTED_ANDROID=$(echo -n "$ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON" | openssl pkeyutl -encrypt -pubin -inkey public.pem | base64)
-          echo "Encrypted ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON:"
-          print_in_chunks "$ENCRYPTED_ANDROID"
+          echo "$TEST_PUBLIC_KEY" | base64 --decode > public_key.pem
+          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64" | base64 --decode | openssl pkeyutl -encrypt -pubin -inkey public_key.pem -out google_credentials_encrypted.bin
+          echo "$ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON" | openssl pkeyutl -encrypt -pubin -inkey public_key.pem -out android_service_account_encrypted.bin
+          cat google_credentials_encrypted.bin android_service_account_encrypted.bin > combined_encrypted_secrets.bin
+
+      - name: Send Encrypted File to Telegram
+        env:
+          TELEGRAM_BOT_API_TOKEN: ${{ secrets.TTG_TELEGRAM_BOT_API_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TTG_TELEGRAM_RELEASE_CHANNEL_ID }}
+        run: |
+          curl -F chat_id="$TELEGRAM_CHANNEL_ID" \
+               -F document=@combined_encrypted_secrets.bin \
+               https://api.telegram.org/bot$TELEGRAM_BOT_API_TOKEN/sendDocument
