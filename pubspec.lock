@@ -389,10 +389,10 @@ packages:
     dependency: "direct main"
     description:
       name: flame_rive
-      sha256: df9a5963cc6cbf16db701ca3f0074e018205e7ba2d0bdd25ca9c6f7cbde2c667
+      sha256: "7e047bb631cb96e3fb23de5c6fe5ae4a1b7df1fbcae7135eaf82d686ca1f07b8"
       url: "https://pub.dev"
     source: hosted
-    version: "1.9.10"
+    version: "1.10.0"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -402,10 +402,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_animate
-      sha256: "2f3535790fff1ad21bca4f16b7435fa4af6a3c4b43e88e273a8683ed4ec26b26"
+      sha256: "7c8a6594a9252dad30cc2ef16e33270b6248c4dedc3b3d06c86c4f3f4dc05ae5"
       url: "https://pub.dev"
     source: hosted
-    version: "4.4.0"
+    version: "4.5.0"
   flutter_bloc:
     dependency: "direct main"
     description:
@@ -483,6 +483,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  flutter_shaders:
+    dependency: transitive
+    description:
+      name: flutter_shaders
+      sha256: "02750b545c01ff4d8e9bbe8f27a7731aa3778402506c67daa1de7f5fc3f4befe"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.2"
   flutter_svg:
     dependency: "direct main"
     description:
