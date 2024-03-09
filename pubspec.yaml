@@ -16,7 +16,7 @@ dependencies:
   flutter_bloc: ^8.1.4
   flame_bloc: ^1.11.0
   equatable: ^2.0.5
-  flame_audio: ^2.1.7
+  flame_audio: ^2.10.0
   flame_rive: ^1.9.10
   rive: ^0.12.4
   shared_preferences: ^2.2.2
