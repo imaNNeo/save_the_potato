@@ -136,6 +136,29 @@ class MyWorld extends World
     }
   }
 
+  int _firstTimeHealthGeneratedCount = 0;
+
+  bool _shouldSpawnHeart() {
+    final missingHP = GameConstants.maxHealthPoints - bloc.state.healthPoints;
+    if (missingHP == 0) {
+      return false;
+    }
+    late double generateHealthChance;
+    if (bloc.state.firstHealthReceived) {
+      generateHealthChance = GameConstants.chanceToSpawnHeart;
+    } else {
+      if (_firstTimeHealthGeneratedCount <
+          GameConstants.spawnHeartForFirstTimeMaxCount) {
+        generateHealthChance = GameConstants.chanceToSpawnHeartForFirstTime;
+      } else {
+        generateHealthChance = GameConstants.chanceToSpawnHeart;
+      }
+      _firstTimeHealthGeneratedCount++;
+    }
+
+    return Random().nextDouble() <= generateHealthChance;
+  }
+
   void spawnOrb() {
     if (game.playingState != const PlayingStatePlaying()) {
       return;
@@ -149,12 +172,7 @@ class MyWorld extends World
     final size = 16 + Random().nextDouble() * 2;
     final target = game.world.player;
     final startPosition = position.clone();
-
-    final missingHP = GameConstants.maxHealthPoints - bloc.state.healthPoints;
-    final generateHealthChance = (!bloc.state.firstHealthReceived
-        ? GameConstants.chanceToSpawnHeartForFirstTime
-        : GameConstants.chanceToSpawnHeart);
-    if (missingHP > 0 && Random().nextDouble() <= generateHealthChance) {
+    if (_shouldSpawnHeart()) {
       final healthMoveSpeed =
           (moveSpeed * GameConstants.movingHealthPointSpeedMultiplier).clamp(
         GameConstants.movingHealthMinSpeed,

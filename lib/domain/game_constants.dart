@@ -29,6 +29,7 @@ class GameConstants {
 
   static const double chanceToSpawnHeart = 0.02;
   static const double chanceToSpawnHeartForFirstTime = 1.0;
+  static const int spawnHeartForFirstTimeMaxCount = 3;
   static const double movingHealthPointSpeedMultiplier = 0.9;
   static double movingHealthMinSpeed = orbsMoveSpeedInitial.max;
   static double movingHealthMaxSpeed = orbsMoveSpeedPeak.min * 0.8;
