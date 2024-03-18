@@ -1,5 +1,8 @@
-## 1.2.1
+## 1.2.2
 * Fix generating infinite moving hearts
+
+## 1.2.1
+* Add wiredash analytics
 
 ## 1.2.0
 * Introduce heart/health concept instead of temperature bar (hot & cold). Now you have 3 hearts when the game starts, decreases when an orb hits you, there are some hearts coming towards you, you can collect them to increase your health. When you lose all hearts, the game is over.
