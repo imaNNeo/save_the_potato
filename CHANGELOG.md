@@ -1,6 +1,3 @@
-## 1.2.2
-* Fix generating infinite moving hearts
-
 ## 1.2.1
 * Add wiredash analytics
 
