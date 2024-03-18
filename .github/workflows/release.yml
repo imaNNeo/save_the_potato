@@ -106,7 +106,7 @@ jobs:
           > /dev/null 2>&1
       - name: Setup wiredash
         run: |
-          sed -i '' "s/###WIREDASH_SECRET/\${{ secrets.WIREDASH_SECRET }}/" lib/main.dart
+          sed -i "s/###WIREDASH_SECRET/\${{ secrets.WIREDASH_SECRET }}/" lib/main.dart
         shell: bash
       - name: Create the Keystore file
         run: |
