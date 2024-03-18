@@ -50,7 +50,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Wiredash(
       projectId: 'save-the-potato-4iu0ckj',
-      secret: const String.fromEnvironment('WIREDASH_SECRET'),
+      secret: '###WIREDASH_SECRET',
       child: MultiBlocProvider(
         providers: [
           BlocProvider<ConfigsCubit>(

@@ -29,6 +29,10 @@ jobs:
           --ios-bundle-id=dev.app2pack.savethepotato \
           --platforms=android,ios \
           > /dev/null 2>&1
+      - name: Setup wiredash
+        run: |
+          sed -i '' "s/###WIREDASH_SECRET/\${{ secrets.WIREDASH_SECRET }}/" lib/main.dart
+        shell: bash
       - name: Setup Flutter
         run: |
           flutter pub get
@@ -64,7 +68,6 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_KEY_ISSUER_ID: ${{ secrets.APPSTORE_KEY_ISSUER_ID }}
           APPSTORE_KEY_CONTENT: ${{ secrets.APPSTORE_KEY_CONTENT }}
-          WIREDASH_SECRET: ${{ secrets.WIREDASH_SECRET }}
       - name: Rename the iPA file
         run: |
           mkdir artifacts
@@ -101,6 +104,10 @@ jobs:
           --ios-bundle-id=dev.app2pack.savethepotato \
           --platforms=android,ios \
           > /dev/null 2>&1
+      - name: Setup wiredash
+        run: |
+          sed -i '' "s/###WIREDASH_SECRET/\${{ secrets.WIREDASH_SECRET }}/" lib/main.dart
+        shell: bash
       - name: Create the Keystore file
         run: |
           echo $ANDROID_KEYSTORE_BASE64 | base64 -d > keystore.jks
