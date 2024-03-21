@@ -15,10 +15,12 @@ class OrbDisjointParticleComponent extends Component
     super.key,
     required this.colors,
     required this.smallSparkleSprites,
+    required this.speedProgress,
   });
 
   final List<Color> colors;
   final List<Sprite> smallSparkleSprites;
+  final double speedProgress;
 
   late Paint _disjointParticlePaint;
 
@@ -40,36 +42,38 @@ class OrbDisjointParticleComponent extends Component
         ),
     ]);
     final size = parent.size;
-    final radius = size.x / 2;
     await game.world.add(ParticleSystemComponent(
       position: parent.positionOfAnchor(Anchor.center),
       anchor: Anchor.center,
       particle: Particle.generate(
-        count: 30,
-        lifespan: 2,
+        count: 42,
+        lifespan: 0.6 + ((1 - speedProgress) * 0.4),
         generator: (i) {
           final sprite = smallSparkleSprites.random();
+          final extra = 200 * speedProgress;
+          final halfExtra = extra == 0 ? 0 : extra / 2;
           return AcceleratedParticle(
             speed: Vector2(
-              (rnd.nextDouble() * 200) - 100,
-              (rnd.nextDouble() * 200) - 100,
+              (rnd.nextDouble() * (200 + extra)) - (100 + halfExtra),
+              (rnd.nextDouble() * (200 + extra)) - (100 + halfExtra),
             ),
             acceleration: Vector2(
-              (rnd.nextDouble() * 200) - 100,
-              (rnd.nextDouble() * 200) - 100,
+              (rnd.nextDouble() * (200 + extra)) - (100 + halfExtra),
+              (rnd.nextDouble() * (200 + extra)) - (100 + halfExtra),
             ),
             child: ComputedParticle(
               renderer: (canvas, particle) {
                 final opacity = Tween(begin: 0.8, end: 0.0)
-                    .chain(CurveTween(curve: Curves.easeOutCubic))
+                    .chain(CurveTween(curve: Curves.easeInQuad))
                     .transform(particle.progress);
                 if (opacity <= 0.01) {
                   return;
                 }
                 if (i % 3 == 0) {
+                  final radius = size.x / 2;
                   canvas.drawCircle(
                     Offset.zero,
-                    (radius * 0.6) * (1 - particle.progress),
+                    (radius * 0.7) * (1 - particle.progress),
                     _disjointParticlePaint
                       ..colorFilter = null
                       ..maskFilter = null
@@ -81,7 +85,7 @@ class OrbDisjointParticleComponent extends Component
                 } else {
                   sprite.render(
                     canvas,
-                    size: Vector2.all((size.x * 1.2) * (1 - particle.progress)),
+                    size: Vector2.all((size.x * 1.8) * (1 - particle.progress)),
                     anchor: Anchor.center,
                     overridePaint: _disjointParticlePaint
                       ..colorFilter = ColorFilter.mode(
