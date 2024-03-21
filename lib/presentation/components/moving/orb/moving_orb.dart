@@ -70,6 +70,7 @@ sealed class MovingOrb extends MovingComponent {
     add(OrbDisjointParticleComponent(
       colors: colors,
       smallSparkleSprites: smallSparkleSprites,
+      speedProgress: bloc.state.difficulty,
     ));
   }
 }

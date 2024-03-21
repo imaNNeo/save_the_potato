@@ -165,7 +165,7 @@ class MyWorld extends World
     }
 
     final distance = (game.size.x / 2) + (game.size.x * 0.05);
-    final angle = Random().nextDouble() * pi * 2;
+    final angle = 0;
     final position = Vector2(cos(angle), sin(angle)) * distance;
 
     final moveSpeed = bloc.state.spawnOrbsMoveSpeedRange.random();
@@ -188,7 +188,7 @@ class MyWorld extends World
         movingHealth = null;
       });
     } else {
-      switch (OrbType.values.random()) {
+      switch (OrbType.fire) {
         case OrbType.fire:
           add(FireOrb(
             speed: moveSpeed,

@@ -77,7 +77,7 @@ class GameCubit extends Cubit<GameState> {
       healthPoints: max(0, state.healthPoints - 1),
     ));
     if (state.healthPoints <= 0) {
-      _gameOver();
+      // _gameOver();
       return;
     }
   }
