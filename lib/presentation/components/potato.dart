@@ -18,7 +18,8 @@ class Potato extends PositionComponent
     with
         HasGameRef<MyGame>,
         CollisionCallbacks,
-        FlameBlocListenable<GameCubit, GameState> {
+        FlameBlocListenable<GameCubit, GameState>,
+        ParentIsA<MyWorld> {
   Potato({
     double size = 100,
   }) : super(

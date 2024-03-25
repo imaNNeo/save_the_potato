@@ -163,6 +163,37 @@ class Shield extends PositionComponent
         final rotation =
             isShortFlame ? shortFlameAngle : pi / 2 + largeFlameAngle;
 
+        /// Trail
+        parent.parent.add(ParticleSystemComponent(
+          priority: -10,
+          position: Vector2.zero(),
+          angle: angle,
+          anchor: Anchor.center,
+          particle: ComputedParticle(
+            lifespan: 0.25,
+            renderer: (canvas, particle) {
+              final opacity = Tween(begin: 0.4, end: 0.0).transform(particle.progress);
+              if (opacity <= 0.01) {
+                return;
+              }
+              canvas.drawArc(
+                Rect.fromCircle(
+                  center: Offset.zero,
+                  radius: radius,
+                ),
+                -(shieldSweep / 2),
+                shieldSweep,
+                false,
+                Paint()
+                  ..color = type.intenseColor.withOpacity(0.2)
+                  ..style = PaintingStyle.stroke
+                  ..strokeCap = StrokeCap.round
+                  ..strokeWidth = 8,
+              );
+            },
+          ),
+        ));
+
         add(ParticleSystemComponent(
           position: localPos,
           anchor: Anchor.center,

@@ -16,4 +16,6 @@ enum OrbType {
   };
 
   Color get baseColor => colors.first;
+
+  Color get intenseColor => colors.last;
 }
