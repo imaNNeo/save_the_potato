@@ -17,7 +17,7 @@ import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
 
 import 'components/moving/moving_components.dart';
-import 'components/moving/orb/orb_type.dart';
+import 'components/moving/orb/color_type.dart';
 import 'components/potato.dart';
 import 'cubit/game/game_cubit.dart';
 
@@ -188,24 +188,13 @@ class MyWorld extends World
         movingHealth = null;
       });
     } else {
-      switch (OrbType.values.random()) {
-        case OrbType.fire:
-          add(FireOrb(
-            speed: moveSpeed,
-            size: size,
-            target: target,
-            position: startPosition,
-          ));
-          break;
-        case OrbType.ice:
-          add(IceOrb(
-            speed: moveSpeed,
-            size: size,
-            target: target,
-            position: startPosition,
-          ));
-          break;
-      }
+      add(MovingOrb(
+        type: bloc.state.activeColorTypes.random(),
+        speed: moveSpeed,
+        size: size,
+        target: target,
+        position: startPosition,
+      ));
     }
   }
 }

@@ -47,6 +47,12 @@ class GameConstants {
     Color(0xFF008BFF),
   ];
 
+  static const greenColors = [
+    Color(0xFFB9FFB4),
+    Color(0xFF58DF24),
+    Color(0xFF19AC0E),
+  ];
+
   static const pinkColors = [
     Color(0xFFFFB4CE),
     Color(0xFFFF639F),

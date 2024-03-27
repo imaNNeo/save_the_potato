@@ -1,18 +1,19 @@
 part of '../moving_components.dart';
 
-sealed class MovingOrb extends MovingComponent {
+class MovingOrb extends MovingComponent {
   MovingOrb({
+    required this.type,
     required super.speed,
     required super.size,
     required super.target,
     required super.position,
   });
 
-  OrbType get type;
+  final ColorType type;
 
   late Paint _headPaint;
 
-  List<Sprite> get smallSparkleSprites;
+  late List<Sprite> smallSparkleSprites;
 
   List<Color> get colors => type.colors;
 
@@ -26,6 +27,9 @@ sealed class MovingOrb extends MovingComponent {
   Future<void> onLoad() async {
     super.onLoad();
     _headPaint = Paint();
+    smallSparkleSprites = await Future.wait(
+      List.generate(2, (i) => Sprite.load('snow/snowflake${i + 1}.png')),
+    );
     add(CircleHitbox(collisionType: CollisionType.passive));
     add(MovingOrbTailParticles());
   }
@@ -71,55 +75,5 @@ sealed class MovingOrb extends MovingComponent {
       colors: colors,
       smallSparkleSprites: smallSparkleSprites,
     ));
-  }
-}
-
-class FireOrb extends MovingOrb {
-  FireOrb({
-    required super.speed,
-    required super.size,
-    required super.target,
-    required super.position,
-  });
-
-  late List<Sprite> _smallSparkleSprites;
-
-  @override
-  List<Sprite> get smallSparkleSprites => _smallSparkleSprites;
-
-  @override
-  OrbType get type => OrbType.fire;
-
-  @override
-  Future<void> onLoad() async {
-    super.onLoad();
-    _smallSparkleSprites = await Future.wait(
-      List.generate(2, (i) => Sprite.load('sparkle/sparkle${i + 1}.png')),
-    );
-  }
-}
-
-class IceOrb extends MovingOrb {
-  IceOrb({
-    required super.speed,
-    required super.size,
-    required super.target,
-    required super.position,
-  });
-
-  late List<Sprite> _smallSparkleSprites;
-
-  @override
-  List<Sprite> get smallSparkleSprites => _smallSparkleSprites;
-
-  @override
-  OrbType get type => OrbType.ice;
-
-  @override
-  Future<void> onLoad() async {
-    super.onLoad();
-    _smallSparkleSprites = await Future.wait(
-      List.generate(2, (i) => Sprite.load('snow/snowflake${i + 1}.png')),
-    );
   }
 }
