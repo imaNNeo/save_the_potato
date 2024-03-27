@@ -1,3 +1,6 @@
+## 1.2.3
+* Minor animation effect on the shields
+
 ## 1.2.2
 * Add wiredash analytics
 * Fix generating infinite moving hearts
