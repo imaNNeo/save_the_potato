@@ -11,7 +11,7 @@ import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
 
 import 'moving/moving_components.dart';
-import 'moving/orb/orb_type.dart';
+import 'moving/orb/color_type.dart';
 
 class Shield extends PositionComponent
     with
@@ -22,17 +22,21 @@ class Shield extends PositionComponent
         FlameBlocListenable<GameCubit, GameState> {
   Shield({
     required this.type,
+    required double shieldSweep,
     this.shieldWidth = 6.0,
-    this.shieldSweep = pi / 2,
     this.offset = 12,
-  }) : super(
-          position: Vector2.all(0),
-          anchor: Anchor.center,
-        );
+  }) : _shieldSweep = shieldSweep;
 
-  final OrbType type;
+  final ColorType type;
+  double _shieldSweep;
+
+  double get shieldSweep => _shieldSweep;
+
+  set shieldSweep(double value) {
+    _shieldSweep = value;
+  }
+
   final double shieldWidth;
-  final double shieldSweep;
   final double offset;
 
   late Timer _particleTimer;
@@ -55,21 +59,16 @@ class Shield extends PositionComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    _smallSparkleSprites = switch (type) {
-      OrbType.fire => [
-          await Sprite.load('sparkle/sparkle1.png'),
-          await Sprite.load('sparkle/sparkle2.png'),
-        ],
-      OrbType.ice => [
-          await Sprite.load('snow/snowflake1.png'),
-          await Sprite.load('snow/snowflake2.png'),
-        ],
-    };
+    _smallSparkleSprites = [
+      await Sprite.load('sparkle/sparkle1.png'),
+      await Sprite.load('sparkle/sparkle2.png'),
+    ];
 
     shieldLineColor = type.baseColor.withOpacity(0.0);
     shieldTargetColor = type.baseColor.withOpacity(0.8);
     size = parent.size + Vector2.all(shieldWidth * 2) + Vector2.all(offset * 2);
     position = parent.size / 2;
+    anchor = Anchor.center;
     shieldLinePaint = Paint()
       ..color = type.baseColor
       ..strokeWidth = shieldWidth
@@ -96,9 +95,9 @@ class Shield extends PositionComponent
 
     const precision = 8;
 
-    final segment = shieldSweep / (precision - 1);
+    final segment = _shieldSweep / (precision - 1);
     final radius = size.x / 2;
-    final startAngle = 0 - shieldSweep / 2;
+    final startAngle = 0 - _shieldSweep / 2;
 
     List<Vector2> vertices = [];
     for (int i = 0; i < precision; i++) {
@@ -142,8 +141,8 @@ class Shield extends PositionComponent
       0.06,
       onTick: () {
         final radius = (size.x / 2) - shieldWidth / 2;
-        final minAngle = angle - (shieldSweep / 2);
-        final maxAngle = angle + (shieldSweep / 2);
+        final minAngle = angle - (_shieldSweep / 2);
+        final maxAngle = angle + (_shieldSweep / 2);
         final generateAngle =
             minAngle + rnd.nextDouble() * (maxAngle - minAngle);
         final localPos = (size / 2) +
@@ -172,7 +171,8 @@ class Shield extends PositionComponent
           particle: ComputedParticle(
             lifespan: 0.25,
             renderer: (canvas, particle) {
-              final opacity = Tween(begin: 0.4, end: 0.0).transform(particle.progress);
+              final opacity =
+                  Tween(begin: 0.4, end: 0.0).transform(particle.progress);
               if (opacity <= 0.01) {
                 return;
               }
@@ -181,8 +181,8 @@ class Shield extends PositionComponent
                   center: Offset.zero,
                   radius: radius,
                 ),
-                -(shieldSweep / 2),
-                shieldSweep,
+                -(_shieldSweep / 2),
+                _shieldSweep,
                 false,
                 Paint()
                   ..color = type.intenseColor.withOpacity(0.2)
@@ -281,8 +281,8 @@ class Shield extends PositionComponent
     super.render(canvas);
     canvas.drawArc(
       size.toRect().deflate(shieldWidth / 2),
-      -shieldSweep / 2,
-      shieldSweep,
+      -_shieldSweep / 2,
+      _shieldSweep,
       false,
       shieldLinePaint
         ..color = shieldLineColor
@@ -296,14 +296,12 @@ class Shield extends PositionComponent
       Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is MovingComponent) {
-      switch(other) {
+      bloc.onMovingComponentDefended(other);
+      switch (other) {
         case MovingHealth():
           other.disjoint();
-        case FireOrb():
-        case IceOrb():
-          final orb = other as MovingOrb;
-          if ((orb.type.isFire && type.isFire) ||
-              (orb.type.isIce && type.isIce)) {
+        case MovingOrb():
+          if (other.type == type) {
             other.disjoint();
           }
       }

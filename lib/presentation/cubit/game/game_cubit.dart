@@ -14,6 +14,8 @@ import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
+import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
+import 'package:save_the_potato/presentation/components/moving/orb/color_type.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 
 part 'game_state.dart';
@@ -259,5 +261,24 @@ class GameCubit extends Cubit<GameState> {
       restartGame: true,
     ));
     emit(state.copyWith(restartGame: false));
+  }
+
+  void onMovingComponentDefended(MovingComponent movingComponent) {
+    switch (movingComponent) {
+      case MovingHealth():
+        // nothing
+        break;
+      case MovingOrb():
+        if (state.timePassed > 20 && state.activeColorTypes.length < 4) {
+          emit(state.copyWith(
+            activeColorTypes: state.activeColorTypes + [ColorType.pink],
+          ));
+        } else if (state.timePassed > 10 && state.activeColorTypes.length < 3) {
+          emit(state.copyWith(
+            activeColorTypes: state.activeColorTypes + [ColorType.green],
+          ));
+        }
+        break;
+    }
   }
 }

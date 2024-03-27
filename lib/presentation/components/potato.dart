@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flame/collisions.dart';
@@ -12,14 +13,14 @@ import 'package:save_the_potato/service_locator.dart';
 
 import '../my_game.dart';
 import 'moving/moving_components.dart';
-import 'moving/orb/orb_type.dart';
+import 'moving/orb/color_type.dart';
 
 class Potato extends PositionComponent
     with
         HasGameRef<MyGame>,
         CollisionCallbacks,
-        FlameBlocListenable<GameCubit, GameState>,
-        ParentIsA<MyWorld> {
+        ParentIsA<MyWorld>,
+        FlameBlocListenable<GameCubit, GameState> {
   Potato({
     double size = 100,
   }) : super(
@@ -28,8 +29,7 @@ class Potato extends PositionComponent
           anchor: Anchor.center,
         );
 
-  late final Shield fireShield;
-  late final Shield iceShield;
+  final List<Shield> shields = [];
 
   double get radius => size.x / 2;
 
@@ -38,11 +38,11 @@ class Potato extends PositionComponent
   late SMITrigger iceHitTrigger;
   late SMITrigger heartHitTrigger;
   late SMITrigger dieTrigger;
+  late StreamSubscription _shieldsSubscription;
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
       previousState.playingState != newState.playingState;
-
 
   @override
   void onNewState(GameState state) {
@@ -54,7 +54,7 @@ class Potato extends PositionComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    add(CircleHitbox(
+    await add(CircleHitbox(
       collisionType: CollisionType.active,
       radius: radius * 0.7,
       position: size / 2,
@@ -74,30 +74,72 @@ class Potato extends PositionComponent
     heartHitTrigger = _controller.findInput<bool>('heart-hit') as SMITrigger;
     dieTrigger = _controller.findInput<bool>('Die') as SMITrigger;
     potatoArtBoard.addController(_controller);
-    add(RiveComponent(
+    await add(RiveComponent(
       artboard: potatoArtBoard,
       size: Vector2.all(152),
       anchor: Anchor.center,
       position: size / 2,
     ));
-    add(fireShield = Shield(type: OrbType.fire));
-    add(iceShield = Shield(type: OrbType.ice));
-
     if (game.playingState.isGuide) {
       add(GuideTitle());
+    }
+
+    mounted.then((value) {
+      _shieldsSubscription = bloc.stream
+          .map((state) => state.activeColorTypes)
+          .distinct()
+          .listen(_reAddShields);
+      _reAddShields(bloc.state.activeColorTypes);
+    });
+  }
+
+  void _reAddShields(List<ColorType> shieldTypes) {
+    for (var shield in shields) {
+      shield.removeFromParent();
+    }
+    shields.clear();
+    for (var type in shieldTypes) {
+      final shield = Shield(
+        shieldSweep: pi / 2,
+        type: type,
+      );
+      shields.add(shield);
+      add(shield);
     }
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+    if (shields.isNotEmpty) {
+      _updateShields(dt);
+      return;
+    }
+  }
+
+  void _updateShields(double dt) {
     if (bloc.state.playingState.isPlaying) {
       final rotationSpeed = bloc.state.shieldsAngleRotationSpeed;
       if (rotationSpeed != 0) {
-        fireShield.angle += rotationSpeed * dt;
+        shields[0].angle += rotationSpeed * dt;
       }
     }
-    iceShield.angle = fireShield.angle - pi;
+
+    for (var shield in shields) {
+      shield.shieldSweep = pi / shields.length;
+    }
+
+    final totalSweep =
+    shields.fold(0.0, (prev, shield) => prev + shield.shieldSweep);
+    final totalSpace = (pi * 2) - totalSweep;
+    final shieldsSpace = totalSpace / shields.length;
+    Shield previousShield = shields[0];
+    for (int i = 1; i < shields.length; i++) {
+      final currentShield = shields[i];
+      shields[i].angle =
+          previousShield.angle - (previousShield.shieldSweep + shieldsSpace);
+      previousShield = currentShield;
+    }
   }
 
   @override
@@ -109,12 +151,7 @@ class Potato extends PositionComponent
           getIt.get<AnalyticsHelper>().heartReceived();
           game.onHealthPointReceived();
           heartHitTrigger.fire();
-        case FireOrb():
-          game.onOrbHit();
-          if (bloc.state.healthPoints > 0) {
-            fireHitTrigger.fire();
-          }
-        case IceOrb():
+        case MovingOrb():
           game.onOrbHit();
           if (bloc.state.healthPoints > 0) {
             iceHitTrigger.fire();
@@ -127,6 +164,7 @@ class Potato extends PositionComponent
   @override
   void onRemove() {
     _controller.dispose();
+    _shieldsSubscription.cancel();
     super.onRemove();
   }
 }
