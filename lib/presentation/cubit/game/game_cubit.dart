@@ -94,6 +94,7 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void _gameOver() async {
+    _audioHelper.playGameOverSound();
     final score = (state.timePassed * 1000).toInt();
     final previousScore = await _scoresRepository.getHighScore();
     final bool isHighScore = score > previousScore.score;

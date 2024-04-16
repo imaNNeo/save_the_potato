@@ -15,11 +15,13 @@ import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
+import 'package:save_the_potato/service_locator.dart';
 
 import 'components/moving/moving_components.dart';
 import 'components/moving/orb/orb_type.dart';
 import 'components/potato.dart';
 import 'cubit/game/game_cubit.dart';
+import 'helpers/audio_helper.dart';
 
 class MyGame extends FlameGame<MyWorld>
     with HasCollisionDetection, KeyboardEvents {
@@ -36,7 +38,7 @@ class MyGame extends FlameGame<MyWorld>
 
   @override
   Future<void> onLoad() async {
-    await FlameAudio.audioCache.load('bg.mp3');
+    await getIt.get<AudioHelper>().initializeCache();
     await Flame.images.loadAll([
       ...List.generate(8, (index) => 'flame/flame${index + 1}.png'),
       ...List.generate(2, (index) => 'snow/snowflake${index + 1}.png'),
