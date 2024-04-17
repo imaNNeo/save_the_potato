@@ -27,8 +27,7 @@ jobs:
           --project save-the-potato  \
           --android-app-id=dev.app2pack.savethepotato \
           --ios-bundle-id=dev.app2pack.savethepotato \
-          --platforms=android,ios \
-          > /dev/null 2>&1
+          --platforms=android,ios
       - name: Setup wiredash
         run: |
           sed -i '' "s/###WIREDASH_SECRET/\${{ secrets.WIREDASH_SECRET }}/" lib/main.dart
@@ -102,8 +101,7 @@ jobs:
           --project save-the-potato  \
           --android-app-id=dev.app2pack.savethepotato \
           --ios-bundle-id=dev.app2pack.savethepotato \
-          --platforms=android,ios \
-          > /dev/null 2>&1
+          --platforms=android,ios
       - name: Setup wiredash
         run: |
           sed -i "s/###WIREDASH_SECRET/\${{ secrets.WIREDASH_SECRET }}/" lib/main.dart
