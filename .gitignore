@@ -50,3 +50,5 @@ lib/firebase_options.dart
 
 keystore.jks
 google_play_credentials.json
+
+firebase.json
