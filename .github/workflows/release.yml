@@ -25,7 +25,7 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS=gcloud-service-key.json \
           flutterfire configure \
           --project save-the-potato  \
-          --android-app-id=dev.app2pack.savethepotato \
+          --android-package-name=dev.app2pack.savethepotato \
           --ios-bundle-id=dev.app2pack.savethepotato \
           --platforms=android,ios
       - name: Setup wiredash
@@ -99,7 +99,7 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS=gcloud-service-key.json \
           flutterfire configure \
           --project save-the-potato  \
-          --android-app-id=dev.app2pack.savethepotato \
+          --android-package-name=dev.app2pack.savethepotato \
           --ios-bundle-id=dev.app2pack.savethepotato \
           --platforms=android,ios
       - name: Setup wiredash
