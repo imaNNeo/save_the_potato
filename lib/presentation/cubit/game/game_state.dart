@@ -10,6 +10,7 @@ class GameState extends Equatable {
     this.restartGame = false,
     this.onNewHighScore,
     this.firstHealthReceived = false,
+    this.shieldHitCounter = 0,
   });
 
   final int healthPoints;
@@ -27,6 +28,8 @@ class GameState extends Equatable {
   final OnlineScoreEntity? onNewHighScore;
 
   final bool firstHealthReceived;
+
+  final int shieldHitCounter;
 
   /// Between 0.0 and 1.0
   double get difficulty => GameConstants.difficultyInitialToPeakCurve.transform(
@@ -77,6 +80,7 @@ class GameState extends Equatable {
     bool? restartGame,
     ValueWrapper<OnlineScoreEntity>? onNewHighScore,
     bool? firstHealthReceived,
+    int? shieldHitCounter,
   }) {
     return GameState(
       healthPoints: healthPoints ?? this.healthPoints,
@@ -89,6 +93,7 @@ class GameState extends Equatable {
       onNewHighScore:
           onNewHighScore != null ? onNewHighScore.value : this.onNewHighScore,
       firstHealthReceived: firstHealthReceived ?? this.firstHealthReceived,
+      shieldHitCounter: shieldHitCounter ?? this.shieldHitCounter,
     );
   }
 
@@ -102,5 +107,6 @@ class GameState extends Equatable {
         restartGame,
         onNewHighScore,
         firstHealthReceived,
+        shieldHitCounter,
       ];
 }

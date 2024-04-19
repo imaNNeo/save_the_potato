@@ -261,4 +261,10 @@ class GameCubit extends Cubit<GameState> {
     ));
     emit(state.copyWith(restartGame: false));
   }
+
+  void onShieldHit() {
+    emit(state.copyWith(
+      shieldHitCounter: state.shieldHitCounter + 1,
+    ));
+  }
 }
