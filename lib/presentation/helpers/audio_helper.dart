@@ -9,10 +9,19 @@ class AudioHelper {
 
   Future<void> initializeCache() async {
     await FlameAudio.audioCache.loadAll([
-      'background_120_to_160bpm.wav',
-      'heart.wav',
-      'hit.wav',
-      'shield.wav',
+      'background_120_to_135bpm.wav',
+      'Heart1.wav',
+      'Heart2.wav',
+      'Heart3.wav',
+      'Hit1.wav',
+      'Hit2.wav',
+      'Hit3.wav',
+      'Shield1.wav',
+      'Shield2.wav',
+      'Shield3.wav',
+      'Shield4.wav',
+      'Shield5.wav',
+      'Shield6.wav',
       'victory.mp3',
       'game_over.wav',
     ]);
@@ -47,7 +56,7 @@ class AudioHelper {
       return;
     }
     FlameAudio.bgm.play(
-      'background_120_to_160bpm.wav',
+      'background_120_to_135bpm.wav',
       volume: GameConstants.bgmVolume,
     );
   }
@@ -57,8 +66,8 @@ class AudioHelper {
       return;
     }
     await FlameAudio.play(
-      'heart.wav',
-      volume: GameConstants.bgmVolume,
+      'Heart2.wav',
+      volume: GameConstants.soundEffectsVolume,
     );
   }
 
@@ -67,18 +76,18 @@ class AudioHelper {
       return;
     }
     await FlameAudio.play(
-      'hit.wav',
-      volume: GameConstants.bgmVolume,
+      'Hit2.wav',
+      volume: GameConstants.soundEffectsVolume,
     );
   }
 
-  void playShieldSound() async {
+  void playShieldSound(int seed) async {
     if (!(await _audioEnabled.value)) {
       return;
     }
     await FlameAudio.play(
-      'shield.wav',
-      volume: GameConstants.bgmVolume,
+      'Shield${(seed % 6) + 1}.wav',
+      volume: GameConstants.soundEffectsVolume,
     );
   }
 
@@ -88,7 +97,7 @@ class AudioHelper {
     }
     FlameAudio.play(
       'victory.mp3',
-      volume: GameConstants.bgmVolume,
+      volume: GameConstants.soundEffectsVolume,
     );
   }
 
@@ -98,7 +107,7 @@ class AudioHelper {
     }
     FlameAudio.play(
       'game_over.wav',
-      volume: GameConstants.bgmVolume,
+      volume: GameConstants.soundEffectsVolume,
     );
   }
 }

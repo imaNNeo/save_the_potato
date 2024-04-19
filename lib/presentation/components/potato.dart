@@ -113,8 +113,8 @@ class Potato extends PositionComponent
           game.onHealthPointReceived();
           heartHitTrigger.fire();
         case FireOrb():
-          game.onOrbHit();
           _audioHelper.playOrbHitSound();
+          game.onOrbHit();
           if (bloc.state.healthPoints > 0) {
             fireHitTrigger.fire();
           }

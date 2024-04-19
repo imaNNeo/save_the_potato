@@ -300,6 +300,7 @@ class Shield extends PositionComponent
       Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is MovingComponent) {
+      _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
       bloc.onShieldHit();
       switch(other) {
         case MovingHealth():

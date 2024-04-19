@@ -6,7 +6,6 @@ import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
-import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_noise/flame_noise.dart';
 import 'package:flutter/material.dart';
@@ -147,13 +146,13 @@ class MyWorld extends World
     }
     late double generateHealthChance;
     if (bloc.state.firstHealthReceived) {
-      generateHealthChance = GameConstants.chanceToSpawnHeart;
+      generateHealthChance = GameConstants.chanceToSpawnHeart * 20;
     } else {
       if (_firstTimeHealthGeneratedCount <
           GameConstants.spawnHeartForFirstTimeMaxCount) {
         generateHealthChance = GameConstants.chanceToSpawnHeartForFirstTime;
       } else {
-        generateHealthChance = GameConstants.chanceToSpawnHeart;
+        generateHealthChance = GameConstants.chanceToSpawnHeart * 20;
       }
       _firstTimeHealthGeneratedCount++;
     }
