@@ -300,16 +300,18 @@ class Shield extends PositionComponent
       Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is MovingComponent) {
-      _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
-      bloc.onShieldHit();
       switch(other) {
         case MovingHealth():
+          bloc.onShieldHit();
+          _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
           other.disjoint();
         case FireOrb():
         case IceOrb():
           final orb = other as MovingOrb;
           if ((orb.type.isFire && type.isFire) ||
               (orb.type.isIce && type.isIce)) {
+            bloc.onShieldHit();
+            _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
             other.disjoint();
           }
       }

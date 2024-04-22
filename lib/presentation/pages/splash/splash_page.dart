@@ -97,7 +97,7 @@ class _SplashPageState extends State<SplashPage> {
           isUpdateDialogShowing = false;
           if (shouldOpenNextPage) {
             await await Future.delayed(const Duration(milliseconds: 300));
-            if (!mounted) {
+            if (!context.mounted) {
               return;
             }
             _openHomePage(context);
@@ -107,6 +107,9 @@ class _SplashPageState extends State<SplashPage> {
           if (isUpdateDialogShowing) {
             shouldOpenNextPage = true;
           } else {
+            if (!context.mounted) {
+              return;
+            }
             _openHomePage(context);
           }
         }

@@ -16,7 +16,6 @@ dependencies:
   flutter_bloc: ^8.1.4
   flame_bloc: ^1.11.0
   equatable: ^2.0.5
-  flame_audio: ^2.10.0
   flame_rive: ^1.10.0
   rive: ^0.12.3
   shared_preferences: ^2.2.2
@@ -38,6 +37,7 @@ dependencies:
   share_plus: ^7.2.1
   stream_transform: ^2.1.0
   wiredash: ^2.1.0
+  flutter_soloud: ^2.0.0
 
 dev_dependencies:
   flutter_test:
