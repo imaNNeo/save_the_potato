@@ -26,7 +26,7 @@ class AudioHelper {
       return;
     }
     await soLoud.init();
-    const baseAssets = 'assets/audio/';
+    const baseAssets = 'assets/audio';
     _bgm = await soLoud.loadAsset(
       '$baseAssets/background_120_to_135bpm.wav',
     );
