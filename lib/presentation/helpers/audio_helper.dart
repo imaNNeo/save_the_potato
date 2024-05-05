@@ -8,12 +8,12 @@ class AudioHelper {
   bool isPaused = false;
 
   final _audioEnabled = LazyValue<bool>();
-  final soLoud = SoLoud.instance;
+  late final SoLoud _soLoud;
 
   late final AudioSource _bgm;
   late final AudioSource _shield1, _shield2, _shield3, _shield4, _shield5,
       _shield6;
-  late final AudioSource _heartHit, _orbHit, _orbHit2;
+  late final AudioSource _heartHit, _orbHit1, _orbHit2;
   late final AudioSource _victory, _gameOver;
 
   late final List<AudioSource> notes;
@@ -21,28 +21,29 @@ class AudioHelper {
   SoundHandle? _bgmHandle;
 
   Future<void> initialize() async {
-    if (soLoud.isInitialized) {
+    _soLoud = SoLoud.instance;
+    if (await _soLoud.initialized) {
       /// For example, when we re-run the app in the debug mode
       return;
     }
-    await soLoud.init();
+    await _soLoud.init();
     const baseAssets = 'assets/audio';
-    _bgm = await soLoud.loadAsset(
-      '$baseAssets/background_120_to_135bpm.wav',
+    _bgm = await _soLoud.loadAsset(
+      '$baseAssets/bg_120_140c_bpm.ogg',
     );
-    _shield1 = await soLoud.loadAsset('$baseAssets/Shield1.wav');
-    _shield2 = await soLoud.loadAsset('$baseAssets/Shield2.wav');
-    _shield3 = await soLoud.loadAsset('$baseAssets/Shield3.wav');
-    _shield4 = await soLoud.loadAsset('$baseAssets/Shield4.wav');
-    _shield5 = await soLoud.loadAsset('$baseAssets/Shield5.wav');
-    _shield6 = await soLoud.loadAsset('$baseAssets/Shield6.wav');
+    _shield1 = await _soLoud.loadAsset('$baseAssets/shield1.wav');
+    _shield2 = await _soLoud.loadAsset('$baseAssets/shield2.wav');
+    _shield3 = await _soLoud.loadAsset('$baseAssets/shield3.wav');
+    _shield4 = await _soLoud.loadAsset('$baseAssets/shield4.wav');
+    _shield5 = await _soLoud.loadAsset('$baseAssets/shield5.wav');
+    _shield6 = await _soLoud.loadAsset('$baseAssets/shield6.wav');
 
-    _heartHit = await soLoud.loadAsset('$baseAssets/Heart2.wav');
-    _orbHit = await soLoud.loadAsset('$baseAssets/Hit2.wav');
-    _orbHit2 = await soLoud.loadAsset('$baseAssets/Hit3.wav');
+    _heartHit = await _soLoud.loadAsset('$baseAssets/heart.wav');
+    _orbHit1 = await _soLoud.loadAsset('$baseAssets/hit1.wav');
+    _orbHit2 = await _soLoud.loadAsset('$baseAssets/hit2.wav');
 
-    _victory = await soLoud.loadAsset('$baseAssets/victory.mp3');
-    _gameOver = await soLoud.loadAsset('$baseAssets/game_over.wav');
+    _victory = await _soLoud.loadAsset('$baseAssets/victory.mp3');
+    _gameOver = await _soLoud.loadAsset('$baseAssets/game_over.wav');
 
     notes = await SoLoudTools.createNotes();
   }
@@ -52,15 +53,15 @@ class AudioHelper {
       return;
     }
     if (_bgmHandle != null) {
-      soLoud.stop(_bgmHandle!);
+      _soLoud.stop(_bgmHandle!);
     }
-    _bgmHandle = await soLoud.play(
+    _bgmHandle = await _soLoud.play(
       _bgm,
       volume: GameConstants.bgmVolume,
       looping: true,
       loopingStartAt: const Duration(seconds: 150),
     );
-    soLoud.setProtectVoice(_bgmHandle!, true);
+    _soLoud.setProtectVoice(_bgmHandle!, true);
   }
 
   void setAudioEnabled(bool enabled) {
@@ -71,7 +72,7 @@ class AudioHelper {
     if (_bgmHandle == null) {
       return;
     }
-    soLoud.setPause(_bgmHandle!, true);
+    _soLoud.setPause(_bgmHandle!, true);
     isPaused = true;
   }
 
@@ -80,7 +81,7 @@ class AudioHelper {
       return;
     }
     if (isPaused) {
-      soLoud.setPause(_bgmHandle!, false);
+      _soLoud.setPause(_bgmHandle!, false);
     } else {
       playBackgroundMusic();
     }
@@ -91,16 +92,16 @@ class AudioHelper {
     if (_bgmHandle == null) {
       return;
     }
-    soLoud.fadeVolume(_bgmHandle!, 0, duration);
+    _soLoud.fadeVolume(_bgmHandle!, 0, duration);
     await Future.delayed(duration);
-    soLoud.stop(_bgmHandle!);
+    _soLoud.stop(_bgmHandle!);
   }
 
   void playHeartHitSound() async {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    soLoud.play(
+    _soLoud.play(
       _heartHit,
       volume: GameConstants.soundEffectsVolume,
     );
@@ -110,8 +111,8 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    soLoud.play(
-      Random().nextBool() ? _orbHit : _orbHit2,
+    _soLoud.play(
+      Random().nextBool() ? _orbHit1 : _orbHit2,
       volume: GameConstants.soundEffectsVolume,
     );
   }
@@ -129,7 +130,7 @@ class AudioHelper {
       5 => _shield6,
       _ => throw Exception('Invalid'),
     };
-    soLoud.play(
+    _soLoud.play(
       shield,
       volume: GameConstants.soundEffectsVolume,
     );
@@ -139,7 +140,7 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    soLoud.play(
+    _soLoud.play(
       _victory,
       volume: GameConstants.soundEffectsVolume,
     );
@@ -149,7 +150,7 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    soLoud.play(
+    _soLoud.play(
       _gameOver,
       volume: GameConstants.soundEffectsVolume,
     );
