@@ -74,6 +74,11 @@ class AudioHelper {
     }
     _soLoud.setPause(_bgmHandle!, true);
     isPaused = true;
+    for (var element in _soLoud.activeSounds) {
+      for (var element in element.handles) {
+        _soLoud.setPause(element, true);
+      }
+    }
   }
 
   void resumeBackgroundMusic() async {
