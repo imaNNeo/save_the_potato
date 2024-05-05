@@ -11,7 +11,11 @@ class AudioHelper {
   late final SoLoud _soLoud;
 
   late final AudioSource _bgm;
-  late final AudioSource _shield1, _shield2, _shield3, _shield4, _shield5,
+  late final AudioSource _shield1,
+      _shield2,
+      _shield3,
+      _shield4,
+      _shield5,
       _shield6;
   late final AudioSource _heartHit, _orbHit1, _orbHit2;
   late final AudioSource _victory, _gameOver;
@@ -59,7 +63,11 @@ class AudioHelper {
       _bgm,
       volume: GameConstants.bgmVolume,
       looping: true,
-      loopingStartAt: const Duration(seconds: 150),
+      loopingStartAt: const Duration(
+        minutes: 3,
+        seconds: 0,
+        milliseconds: 480,
+      ),
     );
     _soLoud.setProtectVoice(_bgmHandle!, true);
   }
@@ -126,7 +134,7 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    final shield = switch(seed % 6) {
+    final shield = switch (seed % 6) {
       0 => _shield1,
       1 => _shield2,
       2 => _shield3,
