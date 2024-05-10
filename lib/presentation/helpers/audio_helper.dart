@@ -35,12 +35,12 @@ class AudioHelper {
     _bgm = await _soLoud.loadAsset(
       '$baseAssets/bg_120_140c_bpm.ogg',
     );
-    _shield1 = await _soLoud.loadAsset('$baseAssets/shield1.wav');
-    _shield2 = await _soLoud.loadAsset('$baseAssets/shield2.wav');
-    _shield3 = await _soLoud.loadAsset('$baseAssets/shield3.wav');
-    _shield4 = await _soLoud.loadAsset('$baseAssets/shield4.wav');
-    _shield5 = await _soLoud.loadAsset('$baseAssets/shield5.wav');
-    _shield6 = await _soLoud.loadAsset('$baseAssets/shield6.wav');
+    _shield1 = await _soLoud.loadAsset('$baseAssets/Shield1.wav');
+    _shield2 = await _soLoud.loadAsset('$baseAssets/Shield2.wav');
+    _shield3 = await _soLoud.loadAsset('$baseAssets/Shield3.wav');
+    _shield4 = await _soLoud.loadAsset('$baseAssets/Shield4.wav');
+    _shield5 = await _soLoud.loadAsset('$baseAssets/Shield5.wav');
+    _shield6 = await _soLoud.loadAsset('$baseAssets/Shield6.wav');
 
     _heartHit = await _soLoud.loadAsset('$baseAssets/heart.wav');
     _orbHit1 = await _soLoud.loadAsset('$baseAssets/hit1.wav');
