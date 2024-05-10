@@ -2,10 +2,10 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
-import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/double_range.dart';
@@ -26,7 +26,7 @@ class GameCubit extends Cubit<GameState> {
     this._configsRepository,
     this._analyticsHelper,
   ) : super(const GameState()) {
-    FlameAudio.bgm.initialize();
+    SoLoud.instance.init();
   }
 
   final _shieldAngleRotationAmount = pi * 1.8;
@@ -94,6 +94,7 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void _gameOver() async {
+    _audioHelper.playGameOverSound();
     final score = (state.timePassed * 1000).toInt();
     final previousScore = await _scoresRepository.getHighScore();
     final bool isHighScore = score > previousScore.score;
@@ -109,9 +110,10 @@ class GameCubit extends Cubit<GameState> {
       ),
     ));
     _submitScore(previousScore);
-    await _fadeBackgroundVolume();
+    await _audioHelper.fadeAndStopBackgroundMusic(
+      GameConstants.showRetryAfterGameOverDelay,
+    );
     emit(state.copyWith(showGameOverUI: true));
-    FlameAudio.bgm.stop();
   }
 
   void _submitScore(ScoreEntity previousScore) async {
@@ -137,24 +139,6 @@ class GameCubit extends Cubit<GameState> {
         rethrow;
       }
     }
-  }
-
-  Future<void> _fadeBackgroundVolume() async {
-    final currentVolume = FlameAudio.bgm.audioPlayer.volume;
-    const targetVolume = 0.0;
-    final volumeTween = Tween<double>(
-      begin: currentVolume,
-      end: targetVolume,
-    ).chain(CurveTween(curve: Curves.fastOutSlowIn));
-    int stepCount = 30;
-    final stepDelay = GameConstants.showRetryAfterGameOverDelay ~/ stepCount;
-    for (int i = 0; i < stepCount; i++) {
-      await FlameAudio.bgm.audioPlayer.setVolume(
-        volumeTween.transform((i + 1) / stepCount),
-      );
-      await Future.delayed(Duration(milliseconds: stepDelay.inMilliseconds));
-    }
-    await FlameAudio.bgm.audioPlayer.setVolume(targetVolume);
   }
 
   void onLeftTapDown() {
@@ -259,5 +243,17 @@ class GameCubit extends Cubit<GameState> {
       restartGame: true,
     ));
     emit(state.copyWith(restartGame: false));
+  }
+
+  void onShieldHit() {
+    emit(state.copyWith(
+      shieldHitCounter: state.shieldHitCounter + 1,
+    ));
+  }
+
+  @override
+  Future<void> close() {
+    SoLoud.instance.deinit();
+    return super.close();
   }
 }

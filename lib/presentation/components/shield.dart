@@ -8,7 +8,9 @@ import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
+import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
+import 'package:save_the_potato/service_locator.dart';
 
 import 'moving/moving_components.dart';
 import 'moving/orb/orb_type.dart';
@@ -45,6 +47,8 @@ class Shield extends PositionComponent
   late Paint flamePaint;
   late Paint sparklePaint;
   late Paint shieldLinePaint;
+
+  final _audioHelper = getIt.get<AudioHelper>();
 
   @override
   void onNewState(GameState state) {
@@ -298,12 +302,16 @@ class Shield extends PositionComponent
     if (other is MovingComponent) {
       switch(other) {
         case MovingHealth():
+          bloc.onShieldHit();
+          _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
           other.disjoint();
         case FireOrb():
         case IceOrb():
           final orb = other as MovingOrb;
           if ((orb.type.isFire && type.isFire) ||
               (orb.type.isIce && type.isIce)) {
+            bloc.onShieldHit();
+            _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
             other.disjoint();
           }
       }

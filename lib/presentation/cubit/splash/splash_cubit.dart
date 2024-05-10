@@ -1,12 +1,15 @@
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/service_locator.dart';
 
 part 'splash_state.dart';
 
@@ -53,6 +56,14 @@ class SplashCubit extends Cubit<SplashState> {
     }
 
     /// Wait for splash animations before showing popups
+    try {
+      await getIt.get<AudioHelper>().initialize();
+    } catch (e) {
+      FirebaseCrashlytics.instance.recordError(
+        e,
+        StackTrace.current,
+      );
+    }
     await Future.delayed(const Duration(milliseconds: 1000));
 
     if (forceUpdate) {

@@ -8,6 +8,7 @@ import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/presentation/components/guide_title.dart';
 import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
+import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import '../my_game.dart';
@@ -38,6 +39,7 @@ class Potato extends PositionComponent
   late SMITrigger iceHitTrigger;
   late SMITrigger heartHitTrigger;
   late SMITrigger dieTrigger;
+  final _audioHelper = getIt.get<AudioHelper>();
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
@@ -107,14 +109,17 @@ class Potato extends PositionComponent
       switch (other) {
         case MovingHealth():
           getIt.get<AnalyticsHelper>().heartReceived();
+          _audioHelper.playHeartHitSound();
           game.onHealthPointReceived();
           heartHitTrigger.fire();
         case FireOrb():
+          _audioHelper.playOrbHitSound();
           game.onOrbHit();
           if (bloc.state.healthPoints > 0) {
             fireHitTrigger.fire();
           }
         case IceOrb():
+          _audioHelper.playOrbHitSound();
           game.onOrbHit();
           if (bloc.state.healthPoints > 0) {
             iceHitTrigger.fire();

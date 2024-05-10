@@ -27,6 +27,9 @@ jobs:
           --project save-the-potato  \
           --android-package-name=dev.app2pack.savethepotato \
           --ios-bundle-id=dev.app2pack.savethepotato \
+          --macos-bundle-id=dev.app2pack.savethepotato \
+          --web-app-id=dev.app2pack.savethepotato \
+          --windows-app-id=dev.app2pack.savethepotato \
           --platforms=android,ios
       - name: Setup wiredash
         run: |
@@ -101,6 +104,9 @@ jobs:
           --project save-the-potato  \
           --android-package-name=dev.app2pack.savethepotato \
           --ios-bundle-id=dev.app2pack.savethepotato \
+          --macos-bundle-id=dev.app2pack.savethepotato \
+          --web-app-id=dev.app2pack.savethepotato \
+          --windows-app-id=dev.app2pack.savethepotato \
           --platforms=android,ios
       - name: Setup wiredash
         run: |
