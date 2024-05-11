@@ -32,9 +32,7 @@ class AudioHelper {
     }
     await _soLoud.init();
     const baseAssets = 'assets/audio';
-    _bgm = await _soLoud.loadAsset(
-      '$baseAssets/bg_120_140c_bpm.ogg',
-    );
+    _bgm = await _soLoud.loadAsset('$baseAssets/bg_120_140c_bpm.ogg');
     _shield1 = await _soLoud.loadAsset('$baseAssets/Shield1.wav');
     _shield2 = await _soLoud.loadAsset('$baseAssets/Shield2.wav');
     _shield3 = await _soLoud.loadAsset('$baseAssets/Shield3.wav');

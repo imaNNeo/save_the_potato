@@ -143,13 +143,13 @@ class MyWorld extends World
     }
     late double generateHealthChance;
     if (bloc.state.firstHealthReceived) {
-      generateHealthChance = GameConstants.chanceToSpawnHeart * 20;
+      generateHealthChance = GameConstants.chanceToSpawnHeart;
     } else {
       if (_firstTimeHealthGeneratedCount <
           GameConstants.spawnHeartForFirstTimeMaxCount) {
         generateHealthChance = GameConstants.chanceToSpawnHeartForFirstTime;
       } else {
-        generateHealthChance = GameConstants.chanceToSpawnHeart * 20;
+        generateHealthChance = GameConstants.chanceToSpawnHeart;
       }
       _firstTimeHealthGeneratedCount++;
     }
