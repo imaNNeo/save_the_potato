@@ -45,13 +45,16 @@ class DebugPanel extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                          'nickname: ${authState.user?.nickname ?? 'null'}'),
+                        'nickname: ${authState.user?.nickname ?? 'null'}',
+                      ),
                       const SizedBox(height: 12),
                       Text(
-                          'timePassed: ${gameState.timePassed.toStringAsFixed(2)}'),
+                        'timePassed: ${gameState.timePassed.toStringAsFixed(2)}',
+                      ),
                       const SizedBox(height: 12),
                       Text(
-                          'difficulty (${GameConstants.difficultyInitialToPeakDuration}s): %${(gameState.difficulty * 100).toInt()}'),
+                        'difficulty (${GameConstants.difficultyInitialToPeakDuration}s): %${(gameState.difficulty * 100).toInt()}',
+                      ),
                       const SizedBox(height: 4),
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -61,7 +64,8 @@ class DebugPanel extends StatelessWidget {
                           SizedBox(
                             width: 200,
                             child: LinearProgressIndicator(
-                                value: gameState.difficulty),
+                              value: gameState.difficulty,
+                            ),
                           ),
                           const SizedBox(width: 4),
                           const Text('1.0'),
@@ -69,7 +73,8 @@ class DebugPanel extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                          'spawnEvery: ${gameState.spawnOrbsEvery.toStringAsFixed(2)}'),
+                        'spawnEvery: ${gameState.spawnOrbsEvery.toStringAsFixed(2)}',
+                      ),
                       const SizedBox(height: 4),
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -92,12 +97,14 @@ class DebugPanel extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                          'Orbs Move Speed: ${gameState.spawnOrbsMoveSpeedRange.simpleFormatInt}'),
+                        'Orbs Move Speed: ${gameState.spawnOrbsMoveSpeedRange.simpleFormatInt}',
+                      ),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                              GameConstants.orbsMoveSpeedInitial.simpleFormatInt),
+                            GameConstants.orbsMoveSpeedInitial.simpleFormatInt,
+                          ),
                           const SizedBox(width: 4),
                           SizedBox(
                             width: 200,
