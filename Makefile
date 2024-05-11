@@ -17,4 +17,4 @@ sure:
 	make checkstyle && make runTests
 
 firebaseConfigs:
-	flutterfire configure --project=save-the-potato
+	flutterfire configure -y  --project=save-the-potato --platforms=android,ios
