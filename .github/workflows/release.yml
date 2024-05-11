@@ -61,6 +61,7 @@ jobs:
             --create
           keychain add-certificates
           xcode-project use-profiles
+          flutter pub get
           flutter packages pub get
           find . -name "Podfile" -execdir pod install \;
       - name: Build and Deploy
