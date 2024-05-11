@@ -33,7 +33,7 @@ class GameConstants {
   static const double movingHealthPointSpeedMultiplier = 0.9;
   static double movingHealthMinSpeed = orbsMoveSpeedInitial.max;
   static double movingHealthMaxSpeed = orbsMoveSpeedPeak.min * 0.8;
-  static const double bgmVolume = 0.8;
+  static const double bgmVolume = 0.9;
   static const double soundEffectsVolume = 1.0;
 
   static const redColors = [
