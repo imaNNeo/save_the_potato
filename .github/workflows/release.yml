@@ -51,7 +51,7 @@ jobs:
           echo "${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_BASE64 }}" | base64 -d > AuthKey.p8
           wc -c AuthKey.p8
           export APP_STORE_CONNECT_PRIVATE_KEY=`cat AuthKey.p8`
-          ssh-keygen -t rsa -b 2048 -m PEM -f cert_key -q -N ""
+          echo ${{ secrets.APP_STORE_CONNECT_CERT_KEY_BASE64 }} | base64 -d > cert_key
           keychain initialize
           keychain use-login
           app-store-connect fetch-signing-files $(xcode-project detect-bundle-id) \
