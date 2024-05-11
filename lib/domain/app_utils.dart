@@ -33,6 +33,7 @@ class AppUtils {
           width: 400,
           child: NewRankCelebrationShareableWidget(
             scoreEntity: score,
+            gameConfigEntity: gameConfig,
           ),
         ),
       );

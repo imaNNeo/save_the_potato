@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:save_the_potato/domain/game_constants.dart';
+import 'package:save_the_potato/domain/models/game_config_entity.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/presentation/cubit/configs/configs_cubit.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
+
+import 'new_rank_celebration_shareable_widget.dart';
 
 class Trophy extends StatelessWidget {
   const Trophy({
     super.key,
     required this.score,
+    this.nullableGameConfig,
     this.size = 38,
     this.showNickname = true,
   });
@@ -18,15 +21,25 @@ class Trophy extends StatelessWidget {
   final double size;
   final bool showNickname;
 
+  /// We need to provide the gameConfig when we want to use it in
+  /// the [NewRankCelebrationShareableWidget], Because we don't have access
+  /// to the context to retrieve this object in
+  /// [NewRankCelebrationShareableWidget],
+  /// If it is used in the app widget tree, we don't need to pass it,
+  /// we use context to find the ConfigsCubit and the gameConfig.
+  final GameConfigEntity? nullableGameConfig;
+
   @override
   Widget build(BuildContext context) {
     int? rank =
         score is OnlineScoreEntity ? (score as OnlineScoreEntity).rank : null;
-    final threshold = context
-        .read<ConfigsCubit>()
-        .state
-        .gameConfig
-        .showNewScoreCelebrationRankThreshold;
+
+    late final GameConfigEntity gameConfig;
+    if (nullableGameConfig != null) {
+      gameConfig = nullableGameConfig!;
+    } else {
+      gameConfig = context.read<ConfigsCubit>().state.gameConfig;
+    }
     return SizedBox(
       width: size,
       height: size,
@@ -40,7 +53,8 @@ class Trophy extends StatelessWidget {
               BlendMode.srcATop,
             ),
           ),
-          if (rank != null && rank <= threshold)
+          if (rank != null &&
+              rank <= gameConfig.showNewScoreCelebrationRankThreshold)
             Align(
               alignment: const Alignment(0, -0.7),
               child: Text(

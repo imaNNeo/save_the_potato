@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
+import 'package:save_the_potato/domain/models/game_config_entity.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
 
@@ -8,6 +9,7 @@ import 'victory_lines.dart';
 
 class NewRankCelebrationShareableWidget extends StatelessWidget {
   final OnlineScoreEntity scoreEntity;
+  final GameConfigEntity gameConfigEntity;
 
   static const preferredWidth = 1080.0;
   static const preferredHeight = 1350.0;
@@ -15,6 +17,7 @@ class NewRankCelebrationShareableWidget extends StatelessWidget {
   const NewRankCelebrationShareableWidget({
     super.key,
     required this.scoreEntity,
+    required this.gameConfigEntity,
   });
 
   @override
@@ -56,6 +59,7 @@ class NewRankCelebrationShareableWidget extends StatelessWidget {
                         Trophy(
                           score: scoreEntity,
                           size: width * 0.42,
+                          nullableGameConfig: gameConfigEntity,
                         ),
                         SizedBox(height: width * 0.07),
                         ClipRRect(
