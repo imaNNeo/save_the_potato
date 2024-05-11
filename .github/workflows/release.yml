@@ -41,7 +41,7 @@ jobs:
         run: brew install python3
       - name: Install CodeMagic cli-tool
         run: |
-          pip3 install codemagic-cli-tools
+          pip install codemagic-cli-tools
       - name: Setup CodeMagic
         run: |
           export APP_STORE_CONNECT_ISSUER_ID=${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
