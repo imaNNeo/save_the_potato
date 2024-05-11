@@ -65,11 +65,14 @@ sealed class MovingOrb extends MovingComponent {
     );
   }
 
-  void disjoint() {
+  void disjoint(double contactAngle) {
     removeFromParent();
     add(OrbDisjointParticleComponent(
+      orbType: type,
       colors: colors,
       smallSparkleSprites: smallSparkleSprites,
+      speedProgress: bloc.state.difficulty,
+      contactAngle: contactAngle,
     ));
   }
 }

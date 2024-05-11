@@ -7,27 +7,40 @@ import 'package:flame/particles.dart';
 import 'package:flutter/animation.dart';
 import 'package:save_the_potato/domain/extensions/list_extension.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
+import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
 
 class OrbDisjointParticleComponent extends Component
     with HasGameRef<MyGame>, ParentIsA<MovingOrb> {
   OrbDisjointParticleComponent({
     super.key,
+    required this.orbType,
     required this.colors,
     required this.smallSparkleSprites,
+    required this.speedProgress,
+    required this.contactAngle,
   });
 
+  final OrbType orbType;
   final List<Color> colors;
   final List<Sprite> smallSparkleSprites;
+  final double speedProgress;
+  final double contactAngle;
 
   late Paint _disjointParticlePaint;
 
   Random get rnd => game.rnd;
 
+  double _getRandomConeAngle() {
+    const coneAngle = pi * 1.1;
+    final fromAngle = contactAngle - (coneAngle / 2);
+    final toAngle = contactAngle + (coneAngle / 2);
+    return fromAngle + rnd.nextDouble() * (toAngle - fromAngle);
+  }
+
   @override
   void onLoad() async {
     _disjointParticlePaint = Paint();
-    final color = colors.random();
     final randomOrder = colors.randomOrder();
     TweenSequence<Color?> colorTween = TweenSequence<Color?>([
       for (int i = 0; i < randomOrder.length - 1; i++)
@@ -40,48 +53,50 @@ class OrbDisjointParticleComponent extends Component
         ),
     ]);
     final size = parent.size;
-    final radius = size.x / 2;
     await game.world.add(ParticleSystemComponent(
       position: parent.positionOfAnchor(Anchor.center),
       anchor: Anchor.center,
       particle: Particle.generate(
-        count: 30,
-        lifespan: 2,
+        count: 42,
+        lifespan: 1.25 - (speedProgress * 0.4),
         generator: (i) {
+          final color = colors.random();
           final sprite = smallSparkleSprites.random();
+          final randomAngle = _getRandomConeAngle();
+          final direction = Vector2(cos(randomAngle), sin(randomAngle));
           return AcceleratedParticle(
-            speed: Vector2(
-              (rnd.nextDouble() * 200) - 100,
-              (rnd.nextDouble() * 200) - 100,
-            ),
-            acceleration: Vector2(
-              (rnd.nextDouble() * 200) - 100,
-              (rnd.nextDouble() * 200) - 100,
-            ),
+            speed: direction * (rnd.nextDouble() * 200 + (100 * speedProgress)),
             child: ComputedParticle(
               renderer: (canvas, particle) {
-                final opacity = Tween(begin: 0.8, end: 0.0)
-                    .chain(CurveTween(curve: Curves.easeOutCubic))
+                final opacityBegin = lerpDouble(0.9, 0.6, speedProgress);
+                const opacityEnd = 0.1;
+                final opacity = Tween(begin: opacityBegin, end: opacityEnd)
+                    .chain(CurveTween(curve: Curves.linear))
                     .transform(particle.progress);
                 if (opacity <= 0.01) {
                   return;
                 }
-                if (i % 3 == 0) {
+                /// We have different sizeScale for orb types,
+                /// because snow particles seems larger in the result
+                double sizeScale = orbType == OrbType.fire
+                    ? lerpDouble(1.0, 0.5, particle.progress)!
+                    : lerpDouble(0.8, 0.4, particle.progress)!;
+                sizeScale *= lerpDouble(1.0, 0.8, speedProgress)!;
+                if (i % 2 == 0) {
+                  final radius = size.x / 2;
                   canvas.drawCircle(
                     Offset.zero,
-                    (radius * 0.6) * (1 - particle.progress),
+                    (radius * 0.8) * sizeScale,
                     _disjointParticlePaint
                       ..colorFilter = null
                       ..maskFilter = null
-                      ..color = (rnd.nextBool()
-                          ? color
-                          : colorTween.transform(particle.progress))!
+                      ..color = color
                           .withOpacity(opacity),
                   );
                 } else {
                   sprite.render(
                     canvas,
-                    size: Vector2.all((size.x * 1.2) * (1 - particle.progress)),
+                    size: Vector2.all((size.x * 1.8) * sizeScale),
                     anchor: Anchor.center,
                     overridePaint: _disjointParticlePaint
                       ..colorFilter = ColorFilter.mode(

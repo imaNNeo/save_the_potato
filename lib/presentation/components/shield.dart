@@ -176,7 +176,8 @@ class Shield extends PositionComponent
           particle: ComputedParticle(
             lifespan: 0.25,
             renderer: (canvas, particle) {
-              final opacity = Tween(begin: 0.4, end: 0.0).transform(particle.progress);
+              final opacity =
+                  Tween(begin: 0.4, end: 0.0).transform(particle.progress);
               if (opacity <= 0.01) {
                 return;
               }
@@ -300,7 +301,7 @@ class Shield extends PositionComponent
       Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is MovingComponent) {
-      switch(other) {
+      switch (other) {
         case MovingHealth():
           bloc.onShieldHit();
           _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
@@ -312,7 +313,10 @@ class Shield extends PositionComponent
               (orb.type.isIce && type.isIce)) {
             bloc.onShieldHit();
             _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
-            other.disjoint();
+            final orbPos = other.absolutePosition;
+            final diff = orbPos - absolutePosition;
+            final contactAngle = atan2(diff.y, diff.x);
+            other.disjoint(contactAngle);
           }
       }
     }
