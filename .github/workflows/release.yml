@@ -63,7 +63,7 @@ jobs:
           xcode-project use-profiles
           flutter pub get
           flutter packages pub get
-          find . -name "Podfile" -execdir pod install;
+          find . -name "Podfile" -execdir pod install \;
       - name: Build the ipa file
         run: |
           flutter build ipa --release --export-options-plist=$HOME/export_options.plist
