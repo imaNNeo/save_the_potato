@@ -1,3 +1,8 @@
+## 1.2.9
+* Added new audio and sound effects (switched from [flame_audio](https://pub.dev/packages/flame_audio) to [so_loud](https://pub.dev/packages/flutter_soloud) package)
+* Improved explosion effect (particle) of the moving orbs
+* Fixed bug in the share score function (capturing a screenshot)
+
 ## 1.2.3
 * Minor animation effect on the shields
 
