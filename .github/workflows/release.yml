@@ -67,7 +67,7 @@ jobs:
       - name: Build and Deploy
         run: |
           flutter build ipa --release \
-            --export-options-plist=$HOME/export_options.plist\
+            --export-options-plist=$HOME/export_options.plist
           app-store-connect publish \
             --path $(find $(pwd) -name "*.ipa")
           keychain use-login
@@ -120,83 +120,83 @@ jobs:
 #          overwrite: true
 #          file_glob: true
 
-  release_android:
-    name: Build and Deploy Android
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout the code
-        uses: actions/checkout@v3
-      - name: Install Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-      - name: Setup Firebase
-        run: |
-          curl -sL https://firebase.tools | bash
-          dart pub global activate flutterfire_cli
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}" | base64 -d > gcloud-service-key.json
-          GOOGLE_APPLICATION_CREDENTIALS=gcloud-service-key.json \
-          flutterfire configure \
-          --project save-the-potato  \
-          --android-package-name=dev.app2pack.savethepotato \
-          --ios-bundle-id=dev.app2pack.savethepotato \
-          --macos-bundle-id=dev.app2pack.savethepotato \
-          --web-app-id=dev.app2pack.savethepotato \
-          --windows-app-id=dev.app2pack.savethepotato \
-          --platforms=android,ios
-      - name: Setup wiredash
-        run: |
-          sed -i "s/###WIREDASH_SECRET/\${{ secrets.WIREDASH_SECRET }}/" lib/main.dart
-        shell: bash
-      - name: Create the Keystore file
-        run: |
-          echo $ANDROID_KEYSTORE_BASE64 | base64 -d > keystore.jks
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-      - name: Create the keystore.properties file
-        run: echo $ANDROID_KEYSTORE_PROPERTIES_BASE64 | base64 -d > android/key.properties
-        env:
-          ANDROID_KEYSTORE_PROPERTIES_BASE64: ${{ secrets.ANDROID_KEYSTORE_PROPERTIES_BASE64 }}
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-      - name: Build Android App Bundle
-        run: flutter build appbundle --release
-      - name: Create google_play_credentials.json
-        run: |
-          echo '${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}' > google_play_credentials.json
-          wc -c google_play_credentials.json
-        env:
-          ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}
-
-      - name: Deploy to Alpha
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJson: google_play_credentials.json
-          packageName: dev.app2pack.savethepotato
-          releaseFiles: build/app/outputs/bundle/release/app-release.aab
-          mappingFile: build/app/outputs/mapping/release/mapping.txt
-          debugSymbols: build/app/intermediates/merged_native_libs/release/out/lib
-          track: internal
-          status: draft
-#          whatsNewDirectory: distribution/
-      - name: Build Android universal APK (just for keeping them as artifacts)
-        run: flutter build apk --release
-
-      - name: Rename the apk and aab files
-        run: |
-          mkdir artifacts
-          cp build/app/outputs/flutter-apk/app-release.apk artifacts/SaveThePotato-Android-Universal-${{ github.ref_name }}.apk
-          cp build/app/outputs/bundle/release/app-release.aab artifacts/SaveThePotato-Android-AppBundle-${{ github.ref_name }}.aab
-
-      - name: Upload Android artifacts to the release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: artifacts/*
-          tag: ${{ github.ref }}
-          overwrite: true
-          file_glob: true
+#  release_android:
+#    name: Build and Deploy Android
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout the code
+#        uses: actions/checkout@v3
+#      - name: Install Flutter
+#        uses: subosito/flutter-action@v2
+#        with:
+#          channel: 'stable'
+#      - name: Setup Firebase
+#        run: |
+#          curl -sL https://firebase.tools | bash
+#          dart pub global activate flutterfire_cli
+#          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON_FILE_BASE64 }}" | base64 -d > gcloud-service-key.json
+#          GOOGLE_APPLICATION_CREDENTIALS=gcloud-service-key.json \
+#          flutterfire configure \
+#          --project save-the-potato  \
+#          --android-package-name=dev.app2pack.savethepotato \
+#          --ios-bundle-id=dev.app2pack.savethepotato \
+#          --macos-bundle-id=dev.app2pack.savethepotato \
+#          --web-app-id=dev.app2pack.savethepotato \
+#          --windows-app-id=dev.app2pack.savethepotato \
+#          --platforms=android,ios
+#      - name: Setup wiredash
+#        run: |
+#          sed -i "s/###WIREDASH_SECRET/\${{ secrets.WIREDASH_SECRET }}/" lib/main.dart
+#        shell: bash
+#      - name: Create the Keystore file
+#        run: |
+#          echo $ANDROID_KEYSTORE_BASE64 | base64 -d > keystore.jks
+#        env:
+#          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+#      - name: Create the keystore.properties file
+#        run: echo $ANDROID_KEYSTORE_PROPERTIES_BASE64 | base64 -d > android/key.properties
+#        env:
+#          ANDROID_KEYSTORE_PROPERTIES_BASE64: ${{ secrets.ANDROID_KEYSTORE_PROPERTIES_BASE64 }}
+#      - name: Setup Java
+#        uses: actions/setup-java@v4
+#        with:
+#          distribution: 'zulu'
+#          java-version: '17'
+#      - name: Build Android App Bundle
+#        run: flutter build appbundle --release
+#      - name: Create google_play_credentials.json
+#        run: |
+#          echo '${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}' > google_play_credentials.json
+#          wc -c google_play_credentials.json
+#        env:
+#          ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.ANDROID_GOOGLE_SERVICE_ACCOUNT_JSON }}
+#
+#      - name: Deploy to Alpha
+#        uses: r0adkll/upload-google-play@v1
+#        with:
+#          serviceAccountJson: google_play_credentials.json
+#          packageName: dev.app2pack.savethepotato
+#          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+#          mappingFile: build/app/outputs/mapping/release/mapping.txt
+#          debugSymbols: build/app/intermediates/merged_native_libs/release/out/lib
+#          track: internal
+#          status: draft
+##          whatsNewDirectory: distribution/
+#      - name: Build Android universal APK (just for keeping them as artifacts)
+#        run: flutter build apk --release
+#
+#      - name: Rename the apk and aab files
+#        run: |
+#          mkdir artifacts
+#          cp build/app/outputs/flutter-apk/app-release.apk artifacts/SaveThePotato-Android-Universal-${{ github.ref_name }}.apk
+#          cp build/app/outputs/bundle/release/app-release.aab artifacts/SaveThePotato-Android-AppBundle-${{ github.ref_name }}.aab
+#
+#      - name: Upload Android artifacts to the release
+#        uses: svenstaro/upload-release-action@v2
+#        with:
+#          repo_token: ${{ secrets.GITHUB_TOKEN }}
+#          file: artifacts/*
+#          tag: ${{ github.ref }}
+#          overwrite: true
+#          file_glob: true
