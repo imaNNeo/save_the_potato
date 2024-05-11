@@ -66,12 +66,12 @@ jobs:
           find . -name "Podfile" -execdir pod install \;
       - name: Build the ipa file
         run: |
-          flutter build ipa --release --export-options-plist=$HOME/export_options.plist
-      - name: Deploy the ipa file
-        run: |
-          app-store-connect publish --path $(find $(pwd) -name "*.ipa")
-      - name: Last step
-        run: keychain use-login
+          flutter build ipa --release
+#      - name: Deploy the ipa file
+#        run: |
+#          app-store-connect publish --path $(find $(pwd) -name "*.ipa")
+#      - name: Last step
+#        run: keychain use-login
 
       #      - name: Setup Flutter
 #        run: |
