@@ -28,7 +28,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage>
-    with SingleTickerProviderStateMixin, RouteAware {
+    with SingleTickerProviderStateMixin, RouteAware, WidgetsBindingObserver {
   late Key pageRootKey;
 
   late MyGame _game;
@@ -46,6 +46,7 @@ class _MainPageState extends State<MainPage>
 
   @override
   void initState() {
+    WidgetsBinding.instance.addObserver(this);
     pageRootKey = UniqueKey();
     _gameCubit = context.read<GameCubit>();
     _settingsCubit = context.read<SettingsCubit>();
@@ -90,6 +91,23 @@ class _MainPageState extends State<MainPage>
       pageRootKey = UniqueKey();
       _game = MyGame(_gameCubit, _settingsCubit);
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    switch (state) {
+      case AppLifecycleState.resumed:
+        break;
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+        if (_gameCubit.state.playingState.isPlaying) {
+          _gameCubit.pauseGame(manually: false);
+        }
+        break;
+    }
   }
 
   @override
@@ -186,6 +204,7 @@ class _MainPageState extends State<MainPage>
     routeObserver.unsubscribe(this);
     _streamSubscription.cancel();
     _generalLoadingSubscription.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 }
