@@ -1,3 +1,6 @@
+## 1.3.1
+* Pause background music when game goes into the background
+
 ## 1.3.0
 * Added new audio and sound effects (switched from [flame_audio](https://pub.dev/packages/flame_audio) to [so_loud](https://pub.dev/packages/flutter_soloud) package)
 * Improved explosion effect (particle) of the moving orbs
