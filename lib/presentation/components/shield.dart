@@ -174,7 +174,7 @@ class Shield extends PositionComponent
           angle: angle,
           anchor: Anchor.center,
           particle: ComputedParticle(
-            lifespan: 0.25,
+            lifespan: 0.15,
             renderer: (canvas, particle) {
               final opacity =
                   Tween(begin: 0.4, end: 0.0).transform(particle.progress);
