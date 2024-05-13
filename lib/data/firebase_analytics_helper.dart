@@ -7,6 +7,9 @@ class FirebaseAnalyticsHelper extends AnalyticsHelper {
     required String name,
     Map<String, dynamic>? parameters,
   }) {
+    if (kDebugMode) {
+      return;
+    }
     parameters = parameters?.map((key, value) {
       if (value is bool) {
         return MapEntry(key, value.toString());
