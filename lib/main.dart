@@ -95,6 +95,7 @@ class MyApp extends StatelessWidget {
         ],
         child: MaterialApp(
           title: 'Save the Potato',
+          debugShowCheckedModeBanner: false,
           theme: ThemeData.dark(useMaterial3: true).copyWith(
             textTheme: ThemeData.dark().textTheme.apply(
                   fontFamily: 'Cookies',

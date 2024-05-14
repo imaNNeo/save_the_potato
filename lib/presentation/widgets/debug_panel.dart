@@ -19,7 +19,7 @@ class DebugPanel extends StatelessWidget {
             if (!gameState.playingState.isPlaying) {
               return const SizedBox();
             }
-            if (!kDebugMode) {
+            if (kDebugMode) {
               return const SizedBox();
             }
             return DefaultTextStyle(
