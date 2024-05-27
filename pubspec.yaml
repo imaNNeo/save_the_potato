@@ -36,7 +36,7 @@ dependencies:
   screenshot: ^3.0.0
   share_plus: ^7.2.1
   stream_transform: ^2.1.0
-  wiredash: ^2.1.0
+  wiredash: ^2.1.2
   flutter_soloud: ^2.0.2
 
 dev_dependencies:
