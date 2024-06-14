@@ -30,12 +30,21 @@ class PlayingStatePaused extends PlayingState {
   const PlayingStatePaused();
 }
 
-class PlayingStateGameOver extends PlayingState {
-  final int score;
+class PlayingStateGameOver extends PlayingState with EquatableMixin {
+  final ScoreEntity score;
   final bool isHighScore;
+  final ScoreEntity highestScore;
 
   const PlayingStateGameOver({
     required this.score,
     required this.isHighScore,
+    required this.highestScore,
   });
+
+  @override
+  List<Object?> get props => [
+        score,
+        isHighScore,
+        highestScore,
+      ];
 }
