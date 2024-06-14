@@ -103,10 +103,25 @@ class GameCubit extends Cubit<GameState> {
           (DateTime.now().millisecondsSinceEpoch - gameStartedTimestamp),
       isHighScore: isHighScore,
     );
+    OnlineScoreEntity? tempOnlineScore;
+    if (isHighScore && previousScore is OnlineScoreEntity) {
+      tempOnlineScore = previousScore.copyWith(
+        score: score,
+      );
+    }
+
+    ScoreEntity highestScore;
+    if (isHighScore) {
+      highestScore = tempOnlineScore ?? OfflineScoreEntity(score: score);
+    } else {
+      highestScore = previousScore;
+    }
+
     emit(state.copyWith(
       playingState: PlayingStateGameOver(
-        score: score,
+        score: tempOnlineScore ?? OfflineScoreEntity(score: score),
         isHighScore: isHighScore,
+        highestScore: highestScore,
       ),
     ));
     _submitScore(previousScore);
@@ -127,6 +142,15 @@ class GameCubit extends Cubit<GameState> {
             newScore.rank <= gameConfigs.showNewScoreCelebrationRankThreshold) {
           // Let's celebrate!
           _audioHelper.playVictorySound();
+          if (state.playingState is PlayingStateGameOver) {
+            emit(state.copyWith(
+              playingState: PlayingStateGameOver(
+                score: newScore,
+                isHighScore: true,
+                highestScore: newScore,
+              ),
+            ));
+          }
           emit(state.copyWith(onNewHighScore: ValueWrapper(newScore)));
           emit(state.copyWith(onNewHighScore: const ValueWrapper(null)));
         }
