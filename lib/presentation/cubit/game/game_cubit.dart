@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
@@ -8,15 +7,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
-import 'package:save_the_potato/domain/models/double_range.dart';
 import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
+import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 
 part 'game_state.dart';
+
 part 'playing_state.dart';
 
 class GameCubit extends Cubit<GameState> {
@@ -64,12 +64,43 @@ class GameCubit extends Cubit<GameState> {
     _audioHelper.playBackgroundMusic();
   }
 
+  void _tryToSwitchToMultiSpawnGameMode() {
+    if (state.gameMode is GameModeMultiSpawn) {
+      return;
+    }
+    if (state.upcomingGameMode != null) {
+      return;
+    }
+
+    // If the difficulty is too low, we don't want to switch to multi spawn yet
+    if (state.difficulty < 0.5) {
+      return;
+    }
+
+    // If there is a chance
+    if (Random().nextDouble() > GameConstants.multiShieldGameModeChance) {
+      return;
+    }
+    emit(state.copyWith(
+      upcomingGameMode: const ValueWrapper(
+        GameModeMultiSpawn(spawnerSpawnCount: 3),
+      ),
+    ));
+  }
+
   void update(double dt) {
     if (!state.playingState.isPlaying) {
       return;
     }
     // We calculate the [state.difficulty] based on the time passed
-    emit(state.copyWith(timePassed: state.timePassed + dt));
+    emit(state.copyWith(
+      levelTimePassed: state.levelTimePassed + dt,
+    ));
+    if (state.gameMode.increasesDifficulty) {
+      emit(state.copyWith(
+        difficultyTimePassed: state.difficultyTimePassed + dt,
+      ));
+    }
   }
 
   void potatoOrbHit() {
@@ -95,7 +126,7 @@ class GameCubit extends Cubit<GameState> {
 
   void _gameOver() async {
     _audioHelper.playGameOverSound();
-    final score = (state.timePassed * 1000).toInt();
+    final score = (state.levelTimePassed * 1000).toInt();
     final previousScore = await _scoresRepository.getHighScore();
     final bool isHighScore = score > previousScore.score;
     _analyticsHelper.logLevelEnd(
@@ -134,7 +165,7 @@ class GameCubit extends Cubit<GameState> {
   void _submitScore(ScoreEntity previousScore) async {
     try {
       final gameConfigs = await _configsRepository.getGameConfig();
-      final score = (state.timePassed * 1000).toInt();
+      final score = (state.levelTimePassed * 1000).toInt();
       if (score > previousScore.score) {
         final newScore = await _scoresRepository.saveScore(score);
         if (previousScore is OnlineScoreEntity &&
@@ -272,6 +303,22 @@ class GameCubit extends Cubit<GameState> {
   void onShieldHit() {
     emit(state.copyWith(
       shieldHitCounter: state.shieldHitCounter + 1,
+    ));
+    if (state.shieldHitCounter % GameConstants.tryToSwitchGameModeEvery == 0) {
+      _tryToSwitchToMultiSpawnGameMode();
+    }
+  }
+
+  void multiSpawnModeSpawningFinished() {
+    emit(state.copyWith(
+      upcomingGameMode: const ValueWrapper(GameModeSingleSpawn()),
+    ));
+  }
+
+  void switchToUpcomingMode() {
+    emit(state.copyWith(
+      gameMode: state.upcomingGameMode,
+      upcomingGameMode: const ValueWrapper(null),
     ));
   }
 

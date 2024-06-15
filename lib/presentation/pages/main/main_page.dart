@@ -10,7 +10,6 @@ import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart'
 import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/my_game.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
-import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/game_paused_ui.dart';
 import 'package:save_the_potato/presentation/widgets/high_score_widget.dart';
@@ -147,10 +146,6 @@ class _MainPageState extends State<MainPage>
                 const Align(
                   alignment: Alignment.topCenter,
                   child: PotatoTopBar(),
-                ),
-                const Align(
-                  alignment: Alignment.bottomLeft,
-                  child: DebugPanel(),
                 ),
                 RotationControls(
                   showGuide: state.playingState.isGuide,

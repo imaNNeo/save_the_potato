@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:save_the_potato/domain/models/double_range.dart';
+
+import '../presentation/cubit/game/game_mode.dart';
 
 class GameConstants {
   static const int maxHealthPoints = 3;
@@ -8,17 +9,9 @@ class GameConstants {
   static const showRetryAfterGameOverDelay = Duration(seconds: 3);
   static const showShieldLineAnimDuration = 2.0;
 
-  /// It takes [difficultyInitialToPeakDuration] seconds to
-  /// go from [orbsSpawnEveryInitial] to [orbsSpawnEveryPeak]
-  static const orbsSpawnEveryInitial = 2.5;
-  static const orbsSpawnEveryPeak = 0.65;
-
-  /// It takes [difficultyInitialToPeakDuration] seconds to
-  /// go from [orbsMoveSpeedInitial] to [orbsMoveSpeedPeak]
-  static const orbsMoveSpeedInitial = DoubleRange(min: 105, max: 125);
-  static const orbsMoveSpeedPeak = DoubleRange(min: 195, max: 215);
-
   static const difficultyInitialToPeakDuration = 300.0;
+  static int tryToSwitchGameModeEvery = 3;
+  static const multiShieldGameModeChance = 0.05;
 
   /// https://cubic-bezier.com/#.23,1,.45,.87
   /// Something like very vast in and very slow out
@@ -31,8 +24,8 @@ class GameConstants {
   static const double chanceToSpawnHeartForFirstTime = 1.0;
   static const int spawnHeartForFirstTimeMaxCount = 3;
   static const double movingHealthPointSpeedMultiplier = 0.9;
-  static double movingHealthMinSpeed = orbsMoveSpeedInitial.max;
-  static double movingHealthMaxSpeed = orbsMoveSpeedPeak.min * 0.8;
+  static double movingHealthMinSpeed = GameModeSingleSpawn.orbsMoveSpeedInitial;
+  static double movingHealthMaxSpeed = GameModeSingleSpawn.orbsMoveSpeedPeak * 0.8;
   static const double bgmVolume = 6.3;
   static const double soundEffectsVolume = 7.0;
 

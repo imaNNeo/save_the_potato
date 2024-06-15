@@ -3,7 +3,8 @@ part of 'game_cubit.dart';
 class GameState extends Equatable {
   const GameState({
     this.healthPoints = GameConstants.maxHealthPoints,
-    this.timePassed = 0,
+    this.levelTimePassed = 0,
+    this.difficultyTimePassed = 0,
     this.playingState = const PlayingStateNone(),
     this.showGameOverUI = false,
     this.shieldsAngleRotationSpeed = 0,
@@ -11,11 +12,15 @@ class GameState extends Equatable {
     this.onNewHighScore,
     this.firstHealthReceived = false,
     this.shieldHitCounter = 0,
+    this.gameMode = const GameModeSingleSpawn(),
+    this.upcomingGameMode,
   });
 
   final int healthPoints;
 
-  final double timePassed;
+  final double levelTimePassed;
+
+  final double difficultyTimePassed;
 
   final PlayingState playingState;
 
@@ -31,28 +36,16 @@ class GameState extends Equatable {
 
   final int shieldHitCounter;
 
+  final GameMode gameMode;
+
+  final GameMode? upcomingGameMode;
+
   /// Between 0.0 and 1.0
   double get difficulty => GameConstants.difficultyInitialToPeakCurve.transform(
         min(
           1.0,
-          timePassed / GameConstants.difficultyInitialToPeakDuration,
+          difficultyTimePassed / GameConstants.difficultyInitialToPeakDuration,
         ),
-      );
-
-  /// Between [GameConstants.orbsSpawnEveryInitial] and [GameConstants.orbsSpawnEveryPeak]
-  /// based on [difficulty]
-  double get spawnOrbsEvery => lerpDouble(
-        GameConstants.orbsSpawnEveryInitial,
-        GameConstants.orbsSpawnEveryPeak,
-        difficulty,
-      )!;
-
-  /// Between [GameConstants.orbsMoveSpeedInitial] and [GameConstants.orbsMoveSpeedPeak]
-  /// based on [difficulty]
-  DoubleRange get spawnOrbsMoveSpeedRange => DoubleRange.lerp(
-        GameConstants.orbsMoveSpeedInitial,
-        GameConstants.orbsMoveSpeedPeak,
-        difficulty,
       );
 
   double get gameOverTimeScale {
@@ -73,7 +66,8 @@ class GameState extends Equatable {
 
   GameState copyWith({
     int? healthPoints,
-    double? timePassed,
+    double? levelTimePassed,
+    double? difficultyTimePassed,
     PlayingState? playingState,
     bool? showGameOverUI,
     double? shieldsAngleRotationSpeed,
@@ -81,26 +75,33 @@ class GameState extends Equatable {
     ValueWrapper<OnlineScoreEntity>? onNewHighScore,
     bool? firstHealthReceived,
     int? shieldHitCounter,
-  }) {
-    return GameState(
-      healthPoints: healthPoints ?? this.healthPoints,
-      timePassed: timePassed ?? this.timePassed,
-      playingState: playingState ?? this.playingState,
-      showGameOverUI: showGameOverUI ?? this.showGameOverUI,
-      shieldsAngleRotationSpeed:
-          shieldsAngleRotationSpeed ?? this.shieldsAngleRotationSpeed,
-      restartGame: restartGame ?? this.restartGame,
-      onNewHighScore:
-          onNewHighScore != null ? onNewHighScore.value : this.onNewHighScore,
-      firstHealthReceived: firstHealthReceived ?? this.firstHealthReceived,
-      shieldHitCounter: shieldHitCounter ?? this.shieldHitCounter,
-    );
-  }
+    GameMode? gameMode,
+    ValueWrapper<GameMode>? upcomingGameMode,
+  }) =>
+      GameState(
+        healthPoints: healthPoints ?? this.healthPoints,
+        levelTimePassed: levelTimePassed ?? this.levelTimePassed,
+        difficultyTimePassed: difficultyTimePassed ?? this.difficultyTimePassed,
+        playingState: playingState ?? this.playingState,
+        showGameOverUI: showGameOverUI ?? this.showGameOverUI,
+        shieldsAngleRotationSpeed:
+            shieldsAngleRotationSpeed ?? this.shieldsAngleRotationSpeed,
+        restartGame: restartGame ?? this.restartGame,
+        onNewHighScore:
+            onNewHighScore != null ? onNewHighScore.value : this.onNewHighScore,
+        firstHealthReceived: firstHealthReceived ?? this.firstHealthReceived,
+        shieldHitCounter: shieldHitCounter ?? this.shieldHitCounter,
+        gameMode: gameMode ?? this.gameMode,
+        upcomingGameMode: upcomingGameMode != null
+            ? upcomingGameMode.value
+            : this.upcomingGameMode,
+      );
 
   @override
   List<Object?> get props => [
         healthPoints,
-        timePassed,
+        levelTimePassed,
+        difficultyTimePassed,
         playingState,
         showGameOverUI,
         shieldsAngleRotationSpeed,
@@ -108,5 +109,7 @@ class GameState extends Equatable {
         onNewHighScore,
         firstHealthReceived,
         shieldHitCounter,
+        gameMode,
+        upcomingGameMode,
       ];
 }

@@ -312,7 +312,12 @@ class Shield extends PositionComponent
           if ((orb.type.isFire && type.isFire) ||
               (orb.type.isIce && type.isIce)) {
             bloc.onShieldHit();
-            _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
+            if (orb.overrideCollisionSoundNumber != null) {
+              print('overrideCollisionSoundNumber: ${orb.overrideCollisionSoundNumber}');
+              _audioHelper.playShieldSound(orb.overrideCollisionSoundNumber!);
+            } else {
+              _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
+            }
             final orbPos = other.absolutePosition;
             final diff = orbPos - absolutePosition;
             final contactAngle = atan2(diff.y, diff.x);
