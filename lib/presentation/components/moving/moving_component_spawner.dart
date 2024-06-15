@@ -178,7 +178,7 @@ class MovingComponentSpawner extends Component
     parent.add(spawner);
     aliveMultiOrbSpawners.add(spawner);
 
-    if (Random().nextBool()) {
+    if (Random().nextDouble() <= 2 / 3) {
       final oppositePosition = position.clone()..negate();
       final oppositeOrbType = switch (orbType) {
         OrbType.fire => OrbType.ice,

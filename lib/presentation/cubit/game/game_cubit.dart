@@ -81,9 +81,11 @@ class GameCubit extends Cubit<GameState> {
     if (Random().nextDouble() > GameConstants.multiShieldGameModeChance) {
       return;
     }
+    // 2 to 5
+    final count = Random().nextInt(4) + 2;
     emit(state.copyWith(
-      upcomingGameMode: const ValueWrapper(
-        GameModeMultiSpawn(spawnerSpawnCount: 3),
+      upcomingGameMode: ValueWrapper(
+        GameModeMultiSpawn(spawnerSpawnCount: count),
       ),
     ));
   }
