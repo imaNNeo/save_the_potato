@@ -7,6 +7,7 @@ class FirebaseAnalyticsHelper extends AnalyticsHelper {
     required String name,
     Map<String, dynamic>? parameters,
   }) {
+    return;
     if (kDebugMode) {
       return;
     }

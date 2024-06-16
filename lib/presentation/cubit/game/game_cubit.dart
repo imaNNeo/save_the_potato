@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
@@ -78,11 +79,14 @@ class GameCubit extends Cubit<GameState> {
     }
 
     // If there is a chance
-    if (Random().nextDouble() > GameConstants.multiShieldGameModeChance) {
+    final chance = GameConstants.multiShieldGameModeChanceRange.lerpValue(
+      state.difficulty,
+    );
+    if (Random().nextDouble() > chance) {
       return;
     }
-    // 2 to 5
-    final count = Random().nextInt(4) + 2;
+    // 2 to 4
+    final count = Random().nextInt(3) + 2;
     emit(state.copyWith(
       upcomingGameMode: ValueWrapper(
         GameModeMultiSpawn(spawnerSpawnCount: count),

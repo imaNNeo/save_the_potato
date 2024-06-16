@@ -30,6 +30,7 @@ class AuthCubit extends Cubit<AuthState> {
   late StreamSubscription _userStreamSubscription;
 
   void initialize() async {
+    return;
     try {
       final user = await _authRepository.getCurrentUser();
       FirebaseCrashlytics.instance.setUserIdentifier(user.uid);

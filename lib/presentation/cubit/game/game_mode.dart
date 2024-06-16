@@ -21,8 +21,8 @@ class GameModeSingleSpawn extends GameMode {
 
   /// It takes [difficultyInitialToPeakDuration] seconds to
   /// go from [orbsSpawnEveryInitial] to [orbsSpawnEveryPeak]
-  static const orbsSpawnEveryInitial = 2.2;
-  static const orbsSpawnEveryPeak = 0.65;
+  static const orbsSpawnEveryInitial = 2;
+  static const orbsSpawnEveryPeak = 1.2;
 
   double getSpawnOrbsEvery(double difficulty) => lerpDouble(
         orbsSpawnEveryInitial,
@@ -32,7 +32,7 @@ class GameModeSingleSpawn extends GameMode {
 
   /// It takes [difficultyInitialToPeakDuration] seconds to
   /// go from [orbsMoveSpeedInitial] to [orbsMoveSpeedPeak]
-  static const orbsMoveSpeedInitial = 135.0;
+  static const orbsMoveSpeedInitial = 120.0;
   static const orbsMoveSpeedPeak = 215.0;
 
   double getSpawnOrbsMoveSpeed(double difficulty) => lerpDouble(

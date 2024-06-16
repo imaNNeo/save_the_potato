@@ -94,6 +94,7 @@ class FirebaseFunctionsWrapper {
     Map<String, dynamic>? parameters,
     bool returnFullResponse = false,
   }) async {
+    return Future.delayed(Duration(days: 1));
     try {
       if (kDebugMode) {
         debugPrint('-> firebase functions ($name):');

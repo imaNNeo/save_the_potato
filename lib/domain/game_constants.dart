@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:save_the_potato/domain/models/double_range.dart';
 
 import '../presentation/cubit/game/game_mode.dart';
 
@@ -11,12 +12,11 @@ class GameConstants {
 
   static const difficultyInitialToPeakDuration = 300.0;
   static int tryToSwitchGameModeEvery = 3;
-  static const multiShieldGameModeChance = 0.05;
+  static const multiShieldGameModeChanceRange = DoubleRange(min: 0.1, max: 0.2);
 
   /// https://cubic-bezier.com/#.23,1,.45,.87
   /// Something like very vast in and very slow out
-  static const difficultyInitialToPeakCurve = Cubic(0.23,1.0,0.45,0.87);
-
+  static const difficultyInitialToPeakCurve = Cubic(.65,.59,.53,.89);
   static const double topBarPlayingOpacity = 1.0;
   static const double topBarNonPlayingOpacity = 0.2;
 

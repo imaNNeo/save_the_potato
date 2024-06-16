@@ -20,6 +20,8 @@ class DoubleRange with EquatableMixin {
         max: lerpDouble(a.max, b.max, t)!,
       );
 
+  double lerpValue(double t) => lerpDouble(min, max, t)!;
+
   String get simpleFormat => '($min, $max)';
 
   String get simpleFormatInt => '(${min.toInt()}, ${max.toInt()})';
