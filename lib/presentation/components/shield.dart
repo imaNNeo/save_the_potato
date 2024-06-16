@@ -313,7 +313,6 @@ class Shield extends PositionComponent
               (orb.type.isIce && type.isIce)) {
             bloc.onShieldHit();
             if (orb.overrideCollisionSoundNumber != null) {
-              print('overrideCollisionSoundNumber: ${orb.overrideCollisionSoundNumber}');
               _audioHelper.playShieldSound(orb.overrideCollisionSoundNumber!);
             } else {
               _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
