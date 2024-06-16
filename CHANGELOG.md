@@ -1,3 +1,8 @@
+## 1.4.0
+* Add share functionality in the game-over page
+* Add smooth tap and hold animation in the first page
+* Add multi-spawn game mode (a series of orbs spawn at the same location)
+
 ## 1.3.1
 * Pause background music when game goes into the background
 
