@@ -85,7 +85,6 @@ class RotationControls extends StatelessWidget {
 
 class _GuideWidget extends StatelessWidget {
   const _GuideWidget({
-    super.key,
     required this.isLeft,
   });
 
@@ -93,7 +92,7 @@ class _GuideWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const tapAndHoldText = 'TAP & HOLD';
+    const tapAndHoldText = 'HOLD';
     const iconSize = 88.0;
     const startOpacity = 0.3;
     const endOpacity = 1.0;
@@ -105,7 +104,14 @@ class _GuideWidget extends StatelessWidget {
           size: iconSize,
           color: Colors.white70,
         ),
-        const Text(tapAndHoldText),
+        const Text(
+          tapAndHoldText,
+          style: TextStyle(
+            fontSize: 22.0,
+            height: -0.2,
+            fontFamily: 'Roboto',
+          ),
+        ),
       ],
     )
         .animate(

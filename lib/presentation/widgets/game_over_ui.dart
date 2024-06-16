@@ -97,7 +97,7 @@ class _GameOverUIState extends State<GameOverUI>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       FormattedGameTime(
-                        time: state.timePassed,
+                        time: state.levelTimePassed,
                         textStyle: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 24,

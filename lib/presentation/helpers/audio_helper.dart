@@ -132,6 +132,9 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
+    if (seed < 0) {
+      return;
+    }
     final shield = switch (seed % 6) {
       0 => _shield1,
       1 => _shield2,

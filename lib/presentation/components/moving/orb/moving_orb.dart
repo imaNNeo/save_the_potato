@@ -6,6 +6,7 @@ sealed class MovingOrb extends MovingComponent {
     required super.size,
     required super.target,
     required super.position,
+    this.overrideCollisionSoundNumber,
   });
 
   OrbType get type;
@@ -15,6 +16,8 @@ sealed class MovingOrb extends MovingComponent {
   List<Sprite> get smallSparkleSprites;
 
   List<Color> get colors => type.colors;
+
+  final int? overrideCollisionSoundNumber;
 
   @override
   void render(Canvas canvas) {
@@ -83,6 +86,7 @@ class FireOrb extends MovingOrb {
     required super.size,
     required super.target,
     required super.position,
+    super.overrideCollisionSoundNumber,
   });
 
   late List<Sprite> _smallSparkleSprites;
@@ -108,6 +112,7 @@ class IceOrb extends MovingOrb {
     required super.size,
     required super.target,
     required super.position,
+    super.overrideCollisionSoundNumber,
   });
 
   late List<Sprite> _smallSparkleSprites;

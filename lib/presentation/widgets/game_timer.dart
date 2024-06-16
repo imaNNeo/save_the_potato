@@ -9,7 +9,7 @@ class GameTimer extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<GameCubit, GameState>(
       builder: (context, state) {
-        return FormattedGameTime(time: state.timePassed);
+        return FormattedGameTime(time: state.levelTimePassed);
       },
     );
   }

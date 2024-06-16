@@ -34,7 +34,7 @@ class GamePausedUI extends StatelessWidget {
               ),
               Text(
                 AppUtils.getHighScoreRepresentation(
-                    (gameCubit.state.timePassed * 1000).toInt()),
+                    (gameCubit.state.levelTimePassed * 1000).toInt()),
                 style: const TextStyle(
                   fontSize: 38,
                   color: Colors.white,
