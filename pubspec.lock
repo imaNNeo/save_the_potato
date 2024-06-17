@@ -325,10 +325,10 @@ packages:
     dependency: "direct main"
     description:
       name: flame_rive
-      sha256: "7e047bb631cb96e3fb23de5c6fe5ae4a1b7df1fbcae7135eaf82d686ca1f07b8"
+      sha256: "8cc8ab9a11371ef111390f47df8b92576aa0d0cce5eda46c9dcd2094f0eebacd"
       url: "https://pub.dev"
     source: hosted
-    version: "1.10.0"
+    version: "1.10.2"
   flutter:
     dependency: "direct main"
     description: flutter
