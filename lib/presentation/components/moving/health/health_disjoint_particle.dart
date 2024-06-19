@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/particles.dart';
 import 'package:flutter/animation.dart';
@@ -82,6 +83,6 @@ class HealthDisjointParticleComponent extends Component
         },
       ),
     ));
-    removeFromParent();
+    add(RemoveEffect());
   }
 }
