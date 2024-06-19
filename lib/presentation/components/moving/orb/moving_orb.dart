@@ -3,15 +3,13 @@ part of '../moving_components.dart';
 sealed class MovingOrb extends MovingComponent {
   MovingOrb({
     required super.speed,
-    required super.size,
     required super.target,
     required super.position,
+    super.size = 22,
     this.overrideCollisionSoundNumber,
   });
 
   OrbType get type;
-
-  late Paint _headPaint;
 
   List<Sprite> get smallSparkleSprites;
 
@@ -28,9 +26,9 @@ sealed class MovingOrb extends MovingComponent {
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    _headPaint = Paint();
     add(CircleHitbox(collisionType: CollisionType.passive));
     add(MovingOrbTailParticles());
+    add(MovingOrbHead());
   }
 
   void _drawHead(Canvas canvas) {
@@ -39,32 +37,9 @@ sealed class MovingOrb extends MovingComponent {
     canvas.drawCircle(
       offset,
       radius,
-      _headPaint
-        ..color = colors.last.withOpacity(0.25)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40),
-    );
-
-    canvas.drawCircle(
-      offset,
-      radius,
-      _headPaint
-        ..color = colors.last.withOpacity(1)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30),
-    );
-
-    canvas.drawCircle(
-      offset,
-      radius,
-      _headPaint
+      Paint()
         ..color = colors.last.withOpacity(1)
         ..maskFilter = null,
-    );
-    canvas.drawCircle(
-      offset,
-      radius * 0.75,
-      _headPaint
-        ..color = Colors.white.withOpacity(0.8)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
     );
   }
 
@@ -83,7 +58,6 @@ sealed class MovingOrb extends MovingComponent {
 class FireOrb extends MovingOrb {
   FireOrb({
     required super.speed,
-    required super.size,
     required super.target,
     required super.position,
     super.overrideCollisionSoundNumber,
@@ -109,7 +83,6 @@ class FireOrb extends MovingOrb {
 class IceOrb extends MovingOrb {
   IceOrb({
     required super.speed,
-    required super.size,
     required super.target,
     required super.position,
     super.overrideCollisionSoundNumber,

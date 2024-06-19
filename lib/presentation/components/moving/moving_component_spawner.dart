@@ -206,13 +206,11 @@ class MovingComponentSpawner extends Component
       return;
     }
     final moveSpeed = gameMode.getSpawnOrbsMoveSpeed(bloc.state.difficulty);
-    const size = 22.0;
     late MovingOrb orb;
     switch (OrbType.values.random()) {
       case OrbType.fire:
         orb = FireOrb(
           speed: moveSpeed,
-          size: size,
           target: player,
           position: _getRandomSpawnPositionAroundMap(),
         );
@@ -220,7 +218,6 @@ class MovingComponentSpawner extends Component
       case OrbType.ice:
         orb = IceOrb(
           speed: moveSpeed,
-          size: size,
           target: player,
           position: _getRandomSpawnPositionAroundMap(),
         );

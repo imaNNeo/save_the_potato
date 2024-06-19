@@ -68,7 +68,6 @@ class MultiOrbSpawner extends PositionComponent
       case OrbType.fire:
         orb = FireOrb(
           speed: spawnOrbsMoveSpeed,
-          size: 22.0,
           target: target,
           position: position,
           overrideCollisionSoundNumber: isOpposite ? -1 : spawnedCount % 6,
@@ -76,7 +75,6 @@ class MultiOrbSpawner extends PositionComponent
       case OrbType.ice:
         orb = IceOrb(
           speed: spawnOrbsMoveSpeed,
-          size: 22.0,
           target: target,
           position: position,
           overrideCollisionSoundNumber: isOpposite ? -1 : spawnedCount % 6,
