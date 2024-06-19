@@ -1,3 +1,6 @@
+## 1.4.1
+* Fix performance issue in the iOS by removing all blur effects in the Paint objects
+
 ## 1.4.0
 * Add share functionality in the game-over page
 * Add smooth tap and hold animation in the first page
