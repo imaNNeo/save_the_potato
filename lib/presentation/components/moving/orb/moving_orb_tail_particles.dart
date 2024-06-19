@@ -17,8 +17,7 @@ class MovingOrbTailParticles extends Component with HasGameRef<MyGame> {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    particlePaint = Paint()
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+    particlePaint = Paint();
   }
 
   void _generateParticle() {

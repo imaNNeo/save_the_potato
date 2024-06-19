@@ -74,8 +74,7 @@ class HealthDisjointParticleComponent extends Component
                               : colorTween.transform(particle.progress))!
                           .withOpacity(opacity),
                       BlendMode.srcIn,
-                    )
-                    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1),
+                    ),
                 );
               },
             ),

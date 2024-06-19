@@ -80,11 +80,9 @@ class Shield extends PositionComponent
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    flamePaint = Paint()
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+    flamePaint = Paint();
 
-    sparklePaint = Paint()
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+    sparklePaint = Paint();
     _addHitbox();
 
     _flameSprites = [];
@@ -291,8 +289,7 @@ class Shield extends PositionComponent
       false,
       shieldLinePaint
         ..color = shieldLineColor
-        ..strokeWidth = shieldWidth
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+        ..strokeWidth = shieldWidth,
     );
   }
 
