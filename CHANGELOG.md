@@ -1,3 +1,6 @@
+## newVersion
+* Fix crash when removing HealthDisjointParticle (now we add RemoveEffect to fix that)
+
 ## 1.4.1
 * Fix performance issue in the iOS by removing all blur effects in the Paint objects
 
