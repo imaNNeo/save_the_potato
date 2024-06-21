@@ -8,6 +8,7 @@ import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/presentation/components/guide_title.dart';
 import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
+import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/service_locator.dart';
 
@@ -34,23 +35,46 @@ class Potato extends PositionComponent
 
   double get radius => size.x / 2;
 
+  /*
+  * StateMachine guide:
+  * Entry -> Idle
+  * Idle -> fire-hit
+  * Idle -> ice-hit
+  * idle -> heart-hit
+  * Idle -> Die -> Respawn
+  * Idle -> Scared
+  * Idle -> Amazed
+  * Scared -> ToIdle
+  * Scared -> Die
+  * */
   late StateMachineController _controller;
   late SMITrigger fireHitTrigger;
   late SMITrigger iceHitTrigger;
   late SMITrigger heartHitTrigger;
   late SMITrigger dieTrigger;
+  late SMITrigger scaredTrigger;
+  late SMITrigger toIdleTrigger;
+  late SMITrigger amazedTrigger;
+
   final _audioHelper = getIt.get<AudioHelper>();
-
-  @override
-  bool listenWhen(GameState previousState, GameState newState) =>
-      previousState.playingState != newState.playingState;
-
+  GameState? _lastState;
 
   @override
   void onNewState(GameState state) {
-    if (state.playingState is PlayingStateGameOver) {
+    if (_lastState?.playingState != state.playingState &&
+        state.playingState is PlayingStateGameOver) {
       dieTrigger.fire();
     }
+    if (_lastState?.gameMode != state.gameMode) {
+      // GameMode is changed
+      switch (state.gameMode) {
+        case GameModeSingleSpawn():
+          toIdleTrigger.fire();
+        case GameModeMultiSpawn():
+          scaredTrigger.fire();
+      }
+    }
+    _lastState = state;
   }
 
   @override
@@ -75,6 +99,9 @@ class Potato extends PositionComponent
     iceHitTrigger = _controller.findInput<bool>('ice-hit') as SMITrigger;
     heartHitTrigger = _controller.findInput<bool>('heart-hit') as SMITrigger;
     dieTrigger = _controller.findInput<bool>('Die') as SMITrigger;
+    scaredTrigger = _controller.findInput<bool>('Scared') as SMITrigger;
+    toIdleTrigger = _controller.findInput<bool>('ToIdle') as SMITrigger;
+    amazedTrigger = _controller.findInput<bool>('Amazed') as SMITrigger;
     potatoArtBoard.addController(_controller);
     add(RiveComponent(
       artboard: potatoArtBoard,
@@ -88,6 +115,10 @@ class Potato extends PositionComponent
     if (game.playingState.isGuide) {
       add(GuideTitle());
     }
+
+    mounted.then((_) {
+      _lastState = bloc.state;
+    });
   }
 
   @override
