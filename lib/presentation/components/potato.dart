@@ -69,7 +69,12 @@ class Potato extends PositionComponent
       // GameMode is changed
       switch (state.gameMode) {
         case GameModeSingleSpawn():
-          toIdleTrigger.fire();
+          bool greatWork = Random().nextBool();
+          if (greatWork) {
+            amazedTrigger.fire();
+          } else {
+            toIdleTrigger.fire();
+          }
         case GameModeMultiSpawn():
           scaredTrigger.fire();
       }
