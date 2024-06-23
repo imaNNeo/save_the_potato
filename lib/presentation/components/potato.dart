@@ -65,9 +65,10 @@ class Potato extends PositionComponent
         state.playingState is PlayingStateGameOver) {
       dieTrigger.fire();
     }
-    if (_lastState?.gameMode != state.gameMode) {
+    if (_lastState?.currentGameMode.runtimeType !=
+        state.currentGameMode.runtimeType) {
       // GameMode is changed
-      switch (state.gameMode) {
+      switch (state.currentGameMode) {
         case GameModeSingleSpawn():
           bool greatWork = Random().nextBool();
           if (greatWork) {

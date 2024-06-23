@@ -300,7 +300,7 @@ class Shield extends PositionComponent
     if (other is MovingComponent) {
       switch (other) {
         case MovingHealth():
-          bloc.onShieldHit();
+          bloc.onShieldHit(other);
           _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
           other.disjoint();
         case FireOrb():
@@ -308,7 +308,7 @@ class Shield extends PositionComponent
           final orb = other as MovingOrb;
           if ((orb.type.isFire && type.isFire) ||
               (orb.type.isIce && type.isIce)) {
-            bloc.onShieldHit();
+            bloc.onShieldHit(other);
             if (orb.overrideCollisionSoundNumber != null) {
               _audioHelper.playShieldSound(orb.overrideCollisionSoundNumber!);
             } else {

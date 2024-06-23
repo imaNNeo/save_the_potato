@@ -46,7 +46,7 @@ class MovingComponentSpawner extends Component
     if (!bloc.state.playingState.isPlaying) {
       return;
     }
-    final gameMode = bloc.state.gameMode;
+    final gameMode = bloc.state.currentGameMode;
     aliveSingleMovingOrbs.removeWhere((e) => e.isRemoved);
     aliveMultiOrbSpawners.removeWhere((e) => e.isRemoved);
     switch (gameMode) {
@@ -108,7 +108,7 @@ class MovingComponentSpawner extends Component
   }
 
   bool _shouldSpawnHeart() {
-    if (!bloc.state.gameMode.canSpawnMovingHealth) {
+    if (!bloc.state.currentGameMode.canSpawnMovingHealth) {
       return false;
     }
     final missingHP = GameConstants.maxHealthPoints - bloc.state.healthPoints;
