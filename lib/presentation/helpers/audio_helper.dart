@@ -8,6 +8,9 @@ class AudioHelper {
   bool isPaused = false;
 
   final _audioEnabled = LazyValue<bool>();
+
+  Future<bool> get audioEnabled => _audioEnabled.value;
+
   late final SoLoud _soLoud;
 
   late final AudioSource _bgm;

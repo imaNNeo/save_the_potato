@@ -158,9 +158,15 @@ class GameCubit extends Cubit<GameState> {
       ),
     ));
     _submitScore(previousScore);
-    await _audioHelper.fadeAndStopBackgroundMusic(
-      GameConstants.showRetryAfterGameOverDelay,
-    );
+    if (await _audioHelper.audioEnabled) {
+      await _audioHelper.fadeAndStopBackgroundMusic(
+        GameConstants.showRetryAfterGameOverDelay,
+      );
+    } else {
+      await Future.delayed(
+        GameConstants.showRetryAfterGameOverDelay,
+      );
+    }
     emit(state.copyWith(showGameOverUI: true));
   }
 
