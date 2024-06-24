@@ -6,9 +6,9 @@ import 'package:flame/particles.dart';
 import 'package:flutter/widgets.dart';
 import 'package:save_the_potato/domain/extensions/list_extension.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
-import 'package:save_the_potato/presentation/my_game.dart';
+import 'package:save_the_potato/presentation/potato_game.dart';
 
-class MovingOrbTailParticles extends Component with HasGameRef<MyGame> {
+class MovingOrbTailParticles extends Component with HasGameRef<PotatoGame> {
   late Paint particlePaint;
 
   final double _showEvery = 0.04;

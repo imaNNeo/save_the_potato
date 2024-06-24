@@ -12,13 +12,13 @@ import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/service_locator.dart';
 
-import '../my_game.dart';
+import '../potato_game.dart';
 import 'moving/moving_components.dart';
 import 'moving/orb/orb_type.dart';
 
 class Potato extends PositionComponent
     with
-        HasGameRef<MyGame>,
+        HasGameRef<PotatoGame>,
         CollisionCallbacks,
         FlameBlocListenable<GameCubit, GameState>,
         ParentIsA<MyWorld> {

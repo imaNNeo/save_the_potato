@@ -7,7 +7,7 @@ import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
-import 'package:save_the_potato/presentation/my_game.dart';
+import 'package:save_the_potato/presentation/potato_game.dart';
 
 import 'moving_components.dart';
 import 'multi_orb_spawner.dart';
@@ -40,7 +40,7 @@ class MovingComponentSpawner extends Component
 
   Potato get player => parent.player;
 
-  MyGame get game => parent.game;
+  PotatoGame get game => parent.game;
 
   late GameState _previousGameState;
 

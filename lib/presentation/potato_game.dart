@@ -20,9 +20,9 @@ import 'components/moving/moving_component_spawner.dart';
 import 'components/potato.dart';
 import 'cubit/game/game_cubit.dart';
 
-class MyGame extends FlameGame<MyWorld>
+class PotatoGame extends FlameGame<MyWorld>
     with HasCollisionDetection, KeyboardEvents {
-  MyGame(
+  PotatoGame(
     this._gameCubit,
     this._settingsCubit,
   ) : super(
@@ -93,7 +93,7 @@ class MyGame extends FlameGame<MyWorld>
 }
 
 class MyWorld extends World
-    with HasGameRef<MyGame>, FlameBlocListenable<GameCubit, GameState> {
+    with HasGameRef<PotatoGame>, FlameBlocListenable<GameCubit, GameState> {
   late Potato player;
 
   late StreamSubscription _motivationWordSubscription;

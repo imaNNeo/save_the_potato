@@ -8,7 +8,7 @@ import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
-import 'package:save_the_potato/presentation/my_game.dart';
+import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
@@ -31,7 +31,7 @@ class _MainPageState extends State<MainPage>
     with SingleTickerProviderStateMixin, RouteAware, WidgetsBindingObserver {
   late Key pageRootKey;
 
-  late MyGame _game;
+  late PotatoGame _game;
 
   late GameCubit _gameCubit;
   late SettingsCubit _settingsCubit;
@@ -51,13 +51,13 @@ class _MainPageState extends State<MainPage>
     _gameCubit = context.read<GameCubit>();
     _settingsCubit = context.read<SettingsCubit>();
     _gameCubit.startToShowGuide();
-    _game = MyGame(_gameCubit, _settingsCubit);
+    _game = PotatoGame(_gameCubit, _settingsCubit);
     _previousState = _gameCubit.state.playingState;
     _streamSubscription = _gameCubit.stream.listen((state) {
       if ((_previousState.isNone || _previousState.isGameOver) &&
           (state.playingState.isPlaying || state.playingState.isGuide)) {
         setState(() {
-          _game = MyGame(_gameCubit, _settingsCubit);
+          _game = PotatoGame(_gameCubit, _settingsCubit);
         });
       }
       _previousState = state.playingState;
@@ -89,7 +89,7 @@ class _MainPageState extends State<MainPage>
   void _restartGameWidgets() {
     setState(() {
       pageRootKey = UniqueKey();
-      _game = MyGame(_gameCubit, _settingsCubit);
+      _game = PotatoGame(_gameCubit, _settingsCubit);
     });
   }
 

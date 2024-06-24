@@ -8,10 +8,10 @@ import 'package:flame/particles.dart';
 import 'package:flutter/animation.dart';
 import 'package:save_the_potato/domain/extensions/list_extension.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
-import 'package:save_the_potato/presentation/my_game.dart';
+import 'package:save_the_potato/presentation/potato_game.dart';
 
 class HealthDisjointParticleComponent extends Component
-    with HasGameRef<MyGame>, ParentIsA<MovingHealth> {
+    with HasGameRef<PotatoGame>, ParentIsA<MovingHealth> {
   HealthDisjointParticleComponent({
     super.key,
     required this.colors,
