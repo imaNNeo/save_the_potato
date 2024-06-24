@@ -15,12 +15,7 @@ class AudioHelper {
   late final SoLoud _soLoud;
 
   late final AudioSource _bgm;
-  late final AudioSource _shield1,
-      _shield2,
-      _shield3,
-      _shield4,
-      _shield5,
-      _shield6;
+  late final List<AudioSource> shieldNotes;
   late final AudioSource _heartHit, _orbHit1, _orbHit2;
   late final AudioSource _victory, _gameOver;
 
@@ -35,12 +30,10 @@ class AudioHelper {
     await _soLoud.init();
     const baseAssets = 'assets/audio';
     _bgm = await _soLoud.loadAsset('$baseAssets/bg_120_140c_bpm.ogg');
-    _shield1 = await _soLoud.loadAsset('$baseAssets/Shield1.wav');
-    _shield2 = await _soLoud.loadAsset('$baseAssets/Shield2.wav');
-    _shield3 = await _soLoud.loadAsset('$baseAssets/Shield3.wav');
-    _shield4 = await _soLoud.loadAsset('$baseAssets/Shield4.wav');
-    _shield5 = await _soLoud.loadAsset('$baseAssets/Shield5.wav');
-    _shield6 = await _soLoud.loadAsset('$baseAssets/Shield6.wav');
+    shieldNotes = [];
+    for (var i = 1; i <= 6; i++) {
+      shieldNotes.add(await _soLoud.loadAsset('$baseAssets/Shield$i.wav'));
+    }
 
     _heartHit = await _soLoud.loadAsset('$baseAssets/heart.wav');
     _orbHit1 = await _soLoud.loadAsset('$baseAssets/hit1.wav');
@@ -140,15 +133,7 @@ class AudioHelper {
     if (seed < 0) {
       return;
     }
-    final shield = switch (seed % 6) {
-      0 => _shield1,
-      1 => _shield2,
-      2 => _shield3,
-      3 => _shield4,
-      4 => _shield5,
-      5 => _shield6,
-      _ => throw Exception('Invalid'),
-    };
+    final shield = shieldNotes[seed % shieldNotes.length];
     _soLoud.play(
       shield,
       volume: GameConstants.soundEffectsVolume,
