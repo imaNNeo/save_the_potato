@@ -70,15 +70,16 @@ class Potato extends PositionComponent
       // GameMode is changed
       switch (state.currentGameMode) {
         case GameModeSingleSpawn():
-          bool greatWork = Random().nextBool();
-          if (greatWork) {
-            amazedTrigger.fire();
-          } else {
+          final previousMode = state.gameModeHistory.last as GameModeMultiSpawn;
+          if (!previousMode.shouldPlayMotivationWord()) {
             toIdleTrigger.fire();
           }
         case GameModeMultiSpawn():
           scaredTrigger.fire();
       }
+    }
+    if (state.playMotivationWord != null) {
+      amazedTrigger.fire();
     }
     _lastState = state;
   }

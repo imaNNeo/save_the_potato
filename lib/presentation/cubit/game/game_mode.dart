@@ -10,6 +10,7 @@ sealed class GameMode with EquatableMixin {
     required this.defendedOrbsCount,
     required this.collidedOrbsCount,
     required this.defendOrbStreakCount,
+    required this.initialDelay,
   });
 
   final bool increasesDifficulty;
@@ -18,6 +19,7 @@ sealed class GameMode with EquatableMixin {
   final int defendedOrbsCount;
   final int collidedOrbsCount;
   final int defendOrbStreakCount;
+  final double initialDelay;
 
   GameMode updatePassedTime(double dt) {
     final gameMode = this;
@@ -85,6 +87,18 @@ sealed class GameMode with EquatableMixin {
     };
   }
 
+  GameMode updateInitialDelay(double delay) {
+    final gameMode = this;
+    return switch (gameMode) {
+      GameModeSingleSpawn() => gameMode.copyWith(
+          initialDelay: delay,
+        ),
+      GameModeMultiSpawn() => gameMode.copyWith(
+          initialDelay: delay,
+        ),
+    };
+  }
+
   @override
   bool? get stringify => true;
 }
@@ -95,6 +109,7 @@ class GameModeSingleSpawn extends GameMode {
     super.defendedOrbsCount = 0,
     super.collidedOrbsCount = 0,
     super.defendOrbStreakCount = 0,
+    super.initialDelay = 0,
   }) : super(
           increasesDifficulty: true,
           canSpawnMovingHealth: true,
@@ -127,12 +142,14 @@ class GameModeSingleSpawn extends GameMode {
     int? defendedOrbsCount,
     int? collidedOrbsCount,
     int? defendOrbStreakCount,
+    double? initialDelay,
   }) {
     return GameModeSingleSpawn(
       passedTime: passedTime ?? this.passedTime,
       defendedOrbsCount: defendedOrbsCount ?? this.defendedOrbsCount,
       collidedOrbsCount: collidedOrbsCount ?? this.collidedOrbsCount,
       defendOrbStreakCount: defendOrbStreakCount ?? this.defendOrbStreakCount,
+      initialDelay: initialDelay ?? this.initialDelay,
     );
   }
 
@@ -144,6 +161,7 @@ class GameModeSingleSpawn extends GameMode {
         increasesDifficulty,
         canSpawnMovingHealth,
         defendOrbStreakCount,
+        initialDelay,
       ];
 }
 
@@ -154,10 +172,13 @@ class GameModeMultiSpawn extends GameMode {
     super.defendedOrbsCount = 0,
     super.collidedOrbsCount = 0,
     super.defendOrbStreakCount = 0,
+    super.initialDelay = 0,
   }) : super(
           increasesDifficulty: false,
           canSpawnMovingHealth: false,
         );
+
+  bool shouldPlayMotivationWord() => collidedOrbsCount == 0;
 
   final int spawnerSpawnCount;
 
@@ -200,6 +221,7 @@ class GameModeMultiSpawn extends GameMode {
     int? defendedOrbsCount,
     int? collidedOrbsCount,
     int? defendOrbStreakCount,
+    double? initialDelay,
   }) {
     return GameModeMultiSpawn(
       spawnerSpawnCount: spawnerSpawnCount ?? this.spawnerSpawnCount,
@@ -207,6 +229,7 @@ class GameModeMultiSpawn extends GameMode {
       defendedOrbsCount: defendedOrbsCount ?? this.defendedOrbsCount,
       collidedOrbsCount: collidedOrbsCount ?? this.collidedOrbsCount,
       defendOrbStreakCount: defendOrbStreakCount ?? this.defendOrbStreakCount,
+      initialDelay: initialDelay ?? this.initialDelay,
     );
   }
 
@@ -219,5 +242,6 @@ class GameModeMultiSpawn extends GameMode {
         increasesDifficulty,
         canSpawnMovingHealth,
         defendOrbStreakCount,
+        initialDelay,
       ];
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
@@ -14,6 +15,7 @@ import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart'
 import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
 
+import 'components/motivation_component.dart';
 import 'components/moving/moving_component_spawner.dart';
 import 'components/potato.dart';
 import 'cubit/game/game_cubit.dart';
@@ -94,10 +96,34 @@ class MyWorld extends World
     with HasGameRef<MyGame>, FlameBlocListenable<GameCubit, GameState> {
   late Potato player;
 
+  late StreamSubscription _motivationWordSubscription;
+
   @override
   Future<void> onLoad() async {
     await add(player = Potato());
     await add(MovingComponentSpawner());
+    mounted.then((_) {
+      _motivationWordSubscription = bloc.stream
+          .map((state) => state.playMotivationWord)
+          .distinct()
+          .where((word) => word != null)
+          .listen(
+        (playMotivationWord) {
+          addMotivationWord(playMotivationWord!);
+        },
+      );
+    });
+  }
+
+  void addMotivationWord(MotivationWordType type) {
+    add(
+      MotivationComponent(
+        position: player.positionOfAnchor(Anchor.center),
+        motivationWordType: type,
+        inDuration: lerpDouble(1.0, 0.75, bloc.state.difficulty)!,
+        outDuration: lerpDouble(4.0, 2.0, bloc.state.difficulty)!,
+      ),
+    );
   }
 
   @override
@@ -117,5 +143,11 @@ class MyWorld extends World
         zoomTo: 1.0,
       ));
     }
+  }
+
+  @override
+  void onRemove() {
+    _motivationWordSubscription.cancel();
+    super.onRemove();
   }
 }

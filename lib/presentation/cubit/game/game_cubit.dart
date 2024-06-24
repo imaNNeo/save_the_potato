@@ -1,6 +1,8 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
+import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,6 +14,7 @@ import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
+import 'package:save_the_potato/presentation/components/motivation_component.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
@@ -280,6 +283,22 @@ class GameCubit extends Cubit<GameState> {
     return KeyEventResult.ignored;
   }
 
+  void _playMotivationWord() {
+    if (state.motivationWordsPoolToPlay.isEmpty) {
+      emit(state.copyWith(
+        motivationWordsPoolToPlay: MotivationWordType.values,
+      ));
+    }
+    final randomMotivation = state.motivationWordsPoolToPlay.random();
+    emit(state.copyWith(
+      playMotivationWord: ValueWrapper(randomMotivation),
+      motivationWordsPoolToPlay: state.motivationWordsPoolToPlay
+          .where((element) => element != randomMotivation)
+          .toList(),
+    ));
+    emit(state.copyWith(playMotivationWord: ValueWrapper.nullValue()));
+  }
+
   void _updateShieldsRotationSpeed(double speed) {
     emit(state.copyWith(
       shieldsAngleRotationSpeed: speed.clamp(
@@ -345,17 +364,30 @@ class GameCubit extends Cubit<GameState> {
     ));
   }
 
-  void switchToUpcomingMode() {
+  void switchToUpcomingMode() async {
+    final currentGameMode = state.currentGameMode;
+    bool showMotivation = false;
+    if (currentGameMode is GameModeMultiSpawn) {
+      if (currentGameMode.shouldPlayMotivationWord()) {
+        _playMotivationWord();
+        showMotivation = true;
+      }
+    }
+
+    final upcoming = state.upcomingGameMode!;
+    final upcomingDelay =
+        showMotivation ? lerpDouble(0.80, 0.55, state.difficulty)! : 0.0;
+
     emit(state.copyWith(
       gameModeHistory: [
         ...state.gameModeHistory,
         state.currentGameMode,
       ],
-      currentGameMode: state.upcomingGameMode,
+      currentGameMode: upcoming.updateInitialDelay(
+        upcoming.initialDelay + upcomingDelay,
+      ),
       upcomingGameMode: const ValueWrapper(null),
     ));
-    print('Switched to upcoming mode');
-    print('History: ${state.gameModeHistory}');
   }
 
   @override

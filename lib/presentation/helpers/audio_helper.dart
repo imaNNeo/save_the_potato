@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/lazy_value.dart';
+import 'package:save_the_potato/presentation/components/motivation_component.dart';
 
 class AudioHelper {
   bool isPaused = false;
@@ -22,8 +23,6 @@ class AudioHelper {
       _shield6;
   late final AudioSource _heartHit, _orbHit1, _orbHit2;
   late final AudioSource _victory, _gameOver;
-
-  late final List<AudioSource> notes;
 
   SoundHandle? _bgmHandle;
 
@@ -50,7 +49,10 @@ class AudioHelper {
     _victory = await _soLoud.loadAsset('$baseAssets/victory.mp3');
     _gameOver = await _soLoud.loadAsset('$baseAssets/game_over.wav');
 
-    notes = await SoLoudTools.createNotes();
+    // Motivation words
+    for (var word in MotivationWordType.values) {
+      await _soLoud.loadAsset('$baseAssets/motivation/${word.assetName}');
+    }
   }
 
   void playBackgroundMusic() async {
@@ -169,6 +171,19 @@ class AudioHelper {
     }
     _soLoud.play(
       _gameOver,
+      volume: GameConstants.soundEffectsVolume,
+    );
+  }
+
+  void playMotivationWord(MotivationWordType word) async {
+    if (!(await _audioEnabled.value)) {
+      return;
+    }
+    final audio = await _soLoud.loadAsset(
+      'assets/audio/motivation/${word.assetName}',
+    );
+    _soLoud.play(
+      audio,
       volume: GameConstants.soundEffectsVolume,
     );
   }
