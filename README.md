@@ -19,6 +19,7 @@ This game is developed during the [Flame Game Jam 3](https://itch.io/jam/flame-j
 * Play it live [here](https://savethepotato.app2pack.dev/)
 * [Demo video](https://www.youtube.com/watch?v=IuXIr0qrsvM)
 * This is [our submission at itch](https://itch.io/jam/flame-jam-3/rate/2414926)
+* Icon set is from [FlatIcon](https://www.flaticon.com/icon-fonts-most-downloaded?weight=bold&type=uicon)
 
 
 # Development
