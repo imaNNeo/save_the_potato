@@ -1,6 +1,8 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
+import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,6 +14,8 @@ import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
+import 'package:save_the_potato/presentation/components/motivation_component.dart';
+import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 
@@ -65,7 +69,7 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void _tryToSwitchToMultiSpawnGameMode() {
-    if (state.gameMode is GameModeMultiSpawn) {
+    if (state.currentGameMode is GameModeMultiSpawn) {
       return;
     }
     if (state.upcomingGameMode != null) {
@@ -97,8 +101,9 @@ class GameCubit extends Cubit<GameState> {
     // We calculate the [state.difficulty] based on the time passed
     emit(state.copyWith(
       levelTimePassed: state.levelTimePassed + dt,
+      currentGameMode: state.currentGameMode.updatePassedTime(dt),
     ));
-    if (state.gameMode.increasesDifficulty) {
+    if (state.currentGameMode.increasesDifficulty) {
       emit(state.copyWith(
         difficultyTimePassed: state.difficultyTimePassed + dt,
       ));
@@ -106,8 +111,13 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void potatoOrbHit() {
+    var updatedGameMode = state.currentGameMode.increaseCollidedOrbsCount(
+      count: 1,
+    );
+    updatedGameMode = updatedGameMode.resetDefendOrbStreakCount();
     emit(state.copyWith(
       healthPoints: max(0, state.healthPoints - 1),
+      currentGameMode: updatedGameMode,
     ));
     if (state.healthPoints <= 0) {
       _gameOver();
@@ -158,9 +168,15 @@ class GameCubit extends Cubit<GameState> {
       ),
     ));
     _submitScore(previousScore);
-    await _audioHelper.fadeAndStopBackgroundMusic(
-      GameConstants.showRetryAfterGameOverDelay,
-    );
+    if (await _audioHelper.audioEnabled) {
+      await _audioHelper.fadeAndStopBackgroundMusic(
+        GameConstants.showRetryAfterGameOverDelay,
+      );
+    } else {
+      await Future.delayed(
+        GameConstants.showRetryAfterGameOverDelay,
+      );
+    }
     emit(state.copyWith(showGameOverUI: true));
   }
 
@@ -267,6 +283,22 @@ class GameCubit extends Cubit<GameState> {
     return KeyEventResult.ignored;
   }
 
+  void _playMotivationWord() {
+    if (state.motivationWordsPoolToPlay.isEmpty) {
+      emit(state.copyWith(
+        motivationWordsPoolToPlay: MotivationWordType.values,
+      ));
+    }
+    final randomMotivation = state.motivationWordsPoolToPlay.random();
+    emit(state.copyWith(
+      playMotivationWord: ValueWrapper(randomMotivation),
+      motivationWordsPoolToPlay: state.motivationWordsPoolToPlay
+          .where((element) => element != randomMotivation)
+          .toList(),
+    ));
+    emit(state.copyWith(playMotivationWord: ValueWrapper.nullValue()));
+  }
+
   void _updateShieldsRotationSpeed(double speed) {
     emit(state.copyWith(
       shieldsAngleRotationSpeed: speed.clamp(
@@ -302,10 +334,25 @@ class GameCubit extends Cubit<GameState> {
     emit(state.copyWith(restartGame: false));
   }
 
-  void onShieldHit() {
-    emit(state.copyWith(
-      shieldHitCounter: state.shieldHitCounter + 1,
-    ));
+  void onShieldHit(MovingComponent movingComponent) {
+    switch (movingComponent) {
+      case MovingHealth():
+        break;
+      case FireOrb():
+      case IceOrb():
+        var updatedGameMode = state.currentGameMode.increaseDefendedOrbsCount(
+          count: 1,
+        );
+        updatedGameMode = updatedGameMode.increaseDefendOrbStreakCount(
+          count: 1,
+        );
+        emit(state.copyWith(
+          shieldHitCounter: state.shieldHitCounter + 1,
+          currentGameMode: updatedGameMode,
+        ));
+        break;
+    }
+
     if (state.shieldHitCounter % GameConstants.tryToSwitchGameModeEvery == 0) {
       _tryToSwitchToMultiSpawnGameMode();
     }
@@ -317,9 +364,28 @@ class GameCubit extends Cubit<GameState> {
     ));
   }
 
-  void switchToUpcomingMode() {
+  void switchToUpcomingMode() async {
+    final currentGameMode = state.currentGameMode;
+    bool showMotivation = false;
+    if (currentGameMode is GameModeMultiSpawn) {
+      if (currentGameMode.shouldPlayMotivationWord()) {
+        _playMotivationWord();
+        showMotivation = true;
+      }
+    }
+
+    final upcoming = state.upcomingGameMode!;
+    final upcomingDelay =
+        showMotivation ? lerpDouble(0.80, 0.55, state.difficulty)! : 0.0;
+
     emit(state.copyWith(
-      gameMode: state.upcomingGameMode,
+      gameModeHistory: [
+        ...state.gameModeHistory,
+        state.currentGameMode,
+      ],
+      currentGameMode: upcoming.updateInitialDelay(
+        upcoming.initialDelay + upcomingDelay,
+      ),
       upcomingGameMode: const ValueWrapper(null),
     ));
   }

@@ -2,11 +2,13 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
+import 'package:save_the_potato/presentation/widgets/game_stroke_button.dart';
 
 import 'game_round_button.dart';
 import 'game_timer.dart';
@@ -116,27 +118,26 @@ class _GameOverUIState extends State<GameOverUI>
                       onPressed: () => context.read<GameCubit>().restartGame(),
                     ),
                   ),
-                  if (gameOverState.highestScore is OnlineScoreEntity)
-                    ...[
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: () {
-                          context.read<ScoresCubit>().shareScore(
-                            gameOverState.highestScore as OnlineScoreEntity,
-                          );
-                        },
-                        child: Text(
-                          gameOverState.isHighScore
-                              ? 'Share Score'
-                              : 'Share Best Score',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
-                          ),
+                  if (gameOverState.highestScore is OnlineScoreEntity) ...[
+                    const SizedBox(height: 18),
+                    GameStrokeButton(
+                      title: gameOverState.isHighScore
+                          ? 'Share Score'
+                          : 'Share Best Score',
+                      icon: SvgPicture.asset(
+                        'assets/images/icons/share.svg',
+                        width: 22,
+                        height: 22,
+                        colorFilter: const ColorFilter.mode(
+                          Colors.white,
+                          BlendMode.srcIn,
                         ),
                       ),
-                    ],
+                      onPressed: () => context.read<ScoresCubit>().shareScore(
+                            gameOverState.highestScore as OnlineScoreEntity,
+                          ),
+                    ),
+                  ],
                 ],
               ),
             ),

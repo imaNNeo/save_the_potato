@@ -2,7 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
-import 'package:save_the_potato/presentation/my_game.dart';
+import 'package:save_the_potato/presentation/potato_game.dart';
 
 import 'moving_components.dart';
 

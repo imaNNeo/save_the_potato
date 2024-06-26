@@ -12,8 +12,11 @@ class GameState extends Equatable {
     this.onNewHighScore,
     this.firstHealthReceived = false,
     this.shieldHitCounter = 0,
-    this.gameMode = const GameModeSingleSpawn(),
+    this.gameModeHistory = const [],
+    this.currentGameMode = const GameModeSingleSpawn(),
     this.upcomingGameMode,
+    this.playMotivationWord,
+    this.motivationWordsPoolToPlay = MotivationWordType.values,
   });
 
   final int healthPoints;
@@ -36,9 +39,15 @@ class GameState extends Equatable {
 
   final int shieldHitCounter;
 
-  final GameMode gameMode;
+  final List<GameMode> gameModeHistory;
+
+  final GameMode currentGameMode;
 
   final GameMode? upcomingGameMode;
+
+  final MotivationWordType? playMotivationWord;
+
+  final List<MotivationWordType> motivationWordsPoolToPlay;
 
   /// Between 0.0 and 1.0
   double get difficulty => GameConstants.difficultyInitialToPeakCurve.transform(
@@ -75,8 +84,11 @@ class GameState extends Equatable {
     ValueWrapper<OnlineScoreEntity>? onNewHighScore,
     bool? firstHealthReceived,
     int? shieldHitCounter,
-    GameMode? gameMode,
+    List<GameMode>? gameModeHistory,
+    GameMode? currentGameMode,
     ValueWrapper<GameMode>? upcomingGameMode,
+    ValueWrapper<MotivationWordType>? playMotivationWord,
+    List<MotivationWordType>? motivationWordsPoolToPlay,
   }) =>
       GameState(
         healthPoints: healthPoints ?? this.healthPoints,
@@ -91,10 +103,16 @@ class GameState extends Equatable {
             onNewHighScore != null ? onNewHighScore.value : this.onNewHighScore,
         firstHealthReceived: firstHealthReceived ?? this.firstHealthReceived,
         shieldHitCounter: shieldHitCounter ?? this.shieldHitCounter,
-        gameMode: gameMode ?? this.gameMode,
+        gameModeHistory: gameModeHistory ?? this.gameModeHistory,
+        currentGameMode: currentGameMode ?? this.currentGameMode,
         upcomingGameMode: upcomingGameMode != null
             ? upcomingGameMode.value
             : this.upcomingGameMode,
+        playMotivationWord: playMotivationWord != null
+            ? playMotivationWord.value
+            : this.playMotivationWord,
+        motivationWordsPoolToPlay:
+            motivationWordsPoolToPlay ?? this.motivationWordsPoolToPlay,
       );
 
   @override
@@ -109,7 +127,10 @@ class GameState extends Equatable {
         onNewHighScore,
         firstHealthReceived,
         shieldHitCounter,
-        gameMode,
+        gameModeHistory,
+        currentGameMode,
         upcomingGameMode,
+        playMotivationWord,
+        motivationWordsPoolToPlay,
       ];
 }

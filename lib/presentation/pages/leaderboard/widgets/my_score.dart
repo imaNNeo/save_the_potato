@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
@@ -92,16 +93,26 @@ class MyScore extends StatelessWidget {
               itemBuilder: (context) => [
                 const PopupMenuItem<int>(
                   value: 0,
-                  child: Text('Rename Nickname'),
+                  child: _MenuRow(
+                    title: 'Rename Nickname',
+                    iconSvgAssetName: 'user_pen.svg',
+                  ),
                 ),
                 const PopupMenuItem<int>(
                   value: 1,
-                  child: Text('Share Score'),
+                  child: _MenuRow(
+                    title: 'Share Score',
+                    iconSvgAssetName: 'share.svg',
+                  ),
                 ),
                 if (kDebugMode)
                   const PopupMenuItem<int>(
                     value: 2,
-                    child: Text('Celebrate New Rank'),
+                    child:
+                    _MenuRow(
+                      title: 'Celebrate New Rank',
+                      iconSvgAssetName: 'party_horn.svg',
+                    ),
                   ),
               ],
               child: Padding(
@@ -113,7 +124,15 @@ class MyScore extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.more_vert),
+                    SvgPicture.asset(
+                        'assets/images/icons/menu_dots_vertical.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter: const ColorFilter.mode(
+                          Colors.white,
+                          BlendMode.srcIn,
+                        )),
+                    const SizedBox(width: 6),
                     ScoreRankNumber(
                       rank: scoreEntity.rank,
                       size: 48,
@@ -150,6 +169,44 @@ class MyScore extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({
+    super.key,
+    required this.title,
+    required this.iconSvgAssetName,
+  });
+
+  final String title;
+  final String iconSvgAssetName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SvgPicture.asset(
+          'assets/images/icons/$iconSvgAssetName',
+          width: 24,
+          height: 24,
+          colorFilter: const ColorFilter.mode(
+            Colors.black,
+            BlendMode.srcIn,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w400,
+            fontSize: 18,
+          ),
+        ),
+      ],
     );
   }
 }

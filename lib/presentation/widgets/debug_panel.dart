@@ -21,8 +21,12 @@ class DebugPanel extends StatelessWidget {
             if (!gameState.playingState.isPlaying) {
               return const SizedBox();
             }
-            final gameMode = gameState.gameMode;
+            final gameMode = gameState.currentGameMode;
             final difficulty = gameState.difficulty;
+            final gameModeTitle = switch (gameMode) {
+              GameModeSingleSpawn() => 'Single',
+              GameModeMultiSpawn() => 'Multi',
+            };
             return DefaultTextStyle(
               style: const TextStyle(
                 color: Colors.white,
@@ -40,17 +44,72 @@ class DebugPanel extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Debug Panel:',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                      const SizedBox(height: 24),
                       Text(
                         'nickname: ${authState.user?.nickname ?? 'null'}',
                       ),
                       const SizedBox(height: 12),
                       Text(
                         'levelTimePassed: ${gameState.levelTimePassed.toStringAsFixed(2)}',
+                      ),
+                      const SizedBox(height: 12),
+                      RichText(
+                        text: TextSpan(
+                          text: '',
+                          children: [
+                            const TextSpan(
+                              text: 'GameMode: ',
+                            ),
+                            TextSpan(
+                              text: gameModeTitle,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: switch (gameMode) {
+                                  GameModeSingleSpawn() => Colors.blue,
+                                  GameModeMultiSpawn() => Colors.purpleAccent,
+                                },
+                              ),
+                            ),
+                            const TextSpan(
+                              text: ' Defended:',
+                              style: TextStyle(
+                                color: Colors.greenAccent,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '${gameMode.defendedOrbsCount}',
+                              style: const TextStyle(
+                                color: Colors.greenAccent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const TextSpan(
+                              text: ' Collided:',
+                              style: TextStyle(
+                                color: Colors.red,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '${gameMode.collidedOrbsCount}',
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const TextSpan(
+                              text: ' Streak:',
+                              style: TextStyle(
+                                color: Colors.yellowAccent,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '${gameMode.defendOrbStreakCount}',
+                              style: const TextStyle(
+                                color: Colors.yellowAccent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Text(

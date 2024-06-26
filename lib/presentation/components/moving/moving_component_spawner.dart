@@ -7,7 +7,7 @@ import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
-import 'package:save_the_potato/presentation/my_game.dart';
+import 'package:save_the_potato/presentation/potato_game.dart';
 
 import 'moving_components.dart';
 import 'multi_orb_spawner.dart';
@@ -36,9 +36,21 @@ class MovingComponentSpawner extends Component
 
   int _firstTimeHealthGeneratedCount = 0;
 
+  double initialDelayTimeRemaining = 0.0;
+
   Potato get player => parent.player;
 
-  MyGame get game => parent.game;
+  PotatoGame get game => parent.game;
+
+  late GameState _previousGameState;
+
+  @override
+  void onLoad() {
+    super.onLoad();
+    mounted.then((_) {
+      _previousGameState = bloc.state;
+    });
+  }
 
   @override
   void update(double dt) {
@@ -46,9 +58,21 @@ class MovingComponentSpawner extends Component
     if (!bloc.state.playingState.isPlaying) {
       return;
     }
-    final gameMode = bloc.state.gameMode;
+    final gameMode = bloc.state.currentGameMode;
     aliveSingleMovingOrbs.removeWhere((e) => e.isRemoved);
     aliveMultiOrbSpawners.removeWhere((e) => e.isRemoved);
+
+    // Check for initial delay
+    if (_previousGameState.currentGameMode.runtimeType != gameMode.runtimeType) {
+      initialDelayTimeRemaining = gameMode.initialDelay;
+    }
+    _previousGameState = bloc.state;
+    if (initialDelayTimeRemaining > 0) {
+      initialDelayTimeRemaining -= dt;
+      return;
+    }
+
+    // Try to spawn or switch to the upcoming game mode
     switch (gameMode) {
       case GameModeSingleSpawn():
         if (bloc.state.upcomingGameMode != null) {
@@ -108,7 +132,7 @@ class MovingComponentSpawner extends Component
   }
 
   bool _shouldSpawnHeart() {
-    if (!bloc.state.gameMode.canSpawnMovingHealth) {
+    if (!bloc.state.currentGameMode.canSpawnMovingHealth) {
       return false;
     }
     final missingHP = GameConstants.maxHealthPoints - bloc.state.healthPoints;

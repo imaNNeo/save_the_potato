@@ -1,9 +1,13 @@
 # Save The Potato
+
+<a href='https://play.google.com/store/apps/details?id=dev.app2pack.savethepotato'><img src='https://savethepotato.com/assets/google-play.png' width="140" /></a> <a href='https://apps.apple.com/app/save-the-potato/id6474765181'><img src='https://savethepotato.com/assets/app-store.png' width="140" /></a>
+
 #### Winner of the **[Flame Jam 3](https://itch.io/jam/flame-jam-3/results)** 🏆
 
 | Behind the Scene                                                                            | Demo                                                                                    |
 |---------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
 | [<img src="./repo_files/tutorial_preview.png" width="800" />](https://youtu.be/KQkTBiRJltM) | [<img src="./repo_files/demo_preview.jpg" width="800" />](https://youtu.be/IuXIr0qrsvM) |
+
 
 ## General info
 This game is developed during the [Flame Game Jam 3](https://itch.io/jam/flame-jam-3) by [Fateme](hhttps://www.linkedin.com/in/fateme-bahrami-388585156) and [@imaNNeo](https://github.com/imaNNeo)(me) using [Flutter](https://flutter.dev/) and [Flame game engine](https://flame-engine.org/)
@@ -19,6 +23,7 @@ This game is developed during the [Flame Game Jam 3](https://itch.io/jam/flame-j
 * Play it live [here](https://savethepotato.app2pack.dev/)
 * [Demo video](https://www.youtube.com/watch?v=IuXIr0qrsvM)
 * This is [our submission at itch](https://itch.io/jam/flame-jam-3/rate/2414926)
+* Icon set is from [FlatIcon](https://www.flaticon.com/icon-fonts-most-downloaded?weight=bold&type=uicon)
 
 
 # Development

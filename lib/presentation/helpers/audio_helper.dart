@@ -3,24 +3,21 @@ import 'dart:math';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/lazy_value.dart';
+import 'package:save_the_potato/presentation/components/motivation_component.dart';
 
 class AudioHelper {
   bool isPaused = false;
 
   final _audioEnabled = LazyValue<bool>();
+
+  Future<bool> get audioEnabled => _audioEnabled.value;
+
   late final SoLoud _soLoud;
 
   late final AudioSource _bgm;
-  late final AudioSource _shield1,
-      _shield2,
-      _shield3,
-      _shield4,
-      _shield5,
-      _shield6;
+  late final List<AudioSource> shieldNotes;
   late final AudioSource _heartHit, _orbHit1, _orbHit2;
   late final AudioSource _victory, _gameOver;
-
-  late final List<AudioSource> notes;
 
   SoundHandle? _bgmHandle;
 
@@ -33,12 +30,10 @@ class AudioHelper {
     await _soLoud.init();
     const baseAssets = 'assets/audio';
     _bgm = await _soLoud.loadAsset('$baseAssets/bg_120_140c_bpm.ogg');
-    _shield1 = await _soLoud.loadAsset('$baseAssets/Shield1.wav');
-    _shield2 = await _soLoud.loadAsset('$baseAssets/Shield2.wav');
-    _shield3 = await _soLoud.loadAsset('$baseAssets/Shield3.wav');
-    _shield4 = await _soLoud.loadAsset('$baseAssets/Shield4.wav');
-    _shield5 = await _soLoud.loadAsset('$baseAssets/Shield5.wav');
-    _shield6 = await _soLoud.loadAsset('$baseAssets/Shield6.wav');
+    shieldNotes = [];
+    for (var i = 1; i <= 6; i++) {
+      shieldNotes.add(await _soLoud.loadAsset('$baseAssets/Shield$i.wav'));
+    }
 
     _heartHit = await _soLoud.loadAsset('$baseAssets/heart.wav');
     _orbHit1 = await _soLoud.loadAsset('$baseAssets/hit1.wav');
@@ -47,7 +42,10 @@ class AudioHelper {
     _victory = await _soLoud.loadAsset('$baseAssets/victory.mp3');
     _gameOver = await _soLoud.loadAsset('$baseAssets/game_over.wav');
 
-    notes = await SoLoudTools.createNotes();
+    // Motivation words
+    for (var word in MotivationWordType.values) {
+      await _soLoud.loadAsset('$baseAssets/motivation/${word.assetName}');
+    }
   }
 
   void playBackgroundMusic() async {
@@ -135,15 +133,7 @@ class AudioHelper {
     if (seed < 0) {
       return;
     }
-    final shield = switch (seed % 6) {
-      0 => _shield1,
-      1 => _shield2,
-      2 => _shield3,
-      3 => _shield4,
-      4 => _shield5,
-      5 => _shield6,
-      _ => throw Exception('Invalid'),
-    };
+    final shield = shieldNotes[seed % shieldNotes.length];
     _soLoud.play(
       shield,
       volume: GameConstants.soundEffectsVolume,
@@ -166,6 +156,19 @@ class AudioHelper {
     }
     _soLoud.play(
       _gameOver,
+      volume: GameConstants.soundEffectsVolume,
+    );
+  }
+
+  void playMotivationWord(MotivationWordType word) async {
+    if (!(await _audioEnabled.value)) {
+      return;
+    }
+    final audio = await _soLoud.loadAsset(
+      'assets/audio/motivation/${word.assetName}',
+    );
+    _soLoud.play(
+      audio,
       volume: GameConstants.soundEffectsVolume,
     );
   }

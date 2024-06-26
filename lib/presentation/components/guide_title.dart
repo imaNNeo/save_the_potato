@@ -4,11 +4,11 @@ import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
-import 'package:save_the_potato/presentation/my_game.dart';
+import 'package:save_the_potato/presentation/potato_game.dart';
 
 class GuideTitle extends PositionComponent
     with
-        HasGameRef<MyGame>,
+        HasGameRef<PotatoGame>,
         FlameBlocListenable<GameCubit, GameState>,
         ParentIsA<Potato> {
   GuideTitle({

@@ -9,10 +9,10 @@ import 'package:flutter/animation.dart';
 import 'package:save_the_potato/domain/extensions/list_extension.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
-import 'package:save_the_potato/presentation/my_game.dart';
+import 'package:save_the_potato/presentation/potato_game.dart';
 
 class OrbDisjointParticleComponent extends Component
-    with HasGameRef<MyGame>, ParentIsA<MovingOrb> {
+    with HasGameRef<PotatoGame>, ParentIsA<MovingOrb> {
   OrbDisjointParticleComponent({
     super.key,
     required this.orbType,
