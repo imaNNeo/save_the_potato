@@ -1,7 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
+import 'package:save_the_potato/presentation/widgets/game_icon_button.dart';
 
 class SettingsPauseIcon extends StatelessWidget {
   const SettingsPauseIcon({super.key});
@@ -16,23 +19,19 @@ class SettingsPauseIcon extends StatelessWidget {
             padding: const EdgeInsets.only(right: 12.0, top: 8.0),
             child: switch (state.playingState) {
               PlayingStateNone() => const SizedBox(),
-              PlayingStatePlaying() => IconButton(
-                  onPressed: () => gameCubit.pauseGame(
-                    manually: true,
-                  ),
-                  icon: const Icon(
-                    Icons.pause,
-                    size: 36,
-                  ),
+              PlayingStatePlaying() => GameIconButton(
+                svgAssetName: 'pause.svg',
+                onPressed: () => gameCubit.pauseGame(
+                  manually: true,
                 ),
+              ),
               PlayingStatePaused() ||
               PlayingStateGameOver() ||
               PlayingStateGuide() =>
-                IconButton(
-                  onPressed: () => BaseDialog.showSettingsDialog(context),
-                  icon: const Icon(
-                    Icons.settings,
-                    size: 36,
+                GameIconButton(
+                  svgAssetName: 'settings.svg',
+                  onPressed: () => BaseDialog.showSettingsDialog(
+                    context
                   ),
                 ),
             },

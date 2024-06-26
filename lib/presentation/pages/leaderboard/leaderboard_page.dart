@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:save_the_potato/domain/models/presentation_message.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/leaderboard_score_item.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/widgets/error_retry_box.dart';
+import 'package:save_the_potato/presentation/widgets/game_icon_button.dart';
 
 import 'widgets/my_score.dart';
 import 'widgets/score_row.dart';
@@ -18,7 +20,6 @@ class LeaderboardPage extends StatefulWidget {
 }
 
 class _LeaderboardPageState extends State<LeaderboardPage> {
-
   late ScrollController _scrollController;
 
   @override
@@ -69,6 +70,12 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                     letterSpacing: 4,
                   ),
                 ),
+                leading: GameIconButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  svgAssetName: 'arrow_left.svg',
+                ),
               ),
               body: Stack(
                 children: [
@@ -88,7 +95,9 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                               scoreEntity: item.score,
                               loading: item.refreshing,
                             ),
-                          LeaderboardLoadingScoreItem(showShimmer: bool showShimmer) =>
+                          LeaderboardLoadingScoreItem(
+                            showShimmer: bool showShimmer
+                          ) =>
                             ScoreRowTemplateShimmer(
                               showShimmer: showShimmer,
                             ),
