@@ -119,8 +119,8 @@ class MovingComponentSpawner extends Component
             movingHealth == null) {
           multiOrbSpawnerFirstSpawned = true;
           timeSinceLastMultiOrbSpawnerSpawn = 0.0;
+          spawnOrbSpawner(gameMode, multiOrbSpawnerSpawnCounter);
           multiOrbSpawnerSpawnCounter++;
-          spawnOrbSpawner(gameMode);
         }
     }
   }
@@ -181,7 +181,7 @@ class MovingComponentSpawner extends Component
     return true;
   }
 
-  void spawnOrbSpawner(GameModeMultiSpawn gameMode) {
+  void spawnOrbSpawner(GameModeMultiSpawn gameMode, int spawnerIndex) {
     if (bloc.state.upcomingGameMode != null) {
       return;
     }
@@ -198,6 +198,7 @@ class MovingComponentSpawner extends Component
       orbType: orbType,
       target: player,
       spawnCount: gameMode.orbsSpawnCount(),
+      spawnerIndex: spawnerIndex,
     );
     parent.add(spawner);
     aliveMultiOrbSpawners.add(spawner);
@@ -216,6 +217,7 @@ class MovingComponentSpawner extends Component
         target: player,
         spawnCount: gameMode.orbsSpawnCount(),
         isOpposite: true,
+        spawnerIndex: spawnerIndex,
       );
       parent.add(oppositeSpawner);
       aliveMultiOrbSpawners.add(oppositeSpawner);

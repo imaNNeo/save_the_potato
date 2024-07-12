@@ -31,7 +31,7 @@ class AudioHelper {
     const baseAssets = 'assets/audio';
     _bgm = await _soLoud.loadAsset('$baseAssets/bg_120_140c_bpm.ogg');
     shieldNotes = [];
-    for (var i = 1; i <= 6; i++) {
+    for (var i = 1; i <= 12; i++) {
       shieldNotes.add(await _soLoud.loadAsset('$baseAssets/Shield$i.wav'));
     }
 

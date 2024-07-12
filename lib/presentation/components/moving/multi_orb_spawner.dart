@@ -20,6 +20,8 @@ class MultiOrbSpawner extends PositionComponent
 
   int spawnedCount = 0;
 
+  int spawnerIndex;
+
   List<MovingOrb> aliveMovingOrbs = [];
 
   MultiOrbSpawner({
@@ -30,6 +32,7 @@ class MultiOrbSpawner extends PositionComponent
     required this.target,
     required this.spawnCount,
     this.isOpposite = false,
+    required this.spawnerIndex,
   });
 
   @override
@@ -64,20 +67,26 @@ class MultiOrbSpawner extends PositionComponent
 
   void spawnOrb() {
     late MovingOrb orb;
+    late int overrideSoundNumber;
+    if (isOpposite) {
+      overrideSoundNumber = -1;
+    } else {
+      overrideSoundNumber = ((spawnerIndex % 2) * 6) + (spawnedCount % 6);
+    }
     switch (orbType) {
       case OrbType.fire:
         orb = FireOrb(
           speed: spawnOrbsMoveSpeed,
           target: target,
           position: position,
-          overrideCollisionSoundNumber: isOpposite ? -1 : spawnedCount % 6,
+          overrideCollisionSoundNumber: overrideSoundNumber,
         );
       case OrbType.ice:
         orb = IceOrb(
           speed: spawnOrbsMoveSpeed,
           target: target,
           position: position,
-          overrideCollisionSoundNumber: isOpposite ? -1 : spawnedCount % 6,
+          overrideCollisionSoundNumber: overrideSoundNumber,
         );
     }
     aliveMovingOrbs.add(orb);
