@@ -89,13 +89,9 @@ class MotivationComponent extends PositionComponent with HasPaint {
 
 enum MotivationWordType {
   amazing('Amazing!', 'amazing.wav'),
-  nice('Nice!', 'nice.wav'),
-  goodJob('Good Job!', 'goodJob.wav'),
-  wonderful('Wonderful!', 'wonderful.wav'),
-  great('Great!', 'great.wav'),
-  excellent('Excellent!', 'excellent.wav'),
-  fantastic('Fantastic!', 'fantastic.wav'),
-  awesome('Awesome!', 'awesome.wav'),
+  goodJob('Good Job!', 'good_job.wav'),
+  ohGreat('Oh Great!', 'oh_great.wav'),
+  ohNice('Oh Nice!', 'oh_nice.wav'),
   perfect('Perfect!', 'perfect.wav');
 
   final String text;
