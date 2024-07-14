@@ -1,6 +1,11 @@
+import 'dart:math';
+
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
+import 'package:flame/extensions.dart';
+import 'package:flame/particles.dart';
 import 'package:flutter/material.dart';
+import 'package:save_the_potato/presentation/extensions/rect_extensions.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/service_locator.dart';
@@ -12,7 +17,6 @@ class MotivationComponent extends PositionComponent with HasPaint {
   late final TextComponent _textComponent;
   final double inDuration;
   final double outDuration;
-
 
   double get totalDuration => inDuration + outDuration;
 
@@ -29,7 +33,98 @@ class MotivationComponent extends PositionComponent with HasPaint {
     await super.onLoad();
     _audioHelper = getIt.get<AudioHelper>();
     _audioHelper.playMotivationWord(motivationWordType);
+    final textOffset = Vector2(0, -150);
+
+    final textApproximateRect = Rect.fromCenter(
+      center: textOffset.toOffset(),
+      width: 340,
+      height: 68,
+    );
+    const particlesCount = 10;
+
+    final expandedRect = textApproximateRect.expandBy(80, 60);
+
+    final particlesLifespan = totalDuration;
+    final List<Sprite> sprites = [
+      await Sprite.load('sparkle/sparkle1.png'),
+      await Sprite.load('sparkle/sparkle2.png'),
+    ];
+    final randomSprites = List.generate(
+      particlesCount,
+      (i) => sprites.random(),
+    );
+    /// Motivation particles
+    add(ParticleSystemComponent(
+      priority: 0,
+      particle: Particle.generate(
+        count: particlesCount,
+        lifespan: particlesLifespan,
+        generator: (i) {
+          final randomPoint = expandedRect.randomPointExcludeRect(
+            textApproximateRect,
+          );
+          return AcceleratedParticle(
+            position: randomPoint,
+            child: ComputedParticle(
+              renderer: (canvas, particle) {
+                final sprite = randomSprites[i];
+                final scaleProgress = TweenSequence(
+                  <TweenSequenceItem<double>>[
+                    TweenSequenceItem(
+                      tween: Tween(begin: 0.0, end: 0.8),
+                      weight: 1,
+                    ),
+                    TweenSequenceItem(
+                      tween: Tween(begin: 0.8, end: 1.0),
+                      weight: 3,
+                    ),
+                    TweenSequenceItem(
+                      tween: Tween(begin: 1.0, end: 0.0),
+                      weight: 1,
+                    ),
+                  ],
+                ).transform(
+                  Curves.fastOutSlowIn.transform(
+                    particle.progress,
+                  ),
+                );
+                final size =
+                    Tween(begin: 0.0, end: 18.0).transform(scaleProgress);
+
+                final opacityTween = TweenSequence(
+                  <TweenSequenceItem<double>>[
+                    TweenSequenceItem(
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      weight: 1,
+                    ),
+                    TweenSequenceItem(
+                      tween: Tween(begin: 1.0, end: 0.0),
+                      weight: 1,
+                    ),
+                  ],
+                );
+                canvas.rotate(particle.progress * pi * 2);
+                sprite.render(
+                  canvas,
+                  size: Vector2.all(size),
+                  anchor: Anchor.center,
+                  overridePaint: Paint()
+                    ..colorFilter = ColorFilter.mode(
+                      color.withOpacity(
+                        opacityTween.transform(particle.progress),
+                      ),
+                      BlendMode.srcIn,
+                    ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    ));
+
     add(_textComponent = TextComponent(
+      priority: 2,
       text: motivationWordType.text,
       anchor: Anchor.center,
       textRenderer: TextPaint(
@@ -47,7 +142,7 @@ class MotivationComponent extends PositionComponent with HasPaint {
           ),
         ),
         MoveByEffect(
-          Vector2(0, -150),
+          textOffset,
           EffectController(
             duration: inDuration,
             curve: Curves.fastOutSlowIn,
@@ -72,7 +167,9 @@ class MotivationComponent extends PositionComponent with HasPaint {
       ],
     ));
     setOpacity(0);
-    add(RemoveEffect(delay: totalDuration));
+    add(RemoveEffect(
+      delay: max(totalDuration, particlesLifespan),
+    ));
   }
 
   @override
