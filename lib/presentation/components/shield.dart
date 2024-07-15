@@ -126,7 +126,7 @@ class Shield extends PositionComponent
   }
 
   void _addParticles() {
-    Random rnd = Random();
+    Random rnd = game.rnd;
 
     final increaseDecreaseTween = TweenSequence<double>([
       TweenSequenceItem<double>(
@@ -151,7 +151,7 @@ class Shield extends PositionComponent
         final localPos = (size / 2) +
             Vector2(cos(generateAngle - angle), sin(generateAngle - angle)) *
                 radius;
-        final color = type.colors.random();
+        final color = type.colors.random(game.rnd);
 
         final spriteIndex = rnd.nextInt(_flameSprites.length);
         final isShortFlame = spriteIndex <= 2;
@@ -229,7 +229,7 @@ class Shield extends PositionComponent
           ),
         ));
 
-        final extraParticle = _smallSparkleSprites.random();
+        final extraParticle = _smallSparkleSprites.random(game.rnd);
         add(ParticleSystemComponent(
           position: localPos,
           anchor: Anchor.center,

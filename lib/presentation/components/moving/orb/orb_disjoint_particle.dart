@@ -61,8 +61,8 @@ class OrbDisjointParticleComponent extends Component
         count: 42,
         lifespan: 1.25 - (speedProgress * 0.4),
         generator: (i) {
-          final color = colors.random();
-          final sprite = smallSparkleSprites.random();
+          final color = colors.random(game.rnd);
+          final sprite = smallSparkleSprites.random(game.rnd);
           final randomAngle = _getRandomConeAngle();
           final direction = Vector2(cos(randomAngle), sin(randomAngle));
           return AcceleratedParticle(

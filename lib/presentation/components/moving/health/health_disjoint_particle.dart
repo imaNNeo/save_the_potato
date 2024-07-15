@@ -47,8 +47,8 @@ class HealthDisjointParticleComponent extends Component
         count: 8,
         lifespan: 3,
         generator: (i) {
-          final sprite = smallSparkleSprites.random();
-          final color = colors.random();
+          final sprite = smallSparkleSprites.random(rnd);
+          final color = colors.random(rnd);
           final rotation = rnd.nextDouble() * pi * 4;
           return AcceleratedParticle(
             speed: Vector2(

@@ -32,7 +32,7 @@ class MotivationComponent extends PositionComponent
   List<Vector2> randomParticlePoints(Vector2 textOffset) {
     // /// We can either use our cached points (they're perfectly distributed)
     final randomPoints = _bestCachedRandomPoints
-        .random(game.random)
+        .random(game.rnd)
         .map((e) => Vector2(e[0].toDouble(), e[1].toDouble()))
         .toList();
 
