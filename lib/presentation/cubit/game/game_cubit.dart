@@ -360,7 +360,9 @@ class GameCubit extends Cubit<GameState> {
 
   void multiSpawnModeSpawningFinished() {
     emit(state.copyWith(
-      upcomingGameMode: const ValueWrapper(GameModeSingleSpawn()),
+      upcomingGameMode: ValueWrapper(GameModeSingleSpawn(
+        initialDelay: lerpDouble(0.7, 1.7, state.difficulty)!,
+      )),
     ));
   }
 
