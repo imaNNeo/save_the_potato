@@ -120,7 +120,7 @@ class MyWorld extends World
       MotivationComponent(
         position: player.positionOfAnchor(Anchor.center),
         motivationWordType: type,
-        inDuration: lerpDouble(1.0, 0.75, bloc.state.difficulty)!,
+        inDuration: lerpDouble(1.25, 0.9, bloc.state.difficulty)!,
         outDuration: lerpDouble(4.0, 2.0, bloc.state.difficulty)!,
       ),
     );
