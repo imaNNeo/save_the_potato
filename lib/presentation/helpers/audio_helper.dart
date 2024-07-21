@@ -169,7 +169,7 @@ class AudioHelper {
     );
     _soLoud.play(
       audio,
-      volume: GameConstants.soundEffectsVolume * 2,
+      volume: GameConstants.soundEffectsVolume * 1.5,
     );
   }
 }
