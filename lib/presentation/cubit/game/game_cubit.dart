@@ -359,9 +359,12 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void multiSpawnModeSpawningFinished() {
+    final showingMotivation = (state.currentGameMode as GameModeMultiSpawn)
+        .shouldPlayMotivationWord();
     emit(state.copyWith(
       upcomingGameMode: ValueWrapper(GameModeSingleSpawn(
-        initialDelay: lerpDouble(0.7, 1.7, state.difficulty)!,
+        initialDelay:
+            showingMotivation ? lerpDouble(0.7, 1.7, state.difficulty)! : 0.0,
       )),
     ));
   }
