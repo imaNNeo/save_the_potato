@@ -17,6 +17,11 @@ sealed class MovingOrb extends MovingComponent {
 
   final int? overrideCollisionSoundNumber;
 
+  double get trailSizeMultiplier => switch(type) {
+    OrbType.fire => 0.85,
+    OrbType.ice => 0.7,
+  };
+
   @override
   void render(Canvas canvas) {
     super.render(canvas);
