@@ -29,6 +29,7 @@ class OrbDisjointParticleComponent extends Component
   final double contactAngle;
 
   late Paint _disjointParticlePaint;
+  final _cachedDirection = Vector2.zero();
 
   Random get rnd => game.rnd;
 
@@ -64,9 +65,10 @@ class OrbDisjointParticleComponent extends Component
           final color = colors.random(game.rnd);
           final sprite = smallSparkleSprites.random(game.rnd);
           final randomAngle = _getRandomConeAngle();
-          final direction = Vector2(cos(randomAngle), sin(randomAngle));
+          _cachedDirection.setValues(cos(randomAngle), sin(randomAngle));
           return AcceleratedParticle(
-            speed: direction * (rnd.nextDouble() * 200 + (100 * speedProgress)),
+            speed: _cachedDirection *
+                (rnd.nextDouble() * 200 + (100 * speedProgress)),
             child: ComputedParticle(
               renderer: (canvas, particle) {
                 final opacityBegin = lerpDouble(0.9, 0.6, speedProgress);
