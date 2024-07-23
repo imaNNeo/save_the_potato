@@ -125,9 +125,6 @@ class Shield extends PositionComponent
     ));
   }
 
-  final _cachedDirectionVec2 = Vector2.zero();
-  final _cachedAccelerationVec2 = Vector2.zero();
-  final _cachedSparklesAccelerationVec2 = Vector2.zero();
   final _opacityTween = Tween(begin: 0.4, end: 0.0);
 
   void _addParticles() {
@@ -154,11 +151,12 @@ class Shield extends PositionComponent
         final generateAngle =
             minAngle + rnd.nextDouble() * (maxAngle - minAngle);
 
-        _cachedDirectionVec2.setValues(
-          cos(generateAngle - angle),
-          sin(generateAngle - angle),
-        );
-        final localPos = (size / 2) + _cachedDirectionVec2 * radius;
+        final localPos = (size / 2) +
+            Vector2(
+                  cos(generateAngle - angle),
+                  sin(generateAngle - angle),
+                ) *
+                radius;
         final color = type.colors.random(game.rnd);
 
         final spriteIndex = rnd.nextInt(_flameSprites.length);
@@ -204,23 +202,20 @@ class Shield extends PositionComponent
         ));
 
         // Main flames (inside and moving out)
-        if (isShortFlame) {
-          _cachedAccelerationVec2.setValues(
-            rnd.nextDouble() * 40,
-            -10 + rnd.nextDouble() * 20,
-          );
-        } else {
-          _cachedAccelerationVec2.setValues(
-            0,
-            -20 + rnd.nextDouble() * 40,
-          );
-        }
         add(ParticleSystemComponent(
           position: localPos,
           anchor: Anchor.center,
           particle: AcceleratedParticle(
             lifespan: 2,
-            acceleration: _cachedAccelerationVec2,
+            acceleration: isShortFlame
+                ? Vector2(
+                    rnd.nextDouble() * 40,
+                    -10 + rnd.nextDouble() * 20,
+                  )
+                : Vector2(
+                    0,
+                    -20 + rnd.nextDouble() * 40,
+                  ),
             child: ComputedParticle(
               renderer: (canvas, particle) {
                 final opacity = increaseDecreaseTween.transform(
@@ -247,16 +242,15 @@ class Shield extends PositionComponent
 
         // Sparkles (moving out)
         final extraParticle = _smallSparkleSprites.random(game.rnd);
-        _cachedSparklesAccelerationVec2.setValues(
-          (rnd.nextDouble() * 120) - 20,
-          -15 + rnd.nextDouble() * 30,
-        );
         add(ParticleSystemComponent(
           position: localPos,
           anchor: Anchor.center,
           particle: AcceleratedParticle(
             lifespan: 1.15,
-            acceleration: _cachedSparklesAccelerationVec2,
+            acceleration: Vector2(
+              (rnd.nextDouble() * 120) - 20,
+              -15 + rnd.nextDouble() * 30,
+            ),
             child: ComputedParticle(renderer: (Canvas c, Particle particle) {
               final opacity =
                   increaseDecreaseTween.transform(particle.progress);
