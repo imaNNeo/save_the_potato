@@ -149,7 +149,13 @@ class _MainPageState extends State<MainPage>
                       GameColors.starsBackground[state.gameDifficultyModeIndex],
                   starsColor:
                       GameColors.starsColors[state.gameDifficultyModeIndex],
-                  starsTimeScale: 0.5 + (state.difficultyLinear * 1.5),
+                  starsTimeScale: switch (state.playingState) {
+                    PlayingStateNone() => 0.0,
+                    PlayingStateGuide() ||
+                    PlayingStatePlaying() =>
+                      0.5 + (state.difficultyLinear * 1.5),
+                    PlayingStatePaused() || PlayingStateGameOver() => 0.0,
+                  },
                 ),
                 gameWidget,
                 const Align(
