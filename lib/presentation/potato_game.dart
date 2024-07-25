@@ -36,6 +36,9 @@ class PotatoGame extends FlameGame<MyWorld>
         );
 
   @override
+  Color backgroundColor() => Colors.transparent;
+
+  @override
   Future<void> onLoad() async {
     await Flame.images.loadAll([
       ...List.generate(8, (index) => 'flame/flame${index + 1}.png'),
