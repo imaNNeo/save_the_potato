@@ -31,16 +31,22 @@ class _ShaderRendererWidgetState extends State<ShaderRendererWidget>
     with SingleTickerProviderStateMixin {
   Ticker? _ticker;
 
+  Duration? _lastElapsed;
+  double shaderElapsed = 0.0;
+
   @override
   void initState() {
     _ticker = createTicker((elapsed) {
+      final dt = (elapsed.inMilliseconds / 1000) -
+          ((_lastElapsed?.inMilliseconds ?? 0) / 1000);
+      shaderElapsed += dt * widget.timeScale;
       setState(() {
         widget.shader.setFloat(
           0,
-          widget.initialTimeOffset +
-              ((elapsed.inMilliseconds / 1000) * widget.timeScale),
+          widget.initialTimeOffset + shaderElapsed,
         );
       });
+      _lastElapsed = elapsed;
     });
     _ticker!.start();
     super.initState();
