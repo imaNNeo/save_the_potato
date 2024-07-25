@@ -70,6 +70,9 @@ flutter:
     - assets/rive/
     - assets/logo/
 
+  shaders:
+    - shaders/background.frag
+
 flutter_launcher_icons:
   android: false
   ios: true

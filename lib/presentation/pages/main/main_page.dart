@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,8 +7,10 @@ import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
+import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
+import 'package:save_the_potato/presentation/widgets/background_stars.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/game_paused_ui.dart';
@@ -143,6 +144,13 @@ class _MainPageState extends State<MainPage>
             backgroundColor: Colors.black,
             body: Stack(
               children: [
+                AnimatedBackgroundStars(
+                  backgroundColor:
+                      GameColors.starsBackground[state.gameDifficultyModeIndex],
+                  starsColor:
+                      GameColors.starsColors[state.gameDifficultyModeIndex],
+                  starsTimeScale: 0.5 + (state.difficultyLinear * 1.5),
+                ),
                 gameWidget,
                 const Align(
                   alignment: Alignment.topCenter,
