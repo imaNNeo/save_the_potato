@@ -72,6 +72,7 @@ flutter:
 
   shaders:
     - shaders/background.frag
+    - shaders/shield.frag
 
 flutter_launcher_icons:
   android: false

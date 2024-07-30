@@ -20,6 +20,7 @@ import 'package:save_the_potato/presentation/widgets/new_rank_celebration_page.d
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
 import 'package:save_the_potato/presentation/widgets/rotating_controls.dart';
 import 'package:save_the_potato/presentation/widgets/settings_pause_icon.dart';
+import 'package:save_the_potato/presentation/widgets/shield_shader.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -144,44 +145,59 @@ class _MainPageState extends State<MainPage>
             backgroundColor: Colors.black,
             body: Stack(
               children: [
-                AnimatedBackgroundStars(
-                  backgroundColor:
-                      GameColors.starsBackground[state.gameDifficultyModeIndex],
-                  starsColor:
-                      GameColors.starsColors[state.gameDifficultyModeIndex],
-                  starsTimeScale: switch (state.playingState) {
-                    PlayingStateNone() => 0.0,
-                    PlayingStateGuide() ||
-                    PlayingStatePlaying() =>
-                      0.5 + (state.difficultyLinear * 1.5),
-                    PlayingStatePaused() || PlayingStateGameOver() => 0.0,
-                  },
+                Container(
+                  color: Colors.white,
                 ),
-                gameWidget,
-                const Align(
-                  alignment: Alignment.topCenter,
-                  child: PotatoTopBar(),
-                ),
-                const Align(
-                  alignment: Alignment.bottomLeft,
-                  child: DebugPanel(),
-                ),
-                RotationControls(
-                  showGuide: state.playingState.isGuide,
-                  onLeftDown: _gameCubit.onLeftTapDown,
-                  onLeftUp: _gameCubit.onLeftTapUp,
-                  onRightDown: _gameCubit.onRightTapDown,
-                  onRightUp: _gameCubit.onRightTapUp,
-                ),
-                if (state.playingState.isPaused) const GamePausedUI(),
-                if (state.showGameOverUI) const GameOverUI(),
-                const Align(
-                  alignment: Alignment.topRight,
-                  child: SettingsPauseIcon(),
-                ),
-                const Align(
-                  alignment: Alignment.topLeft,
-                  child: HighScoreWidget(),
+                // AnimatedBackgroundStars(
+                //   backgroundColor:
+                //       GameColors.starsBackground[state.gameDifficultyModeIndex],
+                //   starsColor:
+                //       GameColors.starsColors[state.gameDifficultyModeIndex],
+                //   starsTimeScale: switch (state.playingState) {
+                //     PlayingStateNone() => 0.0,
+                //     PlayingStateGuide() ||
+                //     PlayingStatePlaying() =>
+                //       0.5 + (state.difficultyLinear * 1.5),
+                //     PlayingStatePaused() || PlayingStateGameOver() => 0.0,
+                //   },
+                // ),
+                // gameWidget,
+                // const Align(
+                //   alignment: Alignment.topCenter,
+                //   child: PotatoTopBar(),
+                // ),
+                // const Align(
+                //   alignment: Alignment.bottomLeft,
+                //   child: DebugPanel(),
+                // ),
+                // RotationControls(
+                //   showGuide: state.playingState.isGuide,
+                //   onLeftDown: _gameCubit.onLeftTapDown,
+                //   onLeftUp: _gameCubit.onLeftTapUp,
+                //   onRightDown: _gameCubit.onRightTapDown,
+                //   onRightUp: _gameCubit.onRightTapUp,
+                // ),
+                // if (state.playingState.isPaused) const GamePausedUI(),
+                // if (state.showGameOverUI) const GameOverUI(),
+                // const Align(
+                //   alignment: Alignment.topRight,
+                //   child: SettingsPauseIcon(),
+                // ),
+                // const Align(
+                //   alignment: Alignment.topLeft,
+                //   child: HighScoreWidget(),
+                // ),
+                Center(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black),
+                    ),
+                    width: 200,
+                    height: 200,
+                    child: const ShieldShader(
+                      timeScale: 1.0,
+                    ),
+                  ),
                 ),
               ],
             ),
