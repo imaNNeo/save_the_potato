@@ -1,42 +1,16 @@
 import 'dart:math';
 
-import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/particles.dart';
-import 'package:flame_bloc/flame_bloc.dart';
-import 'package:flutter/material.dart';
-import 'package:save_the_potato/presentation/components/potato.dart';
-import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
-import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:flutter/widgets.dart';
+import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
+import 'package:save_the_potato/presentation/components/shield/shield.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
-import 'package:save_the_potato/service_locator.dart';
 
-import 'moving/moving_components.dart';
-import 'moving/orb/orb_type.dart';
 
-class Shield extends PositionComponent
-    with
-        ParentIsA<Potato>,
-        HasGameRef<PotatoGame>,
-        CollisionCallbacks,
-        HasTimeScale,
-        FlameBlocListenable<GameCubit, GameState> {
-  Shield({
-    required this.type,
-    this.shieldWidth = 6.0,
-    this.shieldSweep = pi / 2,
-    this.offset = 12,
-  }) : super(
-          position: Vector2.all(0),
-          anchor: Anchor.center,
-        );
-
-  final OrbType type;
-  final double shieldWidth;
-  final double shieldSweep;
-  final double offset;
-
+class ShieldUiStyle1 extends PositionComponent
+    with ParentIsA<Shield>, HasGameRef<PotatoGame> {
   late Timer _particleTimer;
   late List<Sprite> _flameSprites;
   late List<Sprite> _smallSparkleSprites;
@@ -48,32 +22,25 @@ class Shield extends PositionComponent
   late Paint sparklePaint;
   late Paint shieldLinePaint;
 
-  final _audioHelper = getIt.get<AudioHelper>();
-
-  @override
-  void onNewState(GameState state) {
-    super.onNewState(state);
-    timeScale = state.gameOverTimeScale;
-  }
-
   @override
   Future<void> onLoad() async {
     super.onLoad();
+    size = parent.size;
+    final type = parent.type;
+    final shieldWidth = parent.shieldWidth;
     _smallSparkleSprites = switch (type) {
       OrbType.fire => [
-          await Sprite.load('sparkle/sparkle1.png'),
-          await Sprite.load('sparkle/sparkle2.png'),
-        ],
+        await Sprite.load('sparkle/sparkle1.png'),
+        await Sprite.load('sparkle/sparkle2.png'),
+      ],
       OrbType.ice => [
-          await Sprite.load('snow/snowflake1.png'),
-          await Sprite.load('snow/snowflake2.png'),
-        ],
+        await Sprite.load('snow/snowflake1.png'),
+        await Sprite.load('snow/snowflake2.png'),
+      ],
     };
 
     shieldLineColor = type.baseColor.withOpacity(0.0);
     shieldTargetColor = type.baseColor.withOpacity(0.8);
-    size = parent.size + Vector2.all(shieldWidth * 2) + Vector2.all(offset * 2);
-    position = parent.size / 2;
     shieldLinePaint = Paint()
       ..color = type.baseColor
       ..strokeWidth = shieldWidth
@@ -83,7 +50,6 @@ class Shield extends PositionComponent
     flamePaint = Paint();
 
     sparklePaint = Paint();
-    _addHitbox();
 
     _flameSprites = [];
     for (int i = 1; i <= 8; i++) {
@@ -93,43 +59,13 @@ class Shield extends PositionComponent
     _addParticles();
   }
 
-  void _addHitbox() {
-    final center = size / 2;
-
-    const precision = 8;
-
-    final segment = shieldSweep / (precision - 1);
-    final radius = size.x / 2;
-    final startAngle = 0 - shieldSweep / 2;
-
-    List<Vector2> vertices = [];
-    for (int i = 0; i < precision; i++) {
-      final thisSegment = startAngle + segment * i;
-      vertices.add(
-        center + Vector2(cos(thisSegment), sin(thisSegment)) * radius,
-      );
-    }
-
-    for (int i = precision - 1; i >= 0; i--) {
-      final thisSegment = startAngle + segment * i;
-      vertices.add(
-        center +
-            Vector2(cos(thisSegment), sin(thisSegment)) *
-                (radius - shieldWidth),
-      );
-    }
-
-    add(PolygonHitbox(
-      vertices,
-      collisionType: CollisionType.active,
-    ));
-  }
-
   final _opacityTween = Tween(begin: 0.4, end: 0.0);
 
   void _addParticles() {
     Random rnd = game.rnd;
-
+    final shieldWidth = parent.shieldWidth;
+    final shieldSweep = parent.shieldSweep;
+    final type = parent.type;
     final increaseDecreaseTween = TweenSequence<double>([
       TweenSequenceItem<double>(
         tween: Tween<double>(begin: 0.0, end: 0.8)
@@ -145,6 +81,7 @@ class Shield extends PositionComponent
     _particleTimer = Timer(
       0.06,
       onTick: () {
+        final angle = parent.angle;
         final radius = (size.x / 2) - shieldWidth / 2;
         final minAngle = angle - (shieldSweep / 2);
         final maxAngle = angle + (shieldSweep / 2);
@@ -153,9 +90,9 @@ class Shield extends PositionComponent
 
         final localPos = (size / 2) +
             Vector2(
-                  cos(generateAngle - angle),
-                  sin(generateAngle - angle),
-                ) *
+              cos(generateAngle - angle),
+              sin(generateAngle - angle),
+            ) *
                 radius;
         final color = type.colors.random(game.rnd);
 
@@ -169,10 +106,11 @@ class Shield extends PositionComponent
         final largeFlameAngle = place * (pi / 2);
         final shortFlameAngle = radians((rnd.nextDouble() * 20) - 5);
         final rotation =
-            isShortFlame ? shortFlameAngle : pi / 2 + largeFlameAngle;
+        isShortFlame ? shortFlameAngle : pi / 2 + largeFlameAngle;
 
         /// Trail
-        parent.parent.add(ParticleSystemComponent(
+        final myWorld = game.world;
+        myWorld.add(ParticleSystemComponent(
           priority: -10,
           angle: angle,
           anchor: Anchor.center,
@@ -209,13 +147,13 @@ class Shield extends PositionComponent
             lifespan: 2,
             acceleration: isShortFlame
                 ? Vector2(
-                    rnd.nextDouble() * 40,
-                    -10 + rnd.nextDouble() * 20,
-                  )
+              rnd.nextDouble() * 40,
+              -10 + rnd.nextDouble() * 20,
+            )
                 : Vector2(
-                    0,
-                    -20 + rnd.nextDouble() * 40,
-                  ),
+              0,
+              -20 + rnd.nextDouble() * 40,
+            ),
             child: ComputedParticle(
               renderer: (canvas, particle) {
                 final opacity = increaseDecreaseTween.transform(
@@ -253,7 +191,7 @@ class Shield extends PositionComponent
             ),
             child: ComputedParticle(renderer: (Canvas c, Particle particle) {
               final opacity =
-                  increaseDecreaseTween.transform(particle.progress);
+              increaseDecreaseTween.transform(particle.progress);
 
               if (opacity <= 0.01) {
                 return;
@@ -293,6 +231,8 @@ class Shield extends PositionComponent
   @override
   void render(Canvas canvas) {
     super.render(canvas);
+    final shieldWidth = parent.shieldWidth;
+    final shieldSweep = parent.shieldSweep;
     canvas.drawArc(
       size.toRect().deflate(shieldWidth / 2),
       -shieldSweep / 2,
@@ -302,36 +242,6 @@ class Shield extends PositionComponent
         ..color = shieldLineColor
         ..strokeWidth = shieldWidth,
     );
-  }
-
-  @override
-  void onCollisionStart(
-      Set<Vector2> intersectionPoints, PositionComponent other) {
-    super.onCollisionStart(intersectionPoints, other);
-    if (other is MovingComponent) {
-      switch (other) {
-        case MovingHealth():
-          bloc.onShieldHit(other);
-          _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
-          other.disjoint();
-        case FireOrb():
-        case IceOrb():
-          final orb = other as MovingOrb;
-          if ((orb.type.isFire && type.isFire) ||
-              (orb.type.isIce && type.isIce)) {
-            bloc.onShieldHit(other);
-            if (orb.overrideCollisionSoundNumber != null) {
-              _audioHelper.playShieldSound(orb.overrideCollisionSoundNumber!);
-            } else {
-              _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
-            }
-            final orbPos = other.absolutePosition;
-            final diff = orbPos - absolutePosition;
-            final contactAngle = atan2(diff.y, diff.x);
-            other.disjoint(contactAngle);
-          }
-      }
-    }
   }
 
   @override

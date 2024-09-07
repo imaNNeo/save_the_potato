@@ -96,6 +96,7 @@ class MyApp extends StatelessWidget {
           ),
         ],
         child: MaterialApp(
+          showPerformanceOverlay: true,
           title: 'Save the Potato',
           theme: ThemeData.dark(useMaterial3: true).copyWith(
             textTheme: ThemeData.dark().textTheme.apply(
