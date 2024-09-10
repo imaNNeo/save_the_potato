@@ -12,6 +12,7 @@ import 'package:save_the_potato/service_locator.dart';
 
 import '../moving/moving_components.dart';
 import '../moving/orb/orb_type.dart';
+import 'ui/shield_ui3.dart';
 
 class Shield extends PositionComponent
     with
@@ -49,7 +50,9 @@ class Shield extends PositionComponent
     size = parent.size + Vector2.all(shieldWidth * 2) + Vector2.all(offset * 2);
     position = parent.size / 2;
     _addHitbox();
-    add(ShieldUiStyle1());
+    if (type == OrbType.fire) {
+      add(ShieldUiStyle3());
+    }
   }
 
   void _addHitbox() {
