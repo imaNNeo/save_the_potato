@@ -5,7 +5,7 @@ import 'package:save_the_potato/domain/analytics_helper.dart';
 class FirebaseAnalyticsHelper extends AnalyticsHelper {
   void _logEvent({
     required String name,
-    Map<String, dynamic>? parameters,
+    Map<String, Object>? parameters,
   }) {
     if (kDebugMode) {
       return;
