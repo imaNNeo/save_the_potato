@@ -1,5 +1,8 @@
-## newVersion
+## 1.5.0
 * Fix crash when removing HealthDisjointParticle (now we add RemoveEffect to fix that)
+* Add scared state on multi spawn
+* Play and show amazed animation after a successful multi spawn
+* Upgrade some dependencies
 
 ## 1.4.1
 * Fix performance issue in the iOS by removing all blur effects in the Paint objects
