@@ -6,7 +6,6 @@ import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/errors/domain_error.dart';
@@ -29,9 +28,7 @@ class GameCubit extends Cubit<GameState> {
     this._scoresRepository,
     this._configsRepository,
     this._analyticsHelper,
-  ) : super(const GameState()) {
-    SoLoud.instance.init();
-  }
+  ) : super(const GameState());
 
   final _shieldAngleRotationAmount = pi * 1.8;
 
@@ -393,11 +390,5 @@ class GameCubit extends Cubit<GameState> {
       ),
       upcomingGameMode: const ValueWrapper(null),
     ));
-  }
-
-  @override
-  Future<void> close() {
-    SoLoud.instance.deinit();
-    return super.close();
   }
 }
