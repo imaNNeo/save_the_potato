@@ -8,12 +8,14 @@ class AnimatedBackgroundStars extends ImplicitlyAnimatedWidget {
   final Color backgroundColor;
   final Color starsColor;
   final double starsTimeScale;
+  final double starsSize;
 
   const AnimatedBackgroundStars({
     super.key,
     required this.backgroundColor,
     required this.starsColor,
     required this.starsTimeScale,
+    required this.starsSize,
     super.duration = const Duration(milliseconds: 300),
   });
 
@@ -34,6 +36,7 @@ class _AnimatedBackgroundStarsState
       backgroundColor: _backgroundColor?.evaluate(animation) ?? Colors.black,
       starColor: _starsColor?.evaluate(animation) ?? Colors.white,
       timeScale: widget.starsTimeScale,
+      starsSize: widget.starsSize,
     );
   }
 
@@ -52,11 +55,13 @@ class BackgroundStars extends StatefulWidget {
     required this.backgroundColor,
     required this.timeScale,
     this.starColor = Colors.white,
+    required this.starsSize,
   });
 
   final Color backgroundColor;
   final Color starColor;
   final double timeScale;
+  final double starsSize;
 
   @override
   State<BackgroundStars> createState() => _BackgroundStarsState();
@@ -86,13 +91,14 @@ class _BackgroundStarsState extends State<BackgroundStars> {
   }
 
   void _refreshShaderParams() {
-    _backgroundShader?.setFloat(3, widget.backgroundColor.red / 255);
-    _backgroundShader?.setFloat(4, widget.backgroundColor.green / 255);
-    _backgroundShader?.setFloat(5, widget.backgroundColor.blue / 255);
+    _backgroundShader?.setFloat(3, widget.backgroundColor.r);
+    _backgroundShader?.setFloat(4, widget.backgroundColor.g);
+    _backgroundShader?.setFloat(5, widget.backgroundColor.b);
 
-    _backgroundShader?.setFloat(6, widget.starColor.red / 255);
-    _backgroundShader?.setFloat(7, widget.starColor.green / 255);
-    _backgroundShader?.setFloat(8, widget.starColor.blue / 255);
+    _backgroundShader?.setFloat(6, widget.starColor.r);
+    _backgroundShader?.setFloat(7, widget.starColor.g);
+    _backgroundShader?.setFloat(8, widget.starColor.b);
+    _backgroundShader?.setFloat(9, widget.starsSize);
   }
 
   @override

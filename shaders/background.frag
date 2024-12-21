@@ -5,7 +5,7 @@
 #define MAX_MOVEMENT_SPEED 0.02
 #define MIN_RADIUS 0.01
 #define MAX_RADIUS 0.04
-#define STAR_COUNT 100
+#define STAR_COUNT 50
 #define PI 3.14159265358979323
 #define TWOPI 6.283185307
 
@@ -17,6 +17,7 @@ uniform float iTime;
 uniform vec2 iResolution;
 uniform vec3 backgroundColor;
 uniform vec3 starColor;
+uniform float starSize;
 
 float rand(float s1, float s2) {
     return fract(sin(dot(vec2(s1, s2), vec2(12.9898, 78.233))) * 43758.5453);
@@ -57,7 +58,7 @@ vec3 renderStars(vec2 uv, float aspect) {
         float dist = length(uv - pos);
         float distFromStarCenter = dist / rad;
         float distTraveled = r / maxDistance;
-        float shape = saturate(1.0 / (50.0 * (1.0 / distTraveled) * distFromStarCenter) - 0.08);
+        float shape = saturate(1.0 / ((100 - min(starSize, 100)) * (1.0 / distTraveled) * distFromStarCenter) - 0.08);
 
         col += starColor * step(dist, rad) * shape;
     }

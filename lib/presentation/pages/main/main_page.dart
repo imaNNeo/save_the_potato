@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -85,6 +86,8 @@ class _MainPageState extends State<MainPage>
   @override
   Widget build(BuildContext context) {
     final gameWidget = GameWidget(game: _game);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    print('screenWidth: $screenWidth');
     return BlocConsumer<GameCubit, GameState>(
       key: pageRootKey,
       listener: (context, state) {
@@ -116,6 +119,7 @@ class _MainPageState extends State<MainPage>
                       0.5 + (state.difficultyLinear * 1.5),
                     PlayingStatePaused() || PlayingStateGameOver() => 0.0,
                   },
+                  starsSize: min(screenWidth * 0.1, 80),
                 ),
                 gameWidget,
                 const Align(
