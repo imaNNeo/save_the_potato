@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_poki_sdk/flutter_poki_sdk.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
 import 'package:save_the_potato/domain/repository/settings_repository.dart';
@@ -16,6 +17,16 @@ final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setupServiceLocator();
+  try {
+    await getIt.get<AudioHelper>().initialize();
+    try {
+      await PokiSDK.init();
+    } catch (e, stack) {
+      debugPrintStack(stackTrace: stack);
+    }
+  } catch (e) {
+    debugPrint('Error initializing: $e');
+  }
   runApp(const MyApp());
 }
 
