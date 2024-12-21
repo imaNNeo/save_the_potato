@@ -274,14 +274,14 @@ class GameCubit extends Cubit<GameState> {
     _audioHelper.resumeBackgroundMusic();
   }
 
-  void restartGame() {
+  void restartGame() async {
+    await PokiSDK.commercialBreak(onStarted: () {});
     emit(const GameState().copyWith(
       playingState: const PlayingStateGuide(),
       restartGame: true,
       gameSessionNumber: state.gameSessionNumber + 1,
     ));
     emit(state.copyWith(restartGame: false));
-    // Todo: commercial break
   }
 
   void onShieldHit(MovingComponent movingComponent) {
