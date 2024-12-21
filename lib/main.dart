@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_poki_sdk/flutter_poki_sdk.dart';
@@ -19,10 +20,12 @@ Future<void> main() async {
   setupServiceLocator();
   try {
     await getIt.get<AudioHelper>().initialize();
-    try {
-      await PokiSDK.init();
-    } catch (e, stack) {
-      debugPrintStack(stackTrace: stack);
+    if (kIsWeb || kIsWasm) {
+      try {
+        await PokiSDK.init();
+      } catch (e, stack) {
+        debugPrintStack(stackTrace: stack);
+      }
     }
   } catch (e) {
     debugPrint('Error initializing: $e');

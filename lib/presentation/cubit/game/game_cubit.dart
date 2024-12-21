@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
 import 'package:flame/extensions.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -52,7 +53,9 @@ class GameCubit extends Cubit<GameState> {
     if (!state.playingState.isGuide) {
       return;
     }
-    PokiSDK.gameplayStart();
+    if (kIsWeb || kIsWasm) {
+      PokiSDK.gameplayStart();
+    }
     gameStartedTimestamp = DateTime.now().millisecondsSinceEpoch;
     emit(state.copyWith(playingState: const PlayingStatePlaying()));
     _audioHelper.playBackgroundMusic();
@@ -127,7 +130,9 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void _gameOver() async {
-    PokiSDK.gameplayStop();
+    if (kIsWeb || kIsWasm) {
+      PokiSDK.gameplayStop();
+    }
     _audioHelper.playGameOverSound();
     final score = (state.levelTimePassed * 1000).toInt();
     final previousScore = await _scoresRepository.getHighScore();
@@ -263,19 +268,25 @@ class GameCubit extends Cubit<GameState> {
         'State is not playing, how could you call this function?',
       );
     }
-    PokiSDK.gameplayStop();
+    if (kIsWeb || kIsWasm) {
+      PokiSDK.gameplayStop();
+    }
     emit(state.copyWith(playingState: const PlayingStatePaused()));
     _audioHelper.pauseBackgroundMusic();
   }
 
   void resumeGame() {
-    PokiSDK.gameplayStart();
+    if (kIsWeb || kIsWasm) {
+      PokiSDK.gameplayStart();
+    }
     emit(state.copyWith(playingState: const PlayingStatePlaying()));
     _audioHelper.resumeBackgroundMusic();
   }
 
   void restartGame() async {
-    await PokiSDK.commercialBreak(onStarted: () {});
+    if (kIsWeb || kIsWasm) {
+      await PokiSDK.commercialBreak(onStarted: () {});
+    }
     emit(const GameState().copyWith(
       playingState: const PlayingStateGuide(),
       restartGame: true,

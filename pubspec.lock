@@ -219,7 +219,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "3d056ab1add8d61aa129e2a4939c50d18bcddad1"
+      resolved-ref: "27ba9e8c27a8e31054fb8ff66f3d4b7976bbe555"
       url: "git@github.com:imaNNeo/flutter_poki_sdk.git"
     source: git
     version: "1.0.0"

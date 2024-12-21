@@ -9,6 +9,7 @@ import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_noise/flame_noise.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_poki_sdk/flutter_poki_sdk.dart';
@@ -53,7 +54,9 @@ class PotatoGame extends FlameGame<MyWorld>
       children: [world],
     ));
     if (_gameCubit.state.gameSessionNumber == 0) {
-      PokiSDK.gameLoadingFinished();
+      if (kIsWeb || kIsWasm) {
+        PokiSDK.gameLoadingFinished();
+      }
     }
   }
 
