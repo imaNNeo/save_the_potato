@@ -12,8 +12,13 @@ class ScoresLocalDataSource {
   Stream<int> getHighScoreStream() => _highScoreStreamController.stream;
 
   Future<int?> getHighScore() async {
-    final sharedPref = await SharedPreferences.getInstance();
-    return sharedPref.getInt(_highScoreKey);
+    try {
+      final sharedPref = await SharedPreferences.getInstance();
+      return sharedPref.getInt(_highScoreKey);
+    } catch (e) {
+      await clearHighScore();
+      return null;
+    }
   }
 
   Future<int> setHighScore(int score) async {
