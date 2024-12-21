@@ -52,7 +52,9 @@ class PotatoGame extends FlameGame<MyWorld>
       ],
       children: [world],
     ));
-    PokiSDK.gameLoadingFinished();
+    if (_gameCubit.state.gameSessionNumber == 0) {
+      PokiSDK.gameLoadingFinished();
+    }
   }
 
   final GameCubit _gameCubit;

@@ -16,6 +16,7 @@ class GameState extends Equatable {
     this.upcomingGameMode,
     this.playMotivationWord,
     this.motivationWordsPoolToPlay = MotivationWordType.values,
+    this.gameSessionNumber = 0,
   });
 
   final int healthPoints;
@@ -45,6 +46,8 @@ class GameState extends Equatable {
   final MotivationWordType? playMotivationWord;
 
   final List<MotivationWordType> motivationWordsPoolToPlay;
+
+  final int gameSessionNumber;
 
   /// Between 0.0 and 1.0
   double get difficulty => GameConstants.difficultyInitialToPeakCurve.transform(
@@ -85,6 +88,7 @@ class GameState extends Equatable {
     ValueWrapper<GameMode>? upcomingGameMode,
     ValueWrapper<MotivationWordType>? playMotivationWord,
     List<MotivationWordType>? motivationWordsPoolToPlay,
+    int? gameSessionNumber,
   }) =>
       GameState(
         healthPoints: healthPoints ?? this.healthPoints,
@@ -107,6 +111,7 @@ class GameState extends Equatable {
             : this.playMotivationWord,
         motivationWordsPoolToPlay:
             motivationWordsPoolToPlay ?? this.motivationWordsPoolToPlay,
+        gameSessionNumber: gameSessionNumber ?? this.gameSessionNumber,
       );
 
   @override
@@ -125,5 +130,6 @@ class GameState extends Equatable {
         upcomingGameMode,
         playMotivationWord,
         motivationWordsPoolToPlay,
+        gameSessionNumber,
       ];
 }

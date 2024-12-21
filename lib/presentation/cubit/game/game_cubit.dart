@@ -279,6 +279,7 @@ class GameCubit extends Cubit<GameState> {
     emit(const GameState().copyWith(
       playingState: const PlayingStateGuide(),
       restartGame: true,
+      gameSessionNumber: state.gameSessionNumber + 1,
     ));
     emit(state.copyWith(restartGame: false));
     // Todo: commercial break
