@@ -136,7 +136,6 @@ class GameCubit extends Cubit<GameState> {
     int highestScore;
     if (isHighScore) {
       highestScore = score;
-      _audioHelper.playVictorySound();
     } else {
       highestScore = previousScore;
     }

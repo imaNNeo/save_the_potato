@@ -17,7 +17,7 @@ class AudioHelper {
   late final AudioSource _bgm;
   late final List<AudioSource> shieldNotes;
   late final AudioSource _heartHit, _orbHit1, _orbHit2;
-  late final AudioSource _victory, _gameOver;
+  late final AudioSource _gameOver;
 
   SoundHandle? _bgmHandle;
 
@@ -39,7 +39,6 @@ class AudioHelper {
     _orbHit1 = await _soLoud.loadAsset('$baseAssets/hit1.ogg');
     _orbHit2 = await _soLoud.loadAsset('$baseAssets/hit2.ogg');
 
-    _victory = await _soLoud.loadAsset('$baseAssets/victory.mp3');
     _gameOver = await _soLoud.loadAsset('$baseAssets/game_over.ogg');
 
     // Motivation words
@@ -136,16 +135,6 @@ class AudioHelper {
     final shield = shieldNotes[seed % shieldNotes.length];
     _soLoud.play(
       shield,
-      volume: GameConstants.soundEffectsVolume,
-    );
-  }
-
-  void playVictorySound() async {
-    if (!(await _audioEnabled.value)) {
-      return;
-    }
-    _soLoud.play(
-      _victory,
       volume: GameConstants.soundEffectsVolume,
     );
   }
