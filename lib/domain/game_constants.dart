@@ -26,8 +26,8 @@ class GameConstants {
   static const double movingHealthPointSpeedMultiplier = 0.9;
   static double movingHealthMinSpeed = GameModeSingleSpawn.orbsMoveSpeedInitial;
   static double movingHealthMaxSpeed = GameModeSingleSpawn.orbsMoveSpeedPeak * 0.8;
-  static const double bgmVolume = 4.0;
-  static const double soundEffectsVolume = 7.0;
+  static const double bgmVolume = 1.0;
+  static const double soundEffectsVolume = 1.75;
 
   static const redColors = [
     Color(0xFFFF9362),
