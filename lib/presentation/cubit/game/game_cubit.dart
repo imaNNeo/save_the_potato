@@ -6,6 +6,7 @@ import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_poki_sdk/flutter_poki_sdk.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
@@ -51,6 +52,7 @@ class GameCubit extends Cubit<GameState> {
     if (!state.playingState.isGuide) {
       return;
     }
+    PokiSDK.gameplayStart();
     gameStartedTimestamp = DateTime.now().millisecondsSinceEpoch;
     emit(state.copyWith(playingState: const PlayingStatePlaying()));
     _audioHelper.playBackgroundMusic();
@@ -125,6 +127,7 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void _gameOver() async {
+    PokiSDK.gameplayStop();
     _audioHelper.playGameOverSound();
     final score = (state.levelTimePassed * 1000).toInt();
     final previousScore = await _scoresRepository.getHighScore();
@@ -261,11 +264,13 @@ class GameCubit extends Cubit<GameState> {
         'State is not playing, how could you call this function?',
       );
     }
+    PokiSDK.gameplayStop();
     emit(state.copyWith(playingState: const PlayingStatePaused()));
     _audioHelper.pauseBackgroundMusic();
   }
 
   void resumeGame() {
+    PokiSDK.gameplayStart();
     emit(state.copyWith(playingState: const PlayingStatePlaying()));
     _audioHelper.resumeBackgroundMusic();
   }
@@ -276,6 +281,7 @@ class GameCubit extends Cubit<GameState> {
       restartGame: true,
     ));
     emit(state.copyWith(restartGame: false));
+    // Todo: commercial break
   }
 
   void onShieldHit(MovingComponent movingComponent) {

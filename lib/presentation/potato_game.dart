@@ -11,6 +11,7 @@ import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_noise/flame_noise.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_poki_sdk/flutter_poki_sdk.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
@@ -51,6 +52,7 @@ class PotatoGame extends FlameGame<MyWorld>
       ],
       children: [world],
     ));
+    PokiSDK.gameLoadingFinished();
   }
 
   final GameCubit _gameCubit;

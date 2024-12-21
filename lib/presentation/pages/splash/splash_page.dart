@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_poki_sdk/flutter_poki_sdk.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/splash/splash_cubit.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
@@ -26,8 +27,15 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   void _initialize() async {
-    context.read<SplashCubit>().pageOpen();
-    context.read<ScoresCubit>().initialize();
+    final splashCubit = context.read<SplashCubit>();
+    final scoresCubit = context.read<ScoresCubit>();
+    try {
+      await PokiSDK.init();
+    } catch (e, stack) {
+      debugPrintStack(stackTrace: stack);
+    }
+    splashCubit.pageOpen();
+    scoresCubit.initialize();
   }
 
   void _openHomePage(BuildContext context) {

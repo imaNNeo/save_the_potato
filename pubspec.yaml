@@ -25,6 +25,9 @@ dependencies:
   flutter_svg: ^2.0.9
   stream_transform: ^2.1.0
   flutter_soloud: ^2.1.7
+  flutter_poki_sdk:
+    git:
+      url: git@github.com:imaNNeo/flutter_poki_sdk.git
 
 dev_dependencies:
   flutter_test:
