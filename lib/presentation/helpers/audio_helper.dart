@@ -32,15 +32,15 @@ class AudioHelper {
     _bgm = await _soLoud.loadAsset('$baseAssets/bg_120_140c_bpm.ogg');
     shieldNotes = [];
     for (var i = 1; i <= 6; i++) {
-      shieldNotes.add(await _soLoud.loadAsset('$baseAssets/Shield$i.wav'));
+      shieldNotes.add(await _soLoud.loadAsset('$baseAssets/Shield$i.ogg'));
     }
 
-    _heartHit = await _soLoud.loadAsset('$baseAssets/heart.wav');
-    _orbHit1 = await _soLoud.loadAsset('$baseAssets/hit1.wav');
-    _orbHit2 = await _soLoud.loadAsset('$baseAssets/hit2.wav');
+    _heartHit = await _soLoud.loadAsset('$baseAssets/heart.ogg');
+    _orbHit1 = await _soLoud.loadAsset('$baseAssets/hit1.ogg');
+    _orbHit2 = await _soLoud.loadAsset('$baseAssets/hit2.ogg');
 
     _victory = await _soLoud.loadAsset('$baseAssets/victory.mp3');
-    _gameOver = await _soLoud.loadAsset('$baseAssets/game_over.wav');
+    _gameOver = await _soLoud.loadAsset('$baseAssets/game_over.ogg');
 
     // Motivation words
     for (var word in MotivationWordType.values) {
