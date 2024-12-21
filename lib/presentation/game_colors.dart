@@ -9,6 +9,7 @@ class GameColors {
   static const leaderboardBronzeColorText = Color(0xFF1C1B1F);
   static const leaderboardOtherColor = Color(0xFF4B4B4B);
   static const leaderboardOtherColorText = Color(0xFFFFFFFF);
+  static const splashColor = Color(0xFF141218);
 
   static const linkBlueColor = Colors.blue;
   static const gameBlue = Color(0xFF0063BE);
@@ -36,7 +37,9 @@ class GameColors {
     final mineBorderColor = rank <= 3
         ? GameColors.getRankBgColor(rank)
         : Theme.of(context).colorScheme.primary;
-    final normalBorderColor = Theme.of(context).dividerColor.withOpacity(0.3);
+    final normalBorderColor = Theme.of(context).dividerColor.withValues(
+          alpha: 0.3,
+        );
     return isMine ? mineBorderColor : normalBorderColor;
   }
 
