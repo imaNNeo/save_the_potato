@@ -9,7 +9,7 @@ import 'errors/domain_error.dart';
 /// So we can have a reference of this class in our domain layer
 /// When presentation wants to show it, we need to pass the context to parse it
 /// At this time, we only have [RawTextMessage].
-/// Later we can add [LocalizedMessage] whic needs context to parse the localized message
+/// Later we can add [LocalizedMessage] which needs context to parse the localized message
 abstract class PresentationMessage with EquatableMixin {
   String parse(BuildContext context);
 
@@ -53,7 +53,6 @@ abstract class PresentationMessage with EquatableMixin {
             ? PresentationMessage.raw(error.detailsOrMessage!)
             : PresentationMessage.raw('Server error'),
       ServerError(errorEntry: null) => PresentationMessage.raw('Server error'),
-      AccountAlreadyExistsError() ||
       UnknownError() =>
         const RawTextMessage('Unknown error'),
     };

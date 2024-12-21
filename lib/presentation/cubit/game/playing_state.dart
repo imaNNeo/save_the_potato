@@ -31,9 +31,9 @@ class PlayingStatePaused extends PlayingState {
 }
 
 class PlayingStateGameOver extends PlayingState with EquatableMixin {
-  final ScoreEntity score;
+  final int score;
   final bool isHighScore;
-  final ScoreEntity highestScore;
+  final int highestScore;
 
   const PlayingStateGameOver({
     required this.score,

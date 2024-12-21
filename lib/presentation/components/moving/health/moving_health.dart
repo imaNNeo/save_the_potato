@@ -63,7 +63,6 @@ class MovingHealth extends MovingComponent {
   }
 
   void disjoint() {
-    getIt.get<AnalyticsHelper>().heartDisjointed();
     removeFromParent();
     add(HealthDisjointParticleComponent(
       colors: [...colors, Colors.white],

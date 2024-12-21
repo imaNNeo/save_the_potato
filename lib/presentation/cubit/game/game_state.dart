@@ -9,7 +9,6 @@ class GameState extends Equatable {
     this.showGameOverUI = false,
     this.shieldsAngleRotationSpeed = 0,
     this.restartGame = false,
-    this.onNewHighScore,
     this.firstHealthReceived = false,
     this.shieldHitCounter = 0,
     this.gameModeHistory = const [],
@@ -32,8 +31,6 @@ class GameState extends Equatable {
   final double shieldsAngleRotationSpeed;
 
   final bool restartGame;
-
-  final OnlineScoreEntity? onNewHighScore;
 
   final bool firstHealthReceived;
 
@@ -81,7 +78,6 @@ class GameState extends Equatable {
     bool? showGameOverUI,
     double? shieldsAngleRotationSpeed,
     bool? restartGame,
-    ValueWrapper<OnlineScoreEntity>? onNewHighScore,
     bool? firstHealthReceived,
     int? shieldHitCounter,
     List<GameMode>? gameModeHistory,
@@ -99,8 +95,6 @@ class GameState extends Equatable {
         shieldsAngleRotationSpeed:
             shieldsAngleRotationSpeed ?? this.shieldsAngleRotationSpeed,
         restartGame: restartGame ?? this.restartGame,
-        onNewHighScore:
-            onNewHighScore != null ? onNewHighScore.value : this.onNewHighScore,
         firstHealthReceived: firstHealthReceived ?? this.firstHealthReceived,
         shieldHitCounter: shieldHitCounter ?? this.shieldHitCounter,
         gameModeHistory: gameModeHistory ?? this.gameModeHistory,
@@ -124,7 +118,6 @@ class GameState extends Equatable {
         showGameOverUI,
         shieldsAngleRotationSpeed,
         restartGame,
-        onNewHighScore,
         firstHealthReceived,
         shieldHitCounter,
         gameModeHistory,
