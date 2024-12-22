@@ -58,25 +58,34 @@ class _SplashPageState extends State<SplashPage> {
           backgroundColor: GameColors.splashColor,
           body: Stack(
             children: [
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Save the Potato',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 4,
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Save the Potato',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 4,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    const SplashPotato(size: 180),
-                  ].animate().fadeIn(
-                        duration: const Duration(milliseconds: 600),
-                        delay: const Duration(milliseconds: 300),
-                      ),
-                ),
+                  ),
+                  const SplashPotato(size: 180),
+                  Expanded(child: Container()),
+                ].animate().fadeIn(
+                      duration: const Duration(milliseconds: 600),
+                      delay: const Duration(milliseconds: 300),
+                    ),
               ),
               Align(
                 alignment: Alignment.bottomCenter,
