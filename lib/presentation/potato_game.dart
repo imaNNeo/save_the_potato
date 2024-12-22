@@ -16,6 +16,8 @@ import 'package:flutter_poki_sdk/flutter_poki_sdk.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
+import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/service_locator.dart';
 
 import 'components/motivation_component.dart';
 import 'components/moving/moving_component_spawner.dart';
@@ -46,6 +48,7 @@ class PotatoGame extends FlameGame<MyWorld>
       ...List.generate(2, (index) => 'sparkle/sparkle${index + 1}.png'),
       'two-way-arrow.png',
     ]);
+    getIt.get<AudioHelper>().loadGameAssets();
     remove(world);
     add(FlameMultiBlocProvider(
       providers: [

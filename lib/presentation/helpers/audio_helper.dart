@@ -10,6 +10,8 @@ class AudioHelper {
 
   final _audioEnabled = LazyValue<bool>();
 
+  static const _baseAssets = 'assets/audio';
+
   Future<bool> get audioEnabled => _audioEnabled.value;
 
   late final SoLoud _soLoud;
@@ -28,22 +30,24 @@ class AudioHelper {
       return;
     }
     await _soLoud.init();
-    const baseAssets = 'assets/audio';
-    _bgm = await _soLoud.loadAsset('$baseAssets/bg_120_140c_bpm.ogg');
+    _bgm = await _soLoud.loadAsset('$_baseAssets/bg_120_140c_bpm.ogg');
+  }
+
+  Future<void> loadGameAssets() async {
     shieldNotes = [];
     for (var i = 1; i <= 6; i++) {
-      shieldNotes.add(await _soLoud.loadAsset('$baseAssets/Shield$i.ogg'));
+      shieldNotes.add(await _soLoud.loadAsset('$_baseAssets/Shield$i.ogg'));
     }
 
-    _heartHit = await _soLoud.loadAsset('$baseAssets/heart.ogg');
-    _orbHit1 = await _soLoud.loadAsset('$baseAssets/hit1.ogg');
-    _orbHit2 = await _soLoud.loadAsset('$baseAssets/hit2.ogg');
+    _heartHit = await _soLoud.loadAsset('$_baseAssets/heart.ogg');
+    _orbHit1 = await _soLoud.loadAsset('$_baseAssets/hit1.ogg');
+    _orbHit2 = await _soLoud.loadAsset('$_baseAssets/hit2.ogg');
 
-    _gameOver = await _soLoud.loadAsset('$baseAssets/game_over.ogg');
+    _gameOver = await _soLoud.loadAsset('$_baseAssets/game_over.ogg');
 
     // Motivation words
     for (var word in MotivationWordType.values) {
-      await _soLoud.loadAsset('$baseAssets/motivation/${word.assetName}');
+      await _soLoud.loadAsset('$_baseAssets/motivation/${word.assetName}');
     }
   }
 
