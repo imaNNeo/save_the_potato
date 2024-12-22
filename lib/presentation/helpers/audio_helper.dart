@@ -17,9 +17,9 @@ class AudioHelper {
   late final SoLoud _soLoud;
 
   late final AudioSource _bgm;
-  late final List<AudioSource> shieldNotes;
-  late final AudioSource _heartHit, _orbHit1, _orbHit2;
-  late final AudioSource _gameOver;
+  List<AudioSource>? _shieldNotes;
+  AudioSource? _heartHit, _orbHit1, _orbHit2;
+  AudioSource? _gameOver;
 
   SoundHandle? _bgmHandle;
 
@@ -34,9 +34,9 @@ class AudioHelper {
   }
 
   Future<void> loadGameAssets() async {
-    shieldNotes = [];
+    _shieldNotes = [];
     for (var i = 1; i <= 6; i++) {
-      shieldNotes.add(await _soLoud.loadAsset('$_baseAssets/Shield$i.ogg'));
+      _shieldNotes!.add(await _soLoud.loadAsset('$_baseAssets/Shield$i.ogg'));
     }
 
     _orbHit1 = await _soLoud.loadAsset('$_baseAssets/hit1.ogg');
@@ -114,8 +114,11 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
+    if (_heartHit == null) {
+      return;
+    }
     _soLoud.play(
-      _heartHit,
+      _heartHit!,
       volume: GameConstants.soundEffectsVolume,
     );
   }
@@ -124,8 +127,11 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
+    if (_orbHit1 == null || _orbHit2 == null) {
+      return;
+    }
     _soLoud.play(
-      Random().nextBool() ? _orbHit1 : _orbHit2,
+      Random().nextBool() ? _orbHit1! : _orbHit2!,
       volume: GameConstants.soundEffectsVolume,
     );
   }
@@ -137,7 +143,10 @@ class AudioHelper {
     if (seed < 0) {
       return;
     }
-    final shield = shieldNotes[seed % shieldNotes.length];
+    if (_shieldNotes == null) {
+      return;
+    }
+    final shield = _shieldNotes![seed % _shieldNotes!.length];
     _soLoud.play(
       shield,
       volume: GameConstants.soundEffectsVolume,
@@ -148,8 +157,12 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
+
+    if (_gameOver == null) {
+      return;
+    }
     _soLoud.play(
-      _gameOver,
+      _gameOver!,
       volume: GameConstants.soundEffectsVolume,
     );
   }
