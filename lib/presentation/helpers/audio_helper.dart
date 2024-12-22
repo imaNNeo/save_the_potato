@@ -39,9 +39,10 @@ class AudioHelper {
       shieldNotes.add(await _soLoud.loadAsset('$_baseAssets/Shield$i.ogg'));
     }
 
-    _heartHit = await _soLoud.loadAsset('$_baseAssets/heart.ogg');
     _orbHit1 = await _soLoud.loadAsset('$_baseAssets/hit1.ogg');
     _orbHit2 = await _soLoud.loadAsset('$_baseAssets/hit2.ogg');
+
+    _heartHit = await _soLoud.loadAsset('$_baseAssets/heart.ogg');
 
     _gameOver = await _soLoud.loadAsset('$_baseAssets/game_over.ogg');
 
