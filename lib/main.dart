@@ -17,13 +17,6 @@ final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (kIsWeb || kIsWasm) {
-    try {
-      await PokiSDK.init();
-    } catch (e, stack) {
-      debugPrintStack(stackTrace: stack);
-    }
-  }
   setupServiceLocator();
   try {
     await getIt.get<AudioHelper>().initialize();
