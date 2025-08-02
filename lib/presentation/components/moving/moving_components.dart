@@ -26,15 +26,22 @@ sealed class MovingComponent extends PositionComponent
         HasGameRef<PotatoGame>,
         HasTimeScale,
         FlameBlocListenable<GameCubit, GameState> {
-  MovingComponent({
-    required this.speed,
-    required double size,
-    required this.target,
-    required super.position,
-  }) : super(size: Vector2.all(size), priority: 1);
+  MovingComponent() : super(priority: 1);
 
-  final double speed;
-  final PositionComponent target;
+  late double speed;
+  late PositionComponent target;
+
+  void initialize({
+    required double speed,
+    required PositionComponent target,
+    required Vector2 position,
+    required double size,
+  }) {
+    this.speed = speed;
+    this.target = target;
+    this.size = Vector2.all(size);
+    this.position = position;
+  }
 
   Random get rnd => game.rnd;
 

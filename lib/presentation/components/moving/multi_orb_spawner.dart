@@ -1,5 +1,6 @@
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
+import 'package:save_the_potato/presentation/components/component_pool.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
@@ -14,6 +15,8 @@ class MultiOrbSpawner extends PositionComponent
   final PositionComponent target;
   final int spawnCount;
   final bool isOpposite;
+  final ComponentPool<FireOrb> fireOrbPool;
+  final ComponentPool<IceOrb> iceOrbPool;
 
   bool firstSpawned = false;
   double timeSinceLastSpawn = 0;
@@ -29,6 +32,8 @@ class MultiOrbSpawner extends PositionComponent
     required this.orbType,
     required this.target,
     required this.spawnCount,
+    required this.fireOrbPool,
+    required this.iceOrbPool,
     this.isOpposite = false,
   });
 
@@ -66,19 +71,29 @@ class MultiOrbSpawner extends PositionComponent
     late MovingOrb orb;
     switch (orbType) {
       case OrbType.fire:
-        orb = FireOrb(
-          speed: spawnOrbsMoveSpeed,
-          target: target,
-          position: position,
-          overrideCollisionSoundNumber: isOpposite ? -1 : spawnedCount % 6,
-        );
+        orb = fireOrbPool.get()
+          ..initialize(
+            speed: spawnOrbsMoveSpeed,
+            target: target,
+            position: position,
+          );
+        orb.overrideCollisionSoundNumber =
+            isOpposite ? -1 : spawnedCount % 6;
+        orb.onDisjointCallback = () {
+          fireOrbPool.release(orb as FireOrb);
+        };
       case OrbType.ice:
-        orb = IceOrb(
-          speed: spawnOrbsMoveSpeed,
-          target: target,
-          position: position,
-          overrideCollisionSoundNumber: isOpposite ? -1 : spawnedCount % 6,
-        );
+        orb = iceOrbPool.get()
+          ..initialize(
+            speed: spawnOrbsMoveSpeed,
+            target: target,
+            position: position,
+          );
+        orb.overrideCollisionSoundNumber =
+            isOpposite ? -1 : spawnedCount % 6;
+        orb.onDisjointCallback = () {
+          iceOrbPool.release(orb as IceOrb);
+        };
     }
     aliveMovingOrbs.add(orb);
     parent.add(orb);

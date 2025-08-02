@@ -4,6 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
+import 'package:save_the_potato/presentation/components/component_pool.dart';
 import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
@@ -44,12 +45,28 @@ class MovingComponentSpawner extends Component
 
   late GameState _previousGameState;
 
+  late ComponentPool<FireOrb> _fireOrbPool;
+  late ComponentPool<IceOrb> _iceOrbPool;
+  late ComponentPool<MovingHealth> _movingHealthPool;
+
   @override
   void onLoad() {
     super.onLoad();
     mounted.then((_) {
       _previousGameState = bloc.state;
     });
+    _fireOrbPool = ComponentPool<FireOrb>(
+          () => FireOrb(),
+      initialSize: 10,
+    );
+    _iceOrbPool = ComponentPool<IceOrb>(
+          () => IceOrb(),
+      initialSize: 10,
+    );
+    _movingHealthPool = ComponentPool<MovingHealth>(
+          () => MovingHealth(),
+      initialSize: 3,
+    );
   }
 
   @override
@@ -169,15 +186,18 @@ class MovingComponentSpawner extends Component
       GameConstants.movingHealthMinSpeed,
       GameConstants.movingHealthMaxSpeed,
     );
-    parent.add(movingHealth = MovingHealth(
+
+    movingHealth = _movingHealthPool.get()..initialize(
       speed: healthMoveSpeed,
-      size: 28,
       target: player,
+      size: 28,
       position: _getRandomSpawnPositionAroundMap(),
-    ));
-    movingHealth!.removed.then((value) {
+    );
+    movingHealth!.onDisjointCallback = () {
+      _movingHealthPool.release(movingHealth!);
       movingHealth = null;
-    });
+    };
+    parent.add(movingHealth!);
     return true;
   }
 
@@ -198,6 +218,8 @@ class MovingComponentSpawner extends Component
       orbType: orbType,
       target: player,
       spawnCount: gameMode.orbsSpawnCount(),
+      iceOrbPool: _iceOrbPool,
+      fireOrbPool: _fireOrbPool,
     );
     parent.add(spawner);
     aliveMultiOrbSpawners.add(spawner);
@@ -215,6 +237,8 @@ class MovingComponentSpawner extends Component
         orbType: oppositeOrbType,
         target: player,
         spawnCount: gameMode.orbsSpawnCount(),
+        iceOrbPool: _iceOrbPool,
+        fireOrbPool: _fireOrbPool,
         isOpposite: true,
       );
       parent.add(oppositeSpawner);
@@ -233,18 +257,24 @@ class MovingComponentSpawner extends Component
     late MovingOrb orb;
     switch (OrbType.values.random()) {
       case OrbType.fire:
-        orb = FireOrb(
+        orb = _fireOrbPool.get()..initialize(
           speed: moveSpeed,
           target: player,
           position: _getRandomSpawnPositionAroundMap(),
         );
+        orb.onDisjointCallback = () {
+          _fireOrbPool.release(orb as FireOrb);
+        };
         break;
       case OrbType.ice:
-        orb = IceOrb(
+        orb = _iceOrbPool.get()..initialize(
           speed: moveSpeed,
           target: player,
           position: _getRandomSpawnPositionAroundMap(),
         );
+        orb.onDisjointCallback = () {
+          _iceOrbPool.release(orb as IceOrb);
+        };
         break;
     }
     parent.add(orb);
