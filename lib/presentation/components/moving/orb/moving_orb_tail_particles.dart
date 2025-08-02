@@ -2,9 +2,10 @@ import 'dart:math';
 
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
-import 'package:flame/particles.dart';
 import 'package:flutter/widgets.dart';
 import 'package:save_the_potato/domain/extensions/list_extension.dart';
+import 'package:save_the_potato/presentation/components/component_pool.dart';
+import 'package:save_the_potato/presentation/components/custom_particle.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 
@@ -13,16 +14,21 @@ class MovingOrbTailParticles extends Component with HasGameRef<PotatoGame> {
 
   final double _showEvery = 0.04;
   double _passedFromLastShow = 0.0;
-  final _cachedVector2 = Vector2.zero();
 
   final opacityTween = Tween(begin: 0.8, end: 0.0).chain(
     CurveTween(curve: Curves.easeOutQuart),
   );
 
+  late ComponentPool<CustomParticle> _particlePool;
+
   @override
   Future<void> onLoad() async {
     await super.onLoad();
     particlePaint = Paint();
+    _particlePool = ComponentPool<CustomParticle>(
+      () => CustomParticle(),
+      initialSize: 10,
+    );
   }
 
   void _generateParticle() {
@@ -44,46 +50,47 @@ class MovingOrbTailParticles extends Component with HasGameRef<PotatoGame> {
     ]);
     final sprite = parentOrb.smallSparkleSprites.random();
     final rnd = parentOrb.rnd;
-    game.world.add(ParticleSystemComponent(
-      position: parentOrb.positionOfAnchor(Anchor.center),
-      anchor: Anchor.center,
-      particle: Particle.generate(
+
+    for (int index = 0; index < 2; index++) {
+      final p = _particlePool.get();
+      final randomBool = rnd.nextBool();
+      p.startParticle(
         lifespan: 1.2,
-        count: 2,
-        generator: (index) {
-          _cachedVector2.setValues(
-            (rnd.nextDouble() * 200) - (200 / 2),
-            (rnd.nextDouble() * 200) - (200 / 2),
+        pool: _particlePool,
+        position: parentOrb.positionOfAnchor(Anchor.center),
+        acceleration: Vector2(
+          (rnd.nextDouble() * 50) - (50 / 2),
+          (rnd.nextDouble() * 50) - (50 / 2),
+        ),
+        renderDelegate: (canvas, overridePaint, particle) {
+          final size = Vector2.all(
+            (parentOrb.size.x * parentOrb.trailSizeMultiplier) *
+                (1 - particle.progress),
           );
-          return AcceleratedParticle(
-            acceleration: _cachedVector2,
-            child: ComputedParticle(
-              renderer: (canvas, particle) {
-                _cachedVector2.setAll(
-                  (parentOrb.size.x * parentOrb.trailSizeMultiplier) *
-                      (1 - particle.progress),
-                );
-                canvas.rotate(particle.progress * pi * 2);
-                sprite.render(
-                  canvas,
-                  size: _cachedVector2,
-                  anchor: Anchor.center,
-                  overridePaint: particlePaint
-                    ..colorFilter = ColorFilter.mode(
-                      (rnd.nextBool()
-                              ? color
-                              : colorTween.transform(particle.progress))!
-                          .withOpacity(
-                              opacityTween.transform(particle.progress)),
-                      BlendMode.srcIn,
-                    ),
-                );
-              },
-            ),
+          final showingColor =
+              (randomBool ? color : colorTween.transform(particle.progress))!;
+
+          canvas.rotate(particle.progress * pi * 2);
+          final alpha = opacityTween.transform(particle.progress);
+          if (alpha <= 0.01) {
+            return;
+          }
+          sprite.render(
+            canvas,
+            size: size,
+            anchor: Anchor.center,
+            overridePaint: overridePaint
+              ..colorFilter = ColorFilter.mode(
+                showingColor.withValues(
+                  alpha: alpha,
+                ),
+                BlendMode.srcIn,
+              ),
           );
         },
-      ),
-    ));
+      );
+      game.world.add(p);
+    }
   }
 
   @override
