@@ -1,18 +1,15 @@
 part of '../moving_components.dart';
 
 class MovingHealth extends MovingComponent {
-  MovingHealth({
-    required super.speed,
-    required super.size,
-    required super.target,
-    required super.position,
-  });
+  MovingHealth();
 
   late Sprite heartSprite1, heartSprite2;
 
   double rotation = 0;
 
   List<Color> get colors => GameConstants.pinkColors;
+
+  VoidCallback? onDisjointCallback;
 
   @override
   Future<void> onLoad() async {
@@ -63,7 +60,7 @@ class MovingHealth extends MovingComponent {
   }
 
   void disjoint() {
-    removeFromParent();
+    onDisjointCallback?.call();
     add(HealthDisjointParticleComponent(
       colors: [...colors, Colors.white],
       smallSparkleSprites: [

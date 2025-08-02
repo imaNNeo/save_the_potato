@@ -1,26 +1,37 @@
 part of '../moving_components.dart';
 
 sealed class MovingOrb extends MovingComponent {
-  MovingOrb({
-    required super.speed,
-    required super.target,
-    required super.position,
-    super.size = 22,
-    this.overrideCollisionSoundNumber,
-  });
-
   OrbType get type;
 
   List<Sprite> get smallSparkleSprites;
 
   List<Color> get colors => type.colors;
 
-  final int? overrideCollisionSoundNumber;
+  int? overrideCollisionSoundNumber;
 
   double get trailSizeMultiplier => switch(type) {
     OrbType.fire => 0.85,
     OrbType.ice => 0.7,
   };
+
+  VoidCallback? onDisjointCallback;
+
+  @override
+  void initialize({
+    required double speed,
+    required PositionComponent target,
+    required Vector2 position,
+    double size = 22.0,
+    VoidCallback? onDisjoint,
+  }) {
+    super.initialize(
+      speed: speed,
+      target: target,
+      position: position,
+      size: size,
+    );
+    anchor = Anchor.center;
+  }
 
   @override
   void render(Canvas canvas) {
@@ -43,13 +54,13 @@ sealed class MovingOrb extends MovingComponent {
       offset,
       radius,
       Paint()
-        ..color = colors.last.withOpacity(1)
+        ..color = colors.last.withValues(alpha: 1)
         ..maskFilter = null,
     );
   }
 
   void disjoint(double contactAngle) {
-    removeFromParent();
+    onDisjointCallback?.call();
     add(OrbDisjointParticleComponent(
       orbType: type,
       colors: colors,
@@ -61,12 +72,7 @@ sealed class MovingOrb extends MovingComponent {
 }
 
 class FireOrb extends MovingOrb {
-  FireOrb({
-    required super.speed,
-    required super.target,
-    required super.position,
-    super.overrideCollisionSoundNumber,
-  });
+  FireOrb();
 
   late List<Sprite> _smallSparkleSprites;
 
@@ -86,12 +92,7 @@ class FireOrb extends MovingOrb {
 }
 
 class IceOrb extends MovingOrb {
-  IceOrb({
-    required super.speed,
-    required super.target,
-    required super.position,
-    super.overrideCollisionSoundNumber,
-  });
+  IceOrb();
 
   late List<Sprite> _smallSparkleSprites;
 
