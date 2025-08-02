@@ -51,13 +51,16 @@ class CustomParticle extends PositionComponent {
     this.position = position ?? Vector2.zero();
     this.anchor = anchor ?? Anchor.center;
     this.priority = priority ?? 0;
-    this.size = size ?? Vector2.all(32);
+    this.size = size ?? Vector2.zero();
     this.angle = angle ?? 0.0;
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+    if (_progressTimer == null) {
+      return;
+    }
     _progressTimer?.update(dt);
     position += acceleration * dt;
     speed.addScaled(acceleration, dt);
@@ -68,6 +71,9 @@ class CustomParticle extends PositionComponent {
 
   @override
   void render(Canvas canvas) {
+    if (_progressTimer == null) {
+      return;
+    }
     renderDelegate(canvas, _overridePaint, this);
   }
 }
