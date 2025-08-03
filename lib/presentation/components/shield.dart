@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
-import 'package:flame/particles.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/presentation/components/potato.dart';
@@ -12,6 +11,8 @@ import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/service_locator.dart';
 
+import 'component_pool.dart';
+import 'custom_particle.dart';
 import 'moving/moving_components.dart';
 import 'moving/orb/orb_type.dart';
 
@@ -48,6 +49,8 @@ class Shield extends PositionComponent
   late Paint sparklePaint;
   late Paint shieldLinePaint;
 
+  late ComponentPool<CustomParticle> _shieldFlamePool;
+
   final _audioHelper = getIt.get<AudioHelper>();
 
   @override
@@ -70,8 +73,13 @@ class Shield extends PositionComponent
         ],
     };
 
-    shieldLineColor = type.baseColor.withOpacity(0.0);
-    shieldTargetColor = type.baseColor.withOpacity(0.8);
+    _shieldFlamePool = ComponentPool<CustomParticle>(
+      () => CustomParticle(),
+      initialSize: 100,
+    );
+
+    shieldLineColor = type.baseColor.withValues(alpha: 0.0);
+    shieldTargetColor = type.baseColor.withValues(alpha: 0.8);
     size = parent.size + Vector2.all(shieldWidth * 2) + Vector2.all(offset * 2);
     position = parent.size / 2;
     shieldLinePaint = Paint()
@@ -172,105 +180,107 @@ class Shield extends PositionComponent
             isShortFlame ? shortFlameAngle : pi / 2 + largeFlameAngle;
 
         /// Trail
-        parent.parent.add(ParticleSystemComponent(
-          priority: -10,
+        final trailParticle = _shieldFlamePool.get();
+        trailParticle.startParticle(
+          lifespan: 0.15,
+          pool: _shieldFlamePool,
           angle: angle,
           anchor: Anchor.center,
-          particle: ComputedParticle(
-            lifespan: 0.15,
-            renderer: (canvas, particle) {
-              final opacity = _opacityTween.transform(particle.progress);
-              if (opacity <= 0.01) {
-                return;
-              }
-              canvas.drawArc(
-                Rect.fromCircle(
-                  center: Offset.zero,
-                  radius: radius,
-                ),
-                -(shieldSweep / 2),
-                shieldSweep,
-                false,
-                Paint()
-                  ..color = type.intenseColor.withOpacity(0.2)
-                  ..style = PaintingStyle.stroke
-                  ..strokeCap = StrokeCap.round
-                  ..strokeWidth = 8,
-              );
-            },
-          ),
-        ));
+          priority: -10,
+          size: Vector2.zero(),
+          position: Vector2.zero(),
+          renderDelegate: (canvas, overridePaint, particle) {
+            final opacity = _opacityTween.transform(particle.progress);
+            if (opacity <= 0.01) {
+              return;
+            }
+
+            canvas.drawArc(
+              Rect.fromCircle(
+                center: Offset.zero,
+                radius: radius,
+              ),
+              -(shieldSweep / 2),
+              shieldSweep,
+              false,
+              Paint()
+                ..color = type.intenseColor.withValues(alpha: 0.2)
+                ..style = PaintingStyle.stroke
+                ..strokeCap = StrokeCap.round
+                ..strokeWidth = 8,
+            );
+          },
+        );
+        parent.parent.add(trailParticle);
 
         // Main flames (inside and moving out)
-        add(ParticleSystemComponent(
-          position: localPos,
-          anchor: Anchor.center,
-          particle: AcceleratedParticle(
-            lifespan: 2,
+        final mainFlame = _shieldFlamePool.get();
+        mainFlame.startParticle(
+            lifespan: 2.0,
+            pool: _shieldFlamePool,
+            position: localPos,
+            size: spriteActualSize,
+            anchor: Anchor.topLeft,
             acceleration: isShortFlame
                 ? Vector2(
-                    rnd.nextDouble() * 40,
-                    -10 + rnd.nextDouble() * 20,
+                    rnd.nextDouble() * 20,
+                    -5 + rnd.nextDouble() * 10,
                   )
                 : Vector2(
                     0,
-                    -20 + rnd.nextDouble() * 40,
+                    -10 + rnd.nextDouble() * 20,
                   ),
-            child: ComputedParticle(
-              renderer: (canvas, particle) {
-                final opacity = increaseDecreaseTween.transform(
-                  particle.progress,
-                );
-                canvas.rotate(rotation);
-                if (opacity <= 0.01) {
-                  return;
-                }
-                sprite.render(
-                  canvas,
-                  size: spriteActualSize,
-                  anchor: Anchor.center,
-                  overridePaint: flamePaint
-                    ..colorFilter = ColorFilter.mode(
-                      color.withOpacity(opacity),
-                      BlendMode.srcIn,
-                    ),
-                );
-              },
-            ),
-          ),
-        ));
-
-        // Sparkles (moving out)
-        final extraParticle = _smallSparkleSprites.random(game.rnd);
-        add(ParticleSystemComponent(
-          position: localPos,
-          anchor: Anchor.center,
-          particle: AcceleratedParticle(
-            lifespan: 1.15,
-            acceleration: Vector2(
-              (rnd.nextDouble() * 120) - 20,
-              -15 + rnd.nextDouble() * 30,
-            ),
-            child: ComputedParticle(renderer: (Canvas c, Particle particle) {
+            renderDelegate: (canvas, overridePaint, particle) {
               final opacity =
                   increaseDecreaseTween.transform(particle.progress);
-
+              canvas.rotate(rotation);
               if (opacity <= 0.01) {
                 return;
               }
-              extraParticle.render(
-                c,
-                size: Vector2.all(opacity * 14),
-                anchor: Anchor.center,
-                overridePaint: sparklePaint
-                  ..colorFilter = ColorFilter.mode(
-                    color.withOpacity(opacity),
-                    BlendMode.srcIn,
-                  ),
+              overridePaint.colorFilter = ColorFilter.mode(
+                color.withValues(alpha: opacity),
+                BlendMode.srcIn,
               );
-            }),
+              sprite.render(
+                canvas,
+                size: spriteActualSize,
+                anchor: Anchor.center,
+                overridePaint: overridePaint,
+              );
+            });
+        add(mainFlame);
+
+        // Sparkles (moving out)
+        final extraParticle = _smallSparkleSprites.random(game.rnd);
+        final sparkleParticle = _shieldFlamePool.get();
+        sparkleParticle.startParticle(
+          lifespan: 1.15,
+          pool: _shieldFlamePool,
+          acceleration: Vector2(
+            (rnd.nextDouble() * 60) - 10,
+            -7.5 + rnd.nextDouble() * 15,
           ),
-        ));
+          position: localPos,
+          size: spriteActualSize / 2,
+          anchor: Anchor.topLeft,
+          renderDelegate: (canvas, overridePaint, particle) {
+            final opacity = increaseDecreaseTween.transform(particle.progress);
+            if (opacity <= 0.01) {
+              return;
+            }
+            overridePaint.colorFilter = ColorFilter.mode(
+              color.withValues(alpha: opacity),
+              BlendMode.srcIn,
+            );
+            extraParticle.render(
+              canvas,
+              size: Vector2.all(opacity * 14),
+              anchor: Anchor.center,
+              overridePaint: overridePaint,
+            );
+          },
+        );
+        add(sparkleParticle);
       },
       repeat: true,
     );
