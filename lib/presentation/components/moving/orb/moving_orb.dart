@@ -14,7 +14,7 @@ sealed class MovingOrb extends MovingComponent {
     OrbType.ice => 0.7,
   };
 
-  VoidCallback? _onDisjointCallback;
+  Function(double contactAngle)? _onDisjointCallback;
 
   late MovingOrbTailParticles _movingOrbTailParticles;
 
@@ -25,7 +25,7 @@ sealed class MovingOrb extends MovingComponent {
     required Vector2 position,
     double size = 22.0,
     ComponentPool<CustomParticle>? movingTrailParticlePool,
-    VoidCallback? onDisjoint,
+    Function(double contactAngle)? onDisjoint,
   }) {
     super.initialize(
       speed: speed,
@@ -65,14 +65,7 @@ sealed class MovingOrb extends MovingComponent {
   }
 
   void disjoint(double contactAngle) {
-    _onDisjointCallback?.call();
-    add(OrbDisjointParticleComponent(
-      orbType: type,
-      colors: colors,
-      smallSparkleSprites: smallSparkleSprites,
-      speedProgress: bloc.state.difficulty,
-      contactAngle: contactAngle,
-    ));
+    _onDisjointCallback?.call(contactAngle);
   }
 }
 
