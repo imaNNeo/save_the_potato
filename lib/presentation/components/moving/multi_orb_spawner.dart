@@ -86,7 +86,7 @@ class MultiOrbSpawner extends PositionComponent
             target: target,
             position: position,
             movingTrailParticlePool: trailOrbPool,
-            onDisjoint: (double contactAngle) {
+            onDisjointCallback: (double contactAngle) {
               final disjointComponent = orbDisjointComponentPool.get();
               orb.add(disjointComponent);
               disjointComponent.loaded.then((_) {
@@ -98,8 +98,12 @@ class MultiOrbSpawner extends PositionComponent
                   contactAngle: contactAngle,
                   particlePool: orbDisjointParticlePool,
                 );
+                orbDisjointComponentPool.release(disjointComponent);
                 fireOrbPool.release(orb as FireOrb);
               });
+            },
+            onPotatoHitCallback: () {
+              fireOrbPool.release(orb as FireOrb);
             },
           ),
         );
@@ -108,26 +112,30 @@ class MultiOrbSpawner extends PositionComponent
         orb = iceOrbPool.get();
         orb.loaded.then(
           (_) => orb.initialize(
-              speed: spawnOrbsMoveSpeed,
-              target: target,
-              position: position,
-              movingTrailParticlePool: trailOrbPool,
-              onDisjoint: (double contactAngle) {
-                final disjointComponent = orbDisjointComponentPool.get();
-                orb.add(disjointComponent);
-                disjointComponent.loaded.then((_) {
-                  disjointComponent.burst(
-                    orbType: orb.type,
-                    colors: orb.colors,
-                    smallSparkleSprites: orb.smallSparkleSprites,
-                    speedProgress: bloc.state.difficulty,
-                    contactAngle: contactAngle,
-                    particlePool: orbDisjointParticlePool,
-                  );
-                  iceOrbPool.release(orb as IceOrb);
-                });
-              },
-            ),
+            speed: spawnOrbsMoveSpeed,
+            target: target,
+            position: position,
+            movingTrailParticlePool: trailOrbPool,
+            onDisjointCallback: (double contactAngle) {
+              final disjointComponent = orbDisjointComponentPool.get();
+              orb.add(disjointComponent);
+              disjointComponent.loaded.then((_) {
+                disjointComponent.burst(
+                  orbType: orb.type,
+                  colors: orb.colors,
+                  smallSparkleSprites: orb.smallSparkleSprites,
+                  speedProgress: bloc.state.difficulty,
+                  contactAngle: contactAngle,
+                  particlePool: orbDisjointParticlePool,
+                );
+                orbDisjointComponentPool.release(disjointComponent);
+                iceOrbPool.release(orb as IceOrb);
+              });
+            },
+            onPotatoHitCallback: () {
+              iceOrbPool.release(orb as IceOrb);
+            },
+          ),
         );
         orb.overrideCollisionSoundNumber = isOpposite ? -1 : spawnedCount % 6;
     }

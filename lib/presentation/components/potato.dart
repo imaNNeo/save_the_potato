@@ -154,18 +154,24 @@ class Potato extends PositionComponent
           _audioHelper.playHeartHitSound();
           game.onHealthPointReceived();
           heartHitTrigger.fire();
+          other.onConsumed();
+          break;
         case FireOrb():
           _audioHelper.playOrbHitSound();
           game.onOrbHit();
           if (bloc.state.healthPoints > 0) {
             fireHitTrigger.fire();
           }
+          other.onPotatoHit();
+          break;
         case IceOrb():
           _audioHelper.playOrbHitSound();
           game.onOrbHit();
           if (bloc.state.healthPoints > 0) {
             iceHitTrigger.fire();
           }
+          other.onPotatoHit();
+        break;
       }
       other.removeFromParent();
     }

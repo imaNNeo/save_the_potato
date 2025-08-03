@@ -15,6 +15,7 @@ sealed class MovingOrb extends MovingComponent {
   };
 
   Function(double contactAngle)? _onDisjointCallback;
+  VoidCallback? _onPotatoHitCallback;
 
   late MovingOrbTailParticles _movingOrbTailParticles;
 
@@ -25,7 +26,8 @@ sealed class MovingOrb extends MovingComponent {
     required Vector2 position,
     double size = 22.0,
     ComponentPool<CustomParticle>? movingTrailParticlePool,
-    Function(double contactAngle)? onDisjoint,
+    Function(double contactAngle)? onDisjointCallback,
+    VoidCallback? onPotatoHitCallback,
   }) {
     super.initialize(
       speed: speed,
@@ -34,7 +36,8 @@ sealed class MovingOrb extends MovingComponent {
       size: size,
     );
     _movingOrbTailParticles.particlePool = movingTrailParticlePool!;
-    _onDisjointCallback = onDisjoint;
+    _onDisjointCallback = onDisjointCallback;
+    _onPotatoHitCallback = onPotatoHitCallback;
     anchor = Anchor.center;
   }
 
@@ -66,6 +69,10 @@ sealed class MovingOrb extends MovingComponent {
 
   void disjoint(double contactAngle) {
     _onDisjointCallback?.call(contactAngle);
+  }
+
+  void onPotatoHit() {
+    _onPotatoHitCallback?.call();
   }
 }
 
