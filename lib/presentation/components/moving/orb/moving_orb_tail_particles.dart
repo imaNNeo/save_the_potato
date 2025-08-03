@@ -59,10 +59,6 @@ class MovingOrbTailParticles extends Component with HasGameRef<PotatoGame> {
         lifespan: 1.2,
         pool: _particlePool,
         position: parentOrb.positionOfAnchor(Anchor.center),
-        acceleration: Vector2(
-          (rnd.nextDouble() * 50) - (50 / 2),
-          (rnd.nextDouble() * 50) - (50 / 2),
-        ),
         renderDelegate: (canvas, overridePaint, particle) {
           final size = Vector2.all(
             (parentOrb.size.x * parentOrb.trailSizeMultiplier) *
