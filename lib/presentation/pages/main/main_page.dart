@@ -107,20 +107,20 @@ class _MainPageState extends State<MainPage>
             backgroundColor: Colors.black,
             body: Stack(
               children: [
-                AnimatedBackgroundStars(
-                  backgroundColor:
-                      GameColors.starsBackground[state.gameDifficultyModeIndex],
-                  starsColor:
-                      GameColors.starsColors[state.gameDifficultyModeIndex],
-                  starsTimeScale: switch (state.playingState) {
-                    PlayingStateNone() => 0.0,
-                    PlayingStateGuide() ||
-                    PlayingStatePlaying() =>
-                      0.5 + (state.difficultyLinear * 1.5),
-                    PlayingStatePaused() || PlayingStateGameOver() => 0.0,
-                  },
-                  starsSize: min(screenWidth * 0.1, 80),
-                ),
+                // AnimatedBackgroundStars(
+                //   backgroundColor:
+                //       GameColors.starsBackground[state.gameDifficultyModeIndex],
+                //   starsColor:
+                //       GameColors.starsColors[state.gameDifficultyModeIndex],
+                //   starsTimeScale: switch (state.playingState) {
+                //     PlayingStateNone() => 0.0,
+                //     PlayingStateGuide() ||
+                //     PlayingStatePlaying() =>
+                //       0.5 + (state.difficultyLinear * 1.5),
+                //     PlayingStatePaused() || PlayingStateGameOver() => 0.0,
+                //   },
+                //   starsSize: min(screenWidth * 0.1, 80),
+                // ),
                 gameWidget,
                 const Align(
                   alignment: Alignment.topCenter,
