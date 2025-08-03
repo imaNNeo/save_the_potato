@@ -1,3 +1,6 @@
+## 1.5.2
+* Upgrade some dependencies and android target SDK to 35
+
 ## 1.5.1
 * Fix crash when removing HealthDisjointParticle (now we add RemoveEffect to fix that)
 * Add scared state on multi spawn
