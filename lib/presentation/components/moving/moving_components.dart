@@ -7,6 +7,8 @@ import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
+import 'package:save_the_potato/presentation/components/component_pool.dart';
+import 'package:save_the_potato/presentation/components/custom_particle.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/service_locator.dart';
 

@@ -5,6 +5,7 @@ import 'package:flame/extensions.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/components/component_pool.dart';
+import 'package:save_the_potato/presentation/components/custom_particle.dart';
 import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
@@ -18,6 +19,7 @@ class MovingComponentSpawner extends Component
     with ParentIsA<MyWorld>, FlameBlocListenable<GameCubit, GameState> {
   // We increase [timeSinceLastSingleOrbSpawn] to spawn the single moving orbs
   double timeSinceLastSingleOrbSpawn = 0.0;
+
   // Keeps a list of alive spawners to check if we are ready to switch to
   // the upcoming game mode. We switch only when everything is cleared
   // to prevent gameMode collision
@@ -28,6 +30,7 @@ class MovingComponentSpawner extends Component
   bool multiOrbSpawnerFirstSpawned = false;
   double timeSinceLastMultiOrbSpawnerSpawn = 0.0;
   int multiOrbSpawnerSpawnCounter = 0;
+
   // Keeps a list of alive spawners to check if we are ready to switch to
   // the upcoming game mode. We switch only when everything is cleared
   // to prevent gameMode collision
@@ -48,6 +51,7 @@ class MovingComponentSpawner extends Component
   late ComponentPool<FireOrb> _fireOrbPool;
   late ComponentPool<IceOrb> _iceOrbPool;
   late ComponentPool<MovingHealth> _movingHealthPool;
+  late ComponentPool<CustomParticle> _trailParticlePool;
 
   @override
   void onLoad() {
@@ -56,16 +60,20 @@ class MovingComponentSpawner extends Component
       _previousGameState = bloc.state;
     });
     _fireOrbPool = ComponentPool<FireOrb>(
-          () => FireOrb(),
+      () => FireOrb(),
       initialSize: 10,
     );
     _iceOrbPool = ComponentPool<IceOrb>(
-          () => IceOrb(),
+      () => IceOrb(),
       initialSize: 10,
     );
     _movingHealthPool = ComponentPool<MovingHealth>(
-          () => MovingHealth(),
+      () => MovingHealth(),
       initialSize: 3,
+    );
+    _trailParticlePool = ComponentPool<CustomParticle>(
+      () => CustomParticle(),
+      initialSize: 100,
     );
   }
 
@@ -80,7 +88,8 @@ class MovingComponentSpawner extends Component
     aliveMultiOrbSpawners.removeWhere((e) => e.isRemoved);
 
     // Check for initial delay
-    if (_previousGameState.currentGameMode.runtimeType != gameMode.runtimeType) {
+    if (_previousGameState.currentGameMode.runtimeType !=
+        gameMode.runtimeType) {
       initialDelayTimeRemaining = gameMode.initialDelay;
     }
     _previousGameState = bloc.state;
@@ -131,7 +140,7 @@ class MovingComponentSpawner extends Component
           bloc.state.difficulty,
         );
         if ((!multiOrbSpawnerFirstSpawned ||
-            timeSinceLastMultiOrbSpawnerSpawn >= spawnOrbSpawnerEvery) &&
+                timeSinceLastMultiOrbSpawnerSpawn >= spawnOrbSpawnerEvery) &&
             bloc.state.upcomingGameMode == null &&
             movingHealth == null) {
           multiOrbSpawnerFirstSpawned = true;
@@ -182,16 +191,19 @@ class MovingComponentSpawner extends Component
       bloc.state.difficulty,
     );
     final healthMoveSpeed =
-    (moveSpeed * GameConstants.movingHealthPointSpeedMultiplier).clamp(
+        (moveSpeed * GameConstants.movingHealthPointSpeedMultiplier).clamp(
       GameConstants.movingHealthMinSpeed,
       GameConstants.movingHealthMaxSpeed,
     );
 
-    movingHealth = _movingHealthPool.get()..initialize(
-      speed: healthMoveSpeed,
-      target: player,
-      size: 28,
-      position: _getRandomSpawnPositionAroundMap(),
+    movingHealth = _movingHealthPool.get();
+    movingHealth!.loaded.then(
+      (_) => movingHealth!.initialize(
+        speed: healthMoveSpeed,
+        target: player,
+        size: 28,
+        position: _getRandomSpawnPositionAroundMap(),
+      ),
     );
     movingHealth!.onDisjointCallback = () {
       _movingHealthPool.release(movingHealth!);
@@ -220,6 +232,7 @@ class MovingComponentSpawner extends Component
       spawnCount: gameMode.orbsSpawnCount(),
       iceOrbPool: _iceOrbPool,
       fireOrbPool: _fireOrbPool,
+      trailOrbPool: _trailParticlePool,
     );
     parent.add(spawner);
     aliveMultiOrbSpawners.add(spawner);
@@ -239,6 +252,7 @@ class MovingComponentSpawner extends Component
         spawnCount: gameMode.orbsSpawnCount(),
         iceOrbPool: _iceOrbPool,
         fireOrbPool: _fireOrbPool,
+        trailOrbPool: _trailParticlePool,
         isOpposite: true,
       );
       parent.add(oppositeSpawner);
@@ -257,24 +271,32 @@ class MovingComponentSpawner extends Component
     late MovingOrb orb;
     switch (OrbType.values.random()) {
       case OrbType.fire:
-        orb = _fireOrbPool.get()..initialize(
-          speed: moveSpeed,
-          target: player,
-          position: _getRandomSpawnPositionAroundMap(),
+        orb = _fireOrbPool.get();
+        orb.loaded.then(
+          (_) => orb.initialize(
+            speed: moveSpeed,
+            target: player,
+            position: _getRandomSpawnPositionAroundMap(),
+            movingTrailParticlePool: _trailParticlePool,
+            onDisjoint: () {
+              _fireOrbPool.release(orb as FireOrb);
+            },
+          ),
         );
-        orb.onDisjointCallback = () {
-          _fireOrbPool.release(orb as FireOrb);
-        };
         break;
       case OrbType.ice:
-        orb = _iceOrbPool.get()..initialize(
-          speed: moveSpeed,
-          target: player,
-          position: _getRandomSpawnPositionAroundMap(),
+        orb = _iceOrbPool.get();
+        orb.loaded.then(
+          (_) => orb.initialize(
+            speed: moveSpeed,
+            target: player,
+            position: _getRandomSpawnPositionAroundMap(),
+            movingTrailParticlePool: _trailParticlePool,
+            onDisjoint: () {
+              _iceOrbPool.release(orb as IceOrb);
+            },
+          ),
         );
-        orb.onDisjointCallback = () {
-          _iceOrbPool.release(orb as IceOrb);
-        };
         break;
     }
     parent.add(orb);

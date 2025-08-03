@@ -17,6 +17,7 @@ class ComponentPool<T extends Component> {
     if (_pool.isNotEmpty) {
       return _pool.removeLast();
     }
+    print('Component pool is empty, creating a new component');
     return _componentFactory();
   }
 

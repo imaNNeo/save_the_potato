@@ -14,7 +14,9 @@ sealed class MovingOrb extends MovingComponent {
     OrbType.ice => 0.7,
   };
 
-  VoidCallback? onDisjointCallback;
+  VoidCallback? _onDisjointCallback;
+
+  late MovingOrbTailParticles _movingOrbTailParticles;
 
   @override
   void initialize({
@@ -22,6 +24,7 @@ sealed class MovingOrb extends MovingComponent {
     required PositionComponent target,
     required Vector2 position,
     double size = 22.0,
+    ComponentPool<CustomParticle>? movingTrailParticlePool,
     VoidCallback? onDisjoint,
   }) {
     super.initialize(
@@ -30,6 +33,8 @@ sealed class MovingOrb extends MovingComponent {
       position: position,
       size: size,
     );
+    _movingOrbTailParticles.particlePool = movingTrailParticlePool!;
+    _onDisjointCallback = onDisjoint;
     anchor = Anchor.center;
   }
 
@@ -43,7 +48,7 @@ sealed class MovingOrb extends MovingComponent {
   Future<void> onLoad() async {
     super.onLoad();
     add(CircleHitbox(collisionType: CollisionType.passive));
-    add(MovingOrbTailParticles());
+    add(_movingOrbTailParticles = MovingOrbTailParticles());
     add(MovingOrbHead());
   }
 
@@ -60,7 +65,7 @@ sealed class MovingOrb extends MovingComponent {
   }
 
   void disjoint(double contactAngle) {
-    onDisjointCallback?.call();
+    _onDisjointCallback?.call();
     add(OrbDisjointParticleComponent(
       orbType: type,
       colors: colors,
