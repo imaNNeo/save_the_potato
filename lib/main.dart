@@ -14,7 +14,6 @@ import 'package:save_the_potato/presentation/cubit/configs/configs_cubit.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/pages/splash/splash_page.dart';
 import 'package:save_the_potato/service_locator.dart';
-import 'package:wiredash/wiredash.dart';
 import 'domain/repository/auth_repository.dart';
 import 'firebase_options.dart';
 import 'presentation/cubit/game/game_cubit.dart';
@@ -50,7 +49,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final app = MultiBlocProvider(
+    return MultiBlocProvider(
       providers: [
         BlocProvider<ConfigsCubit>(
           create: (context) => ConfigsCubit(
@@ -119,14 +118,6 @@ class MyApp extends StatelessWidget {
         home: const SplashPage(),
         navigatorObservers: [routeObserver],
       ),
-    );
-    if (kDebugMode) {
-      return app;
-    }
-    return Wiredash(
-      projectId: 'save-the-potato-4iu0ckj',
-      secret: '###WIREDASH_SECRET',
-      child: app,
     );
   }
 }
