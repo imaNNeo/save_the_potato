@@ -71,9 +71,11 @@ class PotatoGame extends FlameGame<MyWorld>
     camera.viewfinder.add(
       MoveEffect.by(
         Vector2(8, 8),
-        PerlinNoiseEffectController(
+        NoiseEffectController(
           duration: 1,
-          frequency: 400,
+          noise: PerlinNoise(
+            frequency: 400,
+          ),
         ),
       ),
     );
@@ -93,7 +95,7 @@ class PotatoGame extends FlameGame<MyWorld>
 }
 
 class MyWorld extends World
-    with HasGameRef<PotatoGame>, FlameBlocListenable<GameCubit, GameState> {
+    with HasGameReference<PotatoGame>, FlameBlocListenable<GameCubit, GameState> {
   late Potato player;
 
   late StreamSubscription _motivationWordSubscription;

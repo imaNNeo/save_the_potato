@@ -1,26 +1,51 @@
 part of '../moving_components.dart';
 
 sealed class MovingOrb extends MovingComponent {
-  MovingOrb({
-    required super.speed,
-    required super.target,
-    required super.position,
-    super.size = 22,
-    this.overrideCollisionSoundNumber,
-  });
-
   OrbType get type;
 
   List<Sprite> get smallSparkleSprites;
 
   List<Color> get colors => type.colors;
 
-  final int? overrideCollisionSoundNumber;
+  int? _overrideCollisionSoundNumber;
+
+  int? getOverrideCollisionSoundNumber() {
+    return _overrideCollisionSoundNumber;
+  }
 
   double get trailSizeMultiplier => switch(type) {
     OrbType.fire => 0.85,
     OrbType.ice => 0.7,
   };
+
+  Function(double contactAngle)? _onDisjointCallback;
+  VoidCallback? _onPotatoHitCallback;
+
+  late MovingOrbTailParticles _movingOrbTailParticles;
+
+  @override
+  void initialize({
+    required double speed,
+    required PositionComponent target,
+    required Vector2 position,
+    double size = 22.0,
+    ComponentPool<CustomParticle>? movingTrailParticlePool,
+    Function(double contactAngle)? onDisjointCallback,
+    VoidCallback? onPotatoHitCallback,
+    int? overrideCollisionSoundNumber,
+  }) {
+    super.initialize(
+      speed: speed,
+      target: target,
+      position: position,
+      size: size,
+    );
+    _overrideCollisionSoundNumber = overrideCollisionSoundNumber;
+    _movingOrbTailParticles.particlePool = movingTrailParticlePool!;
+    _onDisjointCallback = onDisjointCallback;
+    _onPotatoHitCallback = onPotatoHitCallback;
+    anchor = Anchor.center;
+  }
 
   @override
   void render(Canvas canvas) {
@@ -32,7 +57,7 @@ sealed class MovingOrb extends MovingComponent {
   Future<void> onLoad() async {
     super.onLoad();
     add(CircleHitbox(collisionType: CollisionType.passive));
-    add(MovingOrbTailParticles());
+    add(_movingOrbTailParticles = MovingOrbTailParticles());
     add(MovingOrbHead());
   }
 
@@ -43,30 +68,22 @@ sealed class MovingOrb extends MovingComponent {
       offset,
       radius,
       Paint()
-        ..color = colors.last.withOpacity(1)
+        ..color = colors.last.withValues(alpha: 1)
         ..maskFilter = null,
     );
   }
 
   void disjoint(double contactAngle) {
-    removeFromParent();
-    add(OrbDisjointParticleComponent(
-      orbType: type,
-      colors: colors,
-      smallSparkleSprites: smallSparkleSprites,
-      speedProgress: bloc.state.difficulty,
-      contactAngle: contactAngle,
-    ));
+    _onDisjointCallback?.call(contactAngle);
+  }
+
+  void onPotatoHit() {
+    _onPotatoHitCallback?.call();
   }
 }
 
 class FireOrb extends MovingOrb {
-  FireOrb({
-    required super.speed,
-    required super.target,
-    required super.position,
-    super.overrideCollisionSoundNumber,
-  });
+  FireOrb();
 
   late List<Sprite> _smallSparkleSprites;
 
@@ -86,12 +103,7 @@ class FireOrb extends MovingOrb {
 }
 
 class IceOrb extends MovingOrb {
-  IceOrb({
-    required super.speed,
-    required super.target,
-    required super.position,
-    super.overrideCollisionSoundNumber,
-  });
+  IceOrb();
 
   late List<Sprite> _smallSparkleSprites;
 

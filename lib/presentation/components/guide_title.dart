@@ -8,7 +8,7 @@ import 'package:save_the_potato/presentation/potato_game.dart';
 
 class GuideTitle extends PositionComponent
     with
-        HasGameRef<PotatoGame>,
+        HasGameReference<PotatoGame>,
         FlameBlocListenable<GameCubit, GameState>,
         ParentIsA<Potato> {
   GuideTitle({

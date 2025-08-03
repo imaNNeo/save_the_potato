@@ -4,6 +4,8 @@ import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
+import 'package:save_the_potato/presentation/components/component_pool.dart';
+import 'package:save_the_potato/presentation/components/custom_particle.dart';
 import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
@@ -11,12 +13,14 @@ import 'package:save_the_potato/presentation/potato_game.dart';
 
 import 'moving_components.dart';
 import 'multi_orb_spawner.dart';
+import 'orb/orb_disjoint_particle.dart';
 import 'orb/orb_type.dart';
 
 class MovingComponentSpawner extends Component
     with ParentIsA<MyWorld>, FlameBlocListenable<GameCubit, GameState> {
   // We increase [timeSinceLastSingleOrbSpawn] to spawn the single moving orbs
   double timeSinceLastSingleOrbSpawn = 0.0;
+
   // Keeps a list of alive spawners to check if we are ready to switch to
   // the upcoming game mode. We switch only when everything is cleared
   // to prevent gameMode collision
@@ -27,6 +31,7 @@ class MovingComponentSpawner extends Component
   bool multiOrbSpawnerFirstSpawned = false;
   double timeSinceLastMultiOrbSpawnerSpawn = 0.0;
   int multiOrbSpawnerSpawnCounter = 0;
+
   // Keeps a list of alive spawners to check if we are ready to switch to
   // the upcoming game mode. We switch only when everything is cleared
   // to prevent gameMode collision
@@ -44,12 +49,49 @@ class MovingComponentSpawner extends Component
 
   late GameState _previousGameState;
 
+  late ComponentPool<FireOrb> _fireOrbPool;
+  late ComponentPool<IceOrb> _iceOrbPool;
+  late ComponentPool<MovingHealth> _movingHealthPool;
+  late ComponentPool<CustomParticle> _trailParticlePool;
+  late ComponentPool<OrbDisjointParticleComponent> _orbDisjointPool;
+  late ComponentPool<CustomParticle> _orbDisjointParticlePool;
+
   @override
   void onLoad() {
     super.onLoad();
     mounted.then((_) {
       _previousGameState = bloc.state;
     });
+    _fireOrbPool = ComponentPool<FireOrb>(
+      () => FireOrb(),
+      initialSize: 10,
+      debugName: 'FireOrbPool',
+    );
+    _iceOrbPool = ComponentPool<IceOrb>(
+      () => IceOrb(),
+      initialSize: 10,
+      debugName: 'IceOrbPool',
+    );
+    _movingHealthPool = ComponentPool<MovingHealth>(
+      () => MovingHealth(),
+      initialSize: 3,
+      debugName: 'MovingHealthPool',
+    );
+    _trailParticlePool = ComponentPool<CustomParticle>(
+      () => CustomParticle(),
+      initialSize: 100,
+      debugName: 'TrailParticlePool',
+    );
+    _orbDisjointPool = ComponentPool<OrbDisjointParticleComponent>(
+      () => OrbDisjointParticleComponent(),
+      initialSize: 20,
+      debugName: 'OrbDisjointPool',
+    );
+    _orbDisjointParticlePool = ComponentPool<CustomParticle>(
+      () => CustomParticle(),
+      initialSize: 100,
+      debugName: 'OrbDisjointParticlePool',
+    );
   }
 
   @override
@@ -63,7 +105,8 @@ class MovingComponentSpawner extends Component
     aliveMultiOrbSpawners.removeWhere((e) => e.isRemoved);
 
     // Check for initial delay
-    if (_previousGameState.currentGameMode.runtimeType != gameMode.runtimeType) {
+    if (_previousGameState.currentGameMode.runtimeType !=
+        gameMode.runtimeType) {
       initialDelayTimeRemaining = gameMode.initialDelay;
     }
     _previousGameState = bloc.state;
@@ -114,7 +157,7 @@ class MovingComponentSpawner extends Component
           bloc.state.difficulty,
         );
         if ((!multiOrbSpawnerFirstSpawned ||
-            timeSinceLastMultiOrbSpawnerSpawn >= spawnOrbSpawnerEvery) &&
+                timeSinceLastMultiOrbSpawnerSpawn >= spawnOrbSpawnerEvery) &&
             bloc.state.upcomingGameMode == null &&
             movingHealth == null) {
           multiOrbSpawnerFirstSpawned = true;
@@ -165,19 +208,29 @@ class MovingComponentSpawner extends Component
       bloc.state.difficulty,
     );
     final healthMoveSpeed =
-    (moveSpeed * GameConstants.movingHealthPointSpeedMultiplier).clamp(
+        (moveSpeed * GameConstants.movingHealthPointSpeedMultiplier).clamp(
       GameConstants.movingHealthMinSpeed,
       GameConstants.movingHealthMaxSpeed,
     );
-    parent.add(movingHealth = MovingHealth(
-      speed: healthMoveSpeed,
-      size: 28,
-      target: player,
-      position: _getRandomSpawnPositionAroundMap(),
-    ));
-    movingHealth!.removed.then((value) {
-      movingHealth = null;
-    });
+
+    movingHealth = _movingHealthPool.get();
+    movingHealth!.loaded.then(
+      (_) => movingHealth!.initialize(
+        speed: healthMoveSpeed,
+        target: player,
+        size: 28,
+        position: _getRandomSpawnPositionAroundMap(),
+        onDisjointCallback: () {
+          _movingHealthPool.release(movingHealth!);
+          movingHealth = null;
+        },
+        onConsumedCallback: () {
+          _movingHealthPool.release(movingHealth!);
+          movingHealth = null;
+        },
+      ),
+    );
+    parent.add(movingHealth!);
     return true;
   }
 
@@ -198,6 +251,11 @@ class MovingComponentSpawner extends Component
       orbType: orbType,
       target: player,
       spawnCount: gameMode.orbsSpawnCount(),
+      iceOrbPool: _iceOrbPool,
+      fireOrbPool: _fireOrbPool,
+      trailOrbPool: _trailParticlePool,
+      orbDisjointComponentPool: _orbDisjointPool,
+      orbDisjointParticlePool: _orbDisjointParticlePool,
     );
     parent.add(spawner);
     aliveMultiOrbSpawners.add(spawner);
@@ -215,6 +273,11 @@ class MovingComponentSpawner extends Component
         orbType: oppositeOrbType,
         target: player,
         spawnCount: gameMode.orbsSpawnCount(),
+        iceOrbPool: _iceOrbPool,
+        fireOrbPool: _fireOrbPool,
+        trailOrbPool: _trailParticlePool,
+        orbDisjointComponentPool: _orbDisjointPool,
+        orbDisjointParticlePool: _orbDisjointParticlePool,
         isOpposite: true,
       );
       parent.add(oppositeSpawner);
@@ -233,17 +296,63 @@ class MovingComponentSpawner extends Component
     late MovingOrb orb;
     switch (OrbType.values.random()) {
       case OrbType.fire:
-        orb = FireOrb(
-          speed: moveSpeed,
-          target: player,
-          position: _getRandomSpawnPositionAroundMap(),
+        orb = _fireOrbPool.get();
+        orb.loaded.then(
+          (_) => orb.initialize(
+            speed: moveSpeed,
+            target: player,
+            position: _getRandomSpawnPositionAroundMap(),
+            movingTrailParticlePool: _trailParticlePool,
+            onDisjointCallback: (double contactAngle) {
+              final disjointComponent = _orbDisjointPool.get();
+              orb.add(disjointComponent);
+              disjointComponent.loaded.then((_) {
+                disjointComponent.burst(
+                  orbType: orb.type,
+                  colors: orb.colors,
+                  smallSparkleSprites: orb.smallSparkleSprites,
+                  speedProgress: bloc.state.difficulty,
+                  contactAngle: contactAngle,
+                  particlePool: _orbDisjointParticlePool,
+                );
+                _orbDisjointPool.release(disjointComponent);
+                _fireOrbPool.release(orb as FireOrb);
+              });
+            },
+            onPotatoHitCallback: () {
+              _fireOrbPool.release(orb as FireOrb);
+            },
+          ),
         );
         break;
       case OrbType.ice:
-        orb = IceOrb(
-          speed: moveSpeed,
-          target: player,
-          position: _getRandomSpawnPositionAroundMap(),
+        orb = _iceOrbPool.get();
+        orb.loaded.then(
+          (_) => orb.initialize(
+            speed: moveSpeed,
+            target: player,
+            position: _getRandomSpawnPositionAroundMap(),
+            movingTrailParticlePool: _trailParticlePool,
+            onDisjointCallback: (double contactAngle) {
+              final disjointComponent = _orbDisjointPool.get();
+              orb.add(disjointComponent);
+              disjointComponent.loaded.then((_) {
+                disjointComponent.burst(
+                  orbType: orb.type,
+                  colors: orb.colors,
+                  smallSparkleSprites: orb.smallSparkleSprites,
+                  speedProgress: bloc.state.difficulty,
+                  contactAngle: contactAngle,
+                  particlePool: _orbDisjointParticlePool,
+                );
+                _orbDisjointPool.release(disjointComponent);
+                _iceOrbPool.release(orb as IceOrb);
+              });
+            },
+            onPotatoHitCallback: () {
+              _iceOrbPool.release(orb as IceOrb);
+            },
+          ),
         );
         break;
     }
