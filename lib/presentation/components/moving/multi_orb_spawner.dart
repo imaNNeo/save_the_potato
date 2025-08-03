@@ -65,17 +65,19 @@ class MultiOrbSpawner extends PositionComponent
     }
     if (!firstSpawned) {
       firstSpawned = true;
-      spawnOrb();
+      spawnOrb(spawnedCount);
+      spawnedCount++;
       return;
     }
     timeSinceLastSpawn += dt;
     if (timeSinceLastSpawn >= spawnOrbsEvery) {
       timeSinceLastSpawn = 0;
-      spawnOrb();
+      spawnOrb(spawnedCount);
+      spawnedCount++;
     }
   }
 
-  void spawnOrb() {
+  void spawnOrb(int spawnedCount) {
     late MovingOrb orb;
     switch (orbType) {
       case OrbType.fire:
@@ -105,9 +107,9 @@ class MultiOrbSpawner extends PositionComponent
             onPotatoHitCallback: () {
               fireOrbPool.release(orb as FireOrb);
             },
+            overrideCollisionSoundNumber: isOpposite ? -1 : spawnedCount % 6,
           ),
         );
-        orb.overrideCollisionSoundNumber = isOpposite ? -1 : spawnedCount % 6;
       case OrbType.ice:
         orb = iceOrbPool.get();
         orb.loaded.then(
@@ -135,12 +137,11 @@ class MultiOrbSpawner extends PositionComponent
             onPotatoHitCallback: () {
               iceOrbPool.release(orb as IceOrb);
             },
+            overrideCollisionSoundNumber: isOpposite ? -1 : spawnedCount % 6,
           ),
         );
-        orb.overrideCollisionSoundNumber = isOpposite ? -1 : spawnedCount % 6;
     }
     aliveMovingOrbs.add(orb);
     parent.add(orb);
-    spawnedCount++;
   }
 }

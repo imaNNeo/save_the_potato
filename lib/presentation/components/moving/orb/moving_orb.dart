@@ -7,7 +7,11 @@ sealed class MovingOrb extends MovingComponent {
 
   List<Color> get colors => type.colors;
 
-  int? overrideCollisionSoundNumber;
+  int? _overrideCollisionSoundNumber;
+
+  int? getOverrideCollisionSoundNumber() {
+    return _overrideCollisionSoundNumber;
+  }
 
   double get trailSizeMultiplier => switch(type) {
     OrbType.fire => 0.85,
@@ -28,6 +32,7 @@ sealed class MovingOrb extends MovingComponent {
     ComponentPool<CustomParticle>? movingTrailParticlePool,
     Function(double contactAngle)? onDisjointCallback,
     VoidCallback? onPotatoHitCallback,
+    int? overrideCollisionSoundNumber,
   }) {
     super.initialize(
       speed: speed,
@@ -35,6 +40,7 @@ sealed class MovingOrb extends MovingComponent {
       position: position,
       size: size,
     );
+    _overrideCollisionSoundNumber = overrideCollisionSoundNumber;
     _movingOrbTailParticles.particlePool = movingTrailParticlePool!;
     _onDisjointCallback = onDisjointCallback;
     _onPotatoHitCallback = onPotatoHitCallback;

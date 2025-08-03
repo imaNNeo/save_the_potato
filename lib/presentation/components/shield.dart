@@ -19,7 +19,7 @@ import 'moving/orb/orb_type.dart';
 class Shield extends PositionComponent
     with
         ParentIsA<Potato>,
-        HasGameRef<PotatoGame>,
+        HasGameReference<PotatoGame>,
         CollisionCallbacks,
         HasTimeScale,
         FlameBlocListenable<GameCubit, GameState> {
@@ -332,8 +332,10 @@ class Shield extends PositionComponent
           if ((orb.type.isFire && type.isFire) ||
               (orb.type.isIce && type.isIce)) {
             bloc.onShieldHit(other);
-            if (orb.overrideCollisionSoundNumber != null) {
-              _audioHelper.playShieldSound(orb.overrideCollisionSoundNumber!);
+            if (orb.getOverrideCollisionSoundNumber() != null) {
+              _audioHelper.playShieldSound(
+                orb.getOverrideCollisionSoundNumber()!,
+              );
             } else {
               _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
             }

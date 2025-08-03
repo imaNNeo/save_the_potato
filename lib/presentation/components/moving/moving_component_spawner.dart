@@ -86,7 +86,6 @@ class MovingComponentSpawner extends Component
       () => OrbDisjointParticleComponent(),
       initialSize: 20,
       debugName: 'OrbDisjointPool',
-      debugPrint: true,
     );
     _orbDisjointParticlePool = ComponentPool<CustomParticle>(
       () => CustomParticle(),
