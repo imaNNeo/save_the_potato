@@ -7,6 +7,7 @@ import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 
 import 'moving_components.dart';
+import 'orb/orb_disjoint_particle.dart';
 
 class MultiOrbSpawner extends PositionComponent
     with ParentIsA<MyWorld>, FlameBlocListenable<GameCubit, GameState> {
@@ -19,6 +20,8 @@ class MultiOrbSpawner extends PositionComponent
   final ComponentPool<FireOrb> fireOrbPool;
   final ComponentPool<IceOrb> iceOrbPool;
   final ComponentPool<CustomParticle> trailOrbPool;
+  final ComponentPool<OrbDisjointParticleComponent> orbDisjointComponentPool;
+  final ComponentPool<CustomParticle> orbDisjointParticlePool;
 
   bool firstSpawned = false;
   double timeSinceLastSpawn = 0;
@@ -37,6 +40,8 @@ class MultiOrbSpawner extends PositionComponent
     required this.fireOrbPool,
     required this.iceOrbPool,
     required this.trailOrbPool,
+    required this.orbDisjointComponentPool,
+    required this.orbDisjointParticlePool,
     this.isOpposite = false,
   });
 
@@ -81,8 +86,20 @@ class MultiOrbSpawner extends PositionComponent
             target: target,
             position: position,
             movingTrailParticlePool: trailOrbPool,
-            onDisjoint: () {
-              fireOrbPool.release(orb as FireOrb);
+            onDisjoint: (double contactAngle) {
+              final disjointComponent = orbDisjointComponentPool.get();
+              orb.add(disjointComponent);
+              disjointComponent.loaded.then((_) {
+                disjointComponent.burst(
+                  orbType: orb.type,
+                  colors: orb.colors,
+                  smallSparkleSprites: orb.smallSparkleSprites,
+                  speedProgress: bloc.state.difficulty,
+                  contactAngle: contactAngle,
+                  particlePool: orbDisjointParticlePool,
+                );
+                fireOrbPool.release(orb as FireOrb);
+              });
             },
           ),
         );
@@ -95,8 +112,20 @@ class MultiOrbSpawner extends PositionComponent
               target: target,
               position: position,
               movingTrailParticlePool: trailOrbPool,
-              onDisjoint: () {
-                iceOrbPool.release(orb as IceOrb);
+              onDisjoint: (double contactAngle) {
+                final disjointComponent = orbDisjointComponentPool.get();
+                orb.add(disjointComponent);
+                disjointComponent.loaded.then((_) {
+                  disjointComponent.burst(
+                    orbType: orb.type,
+                    colors: orb.colors,
+                    smallSparkleSprites: orb.smallSparkleSprites,
+                    speedProgress: bloc.state.difficulty,
+                    contactAngle: contactAngle,
+                    particlePool: orbDisjointParticlePool,
+                  );
+                  iceOrbPool.release(orb as IceOrb);
+                });
               },
             ),
         );

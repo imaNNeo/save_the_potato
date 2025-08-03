@@ -13,6 +13,7 @@ import 'package:save_the_potato/presentation/potato_game.dart';
 
 import 'moving_components.dart';
 import 'multi_orb_spawner.dart';
+import 'orb/orb_disjoint_particle.dart';
 import 'orb/orb_type.dart';
 
 class MovingComponentSpawner extends Component
@@ -52,6 +53,8 @@ class MovingComponentSpawner extends Component
   late ComponentPool<IceOrb> _iceOrbPool;
   late ComponentPool<MovingHealth> _movingHealthPool;
   late ComponentPool<CustomParticle> _trailParticlePool;
+  late ComponentPool<OrbDisjointParticleComponent> _orbDisjointPool;
+  late ComponentPool<CustomParticle> _orbDisjointParticlePool;
 
   @override
   void onLoad() {
@@ -72,6 +75,14 @@ class MovingComponentSpawner extends Component
       initialSize: 3,
     );
     _trailParticlePool = ComponentPool<CustomParticle>(
+      () => CustomParticle(),
+      initialSize: 100,
+    );
+    _orbDisjointPool = ComponentPool<OrbDisjointParticleComponent>(
+      () => OrbDisjointParticleComponent(),
+      initialSize: 20,
+    );
+    _orbDisjointParticlePool = ComponentPool<CustomParticle>(
       () => CustomParticle(),
       initialSize: 100,
     );
@@ -233,6 +244,8 @@ class MovingComponentSpawner extends Component
       iceOrbPool: _iceOrbPool,
       fireOrbPool: _fireOrbPool,
       trailOrbPool: _trailParticlePool,
+      orbDisjointComponentPool: _orbDisjointPool,
+      orbDisjointParticlePool: _orbDisjointParticlePool,
     );
     parent.add(spawner);
     aliveMultiOrbSpawners.add(spawner);
@@ -253,6 +266,8 @@ class MovingComponentSpawner extends Component
         iceOrbPool: _iceOrbPool,
         fireOrbPool: _fireOrbPool,
         trailOrbPool: _trailParticlePool,
+        orbDisjointComponentPool: _orbDisjointPool,
+        orbDisjointParticlePool: _orbDisjointParticlePool,
         isOpposite: true,
       );
       parent.add(oppositeSpawner);
@@ -278,8 +293,20 @@ class MovingComponentSpawner extends Component
             target: player,
             position: _getRandomSpawnPositionAroundMap(),
             movingTrailParticlePool: _trailParticlePool,
-            onDisjoint: () {
-              _fireOrbPool.release(orb as FireOrb);
+            onDisjoint: (double contactAngle) {
+              final disjointComponent = _orbDisjointPool.get();
+              orb.add(disjointComponent);
+              disjointComponent.loaded.then((_) {
+                disjointComponent.burst(
+                  orbType: orb.type,
+                  colors: orb.colors,
+                  smallSparkleSprites: orb.smallSparkleSprites,
+                  speedProgress: bloc.state.difficulty,
+                  contactAngle: contactAngle,
+                  particlePool: _orbDisjointParticlePool,
+                );
+                _fireOrbPool.release(orb as FireOrb);
+              });
             },
           ),
         );
@@ -292,8 +319,20 @@ class MovingComponentSpawner extends Component
             target: player,
             position: _getRandomSpawnPositionAroundMap(),
             movingTrailParticlePool: _trailParticlePool,
-            onDisjoint: () {
-              _iceOrbPool.release(orb as IceOrb);
+            onDisjoint: (double contactAngle) {
+              final disjointComponent = _orbDisjointPool.get();
+              orb.add(disjointComponent);
+              disjointComponent.loaded.then((_) {
+                disjointComponent.burst(
+                  orbType: orb.type,
+                  colors: orb.colors,
+                  smallSparkleSprites: orb.smallSparkleSprites,
+                  speedProgress: bloc.state.difficulty,
+                  contactAngle: contactAngle,
+                  particlePool: _orbDisjointParticlePool,
+                );
+                _iceOrbPool.release(orb as IceOrb);
+              });
             },
           ),
         );
