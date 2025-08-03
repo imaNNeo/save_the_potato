@@ -11,7 +11,7 @@ import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 class MotivationComponent extends PositionComponent
-    with HasPaint, HasGameRef<PotatoGame> {
+    with HasPaint, HasGameReference<PotatoGame> {
   final MotivationWordType motivationWordType;
   final Color color;
   late final AudioHelper _audioHelper;

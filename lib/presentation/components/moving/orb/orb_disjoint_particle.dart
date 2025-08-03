@@ -2,7 +2,6 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
-import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 import 'package:flutter/animation.dart';
 import 'package:save_the_potato/domain/extensions/list_extension.dart';
@@ -13,7 +12,7 @@ import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart
 import 'package:save_the_potato/presentation/potato_game.dart';
 
 class OrbDisjointParticleComponent extends Component
-    with HasGameRef<PotatoGame>, ParentIsA<MovingOrb> {
+    with HasGameReference<PotatoGame>, ParentIsA<MovingOrb> {
   OrbDisjointParticleComponent({
     super.key,
   });
@@ -70,7 +69,6 @@ class OrbDisjointParticleComponent extends Component
 
     for (int i = 0; i < 42; i++) {
       final p = particlePool.get();
-      final randomBool = rnd.nextBool();
       final color = colors.random(game.rnd);
       final sprite = smallSparkleSprites.random(game.rnd);
       final randomAngle = _getRandomConeAngle();

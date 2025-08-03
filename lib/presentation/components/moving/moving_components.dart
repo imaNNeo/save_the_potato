@@ -14,7 +14,6 @@ import 'package:save_the_potato/presentation/potato_game.dart';
 import 'health/health_disjoint_particle.dart';
 import 'orb/moving_orb_head.dart';
 import 'orb/moving_orb_tail_particles.dart';
-import 'orb/orb_disjoint_particle.dart';
 import 'orb/orb_type.dart';
 
 part 'orb/moving_orb.dart';
@@ -23,7 +22,7 @@ part 'health/moving_health.dart';
 
 sealed class MovingComponent extends PositionComponent
     with
-        HasGameRef<PotatoGame>,
+        HasGameReference<PotatoGame>,
         HasTimeScale,
         FlameBlocListenable<GameCubit, GameState> {
   MovingComponent() : super(priority: 1);

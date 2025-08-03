@@ -108,7 +108,7 @@ class PotatoGame extends FlameGame<MyWorld>
 }
 
 class MyWorld extends World
-    with HasGameRef<PotatoGame>, FlameBlocListenable<GameCubit, GameState> {
+    with HasGameReference<PotatoGame>, FlameBlocListenable<GameCubit, GameState> {
   late Potato player;
 
   late StreamSubscription _motivationWordSubscription;
