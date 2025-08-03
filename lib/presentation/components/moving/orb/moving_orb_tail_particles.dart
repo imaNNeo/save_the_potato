@@ -21,14 +21,15 @@ class MovingOrbTailParticles extends Component with HasGameRef<PotatoGame> {
 
   late ComponentPool<CustomParticle> _particlePool;
 
+  // setter
+  set particlePool(ComponentPool<CustomParticle> pool) {
+    _particlePool = pool;
+  }
+
   @override
   Future<void> onLoad() async {
     await super.onLoad();
     particlePaint = Paint();
-    _particlePool = ComponentPool<CustomParticle>(
-      () => CustomParticle(),
-      initialSize: 10,
-    );
   }
 
   void _generateParticle() {
