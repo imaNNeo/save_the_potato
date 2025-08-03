@@ -1,21 +1,18 @@
 import 'dart:async';
-
+import 'dart:math';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/main.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
-import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
-import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
+import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
-import 'package:save_the_potato/presentation/pages/fade_route.dart';
+import 'package:save_the_potato/presentation/widgets/background_stars.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/game_paused_ui.dart';
 import 'package:save_the_potato/presentation/widgets/high_score_widget.dart';
-import 'package:save_the_potato/presentation/widgets/loading_overlay.dart';
-import 'package:save_the_potato/presentation/widgets/new_rank_celebration_page.dart';
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
 import 'package:save_the_potato/presentation/widgets/rotating_controls.dart';
 import 'package:save_the_potato/presentation/widgets/settings_pause_icon.dart';
@@ -40,10 +37,6 @@ class _MainPageState extends State<MainPage>
 
   late PlayingState _previousState;
 
-  OverlayEntry? _generalLoadingEntry;
-
-  late StreamSubscription _generalLoadingSubscription;
-
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
@@ -63,26 +56,6 @@ class _MainPageState extends State<MainPage>
       _previousState = state.playingState;
     });
 
-    _generalLoadingSubscription =
-        context.read<ScoresCubit>().stream.listen((state) {
-      if (state.showAuthDialog) {
-        BaseDialog.showAuthDialog(context);
-      }
-      if (state.showNicknameDialog) {
-        BaseDialog.showNicknameDialog(context);
-      }
-      if (state.scoreShareLoading) {
-        if (_generalLoadingEntry == null) {
-          _generalLoadingEntry = OverlayEntry(
-            builder: (context) => const LoadingOverlay(),
-          );
-          Overlay.of(context).insert(_generalLoadingEntry!);
-        }
-      } else {
-        _generalLoadingEntry?.remove();
-        _generalLoadingEntry = null;
-      }
-    });
     super.initState();
   }
 
@@ -113,36 +86,41 @@ class _MainPageState extends State<MainPage>
   @override
   Widget build(BuildContext context) {
     final gameWidget = GameWidget(game: _game);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    print('screenWidth: $screenWidth');
     return BlocConsumer<GameCubit, GameState>(
       key: pageRootKey,
       listener: (context, state) {
         if (state.restartGame) {
           _restartGameWidgets();
         }
-        if (state.onNewHighScore != null) {
-          context.read<ScoresCubit>().tryToRefreshLeaderboard();
-          Navigator.of(context).push(
-            FadeRoute(
-              page: NewRankCelebrationPage(
-                scoreEntity: state.onNewHighScore!,
-              ),
-            ),
-          );
-        }
       },
       builder: (context, state) {
         return PopScope(
           canPop: !state.playingState.isPlaying,
-          onPopInvoked: (didPop) async {
-            if (didPop) {
-              return;
+          onPopInvokedWithResult: (didPop, result) {
+            if (!didPop) {
+              _gameCubit.pauseGame(manually: true);
             }
-            _gameCubit.pauseGame(manually: true);
           },
           child: Scaffold(
             backgroundColor: Colors.black,
             body: Stack(
               children: [
+                // AnimatedBackgroundStars(
+                //   backgroundColor:
+                //       GameColors.starsBackground[state.gameDifficultyModeIndex],
+                //   starsColor:
+                //       GameColors.starsColors[state.gameDifficultyModeIndex],
+                //   starsTimeScale: switch (state.playingState) {
+                //     PlayingStateNone() => 0.0,
+                //     PlayingStateGuide() ||
+                //     PlayingStatePlaying() =>
+                //       0.5 + (state.difficultyLinear * 1.5),
+                //     PlayingStatePaused() || PlayingStateGameOver() => 0.0,
+                //   },
+                //   starsSize: min(screenWidth * 0.1, 80),
+                // ),
                 gameWidget,
                 const Align(
                   alignment: Alignment.topCenter,
@@ -203,7 +181,6 @@ class _MainPageState extends State<MainPage>
   void dispose() {
     routeObserver.unsubscribe(this);
     _streamSubscription.cancel();
-    _generalLoadingSubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

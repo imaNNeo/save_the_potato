@@ -1,15 +1,16 @@
-import 'package:save_the_potato/data/key_value_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsDataSource {
-  SettingsDataSource(this._storage);
-
-  final KeyValueStorage _storage;
+  static const _audioEnabledKey = 'audio_enabled';
+  SettingsDataSource();
 
   Future<bool> audioEnabled() async {
-    return (await _storage.getBool('audio_enabled')) ?? true;
+    final sharedPref = await SharedPreferences.getInstance();
+    return sharedPref.getBool(_audioEnabledKey) ?? true;
   }
 
   Future<void> setAudioEnabled(bool enabled) async {
-    await _storage.setBool('audio_enabled', enabled);
+    final sharedPref = await SharedPreferences.getInstance();
+    await sharedPref.setBool(_audioEnabledKey, enabled);
   }
 }

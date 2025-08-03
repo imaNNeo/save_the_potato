@@ -4,7 +4,6 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_rive/flame_rive.dart';
-import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/presentation/components/guide_title.dart';
 import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
@@ -18,7 +17,7 @@ import 'moving/orb/orb_type.dart';
 
 class Potato extends PositionComponent
     with
-        HasGameRef<PotatoGame>,
+        HasGameReference<PotatoGame>,
         CollisionCallbacks,
         FlameBlocListenable<GameCubit, GameState>,
         ParentIsA<MyWorld> {
@@ -150,22 +149,27 @@ class Potato extends PositionComponent
     if (other is MovingComponent) {
       switch (other) {
         case MovingHealth():
-          getIt.get<AnalyticsHelper>().heartReceived();
           _audioHelper.playHeartHitSound();
           game.onHealthPointReceived();
           heartHitTrigger.fire();
+          other.onConsumed();
+          break;
         case FireOrb():
           _audioHelper.playOrbHitSound();
           game.onOrbHit();
           if (bloc.state.healthPoints > 0) {
             fireHitTrigger.fire();
           }
+          other.onPotatoHit();
+          break;
         case IceOrb():
           _audioHelper.playOrbHitSound();
           game.onOrbHit();
           if (bloc.state.healthPoints > 0) {
             iceHitTrigger.fire();
           }
+          other.onPotatoHit();
+        break;
       }
       other.removeFromParent();
     }

@@ -9,7 +9,6 @@ class GameState extends Equatable {
     this.showGameOverUI = false,
     this.shieldsAngleRotationSpeed = 0,
     this.restartGame = false,
-    this.onNewHighScore,
     this.firstHealthReceived = false,
     this.shieldHitCounter = 0,
     this.gameModeHistory = const [],
@@ -17,6 +16,7 @@ class GameState extends Equatable {
     this.upcomingGameMode,
     this.playMotivationWord,
     this.motivationWordsPoolToPlay = MotivationWordType.values,
+    this.gameSessionNumber = 0,
   });
 
   final int healthPoints;
@@ -33,8 +33,6 @@ class GameState extends Equatable {
 
   final bool restartGame;
 
-  final OnlineScoreEntity? onNewHighScore;
-
   final bool firstHealthReceived;
 
   final int shieldHitCounter;
@@ -49,11 +47,16 @@ class GameState extends Equatable {
 
   final List<MotivationWordType> motivationWordsPoolToPlay;
 
+  final int gameSessionNumber;
+
+  double get difficultyLinear =>
+      difficultyTimePassed / GameConstants.difficultyInitialToPeakDuration;
+
   /// Between 0.0 and 1.0
   double get difficulty => GameConstants.difficultyInitialToPeakCurve.transform(
         min(
           1.0,
-          difficultyTimePassed / GameConstants.difficultyInitialToPeakDuration,
+          difficultyLinear,
         ),
       );
 
@@ -73,6 +76,26 @@ class GameState extends Equatable {
     return 1.0;
   }
 
+  /// It's an index to use when we show [GameColors.starsBackground]
+  /// and [GameColors.starsColors]. It works as a difficulty level.
+  /// 0 -> When the game starts
+  /// 1 -> From the first game mode change (multi spawn)
+  /// 2 -> When the difficulty is in maximum
+  int get gameDifficultyModeIndex {
+    // Danger
+    if (difficulty >= 1.0) {
+      return 2;
+    }
+
+    // Moderate
+    if (gameModeHistory.isNotEmpty) {
+      return 1;
+    }
+
+    // Safe
+    return 0;
+  }
+
   GameState copyWith({
     int? healthPoints,
     double? levelTimePassed,
@@ -81,7 +104,6 @@ class GameState extends Equatable {
     bool? showGameOverUI,
     double? shieldsAngleRotationSpeed,
     bool? restartGame,
-    ValueWrapper<OnlineScoreEntity>? onNewHighScore,
     bool? firstHealthReceived,
     int? shieldHitCounter,
     List<GameMode>? gameModeHistory,
@@ -89,6 +111,7 @@ class GameState extends Equatable {
     ValueWrapper<GameMode>? upcomingGameMode,
     ValueWrapper<MotivationWordType>? playMotivationWord,
     List<MotivationWordType>? motivationWordsPoolToPlay,
+    int? gameSessionNumber,
   }) =>
       GameState(
         healthPoints: healthPoints ?? this.healthPoints,
@@ -99,8 +122,6 @@ class GameState extends Equatable {
         shieldsAngleRotationSpeed:
             shieldsAngleRotationSpeed ?? this.shieldsAngleRotationSpeed,
         restartGame: restartGame ?? this.restartGame,
-        onNewHighScore:
-            onNewHighScore != null ? onNewHighScore.value : this.onNewHighScore,
         firstHealthReceived: firstHealthReceived ?? this.firstHealthReceived,
         shieldHitCounter: shieldHitCounter ?? this.shieldHitCounter,
         gameModeHistory: gameModeHistory ?? this.gameModeHistory,
@@ -113,6 +134,7 @@ class GameState extends Equatable {
             : this.playMotivationWord,
         motivationWordsPoolToPlay:
             motivationWordsPoolToPlay ?? this.motivationWordsPoolToPlay,
+        gameSessionNumber: gameSessionNumber ?? this.gameSessionNumber,
       );
 
   @override
@@ -124,7 +146,6 @@ class GameState extends Equatable {
         showGameOverUI,
         shieldsAngleRotationSpeed,
         restartGame,
-        onNewHighScore,
         firstHealthReceived,
         shieldHitCounter,
         gameModeHistory,
@@ -132,5 +153,6 @@ class GameState extends Equatable {
         upcomingGameMode,
         playMotivationWord,
         motivationWordsPoolToPlay,
+        gameSessionNumber,
       ];
 }

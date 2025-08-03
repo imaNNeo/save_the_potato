@@ -1,49 +1,35 @@
 import 'dart:async';
-import 'dart:convert';
-
-import 'package:save_the_potato/data/key_value_storage.dart';
-import 'package:save_the_potato/domain/models/score_entity.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ScoresLocalDataSource {
   static const _highScoreKey = 'high_score';
-  final KeyValueStorage _keyValueStorage;
 
-  ScoresLocalDataSource(this._keyValueStorage);
+  ScoresLocalDataSource();
 
-  final StreamController<ScoreEntity> _highScoreStreamController =
-      StreamController<ScoreEntity>.broadcast();
+  final StreamController<int> _highScoreStreamController =
+      StreamController<int>.broadcast();
 
-  Stream<ScoreEntity> getHighScoreStream() => _highScoreStreamController.stream;
+  Stream<int> getHighScoreStream() => _highScoreStreamController.stream;
 
-  Future<ScoreEntity?> getHighScore() async {
-    final scoreJsonStr = await _keyValueStorage.getString(_highScoreKey);
-    if (scoreJsonStr == null || scoreJsonStr.isEmpty) {
+  Future<int?> getHighScore() async {
+    try {
+      final sharedPref = await SharedPreferences.getInstance();
+      return sharedPref.getInt(_highScoreKey);
+    } catch (e) {
+      await clearHighScore();
       return null;
     }
-
-    /// Todo:
-    /// In iOS I couldn't delete the app data,
-    /// We can delete this code in the 1.0.0 version
-    int? oldNumber = int.tryParse(scoreJsonStr);
-    if (oldNumber != null) {
-      final newScore = OfflineScoreEntity(score: oldNumber);
-      await setHighScore(newScore);
-      return newScore;
-    }
-
-    return ScoreEntity.fromJson(jsonDecode(scoreJsonStr));
   }
 
-  Future<ScoreEntity> setHighScore(ScoreEntity scoreEntity) async {
-    _highScoreStreamController.sink.add(scoreEntity);
-    await _keyValueStorage.setString(
-      _highScoreKey,
-      jsonEncode(scoreEntity.toJson()),
-    );
-    return scoreEntity;
+  Future<int> setHighScore(int score) async {
+    _highScoreStreamController.sink.add(score);
+    final sharedPref = await SharedPreferences.getInstance();
+    await sharedPref.setInt(_highScoreKey, score);
+    return score;
   }
 
   Future<void> clearHighScore() async {
-    await setHighScore(OfflineScoreEntity(score: 0));
+    final sharedPref = await SharedPreferences.getInstance();
+    await sharedPref.remove(_highScoreKey);
   }
 }

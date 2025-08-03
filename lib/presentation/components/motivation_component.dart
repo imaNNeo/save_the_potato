@@ -11,7 +11,7 @@ import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 class MotivationComponent extends PositionComponent
-    with HasPaint, HasGameRef<PotatoGame> {
+    with HasPaint, HasGameReference<PotatoGame> {
   final MotivationWordType motivationWordType;
   final Color color;
   late final AudioHelper _audioHelper;
@@ -125,8 +125,8 @@ class MotivationComponent extends PositionComponent
                   anchor: Anchor.center,
                   overridePaint: Paint()
                     ..colorFilter = ColorFilter.mode(
-                      color.withOpacity(
-                        opacityTween.transform(particle.progress),
+                      color.withValues(
+                        alpha: opacityTween.transform(particle.progress),
                       ),
                       BlendMode.srcIn,
                     ),
@@ -193,18 +193,20 @@ class MotivationComponent extends PositionComponent
     _textComponent.textRenderer =
         (_textComponent.textRenderer as TextPaint).copyWith(
       (style) => style.copyWith(
-        color: const Color(0xFF00FF15).withOpacity(opacity),
+        color: const Color(0xFF00FF15).withValues(
+          alpha: opacity,
+        ),
       ),
     );
   }
 }
 
 enum MotivationWordType {
-  amazing('Amazing!', 'amazing.wav'),
-  goodJob('Good Job!', 'good_job.wav'),
-  ohGreat('Oh Great!', 'oh_great.wav'),
-  ohNice('Oh Nice!', 'oh_nice.wav'),
-  perfect('Perfect!', 'perfect.wav');
+  amazing('Amazing!', 'amazing.ogg'),
+  goodJob('Good Job!', 'good_job.ogg'),
+  ohGreat('Oh Great!', 'oh_great.ogg'),
+  ohNice('Oh Nice!', 'oh_nice.ogg'),
+  perfect('Perfect!', 'perfect.ogg');
 
   final String text;
   final String assetName;

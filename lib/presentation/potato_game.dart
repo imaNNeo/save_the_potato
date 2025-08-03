@@ -9,11 +9,15 @@ import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_noise/flame_noise.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_poki_sdk/flutter_poki_sdk.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
+import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/service_locator.dart';
 
 import 'components/motivation_component.dart';
 import 'components/moving/moving_component_spawner.dart';
@@ -34,6 +38,9 @@ class PotatoGame extends FlameGame<MyWorld>
         );
 
   @override
+  Color backgroundColor() => Colors.transparent;
+
+  @override
   Future<void> onLoad() async {
     await Flame.images.loadAll([
       ...List.generate(8, (index) => 'flame/flame${index + 1}.png'),
@@ -41,6 +48,7 @@ class PotatoGame extends FlameGame<MyWorld>
       ...List.generate(2, (index) => 'sparkle/sparkle${index + 1}.png'),
       'two-way-arrow.png',
     ]);
+    getIt.get<AudioHelper>().loadGameAssets();
     remove(world);
     add(FlameMultiBlocProvider(
       providers: [
@@ -51,6 +59,11 @@ class PotatoGame extends FlameGame<MyWorld>
       ],
       children: [world],
     ));
+    if (_gameCubit.state.gameSessionNumber == 0) {
+      if (kIsWeb || kIsWasm) {
+        PokiSDK.gameLoadingFinished();
+      }
+    }
   }
 
   final GameCubit _gameCubit;
@@ -71,9 +84,11 @@ class PotatoGame extends FlameGame<MyWorld>
     camera.viewfinder.add(
       MoveEffect.by(
         Vector2(8, 8),
-        PerlinNoiseEffectController(
+        NoiseEffectController(
           duration: 1,
-          frequency: 400,
+          noise: PerlinNoise(
+            frequency: 400,
+          ),
         ),
       ),
     );
@@ -93,7 +108,7 @@ class PotatoGame extends FlameGame<MyWorld>
 }
 
 class MyWorld extends World
-    with HasGameRef<PotatoGame>, FlameBlocListenable<GameCubit, GameState> {
+    with HasGameReference<PotatoGame>, FlameBlocListenable<GameCubit, GameState> {
   late Potato player;
 
   late StreamSubscription _motivationWordSubscription;

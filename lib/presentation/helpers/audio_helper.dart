@@ -10,41 +10,41 @@ class AudioHelper {
 
   final _audioEnabled = LazyValue<bool>();
 
+  static const _baseAssets = 'assets/audio';
+
   Future<bool> get audioEnabled => _audioEnabled.value;
 
   late final SoLoud _soLoud;
 
   late final AudioSource _bgm;
-  late final List<AudioSource> shieldNotes;
-  late final AudioSource _heartHit, _orbHit1, _orbHit2;
-  late final AudioSource _victory, _gameOver;
+  List<AudioSource>? _shieldNotes;
+  AudioSource? _heartHit, _orbHit1, _orbHit2;
+  AudioSource? _gameOver;
 
   SoundHandle? _bgmHandle;
 
   Future<void> initialize() async {
     _soLoud = SoLoud.instance;
-    if (await _soLoud.initialized) {
-      /// For example, when we re-run the app in the debug mode
-      return;
-    }
     await _soLoud.init();
-    const baseAssets = 'assets/audio';
-    _bgm = await _soLoud.loadAsset('$baseAssets/bg_120_140c_bpm.ogg');
-    shieldNotes = [];
+    _bgm = await _soLoud.loadAsset('$_baseAssets/bg_120_140c_bpm.ogg');
+  }
+
+  Future<void> loadGameAssets() async {
+    _shieldNotes = [];
     for (var i = 1; i <= 6; i++) {
-      shieldNotes.add(await _soLoud.loadAsset('$baseAssets/Shield$i.wav'));
+      _shieldNotes!.add(await _soLoud.loadAsset('$_baseAssets/Shield$i.ogg'));
     }
 
-    _heartHit = await _soLoud.loadAsset('$baseAssets/heart.wav');
-    _orbHit1 = await _soLoud.loadAsset('$baseAssets/hit1.wav');
-    _orbHit2 = await _soLoud.loadAsset('$baseAssets/hit2.wav');
+    _orbHit1 = await _soLoud.loadAsset('$_baseAssets/hit1.ogg');
+    _orbHit2 = await _soLoud.loadAsset('$_baseAssets/hit2.ogg');
 
-    _victory = await _soLoud.loadAsset('$baseAssets/victory.mp3');
-    _gameOver = await _soLoud.loadAsset('$baseAssets/game_over.wav');
+    _heartHit = await _soLoud.loadAsset('$_baseAssets/heart.ogg');
+
+    _gameOver = await _soLoud.loadAsset('$_baseAssets/game_over.ogg');
 
     // Motivation words
     for (var word in MotivationWordType.values) {
-      await _soLoud.loadAsset('$baseAssets/motivation/${word.assetName}');
+      await _soLoud.loadAsset('$_baseAssets/motivation/${word.assetName}');
     }
   }
 
@@ -110,8 +110,11 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
+    if (_heartHit == null) {
+      return;
+    }
     _soLoud.play(
-      _heartHit,
+      _heartHit!,
       volume: GameConstants.soundEffectsVolume,
     );
   }
@@ -120,8 +123,11 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
+    if (_orbHit1 == null || _orbHit2 == null) {
+      return;
+    }
     _soLoud.play(
-      Random().nextBool() ? _orbHit1 : _orbHit2,
+      Random().nextBool() ? _orbHit1! : _orbHit2!,
       volume: GameConstants.soundEffectsVolume,
     );
   }
@@ -133,19 +139,12 @@ class AudioHelper {
     if (seed < 0) {
       return;
     }
-    final shield = shieldNotes[seed % shieldNotes.length];
-    _soLoud.play(
-      shield,
-      volume: GameConstants.soundEffectsVolume,
-    );
-  }
-
-  void playVictorySound() async {
-    if (!(await _audioEnabled.value)) {
+    if (_shieldNotes == null) {
       return;
     }
+    final shield = _shieldNotes![seed % _shieldNotes!.length];
     _soLoud.play(
-      _victory,
+      shield,
       volume: GameConstants.soundEffectsVolume,
     );
   }
@@ -154,8 +153,12 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
+
+    if (_gameOver == null) {
+      return;
+    }
     _soLoud.play(
-      _gameOver,
+      _gameOver!,
       volume: GameConstants.soundEffectsVolume,
     );
   }

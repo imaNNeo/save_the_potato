@@ -13,7 +13,7 @@ class GamePausedUI extends StatelessWidget {
     return Stack(
       children: [
         Container(
-          color: Colors.black.withOpacity(0.7),
+          color: Colors.black.withValues(alpha: 0.7),
         ),
         Center(
           child: Column(

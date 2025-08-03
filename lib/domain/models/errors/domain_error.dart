@@ -41,17 +41,4 @@ class ServerErrorEntry with EquatableMixin {
       ];
 }
 
-class AccountAlreadyExistsError extends DomainError with EquatableMixin {
-  final String? email;
-
-  AccountAlreadyExistsError({
-    required this.email,
-  });
-
-  @override
-  List<Object?> get props => [
-        email,
-      ];
-}
-
 class UnknownError extends DomainError {}

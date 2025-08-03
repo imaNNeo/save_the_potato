@@ -4,7 +4,7 @@ import 'package:flame/effects.dart';
 import 'package:flame/components.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 
-class CameraZoomEffect extends Effect with HasGameRef<PotatoGame> {
+class CameraZoomEffect extends Effect with HasGameReference<PotatoGame> {
   CameraZoomEffect({
     required EffectController controller,
     required this.zoomTo,

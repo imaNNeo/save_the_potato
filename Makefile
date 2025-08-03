@@ -18,3 +18,6 @@ sure:
 
 firebaseConfigs:
 	flutterfire configure -y  --project=save-the-potato --platforms=android,ios
+
+pokiBuild:
+	./scripts/build_and_zip.sh

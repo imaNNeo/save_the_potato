@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -96,14 +97,30 @@ class _GuideWidget extends StatelessWidget {
     const iconSize = 88.0;
     const startOpacity = 0.3;
     const endOpacity = 1.0;
+
+    bool isMobile = defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.android;
+    final leftIcon = switch (isMobile) {
+      true => Icons.undo_rounded,
+      false => Icons.arrow_back_rounded,
+    };
+    final rightIcon = switch(isMobile) {
+      true => Icons.redo_rounded,
+      false => Icons.arrow_forward_rounded,
+    };
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
-          isLeft ? Icons.undo_rounded : Icons.redo_rounded,
+          isLeft ? leftIcon : rightIcon,
           size: iconSize,
           color: Colors.white70,
         ),
+        if (!isMobile)
+          const SizedBox(
+            height: 4.0,
+          ),
         const Text(
           tapAndHoldText,
           style: TextStyle(
