@@ -18,7 +18,7 @@ import 'moving/orb/orb_type.dart';
 
 class Potato extends PositionComponent
     with
-        HasGameRef<PotatoGame>,
+        HasGameReference<PotatoGame>,
         CollisionCallbacks,
         FlameBlocListenable<GameCubit, GameState>,
         ParentIsA<MyWorld> {

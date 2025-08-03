@@ -11,7 +11,7 @@ import 'package:save_the_potato/presentation/components/moving/moving_components
 import 'package:save_the_potato/presentation/potato_game.dart';
 
 class HealthDisjointParticleComponent extends Component
-    with HasGameRef<PotatoGame>, ParentIsA<MovingHealth> {
+    with HasGameReference<PotatoGame>, ParentIsA<MovingHealth> {
   HealthDisjointParticleComponent({
     super.key,
     required this.colors,
@@ -73,7 +73,7 @@ class HealthDisjointParticleComponent extends Component
                       (rnd.nextBool()
                               ? color
                               : colorTween.transform(particle.progress))!
-                          .withOpacity(opacity),
+                          .withValues(alpha: opacity),
                       BlendMode.srcIn,
                     ),
                 );

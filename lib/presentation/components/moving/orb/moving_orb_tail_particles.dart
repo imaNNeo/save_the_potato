@@ -9,7 +9,7 @@ import 'package:save_the_potato/presentation/components/custom_particle.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 
-class MovingOrbTailParticles extends Component with HasGameRef<PotatoGame> {
+class MovingOrbTailParticles extends Component with HasGameReference<PotatoGame> {
   late Paint particlePaint;
 
   final double _showEvery = 0.04;
