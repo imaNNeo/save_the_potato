@@ -25,10 +25,6 @@ class AudioHelper {
 
   Future<void> initialize() async {
     _soLoud = SoLoud.instance;
-    if (_soLoud.isInitialized) {
-      /// For example, when we re-run the app in the debug mode
-      return;
-    }
     await _soLoud.init();
     _bgm = await _soLoud.loadAsset('$_baseAssets/bg_120_140c_bpm.ogg');
   }
