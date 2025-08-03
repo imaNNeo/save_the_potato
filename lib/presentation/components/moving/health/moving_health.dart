@@ -10,6 +10,7 @@ class MovingHealth extends MovingComponent {
   List<Color> get colors => GameConstants.pinkColors;
 
   VoidCallback? _onDisjointCallback;
+  VoidCallback? _onConsumedCallback;
 
   late CircleHitbox _hitbox;
 
@@ -29,6 +30,7 @@ class MovingHealth extends MovingComponent {
     required Vector2 position,
     required double size,
     VoidCallback? onDisjointCallback,
+    VoidCallback? onConsumedCallback,
   }) {
     super.initialize(
       speed: speed,
@@ -45,6 +47,7 @@ class MovingHealth extends MovingComponent {
       ..position = super.size / 2;
 
     _onDisjointCallback = onDisjointCallback!;
+    _onConsumedCallback = onConsumedCallback;
   }
 
   @override
@@ -89,5 +92,9 @@ class MovingHealth extends MovingComponent {
         heartSprite2,
       ],
     ));
+  }
+
+  void onConsumed() {
+    _onConsumedCallback?.call();
   }
 }

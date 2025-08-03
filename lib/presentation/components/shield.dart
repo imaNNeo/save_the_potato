@@ -75,7 +75,8 @@ class Shield extends PositionComponent
 
     _shieldFlamePool = ComponentPool<CustomParticle>(
       () => CustomParticle(),
-      initialSize: 100,
+      initialSize: 60,
+      debugName: 'Shield flame',
     );
 
     shieldLineColor = type.baseColor.withValues(alpha: 0.0);

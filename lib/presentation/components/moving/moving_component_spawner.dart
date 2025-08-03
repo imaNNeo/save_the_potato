@@ -65,26 +65,33 @@ class MovingComponentSpawner extends Component
     _fireOrbPool = ComponentPool<FireOrb>(
       () => FireOrb(),
       initialSize: 10,
+      debugName: 'FireOrbPool',
     );
     _iceOrbPool = ComponentPool<IceOrb>(
       () => IceOrb(),
       initialSize: 10,
+      debugName: 'IceOrbPool',
     );
     _movingHealthPool = ComponentPool<MovingHealth>(
       () => MovingHealth(),
       initialSize: 3,
+      debugName: 'MovingHealthPool',
     );
     _trailParticlePool = ComponentPool<CustomParticle>(
       () => CustomParticle(),
       initialSize: 100,
+      debugName: 'TrailParticlePool',
     );
     _orbDisjointPool = ComponentPool<OrbDisjointParticleComponent>(
       () => OrbDisjointParticleComponent(),
       initialSize: 20,
+      debugName: 'OrbDisjointPool',
+      debugPrint: true,
     );
     _orbDisjointParticlePool = ComponentPool<CustomParticle>(
       () => CustomParticle(),
       initialSize: 100,
+      debugName: 'OrbDisjointParticlePool',
     );
   }
 
@@ -218,6 +225,10 @@ class MovingComponentSpawner extends Component
           _movingHealthPool.release(movingHealth!);
           movingHealth = null;
         },
+        onConsumedCallback: () {
+          _movingHealthPool.release(movingHealth!);
+          movingHealth = null;
+        },
       ),
     );
     parent.add(movingHealth!);
@@ -293,7 +304,7 @@ class MovingComponentSpawner extends Component
             target: player,
             position: _getRandomSpawnPositionAroundMap(),
             movingTrailParticlePool: _trailParticlePool,
-            onDisjoint: (double contactAngle) {
+            onDisjointCallback: (double contactAngle) {
               final disjointComponent = _orbDisjointPool.get();
               orb.add(disjointComponent);
               disjointComponent.loaded.then((_) {
@@ -305,8 +316,12 @@ class MovingComponentSpawner extends Component
                   contactAngle: contactAngle,
                   particlePool: _orbDisjointParticlePool,
                 );
+                _orbDisjointPool.release(disjointComponent);
                 _fireOrbPool.release(orb as FireOrb);
               });
+            },
+            onPotatoHitCallback: () {
+              _fireOrbPool.release(orb as FireOrb);
             },
           ),
         );
@@ -319,7 +334,7 @@ class MovingComponentSpawner extends Component
             target: player,
             position: _getRandomSpawnPositionAroundMap(),
             movingTrailParticlePool: _trailParticlePool,
-            onDisjoint: (double contactAngle) {
+            onDisjointCallback: (double contactAngle) {
               final disjointComponent = _orbDisjointPool.get();
               orb.add(disjointComponent);
               disjointComponent.loaded.then((_) {
@@ -331,8 +346,12 @@ class MovingComponentSpawner extends Component
                   contactAngle: contactAngle,
                   particlePool: _orbDisjointParticlePool,
                 );
+                _orbDisjointPool.release(disjointComponent);
                 _iceOrbPool.release(orb as IceOrb);
               });
+            },
+            onPotatoHitCallback: () {
+              _iceOrbPool.release(orb as IceOrb);
             },
           ),
         );

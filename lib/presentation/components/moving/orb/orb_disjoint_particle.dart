@@ -41,7 +41,7 @@ class OrbDisjointParticleComponent extends Component
     return fromAngle + rnd.nextDouble() * (toAngle - fromAngle);
   }
 
-  Future<void> burst({
+  void burst({
     required OrbType orbType,
     required List<Color> colors,
     required List<Sprite> smallSparkleSprites,
@@ -127,6 +127,5 @@ class OrbDisjointParticleComponent extends Component
       );
       game.world.add(p);
     }
-    add(RemoveEffect());
   }
 }
