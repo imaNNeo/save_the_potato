@@ -29,10 +29,10 @@ packages:
     dependency: transitive
     description:
       name: bloc
-      sha256: "106842ad6569f0b60297619e9e0b1885c2fb9bf84812935490e6c5275777804e"
+      sha256: "52c10575f4445c61dd9e0cafcc6356fdd827c4c64dd7945ef3c4105f6b6ac189"
       url: "https://pub.dev"
     source: hosted
-    version: "8.1.4"
+    version: "9.0.0"
   boolean_selector:
     dependency: transitive
     description:
@@ -117,10 +117,10 @@ packages:
     dependency: transitive
     description:
       name: fast_noise
-      sha256: "271031cebf1602fc064472970e658fa7ff2f3b55a979bb430337b715bd55690b"
+      sha256: "2aa7bbde5599d2b6769750ee23536ec8a0096606fc9d10d29a3855e80715e1c6"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.1"
+    version: "2.0.0"
   ffi:
     dependency: transitive
     description:
@@ -149,34 +149,34 @@ packages:
     dependency: "direct main"
     description:
       name: flame
-      sha256: c02390443e40a2a9034ac867d0789ab32f215eba4779bff4655a7143eb3d75d0
+      sha256: c50e2f39e118f5f6a6f3339ce6825ee803c7e5fada95ec50fb02eb27944e0e76
       url: "https://pub.dev"
     source: hosted
-    version: "1.22.0"
+    version: "1.30.1"
   flame_bloc:
     dependency: "direct main"
     description:
       name: flame_bloc
-      sha256: "0c5180800201d4d2ba37aea8679212d837113f8da166050d73806197d42315f7"
+      sha256: ebf19287035178396a2c08ba66204f48ed2d935f9eee761e2ce8524b816f6890
       url: "https://pub.dev"
     source: hosted
-    version: "1.12.4"
+    version: "1.12.15"
   flame_noise:
     dependency: "direct main"
     description:
       name: flame_noise
-      sha256: "4ec3437bf1f5afb638eed6116a96adaaaa007c1b972ca061d275e6e203132fd8"
+      sha256: e38410e749ade2897a0c7bb854c564feaa479ac297083149402c760e0ad6ba04
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.1+12"
+    version: "0.3.2+14"
   flame_rive:
     dependency: "direct main"
     description:
       name: flame_rive
-      sha256: "35fb5cdd4a776b0a375807605d9da128c9752bb3a29dbc9c1385031ac0ac8e6f"
+      sha256: "3e896259b539e4d00a94a3bb9958a4f8c69ac695f68cce5e47dea394b345fc64"
       url: "https://pub.dev"
     source: hosted
-    version: "1.10.6"
+    version: "1.10.17"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -194,10 +194,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_bloc
-      sha256: b594505eac31a0518bdcb4b5b79573b8d9117b193cc80cc12e17d639b10aa27a
+      sha256: cf51747952201a455a1c840f8171d273be009b932c75093020f9af64f2123e38
       url: "https://pub.dev"
     source: hosted
-    version: "8.1.6"
+    version: "9.1.1"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
@@ -235,10 +235,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_soloud
-      sha256: c1f678187c9f11d22edde1fbcfe0fd51d932b7fc9098c609cb2ff071a5e3dc7a
+      sha256: fc9d491561ff53e3735993b04493f17c19708fbf82f3bf88c6b10d92b0c4c468
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.7"
+    version: "3.2.3"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -277,10 +277,10 @@ packages:
     dependency: transitive
     description:
       name: http
-      sha256: b9c29a161230ee03d3ccf545097fccd9b87a5264228c5d348202e0f0c28f9010
+      sha256: "2c11f3f94c687ee9bad77c171151672986360b2b001d109814ee7140b2cf261b"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.2"
+    version: "1.4.0"
   http_parser:
     dependency: transitive
     description:
@@ -405,10 +405,10 @@ packages:
     dependency: transitive
     description:
       name: ordered_set
-      sha256: fc861bb51fc863cd3e0718e21768af9586e0d5022b91a0fd4437636456cdb7d0
+      sha256: d6c1d053a533e84931a388cbf03f1ad21a0543bf06c7a281859d3ffacd8e15f2
       url: "https://pub.dev"
     source: hosted
-    version: "6.1.1"
+    version: "8.0.0"
   path:
     dependency: transitive
     description:
@@ -525,18 +525,18 @@ packages:
     dependency: "direct main"
     description:
       name: rive
-      sha256: ae75a6e9cfbf146630bfb1feba97ee582d935508be6b362e4bd197b9c55a6dd3
+      sha256: "2551a44fa766a7ed3f52aa2b94feda6d18d00edc25dee5f66e72e9b365bb6d6c"
       url: "https://pub.dev"
     source: hosted
-    version: "0.12.4"
+    version: "0.13.20"
   rive_common:
     dependency: transitive
     description:
       name: rive_common
-      sha256: f4e20d0a99c5040c85624a3eb2b0b6b19e614d93a693c3bb25cf6e7bb2d3d6d3
+      sha256: "2ba42f80d37a4efd0696fb715787c4785f8a13361e8aea9227c50f1e78cf763a"
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.8"
+    version: "0.4.15"
   shared_preferences:
     dependency: "direct main"
     description:
@@ -760,4 +760,4 @@ packages:
     version: "3.1.3"
 sdks:
   dart: ">=3.7.0-0 <4.0.0"
-  flutter: ">=3.24.0"
+  flutter: ">=3.27.1"
