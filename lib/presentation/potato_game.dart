@@ -71,9 +71,11 @@ class PotatoGame extends FlameGame<MyWorld>
     camera.viewfinder.add(
       MoveEffect.by(
         Vector2(8, 8),
-        PerlinNoiseEffectController(
+        NoiseEffectController(
           duration: 1,
-          frequency: 400,
+          noise: PerlinNoise(
+            frequency: 400,
+          ),
         ),
       ),
     );

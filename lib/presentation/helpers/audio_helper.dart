@@ -23,7 +23,7 @@ class AudioHelper {
 
   Future<void> initialize() async {
     _soLoud = SoLoud.instance;
-    if (await _soLoud.initialized) {
+    if (_soLoud.isInitialized) {
       /// For example, when we re-run the app in the debug mode
       return;
     }
