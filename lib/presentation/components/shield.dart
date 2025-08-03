@@ -324,6 +324,7 @@ class Shield extends PositionComponent
           bloc.onShieldHit(other);
           _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
           other.disjoint();
+          break;
         case FireOrb():
         case IceOrb():
           final orb = other as MovingOrb;
@@ -340,6 +341,7 @@ class Shield extends PositionComponent
             final contactAngle = atan2(diff.y, diff.x);
             other.disjoint(contactAngle);
           }
+          break;
       }
     }
   }

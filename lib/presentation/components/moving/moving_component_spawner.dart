@@ -214,12 +214,12 @@ class MovingComponentSpawner extends Component
         target: player,
         size: 28,
         position: _getRandomSpawnPositionAroundMap(),
+        onDisjointCallback: () {
+          _movingHealthPool.release(movingHealth!);
+          movingHealth = null;
+        },
       ),
     );
-    movingHealth!.onDisjointCallback = () {
-      _movingHealthPool.release(movingHealth!);
-      movingHealth = null;
-    };
     parent.add(movingHealth!);
     return true;
   }
