@@ -54,7 +54,7 @@ class _NicknameDialogContentState extends State<NicknameDialogContent> {
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                     filled: true,
-                    hintStyle: TextStyle(color: Colors.grey[800]),
+                    hintStyle: TextStyle(color: Colors.grey[400]),
                     hintText: 'Your nickname',
                     fillColor: Colors.transparent,
                     counterText: '',

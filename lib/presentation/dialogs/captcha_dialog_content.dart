@@ -37,7 +37,7 @@ class _CaptchaDialogContentState extends State<CaptchaDialogContent> {
               borderRadius: BorderRadius.circular(10.0),
             ),
             filled: true,
-            hintStyle: TextStyle(color: Colors.grey[800]),
+            hintStyle: TextStyle(color: Colors.grey[400]),
             fillColor: Colors.transparent,
             counterText: '',
           ),
