@@ -92,10 +92,7 @@ class NewRankCelebrationPage extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Trophy(
-                        score: freshScore,
-                        size: trophySize,
-                      ),
+                      Trophy(score: freshScore, size: trophySize),
                       Expanded(
                         flex: 4,
                         child: Align(
@@ -124,9 +121,7 @@ class NewRankCelebrationPage extends StatelessWidget {
                                 onPressed: () => Navigator.of(context).pop(),
                                 child: const Text(
                                   'Close',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                  ),
+                                  style: TextStyle(color: Colors.white),
                                 ),
                               ),
                             ],

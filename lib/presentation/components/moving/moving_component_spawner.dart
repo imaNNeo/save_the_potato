@@ -209,9 +209,9 @@ class MovingComponentSpawner extends Component
     );
     final healthMoveSpeed =
         (moveSpeed * GameConstants.movingHealthPointSpeedMultiplier).clamp(
-      GameConstants.movingHealthMinSpeed,
-      GameConstants.movingHealthMaxSpeed,
-    );
+          GameConstants.movingHealthMinSpeed,
+          GameConstants.movingHealthMaxSpeed,
+        );
 
     movingHealth = _movingHealthPool.get();
     movingHealth!.loaded.then(

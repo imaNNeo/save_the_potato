@@ -33,7 +33,7 @@ class MovingOrbHead extends PositionComponent with ParentIsA<MovingOrb> {
       position: offset.toVector2(),
       overridePaint: _paint
         ..colorFilter = ColorFilter.mode(
-          parent.colors[1].withOpacity(0.8),
+          parent.colors[1].withValues(alpha: 0.8),
           BlendMode.srcIn,
         ),
     );
@@ -43,10 +43,7 @@ class MovingOrbHead extends PositionComponent with ParentIsA<MovingOrb> {
       anchor: Anchor.center,
       position: offset.toVector2(),
       overridePaint: _paint
-        ..colorFilter = ColorFilter.mode(
-          parent.colors[1],
-          BlendMode.srcIn,
-        ),
+        ..colorFilter = ColorFilter.mode(parent.colors[1], BlendMode.srcIn),
     );
     _sprite3Shine.render(
       canvas,

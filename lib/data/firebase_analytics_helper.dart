@@ -3,10 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 
 class FirebaseAnalyticsHelper extends AnalyticsHelper {
-  void _logEvent({
-    required String name,
-    Map<String, Object>? parameters,
-  }) {
+  void _logEvent({required String name, Map<String, Object>? parameters}) {
     if (kDebugMode) {
       return;
     }
@@ -17,26 +14,20 @@ class FirebaseAnalyticsHelper extends AnalyticsHelper {
       return MapEntry(key, value);
     });
     debugPrint('AnalyticsEvent: $name, $parameters');
-    FirebaseAnalytics.instance.logEvent(
-      name: name,
-      parameters: parameters,
-    );
+    FirebaseAnalytics.instance.logEvent(name: name, parameters: parameters);
   }
 
   @override
   void logLevelStart(int afterGuideDurationMills) => _logEvent(
-        name: 'level_start',
-        parameters: {
-          'level_name': 'main',
-          'started_after_guide_duration_mills': afterGuideDurationMills,
-        },
-      );
+    name: 'level_start',
+    parameters: {
+      'level_name': 'main',
+      'started_after_guide_duration_mills': afterGuideDurationMills,
+    },
+  );
 
   @override
-  void logLevelEnd({
-    required int durationMills,
-    required bool isHighScore,
-  }) =>
+  void logLevelEnd({required int durationMills, required bool isHighScore}) =>
       _logEvent(
         name: 'level_end',
         parameters: {
@@ -47,12 +38,8 @@ class FirebaseAnalyticsHelper extends AnalyticsHelper {
       );
 
   @override
-  void logLevelPause(bool manually) => _logEvent(
-        name: 'level_pause',
-        parameters: {
-          'manually': manually,
-        },
-      );
+  void logLevelPause(bool manually) =>
+      _logEvent(name: 'level_pause', parameters: {'manually': manually});
 
   @override
   void logLevelResume() => _logEvent(name: 'level_resume');
@@ -61,71 +48,50 @@ class FirebaseAnalyticsHelper extends AnalyticsHelper {
   void logLevelRestart() => _logEvent(name: 'level_restart');
 
   @override
-  void logLogin({required String loginMethod}) => _logEvent(
-        name: 'login',
-        parameters: {
-          'method': loginMethod,
-        },
-      );
+  void logLogin({required String loginMethod}) =>
+      _logEvent(name: 'login', parameters: {'method': loginMethod});
 
   @override
   void logLeaderboardPageOpen() => _logEvent(name: 'leaderboard_page_open');
 
   @override
   void logLeaderboardPageLoad(int durationMills) => _logEvent(
-        name: 'leaderboard_page_load',
-        parameters: {
-          'loading_duration_mills': durationMills,
-        },
-      );
+    name: 'leaderboard_page_load',
+    parameters: {'loading_duration_mills': durationMills},
+  );
 
   @override
-  void logLeaderboardMyScoreClick(bool isAnonymous) =>
-      _logEvent(name: 'leaderboard_my_score_click', parameters: {
-        'is_anonymous': isAnonymous,
-      });
+  void logLeaderboardMyScoreClick(bool isAnonymous) => _logEvent(
+    name: 'leaderboard_my_score_click',
+    parameters: {'is_anonymous': isAnonymous},
+  );
 
   @override
-  void logShareMyScore(
-    EventSource source,
-  ) =>
-      _logEvent(name: 'share', parameters: {
-        'content_type': 'score',
-        'item_id': 'my_score',
-        'method': source.key,
-      });
+  void logShareMyScore(EventSource source) => _logEvent(
+    name: 'share',
+    parameters: {
+      'content_type': 'score',
+      'item_id': 'my_score',
+      'method': source.key,
+    },
+  );
 
   @override
-  void logRenameNickname(
-    EventSource source,
-  ) =>
-      _logEvent(
-        name: 'rename_nickname',
-        parameters: {
-          'method': source.key,
-        },
-      );
+  void logRenameNickname(EventSource source) =>
+      _logEvent(name: 'rename_nickname', parameters: {'method': source.key});
 
   @override
-  void logSettingsPopupOpen() => _logEvent(
-        name: 'settings_opened',
-      );
+  void logSettingsPopupOpen() => _logEvent(name: 'settings_opened');
 
   @override
   void logSettingsAudioChanged(bool enabled) => _logEvent(
-        name: 'settings_audio_changed',
-        parameters: {
-          'enabled': enabled,
-        },
-      );
-
-  @override
-  void heartDisjointed() => _logEvent(
-    name: 'heart_disjointed',
+    name: 'settings_audio_changed',
+    parameters: {'enabled': enabled},
   );
 
   @override
-  void heartReceived() => _logEvent(
-    name: 'heart_received',
-  );
+  void heartDisjointed() => _logEvent(name: 'heart_disjointed');
+
+  @override
+  void heartReceived() => _logEvent(name: 'heart_received');
 }

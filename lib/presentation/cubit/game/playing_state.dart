@@ -42,9 +42,5 @@ class PlayingStateGameOver extends PlayingState with EquatableMixin {
   });
 
   @override
-  List<Object?> get props => [
-        score,
-        isHighScore,
-        highestScore,
-      ];
+  List<Object?> get props => [score, isHighScore, highestScore];
 }

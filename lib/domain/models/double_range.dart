@@ -7,10 +7,7 @@ class DoubleRange with EquatableMixin {
   final double min;
   final double max;
 
-  const DoubleRange({
-    required this.min,
-    required this.max,
-  });
+  const DoubleRange({required this.min, required this.max});
 
   double random() => min + (max - min) * Random().nextDouble();
 
@@ -25,8 +22,5 @@ class DoubleRange with EquatableMixin {
   String get simpleFormatInt => '(${min.toInt()}, ${max.toInt()})';
 
   @override
-  List<Object?> get props => [
-        min,
-        max,
-      ];
+  List<Object?> get props => [min, max];
 }

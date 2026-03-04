@@ -47,17 +47,15 @@ class _CaptchaDialogContentState extends State<CaptchaDialogContent> {
         SizedBox(
           width: 118,
           child: ElevatedButton(
-            onPressed: () => Navigator.of(context)
-                .pop(int.tryParse(_controller.text) == result),
+            onPressed: () => Navigator.of(
+              context,
+            ).pop(int.tryParse(_controller.text) == result),
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10.0),
               ),
             ),
-            child: const Text(
-              'Confirm',
-              style: TextStyle(fontSize: 16),
-            ),
+            child: const Text('Confirm', style: TextStyle(fontSize: 16)),
           ),
         ),
       ],

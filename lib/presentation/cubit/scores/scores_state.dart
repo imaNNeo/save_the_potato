@@ -61,16 +61,16 @@ class ScoresState extends Equatable {
 
   @override
   List<Object?> get props => [
-        myScore,
-        allShowingScores,
-        leaderboardLoading,
-        leaderBoardFirstPageError,
-        leaderBoardNextPageError,
-        updateNicknameError,
-        showAuthDialog,
-        showNicknameDialog,
-        scoreShareLoading,
-        scoreShareError,
-        nextPageCountToLoad,
-      ];
+    myScore,
+    allShowingScores,
+    leaderboardLoading,
+    leaderBoardFirstPageError,
+    leaderBoardNextPageError,
+    updateNicknameError,
+    showAuthDialog,
+    showNicknameDialog,
+    scoreShareLoading,
+    scoreShareError,
+    nextPageCountToLoad,
+  ];
 }

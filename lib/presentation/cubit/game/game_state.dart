@@ -51,11 +51,11 @@ class GameState extends Equatable {
 
   /// Between 0.0 and 1.0
   double get difficulty => GameConstants.difficultyInitialToPeakCurve.transform(
-        min(
-          1.0,
-          difficultyTimePassed / GameConstants.difficultyInitialToPeakDuration,
-        ),
-      );
+    min(
+      1.0,
+      difficultyTimePassed / GameConstants.difficultyInitialToPeakDuration,
+    ),
+  );
 
   double get gameOverTimeScale {
     if (playingState.isPaused) {
@@ -89,48 +89,48 @@ class GameState extends Equatable {
     ValueWrapper<GameMode>? upcomingGameMode,
     ValueWrapper<MotivationWordType>? playMotivationWord,
     List<MotivationWordType>? motivationWordsPoolToPlay,
-  }) =>
-      GameState(
-        healthPoints: healthPoints ?? this.healthPoints,
-        levelTimePassed: levelTimePassed ?? this.levelTimePassed,
-        difficultyTimePassed: difficultyTimePassed ?? this.difficultyTimePassed,
-        playingState: playingState ?? this.playingState,
-        showGameOverUI: showGameOverUI ?? this.showGameOverUI,
-        shieldsAngleRotationSpeed:
-            shieldsAngleRotationSpeed ?? this.shieldsAngleRotationSpeed,
-        restartGame: restartGame ?? this.restartGame,
-        onNewHighScore:
-            onNewHighScore != null ? onNewHighScore.value : this.onNewHighScore,
-        firstHealthReceived: firstHealthReceived ?? this.firstHealthReceived,
-        shieldHitCounter: shieldHitCounter ?? this.shieldHitCounter,
-        gameModeHistory: gameModeHistory ?? this.gameModeHistory,
-        currentGameMode: currentGameMode ?? this.currentGameMode,
-        upcomingGameMode: upcomingGameMode != null
-            ? upcomingGameMode.value
-            : this.upcomingGameMode,
-        playMotivationWord: playMotivationWord != null
-            ? playMotivationWord.value
-            : this.playMotivationWord,
-        motivationWordsPoolToPlay:
-            motivationWordsPoolToPlay ?? this.motivationWordsPoolToPlay,
-      );
+  }) => GameState(
+    healthPoints: healthPoints ?? this.healthPoints,
+    levelTimePassed: levelTimePassed ?? this.levelTimePassed,
+    difficultyTimePassed: difficultyTimePassed ?? this.difficultyTimePassed,
+    playingState: playingState ?? this.playingState,
+    showGameOverUI: showGameOverUI ?? this.showGameOverUI,
+    shieldsAngleRotationSpeed:
+        shieldsAngleRotationSpeed ?? this.shieldsAngleRotationSpeed,
+    restartGame: restartGame ?? this.restartGame,
+    onNewHighScore: onNewHighScore != null
+        ? onNewHighScore.value
+        : this.onNewHighScore,
+    firstHealthReceived: firstHealthReceived ?? this.firstHealthReceived,
+    shieldHitCounter: shieldHitCounter ?? this.shieldHitCounter,
+    gameModeHistory: gameModeHistory ?? this.gameModeHistory,
+    currentGameMode: currentGameMode ?? this.currentGameMode,
+    upcomingGameMode: upcomingGameMode != null
+        ? upcomingGameMode.value
+        : this.upcomingGameMode,
+    playMotivationWord: playMotivationWord != null
+        ? playMotivationWord.value
+        : this.playMotivationWord,
+    motivationWordsPoolToPlay:
+        motivationWordsPoolToPlay ?? this.motivationWordsPoolToPlay,
+  );
 
   @override
   List<Object?> get props => [
-        healthPoints,
-        levelTimePassed,
-        difficultyTimePassed,
-        playingState,
-        showGameOverUI,
-        shieldsAngleRotationSpeed,
-        restartGame,
-        onNewHighScore,
-        firstHealthReceived,
-        shieldHitCounter,
-        gameModeHistory,
-        currentGameMode,
-        upcomingGameMode,
-        playMotivationWord,
-        motivationWordsPoolToPlay,
-      ];
+    healthPoints,
+    levelTimePassed,
+    difficultyTimePassed,
+    playingState,
+    showGameOverUI,
+    shieldsAngleRotationSpeed,
+    restartGame,
+    onNewHighScore,
+    firstHealthReceived,
+    shieldHitCounter,
+    gameModeHistory,
+    currentGameMode,
+    upcomingGameMode,
+    playMotivationWord,
+    motivationWordsPoolToPlay,
+  ];
 }

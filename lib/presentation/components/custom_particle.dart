@@ -5,11 +5,8 @@ import 'package:flame/extensions.dart';
 
 import 'component_pool.dart';
 
-typedef CustomParticleRenderDelegate = void Function(
-  Canvas canvas,
-  Paint overridePaint,
-  CustomParticle particle,
-);
+typedef CustomParticleRenderDelegate =
+    void Function(Canvas canvas, Paint overridePaint, CustomParticle particle);
 
 class CustomParticle extends PositionComponent {
   final _overridePaint = Paint();

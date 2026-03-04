@@ -63,12 +63,15 @@ class _MainPageState extends State<MainPage>
       _previousState = state.playingState;
     });
 
-    _generalLoadingSubscription =
-        context.read<ScoresCubit>().stream.listen((state) {
+    final scoresCubit = context.read<ScoresCubit>();
+    _generalLoadingSubscription = scoresCubit.stream.listen((state) {
+      if (!mounted) return;
       if (state.showAuthDialog) {
+        // ignore: use_build_context_synchronously
         BaseDialog.showAuthDialog(context);
       }
       if (state.showNicknameDialog) {
+        // ignore: use_build_context_synchronously
         BaseDialog.showNicknameDialog(context);
       }
       if (state.scoreShareLoading) {
@@ -76,6 +79,7 @@ class _MainPageState extends State<MainPage>
           _generalLoadingEntry = OverlayEntry(
             builder: (context) => const LoadingOverlay(),
           );
+          // ignore: use_build_context_synchronously
           Overlay.of(context).insert(_generalLoadingEntry!);
         }
       } else {
@@ -123,9 +127,7 @@ class _MainPageState extends State<MainPage>
           context.read<ScoresCubit>().tryToRefreshLeaderboard();
           Navigator.of(context).push(
             FadeRoute(
-              page: NewRankCelebrationPage(
-                scoreEntity: state.onNewHighScore!,
-              ),
+              page: NewRankCelebrationPage(scoreEntity: state.onNewHighScore!),
             ),
           );
         }
@@ -133,7 +135,7 @@ class _MainPageState extends State<MainPage>
       builder: (context, state) {
         return PopScope(
           canPop: !state.playingState.isPlaying,
-          onPopInvoked: (didPop) async {
+          onPopInvokedWithResult: (didPop, _) async {
             if (didPop) {
               return;
             }
@@ -180,10 +182,7 @@ class _MainPageState extends State<MainPage>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    routeObserver.subscribe(
-      this,
-      ModalRoute.of(context) as PageRoute<dynamic>,
-    );
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
   }
 
   @override

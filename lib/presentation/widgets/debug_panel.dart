@@ -44,9 +44,7 @@ class DebugPanel extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'nickname: ${authState.user?.nickname ?? 'null'}',
-                      ),
+                      Text('nickname: ${authState.user?.nickname ?? 'null'}'),
                       const SizedBox(height: 12),
                       Text(
                         'levelTimePassed: ${gameState.levelTimePassed.toStringAsFixed(2)}',
@@ -56,9 +54,7 @@ class DebugPanel extends StatelessWidget {
                         text: TextSpan(
                           text: '',
                           children: [
-                            const TextSpan(
-                              text: 'GameMode: ',
-                            ),
+                            const TextSpan(text: 'GameMode: '),
                             TextSpan(
                               text: gameModeTitle,
                               style: TextStyle(
@@ -71,9 +67,7 @@ class DebugPanel extends StatelessWidget {
                             ),
                             const TextSpan(
                               text: ' Defended:',
-                              style: TextStyle(
-                                color: Colors.greenAccent,
-                              ),
+                              style: TextStyle(color: Colors.greenAccent),
                             ),
                             TextSpan(
                               text: '${gameMode.defendedOrbsCount}',
@@ -84,9 +78,7 @@ class DebugPanel extends StatelessWidget {
                             ),
                             const TextSpan(
                               text: ' Collided:',
-                              style: TextStyle(
-                                color: Colors.red,
-                              ),
+                              style: TextStyle(color: Colors.red),
                             ),
                             TextSpan(
                               text: '${gameMode.collidedOrbsCount}',
@@ -97,9 +89,7 @@ class DebugPanel extends StatelessWidget {
                             ),
                             const TextSpan(
                               text: ' Streak:',
-                              style: TextStyle(
-                                color: Colors.yellowAccent,
-                              ),
+                              style: TextStyle(color: Colors.yellowAccent),
                             ),
                             TextSpan(
                               text: '${gameMode.defendOrbStreakCount}',
@@ -141,12 +131,14 @@ class DebugPanel extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Text(
-                                '${GameModeSingleSpawn.orbsSpawnEveryInitial}'),
+                              '${GameModeSingleSpawn.orbsSpawnEveryInitial}',
+                            ),
                             const SizedBox(width: 4),
                             SizedBox(
                               width: 200,
                               child: LinearProgressIndicator(
-                                value: 1 -
+                                value:
+                                    1 -
                                     ((gameMode.getSpawnOrbsEvery(difficulty) -
                                             GameModeSingleSpawn
                                                 .orbsSpawnEveryPeak) /
@@ -158,14 +150,15 @@ class DebugPanel extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             const Text(
-                                '${GameModeSingleSpawn.orbsSpawnEveryPeak}'),
+                              '${GameModeSingleSpawn.orbsSpawnEveryPeak}',
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
                         Text(
                           'Orbs Move Speed: ${gameMode.getSpawnOrbsMoveSpeed(difficulty).toStringAsFixed(2)}',
                         ),
-                      ]
+                      ],
                     ],
                   ),
                 ),

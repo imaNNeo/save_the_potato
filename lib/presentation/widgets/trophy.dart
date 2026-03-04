@@ -31,8 +31,9 @@ class Trophy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int? rank =
-        score is OnlineScoreEntity ? (score as OnlineScoreEntity).rank : null;
+    int? rank = score is OnlineScoreEntity
+        ? (score as OnlineScoreEntity).rank
+        : null;
 
     late final GameConfigEntity gameConfig;
     if (nullableGameConfig != null) {
@@ -80,8 +81,8 @@ class Trophy extends StatelessWidget {
                       score == null
                           ? ''
                           : score is OnlineScoreEntity
-                              ? (score as OnlineScoreEntity).nickname
-                              : '',
+                          ? (score as OnlineScoreEntity).nickname
+                          : '',
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         fontFamily: 'Roboto',

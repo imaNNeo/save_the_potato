@@ -7,19 +7,18 @@ class ScoresRepository {
   final ScoresLocalDataSource _scoresLocalDataSource;
   final ScoresRemoteDataSource _scoresRemoteDataSource;
 
-  ScoresRepository(
-    this._scoresLocalDataSource,
-    this._scoresRemoteDataSource,
-  );
+  ScoresRepository(this._scoresLocalDataSource, this._scoresRemoteDataSource);
 
   Future<OnlineScoreEntity> saveScore(int scoreMilliseconds) async {
     final currentLocalScore = await _scoresLocalDataSource.getHighScore();
     final newLocalScore = switch (currentLocalScore) {
       null => OfflineScoreEntity(score: scoreMilliseconds),
-      OfflineScoreEntity() =>
-        currentLocalScore.copyWith(score: scoreMilliseconds),
-      OnlineScoreEntity() =>
-        currentLocalScore.copyWith(score: scoreMilliseconds),
+      OfflineScoreEntity() => currentLocalScore.copyWith(
+        score: scoreMilliseconds,
+      ),
+      OnlineScoreEntity() => currentLocalScore.copyWith(
+        score: scoreMilliseconds,
+      ),
     };
     await _scoresLocalDataSource.setHighScore(newLocalScore);
     final score = await _scoresRemoteDataSource.submitScore(scoreMilliseconds);
@@ -48,9 +47,7 @@ class ScoresRepository {
     }
 
     if (myRemoteScore != null && myLocalScore == null) {
-      return await _scoresLocalDataSource.setHighScore(
-        myRemoteScore,
-      );
+      return await _scoresLocalDataSource.setHighScore(myRemoteScore);
     }
 
     // Both are not null
@@ -60,12 +57,11 @@ class ScoresRepository {
       await _scoresLocalDataSource.setHighScore(myRemoteScore);
       return myRemoteScore;
     } else if (myRemoteScore.score > myLocalScore.score) {
-      return await _scoresLocalDataSource.setHighScore(
-        myRemoteScore,
-      );
+      return await _scoresLocalDataSource.setHighScore(myRemoteScore);
     } else {
-      final newRemoteScore =
-          await _scoresRemoteDataSource.submitScore(myLocalScore.score);
+      final newRemoteScore = await _scoresRemoteDataSource.submitScore(
+        myLocalScore.score,
+      );
       await _scoresLocalDataSource.setHighScore(newRemoteScore);
       return newRemoteScore;
     }
@@ -81,6 +77,5 @@ class ScoresRepository {
   Future<LeaderboardResponseEntity> getLeaderboard(
     int pageLimit,
     String? pageLastId,
-  ) =>
-      _scoresRemoteDataSource.getLeaderboard(pageLimit, pageLastId);
+  ) => _scoresRemoteDataSource.getLeaderboard(pageLimit, pageLastId);
 }

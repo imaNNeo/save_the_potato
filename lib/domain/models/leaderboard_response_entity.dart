@@ -18,12 +18,12 @@ class LeaderboardResponseEntity {
   });
 
   Map<String, dynamic> toJson() => {
-        'scores': scores.map((e) => e.toJson()).toList(),
-        'my_score': myScore == null ? 'null' : myScore!.toJson(),
-        'leaderboard_id': leaderboardId,
-        'leaderboard_title': leaderboardTitle,
-        'page_data': pageData.toJson(),
-      };
+    'scores': scores.map((e) => e.toJson()).toList(),
+    'my_score': myScore == null ? 'null' : myScore!.toJson(),
+    'leaderboard_id': leaderboardId,
+    'leaderboard_title': leaderboardTitle,
+    'page_data': pageData.toJson(),
+  };
 
   factory LeaderboardResponseEntity.fromJson(Map<String, dynamic> json) =>
       LeaderboardResponseEntity(
@@ -32,11 +32,14 @@ class LeaderboardResponseEntity {
             .toList(),
         myScore: json['my_score'] == null
             ? null
-            : OnlineScoreEntity.fromJson(json['my_score'] as Map<String, dynamic>),
+            : OnlineScoreEntity.fromJson(
+                json['my_score'] as Map<String, dynamic>,
+              ),
         leaderboardId: json['leaderboard_id'],
         leaderboardTitle: json['leaderboard_title'],
         pageData: PaginationPageDataEntity.fromJson(
-            json['page_data'] as Map<String, dynamic>),
+          json['page_data'] as Map<String, dynamic>,
+        ),
       );
 
   LeaderboardResponseEntity copyWith({
@@ -45,12 +48,11 @@ class LeaderboardResponseEntity {
     String? leaderboardId,
     String? leaderboardTitle,
     PaginationPageDataEntity? pageData,
-  }) =>
-      LeaderboardResponseEntity(
-        scores: scores ?? this.scores,
-        myScore: myScore ?? this.myScore,
-        leaderboardId: leaderboardId ?? this.leaderboardId,
-        leaderboardTitle: leaderboardTitle ?? this.leaderboardTitle,
-        pageData: pageData ?? this.pageData,
-      );
+  }) => LeaderboardResponseEntity(
+    scores: scores ?? this.scores,
+    myScore: myScore ?? this.myScore,
+    leaderboardId: leaderboardId ?? this.leaderboardId,
+    leaderboardTitle: leaderboardTitle ?? this.leaderboardTitle,
+    pageData: pageData ?? this.pageData,
+  );
 }

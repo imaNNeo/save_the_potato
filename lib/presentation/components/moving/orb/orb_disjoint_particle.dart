@@ -13,9 +13,7 @@ import 'package:save_the_potato/presentation/potato_game.dart';
 
 class OrbDisjointParticleComponent extends Component
     with HasGameReference<PotatoGame>, ParentIsA<MovingOrb> {
-  OrbDisjointParticleComponent({
-    super.key,
-  });
+  OrbDisjointParticleComponent({super.key});
 
   late OrbType orbType;
   late List<Color> colors;
@@ -59,10 +57,7 @@ class OrbDisjointParticleComponent extends Component
       for (int i = 0; i < randomOrder.length - 1; i++)
         TweenSequenceItem(
           weight: 1,
-          tween: ColorTween(
-            begin: randomOrder[i],
-            end: randomOrder[i + 1],
-          ),
+          tween: ColorTween(begin: randomOrder[i], end: randomOrder[i + 1]),
         ),
     ]);
     final size = parent.size;
@@ -73,8 +68,8 @@ class OrbDisjointParticleComponent extends Component
       final sprite = smallSparkleSprites.random(game.rnd);
       final randomAngle = _getRandomConeAngle();
       _cachedDirection.setValues(cos(randomAngle), sin(randomAngle));
-      final speed = _cachedDirection *
-          (rnd.nextDouble() * 200 + (100 * speedProgress));
+      final speed =
+          _cachedDirection * (rnd.nextDouble() * 200 + (100 * speedProgress));
       p.startParticle(
         lifespan: 1.25 - (speedProgress * 0.4),
         pool: particlePool,
@@ -89,6 +84,7 @@ class OrbDisjointParticleComponent extends Component
           if (opacity <= 0.01) {
             return;
           }
+
           /// We have different sizeScale for orb types,
           /// because snow particles seems larger in the result
           double sizeScale = orbType == OrbType.fire
@@ -103,8 +99,7 @@ class OrbDisjointParticleComponent extends Component
               _disjointParticlePaint
                 ..colorFilter = null
                 ..maskFilter = null
-                ..color = color
-                    .withValues(alpha: opacity),
+                ..color = color.withValues(alpha: opacity),
             );
           } else {
             sprite.render(
@@ -114,8 +109,8 @@ class OrbDisjointParticleComponent extends Component
               overridePaint: _disjointParticlePaint
                 ..colorFilter = ColorFilter.mode(
                   (rnd.nextBool()
-                      ? color
-                      : colorTween.transform(particle.progress))!
+                          ? color
+                          : colorTween.transform(particle.progress))!
                       .withValues(alpha: opacity),
                   BlendMode.srcIn,
                 ),

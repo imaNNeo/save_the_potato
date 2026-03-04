@@ -49,13 +49,13 @@ class AuthState extends Equatable {
 
   @override
   List<Object?> get props => [
-        user,
-        updateUserLoading,
-        updateUserError,
-        updateUserSucceeds,
-        authLoading,
-        authError,
-        authSucceeds,
-        accountAlreadyExistsError,
-      ];
+    user,
+    updateUserLoading,
+    updateUserError,
+    updateUserSucceeds,
+    authLoading,
+    authError,
+    authSucceeds,
+    accountAlreadyExistsError,
+  ];
 }

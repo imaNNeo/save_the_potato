@@ -8,10 +8,7 @@ class LeaderboardLoadedScoreItem extends LeaderboardScoreItem
   final OnlineScoreEntity score;
   final bool refreshing;
 
-  LeaderboardLoadedScoreItem({
-    required this.score,
-    this.refreshing = false,
-  });
+  LeaderboardLoadedScoreItem({required this.score, this.refreshing = false});
 
   LeaderboardLoadedScoreItem copyWith({
     OnlineScoreEntity? score,
@@ -33,18 +30,14 @@ class LeaderboardLoadingScoreItem extends LeaderboardScoreItem
 
   LeaderboardLoadingScoreItem({this.showShimmer = true});
 
-  LeaderboardLoadingScoreItem copyWith({
-    bool? showShimmer,
-  }) {
+  LeaderboardLoadingScoreItem copyWith({bool? showShimmer}) {
     return LeaderboardLoadingScoreItem(
       showShimmer: showShimmer ?? this.showShimmer,
     );
   }
 
   @override
-  List<Object?> get props => [
-        showShimmer,
-      ];
+  List<Object?> get props => [showShimmer];
 }
 
 extension OnlineScoreEntityListExtension on List<OnlineScoreEntity> {

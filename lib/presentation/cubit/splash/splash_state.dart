@@ -18,37 +18,30 @@ class SplashState extends Equatable {
     bool? openNextPage,
     ValueWrapper<UpdateInfo>? showUpdatePopup,
     bool? versionIsAllowed,
-  }) =>
-      SplashState(
-        showingVersion: showingVersion ?? this.showingVersion,
-        openNextPage: openNextPage ?? this.openNextPage,
-        showUpdatePopup: showUpdatePopup != null
-            ? showUpdatePopup.value
-            : this.showUpdatePopup,
-        versionIsAllowed: versionIsAllowed ?? this.versionIsAllowed,
-      );
+  }) => SplashState(
+    showingVersion: showingVersion ?? this.showingVersion,
+    openNextPage: openNextPage ?? this.openNextPage,
+    showUpdatePopup: showUpdatePopup != null
+        ? showUpdatePopup.value
+        : this.showUpdatePopup,
+    versionIsAllowed: versionIsAllowed ?? this.versionIsAllowed,
+  );
 
   @override
   List<Object?> get props => [
-        showingVersion,
-        openNextPage,
-        showUpdatePopup,
-        versionIsAllowed,
-      ];
+    showingVersion,
+    openNextPage,
+    showUpdatePopup,
+    versionIsAllowed,
+  ];
 }
 
 class UpdateInfo with EquatableMixin {
   final bool forced;
   final String storeLink;
 
-  UpdateInfo({
-    required this.forced,
-    required this.storeLink,
-  });
+  UpdateInfo({required this.forced, required this.storeLink});
 
   @override
-  List<Object?> get props => [
-        forced,
-        storeLink,
-      ];
+  List<Object?> get props => [forced, storeLink];
 }

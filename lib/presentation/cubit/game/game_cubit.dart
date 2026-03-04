@@ -45,12 +45,12 @@ class GameCubit extends Cubit<GameState> {
 
   void startToShowGuide() async {
     gameShowGuideTimestamp = DateTime.now().millisecondsSinceEpoch;
-    emit(const GameState().copyWith(
-      playingState: const PlayingStateGuide(),
-    ));
-    emit(state.copyWith(
-      firstHealthReceived: await _configsRepository.isFirstHealthReceived(),
-    ));
+    emit(const GameState().copyWith(playingState: const PlayingStateGuide()));
+    emit(
+      state.copyWith(
+        firstHealthReceived: await _configsRepository.isFirstHealthReceived(),
+      ),
+    );
   }
 
   void _guideInteracted() async {
@@ -84,11 +84,13 @@ class GameCubit extends Cubit<GameState> {
     }
     // 2 to 5
     final count = Random().nextInt(4) + 2;
-    emit(state.copyWith(
-      upcomingGameMode: ValueWrapper(
-        GameModeMultiSpawn(spawnerSpawnCount: count),
+    emit(
+      state.copyWith(
+        upcomingGameMode: ValueWrapper(
+          GameModeMultiSpawn(spawnerSpawnCount: count),
+        ),
       ),
-    ));
+    );
   }
 
   void update(double dt) {
@@ -96,14 +98,16 @@ class GameCubit extends Cubit<GameState> {
       return;
     }
     // We calculate the [state.difficulty] based on the time passed
-    emit(state.copyWith(
-      levelTimePassed: state.levelTimePassed + dt,
-      currentGameMode: state.currentGameMode.updatePassedTime(dt),
-    ));
+    emit(
+      state.copyWith(
+        levelTimePassed: state.levelTimePassed + dt,
+        currentGameMode: state.currentGameMode.updatePassedTime(dt),
+      ),
+    );
     if (state.currentGameMode.increasesDifficulty) {
-      emit(state.copyWith(
-        difficultyTimePassed: state.difficultyTimePassed + dt,
-      ));
+      emit(
+        state.copyWith(difficultyTimePassed: state.difficultyTimePassed + dt),
+      );
     }
   }
 
@@ -112,10 +116,12 @@ class GameCubit extends Cubit<GameState> {
       count: 1,
     );
     updatedGameMode = updatedGameMode.resetDefendOrbStreakCount();
-    emit(state.copyWith(
-      healthPoints: max(0, state.healthPoints - 1),
-      currentGameMode: updatedGameMode,
-    ));
+    emit(
+      state.copyWith(
+        healthPoints: max(0, state.healthPoints - 1),
+        currentGameMode: updatedGameMode,
+      ),
+    );
     if (state.healthPoints <= 0) {
       _gameOver();
       return;
@@ -123,13 +129,15 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void onPotatoHealthPointReceived() {
-    emit(state.copyWith(
-      healthPoints: min(
-        GameConstants.maxHealthPoints,
-        state.healthPoints + 1,
+    emit(
+      state.copyWith(
+        healthPoints: min(
+          GameConstants.maxHealthPoints,
+          state.healthPoints + 1,
+        ),
+        firstHealthReceived: true,
       ),
-      firstHealthReceived: true,
-    ));
+    );
     _configsRepository.setFirstHealthReceived(true);
   }
 
@@ -145,9 +153,7 @@ class GameCubit extends Cubit<GameState> {
     );
     OnlineScoreEntity? tempOnlineScore;
     if (isHighScore && previousScore is OnlineScoreEntity) {
-      tempOnlineScore = previousScore.copyWith(
-        score: score,
-      );
+      tempOnlineScore = previousScore.copyWith(score: score);
     }
 
     ScoreEntity highestScore;
@@ -157,22 +163,22 @@ class GameCubit extends Cubit<GameState> {
       highestScore = previousScore;
     }
 
-    emit(state.copyWith(
-      playingState: PlayingStateGameOver(
-        score: tempOnlineScore ?? OfflineScoreEntity(score: score),
-        isHighScore: isHighScore,
-        highestScore: highestScore,
+    emit(
+      state.copyWith(
+        playingState: PlayingStateGameOver(
+          score: tempOnlineScore ?? OfflineScoreEntity(score: score),
+          isHighScore: isHighScore,
+          highestScore: highestScore,
+        ),
       ),
-    ));
+    );
     _submitScore(previousScore);
     if (await _audioHelper.audioEnabled) {
       await _audioHelper.fadeAndStopBackgroundMusic(
         GameConstants.showRetryAfterGameOverDelay,
       );
     } else {
-      await Future.delayed(
-        GameConstants.showRetryAfterGameOverDelay,
-      );
+      await Future.delayed(GameConstants.showRetryAfterGameOverDelay);
     }
     emit(state.copyWith(showGameOverUI: true));
   }
@@ -189,13 +195,15 @@ class GameCubit extends Cubit<GameState> {
           // Let's celebrate!
           _audioHelper.playVictorySound();
           if (state.playingState is PlayingStateGameOver) {
-            emit(state.copyWith(
-              playingState: PlayingStateGameOver(
-                score: newScore,
-                isHighScore: true,
-                highestScore: newScore,
+            emit(
+              state.copyWith(
+                playingState: PlayingStateGameOver(
+                  score: newScore,
+                  isHighScore: true,
+                  highestScore: newScore,
+                ),
               ),
-            ));
+            );
           }
           emit(state.copyWith(onNewHighScore: ValueWrapper(newScore)));
           emit(state.copyWith(onNewHighScore: const ValueWrapper(null)));
@@ -242,7 +250,9 @@ class GameCubit extends Cubit<GameState> {
   }
 
   KeyEventResult handleKeyEvent(
-      KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    KeyEvent event,
+    Set<LogicalKeyboardKey> keysPressed,
+  ) {
     final containsLeftArrow = keysPressed.contains(
       LogicalKeyboardKey.arrowLeft,
     );
@@ -282,27 +292,31 @@ class GameCubit extends Cubit<GameState> {
 
   void _playMotivationWord() {
     if (state.motivationWordsPoolToPlay.isEmpty) {
-      emit(state.copyWith(
-        motivationWordsPoolToPlay: MotivationWordType.values,
-      ));
+      emit(
+        state.copyWith(motivationWordsPoolToPlay: MotivationWordType.values),
+      );
     }
     final randomMotivation = state.motivationWordsPoolToPlay.random();
-    emit(state.copyWith(
-      playMotivationWord: ValueWrapper(randomMotivation),
-      motivationWordsPoolToPlay: state.motivationWordsPoolToPlay
-          .where((element) => element != randomMotivation)
-          .toList(),
-    ));
+    emit(
+      state.copyWith(
+        playMotivationWord: ValueWrapper(randomMotivation),
+        motivationWordsPoolToPlay: state.motivationWordsPoolToPlay
+            .where((element) => element != randomMotivation)
+            .toList(),
+      ),
+    );
     emit(state.copyWith(playMotivationWord: ValueWrapper.nullValue()));
   }
 
   void _updateShieldsRotationSpeed(double speed) {
-    emit(state.copyWith(
-      shieldsAngleRotationSpeed: speed.clamp(
-        -_shieldAngleRotationAmount,
-        _shieldAngleRotationAmount,
+    emit(
+      state.copyWith(
+        shieldsAngleRotationSpeed: speed.clamp(
+          -_shieldAngleRotationAmount,
+          _shieldAngleRotationAmount,
+        ),
       ),
-    ));
+    );
   }
 
   void pauseGame({required bool manually}) {
@@ -324,10 +338,12 @@ class GameCubit extends Cubit<GameState> {
 
   void restartGame() {
     _analyticsHelper.logLevelRestart();
-    emit(const GameState().copyWith(
-      playingState: const PlayingStateGuide(),
-      restartGame: true,
-    ));
+    emit(
+      const GameState().copyWith(
+        playingState: const PlayingStateGuide(),
+        restartGame: true,
+      ),
+    );
     emit(state.copyWith(restartGame: false));
   }
 
@@ -343,10 +359,12 @@ class GameCubit extends Cubit<GameState> {
         updatedGameMode = updatedGameMode.increaseDefendOrbStreakCount(
           count: 1,
         );
-        emit(state.copyWith(
-          shieldHitCounter: state.shieldHitCounter + 1,
-          currentGameMode: updatedGameMode,
-        ));
+        emit(
+          state.copyWith(
+            shieldHitCounter: state.shieldHitCounter + 1,
+            currentGameMode: updatedGameMode,
+          ),
+        );
         break;
     }
 
@@ -358,12 +376,17 @@ class GameCubit extends Cubit<GameState> {
   void multiSpawnModeSpawningFinished() {
     final showingMotivation = (state.currentGameMode as GameModeMultiSpawn)
         .shouldPlayMotivationWord();
-    emit(state.copyWith(
-      upcomingGameMode: ValueWrapper(GameModeSingleSpawn(
-        initialDelay:
-            showingMotivation ? lerpDouble(0.7, 1.7, state.difficulty)! : 0.0,
-      )),
-    ));
+    emit(
+      state.copyWith(
+        upcomingGameMode: ValueWrapper(
+          GameModeSingleSpawn(
+            initialDelay: showingMotivation
+                ? lerpDouble(0.7, 1.7, state.difficulty)!
+                : 0.0,
+          ),
+        ),
+      ),
+    );
   }
 
   void switchToUpcomingMode() async {
@@ -377,18 +400,18 @@ class GameCubit extends Cubit<GameState> {
     }
 
     final upcoming = state.upcomingGameMode!;
-    final upcomingDelay =
-        showMotivation ? lerpDouble(0.80, 0.55, state.difficulty)! : 0.0;
+    final upcomingDelay = showMotivation
+        ? lerpDouble(0.80, 0.55, state.difficulty)!
+        : 0.0;
 
-    emit(state.copyWith(
-      gameModeHistory: [
-        ...state.gameModeHistory,
-        state.currentGameMode,
-      ],
-      currentGameMode: upcoming.updateInitialDelay(
-        upcoming.initialDelay + upcomingDelay,
+    emit(
+      state.copyWith(
+        gameModeHistory: [...state.gameModeHistory, state.currentGameMode],
+        currentGameMode: upcoming.updateInitialDelay(
+          upcoming.initialDelay + upcomingDelay,
+        ),
+        upcomingGameMode: const ValueWrapper(null),
       ),
-      upcomingGameMode: const ValueWrapper(null),
-    ));
+    );
   }
 }

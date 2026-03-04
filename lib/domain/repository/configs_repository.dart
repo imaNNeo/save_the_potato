@@ -16,8 +16,9 @@ class ConfigsRepository {
   final ConfigsRemoteDataSource _configsRemoteDataSource;
   final AuthLocalDataSource _authLocalDataSource;
 
-  Future<GameConfigEntity> getGameConfig() => _configsLocalDataSource.getGameConfig();
-  
+  Future<GameConfigEntity> getGameConfig() =>
+      _configsLocalDataSource.getGameConfig();
+
   Stream<GameConfigEntity> getGameConfigStream() async* {
     final localConfigs = await _configsLocalDataSource.getGameConfig();
     yield localConfigs;

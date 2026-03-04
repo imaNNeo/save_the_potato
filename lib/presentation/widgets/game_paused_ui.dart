@@ -12,17 +12,12 @@ class GamePausedUI extends StatelessWidget {
     final gameCubit = context.read<GameCubit>();
     return Stack(
       children: [
-        Container(
-          color: Colors.black.withOpacity(0.7),
-        ),
+        Container(color: Colors.black.withValues(alpha: 0.7)),
         Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                flex: 8,
-                child: Container(),
-              ),
+              Expanded(flex: 8, child: Container()),
               const Text(
                 'Current Score',
                 style: TextStyle(
@@ -34,22 +29,14 @@ class GamePausedUI extends StatelessWidget {
               ),
               Text(
                 AppUtils.getHighScoreRepresentation(
-                    (gameCubit.state.levelTimePassed * 1000).toInt()),
-                style: const TextStyle(
-                  fontSize: 38,
-                  color: Colors.white,
+                  (gameCubit.state.levelTimePassed * 1000).toInt(),
                 ),
+                style: const TextStyle(fontSize: 38, color: Colors.white),
               ),
-              Expanded(
-                flex: 2,
-                child: Container(),
-              ),
+              Expanded(flex: 2, child: Container()),
               const Text(
                 'PAUSED',
-                style: TextStyle(
-                  fontSize: 42,
-                  color: Colors.white,
-                ),
+                style: TextStyle(fontSize: 42, color: Colors.white),
               ),
               const SizedBox(height: 38),
               SizedBox(
@@ -60,10 +47,7 @@ class GamePausedUI extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              Expanded(
-                flex: 8,
-                child: Container(),
-              ),
+              Expanded(flex: 8, child: Container()),
               TextButton(
                 onPressed: () => context.read<GameCubit>().restartGame(),
                 child: const Padding(

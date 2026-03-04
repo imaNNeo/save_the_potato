@@ -20,7 +20,7 @@ class GameRoundButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ButtonStyle(
-          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(height / 2),
             ),
@@ -30,16 +30,10 @@ class GameRoundButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (icon != null) ...[
-                icon!,
-                const SizedBox(width: 8),
-              ],
+              if (icon != null) ...[icon!, const SizedBox(width: 8)],
               Text(
                 title,
-                style: const TextStyle(
-                  letterSpacing: 2,
-                  fontSize: 18,
-                ),
+                style: const TextStyle(letterSpacing: 2, fontSize: 18),
               ),
             ],
           ),

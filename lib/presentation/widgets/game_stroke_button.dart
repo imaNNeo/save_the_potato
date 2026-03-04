@@ -20,19 +20,13 @@ class GameStrokeButton extends StatelessWidget {
       child: MaterialButton(
         onPressed: onPressed,
         shape: RoundedRectangleBorder(
-          side: const BorderSide(
-            color: Colors.white,
-            width: 1,
-          ),
+          side: const BorderSide(color: Colors.white, width: 1),
           borderRadius: BorderRadius.circular(height / 2),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) ...[
-              icon!,
-              const SizedBox(width: 8),
-            ],
+            if (icon != null) ...[icon!, const SizedBox(width: 8)],
             Text(
               title,
               style: const TextStyle(

@@ -15,18 +15,18 @@ class GameColors {
   static const greenColor = Color(0xFF3CCE1F);
 
   static Color getRankBgColor(int rank) => switch (rank) {
-        1 => GameColors.leaderboardGoldenColor,
-        2 => GameColors.leaderboardSilverColor,
-        3 => GameColors.leaderboardBronzeColor,
-        _ => GameColors.leaderboardOtherColor,
-      };
+    1 => GameColors.leaderboardGoldenColor,
+    2 => GameColors.leaderboardSilverColor,
+    3 => GameColors.leaderboardBronzeColor,
+    _ => GameColors.leaderboardOtherColor,
+  };
 
   static Color getRankTextColor(int rank) => switch (rank) {
-        1 => GameColors.leaderboardGoldenColorText,
-        2 => GameColors.leaderboardSilverColorText,
-        3 => GameColors.leaderboardBronzeColorText,
-        _ => GameColors.leaderboardOtherColorText,
-      };
+    1 => GameColors.leaderboardGoldenColorText,
+    2 => GameColors.leaderboardSilverColorText,
+    3 => GameColors.leaderboardBronzeColorText,
+    _ => GameColors.leaderboardOtherColorText,
+  };
 
   static Color getLeaderboardStrokeColor(
     BuildContext context,
@@ -36,7 +36,9 @@ class GameColors {
     final mineBorderColor = rank <= 3
         ? GameColors.getRankBgColor(rank)
         : Theme.of(context).colorScheme.primary;
-    final normalBorderColor = Theme.of(context).dividerColor.withOpacity(0.3);
+    final normalBorderColor = Theme.of(
+      context,
+    ).dividerColor.withValues(alpha: 0.3);
     return isMine ? mineBorderColor : normalBorderColor;
   }
 

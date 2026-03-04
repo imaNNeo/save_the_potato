@@ -5,11 +5,7 @@ class ScoreRankNumber extends StatelessWidget {
   final int rank;
   final double size;
 
-  const ScoreRankNumber({
-    super.key,
-    required this.rank,
-    required this.size,
-  });
+  const ScoreRankNumber({super.key, required this.rank, required this.size});
 
   @override
   Widget build(BuildContext context) {

@@ -36,16 +36,18 @@ class ScoresCubit extends Cubit<ScoresState> {
   UserEntity? lastUser;
 
   Future<void> initialize() async {
-    emit(state.copyWith(
-      myScore: ValueWrapper(await _scoreRepository.getHighScore()),
-    ));
+    emit(
+      state.copyWith(
+        myScore: ValueWrapper(await _scoreRepository.getHighScore()),
+      ),
+    );
     tryToRefreshLeaderboard();
-    _highScoreSubscription =
-        _scoreRepository.getHighScoreStream().distinct().listen((event) {
-      emit(state.copyWith(
-        myScore: ValueWrapper(event),
-      ));
-    });
+    _highScoreSubscription = _scoreRepository
+        .getHighScoreStream()
+        .distinct()
+        .listen((event) {
+          emit(state.copyWith(myScore: ValueWrapper(event)));
+        });
     _userSubscription = _authRepository.getUserStream().listen((user) {
       if (lastUser != user && user != null) {
         final userChanged = lastUser?.uid != user.uid;
@@ -68,31 +70,25 @@ class ScoresCubit extends Cubit<ScoresState> {
       if (e is LeaderboardLoadedScoreItem) {
         if (e.score.userId == user.uid) {
           assert(e.score.isMine);
-          return e.copyWith(
-            score: e.score.copyWith(
-              nickname: user.nickname,
-            ),
-          );
+          return e.copyWith(score: e.score.copyWith(nickname: user.nickname));
         }
       }
       return e;
     }).toList();
     final newMyScore = state.myScore is OnlineScoreEntity
-        ? (state.myScore as OnlineScoreEntity).copyWith(
-            nickname: user.nickname,
-          )
+        ? (state.myScore as OnlineScoreEntity).copyWith(nickname: user.nickname)
         : state.myScore;
-    emit(state.copyWith(
-      allShowingScores: newShowingItems,
-      myScore: ValueWrapper(newMyScore),
-    ));
+    emit(
+      state.copyWith(
+        allShowingScores: newShowingItems,
+        myScore: ValueWrapper(newMyScore),
+      ),
+    );
   }
 
   Future<void> reloadHighScore() async {
     final highScore = await _scoreRepository.syncHighScore();
-    emit(state.copyWith(
-      myScore: ValueWrapper(highScore),
-    ));
+    emit(state.copyWith(myScore: ValueWrapper(highScore)));
   }
 
   Future<bool> tryToRefreshLeaderboard() async {
@@ -102,31 +98,27 @@ class ScoresCubit extends Cubit<ScoresState> {
     return await _getLeaderboardItems(pageLastId: null);
   }
 
-  Future<bool> _getLeaderboardItems({
-    required String? pageLastId,
-  }) async {
+  Future<bool> _getLeaderboardItems({required String? pageLastId}) async {
     if (state.leaderboardLoading) {
       return false;
     }
-    emit(state.copyWith(
-      leaderboardLoading: true,
-    ));
+    emit(state.copyWith(leaderboardLoading: true));
     bool isFirstPage = pageLastId == null;
     if (isFirstPage) {
-      emit(const ScoresState().copyWith(
-        leaderBoardFirstPageError: PresentationMessage.empty,
-        allShowingScores: List.generate(
-          ScoresState.maxItemsToLoad,
-          (index) => LeaderboardLoadingScoreItem(),
+      emit(
+        const ScoresState().copyWith(
+          leaderBoardFirstPageError: PresentationMessage.empty,
+          allShowingScores: List.generate(
+            ScoresState.maxItemsToLoad,
+            (index) => LeaderboardLoadingScoreItem(),
+          ),
         ),
-      ));
+      );
     } else {
       _updateLoadingItemShowShimmer(true);
     }
     try {
-      emit(state.copyWith(
-        leaderboardLoading: true,
-      ));
+      emit(state.copyWith(leaderboardLoading: true));
       final leaderboardResponse = await _scoreRepository.getLeaderboard(
         ScoresState.maxItemsToLoad,
         pageLastId,
@@ -143,28 +135,34 @@ class ScoresCubit extends Cubit<ScoresState> {
         if (leaderboardResponse.pageData.hasMore) LeaderboardLoadingScoreItem(),
       ]);
 
-      emit(state.copyWith(
-        allShowingScores: newShowingItems,
-        leaderboardLoading: false,
-        myScore: ValueWrapper(leaderboardResponse.myScore),
-      ));
+      emit(
+        state.copyWith(
+          allShowingScores: newShowingItems,
+          leaderboardLoading: false,
+          myScore: ValueWrapper(leaderboardResponse.myScore),
+        ),
+      );
       return true;
     } catch (e) {
       if (isFirstPage) {
-        emit(state.copyWith(
-          leaderBoardFirstPageError: PresentationMessage.fromError(e),
-          allShowingScores: [],
-          leaderboardLoading: false,
-        ));
+        emit(
+          state.copyWith(
+            leaderBoardFirstPageError: PresentationMessage.fromError(e),
+            allShowingScores: [],
+            leaderboardLoading: false,
+          ),
+        );
       } else {
         _updateLoadingItemShowShimmer(false);
-        emit(state.copyWith(
-          leaderBoardNextPageError: PresentationMessage.fromError(e),
-          leaderboardLoading: false,
-        ));
-        emit(state.copyWith(
-          leaderBoardNextPageError: PresentationMessage.empty,
-        ));
+        emit(
+          state.copyWith(
+            leaderBoardNextPageError: PresentationMessage.fromError(e),
+            leaderboardLoading: false,
+          ),
+        );
+        emit(
+          state.copyWith(leaderBoardNextPageError: PresentationMessage.empty),
+        );
       }
 
       return false;
@@ -199,35 +197,29 @@ class ScoresCubit extends Cubit<ScoresState> {
       emit(state.copyWith(showNicknameDialog: false));
     } catch (e, stackTrace) {
       FirebaseCrashlytics.instance.recordError(e, stackTrace);
-      emit(state.copyWith(
-        updateNicknameError: PresentationMessage.fromError(e),
-      ));
-      emit(state.copyWith(
-        updateNicknameError: PresentationMessage.empty,
-      ));
+      emit(
+        state.copyWith(updateNicknameError: PresentationMessage.fromError(e)),
+      );
+      emit(state.copyWith(updateNicknameError: PresentationMessage.empty));
     }
   }
 
   void shareScore(OnlineScoreEntity scoreEntity) async {
-    emit(state.copyWith(
-      scoreShareLoading: true,
-    ));
+    emit(state.copyWith(scoreShareLoading: true));
     try {
       await AppUtils.shareScore(
         score: scoreEntity,
         gameConfig: await _configsRepository.getGameConfig(),
       );
-      emit(state.copyWith(
-        scoreShareLoading: false,
-      ));
+      emit(state.copyWith(scoreShareLoading: false));
     } catch (e) {
-      emit(state.copyWith(
-        scoreShareLoading: false,
-        scoreShareError: PresentationMessage.fromError(e),
-      ));
-      emit(state.copyWith(
-        scoreShareError: PresentationMessage.empty,
-      ));
+      emit(
+        state.copyWith(
+          scoreShareLoading: false,
+          scoreShareError: PresentationMessage.fromError(e),
+        ),
+      );
+      emit(state.copyWith(scoreShareError: PresentationMessage.empty));
     }
   }
 
@@ -245,8 +237,9 @@ class ScoresCubit extends Cubit<ScoresState> {
 
   void _loadNextPage() async {
     assert(!state.leaderboardLoading);
-    final lastLoadedItem =
-        state.allShowingScores.whereType<LeaderboardLoadedScoreItem>().last;
+    final lastLoadedItem = state.allShowingScores
+        .whereType<LeaderboardLoadedScoreItem>()
+        .last;
     await _getLeaderboardItems(pageLastId: lastLoadedItem.score.userId);
   }
 
@@ -259,9 +252,7 @@ class ScoresCubit extends Cubit<ScoresState> {
     if (lastItem is LeaderboardLoadingScoreItem) {
       final newItems = state.allShowingScores.updateAndReturn(
         state.allShowingScores.length - 1,
-        lastItem.copyWith(
-          showShimmer: showShimmer,
-        ),
+        lastItem.copyWith(showShimmer: showShimmer),
       );
       emit(state.copyWith(allShowingScores: newItems));
     }

@@ -55,21 +55,21 @@ class GameConfigEntity with EquatableMixin {
   });
 
   Map<String, dynamic> toJson() => {
-        'nicknameMaxLength': nicknameMaxLength,
-        'nicknameMinLength': nicknameMinLength,
-        'nicknameAllowedRegex': nicknameAllowedRegex,
-        'minVersionAndroid': minVersionAndroid,
-        'minVersionIos': minVersionIos,
-        'latestVersionAndroid': latestVersionAndroid,
-        'latestVersionIos': latestVersionIos,
-        'androidStoreUrl': androidStoreUrl,
-        'iosStoreUrl': iosStoreUrl,
-        'shareTextWithRank': shareTextWithRank,
-        'shareTextWithoutRank': shareTextWithoutRank,
-        'shareTextWithRankThreshold': shareTextWithRankThreshold,
-        'showNewScoreCelebrationRankThreshold':
-            showNewScoreCelebrationRankThreshold,
-      };
+    'nicknameMaxLength': nicknameMaxLength,
+    'nicknameMinLength': nicknameMinLength,
+    'nicknameAllowedRegex': nicknameAllowedRegex,
+    'minVersionAndroid': minVersionAndroid,
+    'minVersionIos': minVersionIos,
+    'latestVersionAndroid': latestVersionAndroid,
+    'latestVersionIos': latestVersionIos,
+    'androidStoreUrl': androidStoreUrl,
+    'iosStoreUrl': iosStoreUrl,
+    'shareTextWithRank': shareTextWithRank,
+    'shareTextWithoutRank': shareTextWithoutRank,
+    'shareTextWithRankThreshold': shareTextWithRankThreshold,
+    'showNewScoreCelebrationRankThreshold':
+        showNewScoreCelebrationRankThreshold,
+  };
 
   factory GameConfigEntity.fromJson(Map<String, dynamic> json) =>
       GameConfigEntity(
@@ -91,18 +91,18 @@ class GameConfigEntity with EquatableMixin {
 
   @override
   List<Object?> get props => [
-        nicknameMaxLength,
-        nicknameMinLength,
-        nicknameAllowedRegex,
-        minVersionAndroid,
-        minVersionIos,
-        latestVersionAndroid,
-        latestVersionIos,
-        androidStoreUrl,
-        iosStoreUrl,
-        shareTextWithRank,
-        shareTextWithoutRank,
-        shareTextWithRankThreshold,
-        showNewScoreCelebrationRankThreshold,
-      ];
+    nicknameMaxLength,
+    nicknameMinLength,
+    nicknameAllowedRegex,
+    minVersionAndroid,
+    minVersionIos,
+    latestVersionAndroid,
+    latestVersionIos,
+    androidStoreUrl,
+    iosStoreUrl,
+    shareTextWithRank,
+    shareTextWithoutRank,
+    shareTextWithRankThreshold,
+    showNewScoreCelebrationRankThreshold,
+  ];
 }

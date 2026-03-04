@@ -19,7 +19,7 @@ typedef _AuthFunction = Future<UserEntity> Function(bool forceToReplace);
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit(
     this._authRepository,
-    this._configsRepository, 
+    this._configsRepository,
     this._analyticsHelper,
   ) : super(const AuthState());
 
@@ -33,11 +33,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final user = await _authRepository.getCurrentUser();
       FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
-      emit(
-        state.copyWith(
-          user: ValueWrapper(user),
-        ),
-      );
+      emit(state.copyWith(user: ValueWrapper(user)));
     } catch (e, stackTrace) {
       FirebaseCrashlytics.instance.recordError(e, stackTrace);
       debugPrint('auth error: ${e.toString()}');
@@ -47,64 +43,55 @@ class AuthCubit extends Cubit<AuthState> {
       if (user != null) {
         FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
       }
-      emit(
-        state.copyWith(
-          user: ValueWrapper(user),
-        ),
-      );
+      emit(state.copyWith(user: ValueWrapper(user)));
     });
   }
 
-  void loginWithApple({
-    bool forceToReplace = false,
-  }) {
+  void loginWithApple({bool forceToReplace = false}) {
     _analyticsHelper.logLogin(loginMethod: 'apple');
-    _sharedLoginLogic(
-        _authRepository.signInWithApple,
-        forceToReplace,
-      );
+    _sharedLoginLogic(_authRepository.signInWithApple, forceToReplace);
   }
 
-  void loginWithGoogle({
-    bool forceToReplace = false,
-  }) {
+  void loginWithGoogle({bool forceToReplace = false}) {
     _analyticsHelper.logLogin(loginMethod: 'google');
-    _sharedLoginLogic(
-        _authRepository.signInWithGoogle,
-        forceToReplace,
-      );
+    _sharedLoginLogic(_authRepository.signInWithGoogle, forceToReplace);
   }
 
-  void _sharedLoginLogic(_AuthFunction loginFunction, bool forceToReplace) async {
+  void _sharedLoginLogic(
+    _AuthFunction loginFunction,
+    bool forceToReplace,
+  ) async {
     emit(state.copyWith(authLoading: true));
     try {
       final user = await loginFunction(forceToReplace);
-      emit(state.copyWith(
-        authLoading: false,
-        user: ValueWrapper(user),
-        authSucceeds: PresentationMessage.raw('Successfully logged in'),
-      ));
-      emit(state.copyWith(
-        authSucceeds: PresentationMessage.empty,
-      ));
+      emit(
+        state.copyWith(
+          authLoading: false,
+          user: ValueWrapper(user),
+          authSucceeds: PresentationMessage.raw('Successfully logged in'),
+        ),
+      );
+      emit(state.copyWith(authSucceeds: PresentationMessage.empty));
     } catch (e) {
       if (e is AccountAlreadyExistsError) {
-        emit(state.copyWith(
-          authLoading: false,
-          accountAlreadyExistsError: ValueWrapper(e),
-        ));
-        emit(state.copyWith(
-          accountAlreadyExistsError: const ValueWrapper(null),
-        ));
+        emit(
+          state.copyWith(
+            authLoading: false,
+            accountAlreadyExistsError: ValueWrapper(e),
+          ),
+        );
+        emit(
+          state.copyWith(accountAlreadyExistsError: const ValueWrapper(null)),
+        );
         return;
       }
-      emit(state.copyWith(
-        authLoading: false,
-        authError: PresentationMessage.fromError(e),
-      ));
-      emit(state.copyWith(
-        authError: PresentationMessage.empty,
-      ));
+      emit(
+        state.copyWith(
+          authLoading: false,
+          authError: PresentationMessage.fromError(e),
+        ),
+      );
+      emit(state.copyWith(authError: PresentationMessage.empty));
     }
   }
 
@@ -115,30 +102,28 @@ class AuthCubit extends Cubit<AuthState> {
 
     final config = await _configsRepository.getGameConfig();
     if (newNickname.length < config.nicknameMinLength) {
-      emit(state.copyWith(
-        updateUserError: PresentationMessage.raw('Nickname is too short'),
-      ));
-      emit(state.copyWith(
-        updateUserError: PresentationMessage.empty,
-      ));
+      emit(
+        state.copyWith(
+          updateUserError: PresentationMessage.raw('Nickname is too short'),
+        ),
+      );
+      emit(state.copyWith(updateUserError: PresentationMessage.empty));
       return;
     }
 
     if (newNickname.length > config.nicknameMaxLength) {
-      emit(state.copyWith(
-        updateUserError: PresentationMessage.raw('Nickname is too long'),
-      ));
-      emit(state.copyWith(
-        updateUserError: PresentationMessage.empty,
-      ));
+      emit(
+        state.copyWith(
+          updateUserError: PresentationMessage.raw('Nickname is too long'),
+        ),
+      );
+      emit(state.copyWith(updateUserError: PresentationMessage.empty));
       return;
     }
 
     emit(state.copyWith(updateUserLoading: true));
     try {
-      final user = await _authRepository.updateUserNickname(
-        newNickname,
-      );
+      final user = await _authRepository.updateUserNickname(newNickname);
       emit(
         state.copyWith(
           user: ValueWrapper(user),
@@ -146,9 +131,7 @@ class AuthCubit extends Cubit<AuthState> {
           updateUserSucceeds: PresentationMessage.raw('Nickname updated'),
         ),
       );
-      emit(state.copyWith(
-        updateUserSucceeds: PresentationMessage.empty,
-      ));
+      emit(state.copyWith(updateUserSucceeds: PresentationMessage.empty));
     } catch (e) {
       debugPrint('auth error 2: ${e.toString()}');
       emit(
@@ -157,9 +140,7 @@ class AuthCubit extends Cubit<AuthState> {
           updateUserError: PresentationMessage.fromError(e),
         ),
       );
-      emit(state.copyWith(
-        updateUserError: PresentationMessage.empty,
-      ));
+      emit(state.copyWith(updateUserError: PresentationMessage.empty));
     }
   }
 

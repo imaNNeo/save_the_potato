@@ -8,10 +8,8 @@ import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 part 'settings_state.dart';
 
 class SettingsCubit extends Cubit<SettingsState> {
-  SettingsCubit(
-    this._repository,
-    this._audioHelper,
-  ) : super(const SettingsState()) {
+  SettingsCubit(this._repository, this._audioHelper)
+    : super(const SettingsState()) {
     initialize();
   }
 
@@ -22,11 +20,11 @@ class SettingsCubit extends Cubit<SettingsState> {
     emit(state.copyWith(audioEnabled: await _repository.audioEnabled()));
     _audioHelper.setAudioEnabled(state.audioEnabled);
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    emit(state.copyWith(
-      versionName: AppUtils.formatVersionName(
-        packageInfo.version,
+    emit(
+      state.copyWith(
+        versionName: AppUtils.formatVersionName(packageInfo.version),
       ),
-    ));
+    );
   }
 
   void setAudioEnabled(bool enabled) async {

@@ -6,12 +6,16 @@ class CustomRegexFormatter extends TextInputFormatter {
   CustomRegexFormatter(this.regex);
 
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     final oldText = oldValue.text;
     final newText = newValue.text;
 
     bool isInserting = newText.length > oldText.length;
-    bool isSingleSpace = newText.endsWith(' ') && !oldText.endsWith(' ') && isInserting;
+    bool isSingleSpace =
+        newText.endsWith(' ') && !oldText.endsWith(' ') && isInserting;
 
     if (isSingleSpace && newText.trim().isNotEmpty) {
       return newValue;

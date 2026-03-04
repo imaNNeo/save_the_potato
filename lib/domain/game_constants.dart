@@ -15,7 +15,7 @@ class GameConstants {
 
   /// https://cubic-bezier.com/#.23,1,.45,.87
   /// Something like very vast in and very slow out
-  static const difficultyInitialToPeakCurve = Cubic(0.23,1.0,0.45,0.87);
+  static const difficultyInitialToPeakCurve = Cubic(0.23, 1.0, 0.45, 0.87);
 
   static const double topBarPlayingOpacity = 1.0;
   static const double topBarNonPlayingOpacity = 0.2;
@@ -25,7 +25,8 @@ class GameConstants {
   static const int spawnHeartForFirstTimeMaxCount = 3;
   static const double movingHealthPointSpeedMultiplier = 0.9;
   static double movingHealthMinSpeed = GameModeSingleSpawn.orbsMoveSpeedInitial;
-  static double movingHealthMaxSpeed = GameModeSingleSpawn.orbsMoveSpeedPeak * 0.8;
+  static double movingHealthMaxSpeed =
+      GameModeSingleSpawn.orbsMoveSpeedPeak * 0.8;
   static const double bgmVolume = 4.0;
   static const double soundEffectsVolume = 7.0;
 

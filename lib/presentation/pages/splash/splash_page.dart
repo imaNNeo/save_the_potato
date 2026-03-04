@@ -56,10 +56,9 @@ class _SplashPageState extends State<SplashPage> {
         if (!mounted) {
           return;
         }
-        PresentationMessage.raw('Oh, you are a bot!').showAsToast(
-          context,
-          type: ToastificationType.error,
-        );
+        PresentationMessage.raw(
+          'Oh, you are a bot!',
+        ).showAsToast(context, type: ToastificationType.error);
         return;
       }
       if (!mounted) {
@@ -70,9 +69,7 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   void _openHomePage(BuildContext context) {
-    Navigator.of(context).pushReplacement(
-      FadeRoute(page: const MainPage()),
-    );
+    Navigator.of(context).pushReplacement(FadeRoute(page: const MainPage()));
   }
 
   @override
@@ -87,10 +84,7 @@ class _SplashPageState extends State<SplashPage> {
 
         if (state.showUpdatePopup != null) {
           isUpdateDialogShowing = true;
-          await BaseDialog.showUpdateDialog(
-            context,
-            state.showUpdatePopup!,
-          );
+          await BaseDialog.showUpdateDialog(context, state.showUpdatePopup!);
           if (!mounted) {
             return;
           }
@@ -121,18 +115,19 @@ class _SplashPageState extends State<SplashPage> {
               Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Save the Potato',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 4,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const SplashPotato(size: 180),
-                  ].animate().fadeIn(
+                  children:
+                      [
+                        const Text(
+                          'Save the Potato',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 4,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        const SplashPotato(size: 180),
+                      ].animate().fadeIn(
                         duration: const Duration(milliseconds: 600),
                         delay: const Duration(milliseconds: 300),
                       ),
@@ -147,9 +142,10 @@ class _SplashPageState extends State<SplashPage> {
                     const Text(
                       'Powered by',
                       style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontFamily: 'Roboto'),
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontFamily: 'Roboto',
+                      ),
                     ),
                     Image.asset(
                       'assets/images/flutter_flame/flame-logo.png',
@@ -164,7 +160,7 @@ class _SplashPageState extends State<SplashPage> {
                         fontFamily: 'RobotoMono',
                       ),
                     ),
-                    const SizedBox(height: 14)
+                    const SizedBox(height: 14),
                   ],
                 ),
               ),

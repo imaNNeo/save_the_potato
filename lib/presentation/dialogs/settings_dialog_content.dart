@@ -31,25 +31,21 @@ class _SettingsDialogContentState extends State<SettingsDialogContent> {
               contentPadding: EdgeInsets.zero,
               title: const Text(
                 'Audio',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                ),
+                style: TextStyle(fontSize: 18, color: Colors.white),
               ),
               trailing: Switch(
                 value: state.audioEnabled,
                 onChanged: (bool? newValue) {
                   analyticsHelper.logSettingsAudioChanged(newValue!);
-                  BlocProvider.of<SettingsCubit>(context)
-                      .setAudioEnabled(newValue!);
+                  BlocProvider.of<SettingsCubit>(
+                    context,
+                  ).setAudioEnabled(newValue);
                 },
               ),
             ),
             Text(
               state.versionName,
-              style: const TextStyle(
-                fontFamily: 'Roboto',
-              ),
+              style: const TextStyle(fontFamily: 'Roboto'),
             ),
           ],
         );

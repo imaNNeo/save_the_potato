@@ -19,15 +19,14 @@ abstract class PresentationMessage with EquatableMixin {
     AlignmentGeometry alignment = Alignment.bottomCenter,
     Duration duration = const Duration(seconds: 5),
     ToastificationStyle style = ToastificationStyle.flatColored,
-  }) =>
-      toastification.show(
-        context: context,
-        autoCloseDuration: duration,
-        title: Text(parse(context)),
-        type: type,
-        alignment: alignment,
-        style: style,
-      );
+  }) => toastification.show(
+    context: context,
+    autoCloseDuration: duration,
+    title: Text(parse(context)),
+    type: type,
+    alignment: alignment,
+    style: style,
+  );
 
   static const empty = RawTextMessage('');
 
@@ -36,9 +35,9 @@ abstract class PresentationMessage with EquatableMixin {
   bool get isNotEmpty => !isEmpty;
 
   bool get isEmpty => switch (this) {
-        RawTextMessage(rawText: String rawText) => rawText.isBlank,
-        PresentationMessage() => throw UnimplementedError(),
-      };
+    RawTextMessage(rawText: String rawText) => rawText.isBlank,
+    PresentationMessage() => throw UnimplementedError(),
+  };
 
   static PresentationMessage raw(String rawText) => RawTextMessage(rawText);
 
@@ -54,8 +53,7 @@ abstract class PresentationMessage with EquatableMixin {
             : PresentationMessage.raw('Server error'),
       ServerError(errorEntry: null) => PresentationMessage.raw('Server error'),
       AccountAlreadyExistsError() ||
-      UnknownError() =>
-        const RawTextMessage('Unknown error'),
+      UnknownError() => const RawTextMessage('Unknown error'),
     };
   }
 }

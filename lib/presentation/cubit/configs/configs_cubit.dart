@@ -14,8 +14,9 @@ class ConfigsCubit extends Cubit<ConfigsState> {
   late StreamSubscription _configsSubscription;
 
   void initialize() {
-    _configsSubscription =
-        _configsRepository.getGameConfigStream().listen((gameConfig) {
+    _configsSubscription = _configsRepository.getGameConfigStream().listen((
+      gameConfig,
+    ) {
       emit(state.copyWith(gameConfig: gameConfig));
     });
   }

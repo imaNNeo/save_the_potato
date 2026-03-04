@@ -44,10 +44,8 @@ class AuthRepository {
         forceToReplace,
       );
 
-  Future<UserEntity> signInWithApple(bool forceToReplace) => _signInSharedLogic(
-        _authRemoteDataSource.signInWithApple,
-        forceToReplace,
-      );
+  Future<UserEntity> signInWithApple(bool forceToReplace) =>
+      _signInSharedLogic(_authRemoteDataSource.signInWithApple, forceToReplace);
 
   Future<UserEntity> _signInSharedLogic(
     _AuthFunction authFunction,

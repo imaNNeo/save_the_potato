@@ -51,20 +51,23 @@ class _GameOverUIState extends State<GameOverUI>
           children: [
             BackdropFilter(
               filter: ImageFilter.blur(
-                sigmaX: Tween<double>(begin: 0.0, end: 16.0).transform(
-                  _gameOverAnimationController.value,
-                ),
-                sigmaY: Tween<double>(begin: 0.0, end: 16.0).transform(
-                  _gameOverAnimationController.value,
-                ),
+                sigmaX: Tween<double>(
+                  begin: 0.0,
+                  end: 16.0,
+                ).transform(_gameOverAnimationController.value),
+                sigmaY: Tween<double>(
+                  begin: 0.0,
+                  end: 16.0,
+                ).transform(_gameOverAnimationController.value),
               ),
               child: Container(
                 width: double.infinity,
                 height: double.infinity,
-                color: Colors.black.withOpacity(
-                  Tween<double>(begin: 0.0, end: 0.7).transform(
-                    _gameOverAnimationController.value,
-                  ),
+                color: Colors.black.withValues(
+                  alpha: Tween<double>(
+                    begin: 0.0,
+                    end: 0.7,
+                  ).transform(_gameOverAnimationController.value),
                 ),
               ),
             ),
@@ -134,8 +137,8 @@ class _GameOverUIState extends State<GameOverUI>
                         ),
                       ),
                       onPressed: () => context.read<ScoresCubit>().shareScore(
-                            gameOverState.highestScore as OnlineScoreEntity,
-                          ),
+                        gameOverState.highestScore as OnlineScoreEntity,
+                      ),
                     ),
                   ],
                 ],

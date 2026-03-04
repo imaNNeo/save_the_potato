@@ -7,10 +7,8 @@ import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:toastification/toastification.dart';
 
 class AccountAlreadyExistsDialogContent extends StatelessWidget {
-  const AccountAlreadyExistsDialogContent({
-    super.key,
-    required this.error,
-  }) : super();
+  const AccountAlreadyExistsDialogContent({super.key, required this.error})
+    : super();
 
   final AccountAlreadyExistsError error;
 
@@ -49,13 +47,13 @@ class AccountAlreadyExistsDialogContent extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     if (Platform.isIOS) {
-                      context
-                          .read<AuthCubit>()
-                          .loginWithApple(forceToReplace: true);
+                      context.read<AuthCubit>().loginWithApple(
+                        forceToReplace: true,
+                      );
                     } else {
-                      context
-                          .read<AuthCubit>()
-                          .loginWithGoogle(forceToReplace: true);
+                      context.read<AuthCubit>().loginWithGoogle(
+                        forceToReplace: true,
+                      );
                     }
                   },
                   style: ElevatedButton.styleFrom(

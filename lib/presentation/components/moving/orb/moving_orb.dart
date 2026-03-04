@@ -13,7 +13,7 @@ sealed class MovingOrb extends MovingComponent {
     return _overrideCollisionSoundNumber;
   }
 
-  double get trailSizeMultiplier => switch(type) {
+  double get trailSizeMultiplier => switch (type) {
     OrbType.fire => 0.85,
     OrbType.ice => 0.7,
   };

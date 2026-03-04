@@ -12,9 +12,7 @@ class ConfigsLocalDataSource {
 
   Future<GameConfigEntity> getGameConfig() async {
     try {
-      final gameConfigJson = await _keyValueStorage.getString(
-        _gameConfigKey,
-      );
+      final gameConfigJson = await _keyValueStorage.getString(_gameConfigKey);
       return GameConfigEntity.fromJson(jsonDecode(gameConfigJson!));
     } catch (e) {
       return GameConfigEntity.initialOfflineConfigs;

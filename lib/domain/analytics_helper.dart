@@ -1,10 +1,7 @@
 abstract class AnalyticsHelper {
   void logLevelStart(int afterGuideDurationMills);
 
-  void logLevelEnd({
-    required int durationMills,
-    required bool isHighScore,
-  });
+  void logLevelEnd({required int durationMills, required bool isHighScore});
 
   void logLevelPause(bool manually);
 

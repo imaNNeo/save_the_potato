@@ -1,18 +1,12 @@
 part of 'settings_cubit.dart';
 
 class SettingsState extends Equatable {
-  const SettingsState({
-    this.audioEnabled = true,
-    this.versionName = '',
-  });
+  const SettingsState({this.audioEnabled = true, this.versionName = ''});
 
   final bool audioEnabled;
   final String versionName;
 
-  SettingsState copyWith({
-    bool? audioEnabled,
-    String? versionName,
-  }) {
+  SettingsState copyWith({bool? audioEnabled, String? versionName}) {
     return SettingsState(
       audioEnabled: audioEnabled ?? this.audioEnabled,
       versionName: versionName ?? this.versionName,
@@ -20,8 +14,5 @@ class SettingsState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        audioEnabled,
-        versionName,
-      ];
+  List<Object?> get props => [audioEnabled, versionName];
 }

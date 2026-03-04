@@ -15,8 +15,8 @@ extension RectExtensions on Rect {
   }
 
   Rect expandBy(double width, double height) => Rect.fromCenter(
-        center: center,
-        width: this.width + width,
-        height: this.height + height,
-      );
+    center: center,
+    width: this.width + width,
+    height: this.height + height,
+  );
 }

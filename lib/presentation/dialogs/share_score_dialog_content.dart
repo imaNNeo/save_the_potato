@@ -63,7 +63,9 @@ class HighScoreShareDialogContent extends StatelessWidget {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    analyticsHelper.logRenameNickname(EventSource.celebrateHighScore);
+                    analyticsHelper.logRenameNickname(
+                      EventSource.celebrateHighScore,
+                    );
                     Navigator.of(context).pop();
                     context.read<ScoresCubit>().updateNickname();
                   },
@@ -86,7 +88,9 @@ class HighScoreShareDialogContent extends StatelessWidget {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    analyticsHelper.logShareMyScore(EventSource.celebrateHighScore);
+                    analyticsHelper.logShareMyScore(
+                      EventSource.celebrateHighScore,
+                    );
                     Navigator.of(context).pop();
                     context.read<ScoresCubit>().shareScore(scoreEntity);
                   },

@@ -16,10 +16,7 @@ import 'package:save_the_potato/service_locator.dart';
 import 'score_rank_number.dart';
 
 class MyScore extends StatelessWidget {
-  MyScore({
-    super.key,
-    required this.scoreEntity,
-  });
+  MyScore({super.key, required this.scoreEntity});
 
   final OnlineScoreEntity scoreEntity;
   final analyticsHelper = getIt.get<AnalyticsHelper>();
@@ -42,11 +39,7 @@ class MyScore extends StatelessWidget {
           topLeft: borderRadius,
           topRight: borderRadius,
         ),
-        border: Border(
-          left: borderSide,
-          top: borderSide,
-          right: borderSide,
-        ),
+        border: Border(left: borderSide, top: borderSide, right: borderSide),
         boxShadow: const [
           BoxShadow(
             color: Colors.black38,
@@ -81,9 +74,7 @@ class MyScore extends StatelessWidget {
                   case 2:
                     Navigator.of(context).push(
                       FadeRoute(
-                        page: NewRankCelebrationPage(
-                          scoreEntity: scoreEntity,
-                        ),
+                        page: NewRankCelebrationPage(scoreEntity: scoreEntity),
                       ),
                     );
                   case _:
@@ -108,8 +99,7 @@ class MyScore extends StatelessWidget {
                 if (kDebugMode)
                   const PopupMenuItem<int>(
                     value: 2,
-                    child:
-                    _MenuRow(
+                    child: _MenuRow(
                       title: 'Celebrate New Rank',
                       iconSvgAssetName: 'party_horn.svg',
                     ),
@@ -125,18 +115,16 @@ class MyScore extends StatelessWidget {
                 child: Row(
                   children: [
                     SvgPicture.asset(
-                        'assets/images/icons/menu_dots_vertical.svg',
-                        width: 24,
-                        height: 24,
-                        colorFilter: const ColorFilter.mode(
-                          Colors.white,
-                          BlendMode.srcIn,
-                        )),
-                    const SizedBox(width: 6),
-                    ScoreRankNumber(
-                      rank: scoreEntity.rank,
-                      size: 48,
+                      'assets/images/icons/menu_dots_vertical.svg',
+                      width: 24,
+                      height: 24,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
                     ),
+                    const SizedBox(width: 6),
+                    ScoreRankNumber(rank: scoreEntity.rank, size: 48),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Wrap(
@@ -174,11 +162,7 @@ class MyScore extends StatelessWidget {
 }
 
 class _MenuRow extends StatelessWidget {
-  const _MenuRow({
-    super.key,
-    required this.title,
-    required this.iconSvgAssetName,
-  });
+  const _MenuRow({required this.title, required this.iconSvgAssetName});
 
   final String title;
   final String iconSvgAssetName;
@@ -192,10 +176,7 @@ class _MenuRow extends StatelessWidget {
           'assets/images/icons/$iconSvgAssetName',
           width: 24,
           height: 24,
-          colorFilter: const ColorFilter.mode(
-            Colors.black,
-            BlendMode.srcIn,
-          ),
+          colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
         ),
         const SizedBox(width: 12),
         Text(

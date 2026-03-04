@@ -30,47 +30,31 @@ Future<void> setupServiceLocator() async {
     }
   });
   getIt.registerLazySingleton<FirebaseFunctionsWrapper>(
-    () => FirebaseFunctionsWrapper(
-      getIt.get<KeyValueStorage>(),
-    ),
+    () => FirebaseFunctionsWrapper(getIt.get<KeyValueStorage>()),
   );
-  getIt.registerLazySingleton<AnalyticsHelper>(
-    () => FirebaseAnalyticsHelper(),
-  );
+  getIt.registerLazySingleton<AnalyticsHelper>(() => FirebaseAnalyticsHelper());
 
   // Data sources
   getIt.registerLazySingleton<SettingsDataSource>(
     () => SettingsDataSource(getIt.get<KeyValueStorage>()),
   );
   getIt.registerLazySingleton<AuthLocalDataSource>(
-    () => AuthLocalDataSource(
-      getIt.get<KeyValueStorage>(),
-    ),
+    () => AuthLocalDataSource(getIt.get<KeyValueStorage>()),
   );
   getIt.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSource(
-      getIt.get<FirebaseFunctionsWrapper>(),
-    ),
+    () => AuthRemoteDataSource(getIt.get<FirebaseFunctionsWrapper>()),
   );
   getIt.registerLazySingleton<ScoresLocalDataSource>(
-    () => ScoresLocalDataSource(
-      getIt.get<KeyValueStorage>(),
-    ),
+    () => ScoresLocalDataSource(getIt.get<KeyValueStorage>()),
   );
   getIt.registerLazySingleton<ScoresRemoteDataSource>(
-    () => ScoresRemoteDataSource(
-      getIt.get<FirebaseFunctionsWrapper>(),
-    ),
+    () => ScoresRemoteDataSource(getIt.get<FirebaseFunctionsWrapper>()),
   );
   getIt.registerLazySingleton<ConfigsLocalDataSource>(
-    () => ConfigsLocalDataSource(
-      getIt.get<KeyValueStorage>(),
-    ),
+    () => ConfigsLocalDataSource(getIt.get<KeyValueStorage>()),
   );
   getIt.registerLazySingleton<ConfigsRemoteDataSource>(
-    () => ConfigsRemoteDataSource(
-      getIt.get<FirebaseFunctionsWrapper>(),
-    ),
+    () => ConfigsRemoteDataSource(getIt.get<FirebaseFunctionsWrapper>()),
   );
 
   // Repositories

@@ -3,10 +3,7 @@ import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/presentation/cubit/splash/splash_cubit.dart';
 
 class UpdateDialogContent extends StatelessWidget {
-  const UpdateDialogContent({
-    super.key,
-    required this.info,
-  }) : super();
+  const UpdateDialogContent({super.key, required this.info}) : super();
 
   final UpdateInfo info;
 
@@ -16,9 +13,7 @@ class UpdateDialogContent extends StatelessWidget {
         ? 'Your version is outdated and you have to update the app'
         : 'There is a new version of the app. Do you want to update?';
     return DefaultTextStyle(
-      style: const TextStyle(
-        fontFamily: 'Roboto',
-      ),
+      style: const TextStyle(fontFamily: 'Roboto'),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

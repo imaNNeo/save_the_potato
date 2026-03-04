@@ -22,13 +22,12 @@ class Potato extends PositionComponent
         CollisionCallbacks,
         FlameBlocListenable<GameCubit, GameState>,
         ParentIsA<MyWorld> {
-  Potato({
-    double size = 100,
-  }) : super(
-          size: Vector2.all(size),
-          position: Vector2.all(0),
-          anchor: Anchor.center,
-        );
+  Potato({double size = 100})
+    : super(
+        size: Vector2.all(size),
+        position: Vector2.all(0),
+        anchor: Anchor.center,
+      );
 
   late final Shield fireShield;
   late final Shield iceShield;
@@ -91,12 +90,14 @@ class Potato extends PositionComponent
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    add(CircleHitbox(
-      collisionType: CollisionType.active,
-      radius: radius * 0.7,
-      position: size / 2,
-      anchor: Anchor.center,
-    ));
+    add(
+      CircleHitbox(
+        collisionType: CollisionType.active,
+        radius: radius * 0.7,
+        position: size / 2,
+        anchor: Anchor.center,
+      ),
+    );
 
     final potatoArtBoard = await loadArtboard(
       RiveFile.asset('assets/rive/potato.riv'),
@@ -114,12 +115,14 @@ class Potato extends PositionComponent
     toIdleTrigger = _controller.findInput<bool>('ToIdle') as SMITrigger;
     amazedTrigger = _controller.findInput<bool>('Amazed') as SMITrigger;
     potatoArtBoard.addController(_controller);
-    add(RiveComponent(
-      artboard: potatoArtBoard,
-      size: Vector2.all(152),
-      anchor: Anchor.center,
-      position: size / 2,
-    ));
+    add(
+      RiveComponent(
+        artboard: potatoArtBoard,
+        size: Vector2.all(152),
+        anchor: Anchor.center,
+        position: size / 2,
+      ),
+    );
     add(fireShield = Shield(type: OrbType.fire));
     add(iceShield = Shield(type: OrbType.ice));
 
@@ -171,7 +174,7 @@ class Potato extends PositionComponent
             iceHitTrigger.fire();
           }
           other.onPotatoHit();
-        break;
+          break;
       }
       other.removeFromParent();
     }

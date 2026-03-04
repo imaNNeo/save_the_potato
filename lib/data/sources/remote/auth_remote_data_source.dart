@@ -20,7 +20,7 @@ class AuthRemoteDataSource {
         forceToReplace,
       );
 
-  /// [forceToReplace] is used to replace the current anonymous user with the new one 
+  /// [forceToReplace] is used to replace the current anonymous user with the new one
   /// without any link it means user agreed on that
   Future<UserEntity> _signInOrLinkWithProvider(
     AuthProvider provider,

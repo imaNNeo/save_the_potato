@@ -55,11 +55,7 @@ class AudioHelper {
       _bgm,
       volume: GameConstants.bgmVolume,
       looping: true,
-      loopingStartAt: const Duration(
-        minutes: 3,
-        seconds: 0,
-        milliseconds: 480,
-      ),
+      loopingStartAt: const Duration(minutes: 3, seconds: 0, milliseconds: 480),
     );
     _soLoud.setProtectVoice(_bgmHandle!, true);
   }
@@ -106,10 +102,7 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    _soLoud.play(
-      _heartHit,
-      volume: GameConstants.soundEffectsVolume,
-    );
+    _soLoud.play(_heartHit, volume: GameConstants.soundEffectsVolume);
   }
 
   void playOrbHitSound() async {
@@ -130,30 +123,21 @@ class AudioHelper {
       return;
     }
     final shield = shieldNotes[seed % shieldNotes.length];
-    _soLoud.play(
-      shield,
-      volume: GameConstants.soundEffectsVolume,
-    );
+    _soLoud.play(shield, volume: GameConstants.soundEffectsVolume);
   }
 
   void playVictorySound() async {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    _soLoud.play(
-      _victory,
-      volume: GameConstants.soundEffectsVolume,
-    );
+    _soLoud.play(_victory, volume: GameConstants.soundEffectsVolume);
   }
 
   void playGameOverSound() async {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    _soLoud.play(
-      _gameOver,
-      volume: GameConstants.soundEffectsVolume,
-    );
+    _soLoud.play(_gameOver, volume: GameConstants.soundEffectsVolume);
   }
 
   void playMotivationWord(MotivationWordType word) async {
@@ -163,9 +147,6 @@ class AudioHelper {
     final audio = await _soLoud.loadAsset(
       'assets/audio/motivation/${word.assetName}',
     );
-    _soLoud.play(
-      audio,
-      volume: GameConstants.soundEffectsVolume * 1.5,
-    );
+    _soLoud.play(audio, volume: GameConstants.soundEffectsVolume * 1.5);
   }
 }

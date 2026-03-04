@@ -33,56 +33,55 @@ class HealthDisjointParticleComponent extends Component
       for (int i = 0; i < randomOrder.length - 1; i++)
         TweenSequenceItem(
           weight: 1,
-          tween: ColorTween(
-            begin: randomOrder[i],
-            end: randomOrder[i + 1],
-          ),
+          tween: ColorTween(begin: randomOrder[i], end: randomOrder[i + 1]),
         ),
     ]);
     final size = parent.size;
-    await game.world.add(ParticleSystemComponent(
-      position: parent.positionOfAnchor(Anchor.center),
-      anchor: Anchor.center,
-      particle: Particle.generate(
-        count: 8,
-        lifespan: 3,
-        generator: (i) {
-          final sprite = smallSparkleSprites.random(rnd);
-          final color = colors.random(rnd);
-          final rotation = rnd.nextDouble() * pi * 4;
-          return AcceleratedParticle(
-            speed: Vector2(
-              (rnd.nextDouble() * 300) - 150,
-              (rnd.nextDouble() * 300) - 150,
-            ),
-            child: ComputedParticle(
-              renderer: (canvas, particle) {
-                final opacity = Tween(begin: 1.0, end: 0.0)
-                    .chain(CurveTween(curve: Curves.easeOutCubic))
-                    .transform(particle.progress);
-                if (opacity <= 0.01) {
-                  return;
-                }
-                canvas.rotate(particle.progress * rotation);
-                sprite.render(
-                  canvas,
-                  size: Vector2.all((size.x) * (1 - particle.progress)),
-                  anchor: Anchor.center,
-                  overridePaint: _disjointParticlePaint
-                    ..colorFilter = ColorFilter.mode(
-                      (rnd.nextBool()
-                              ? color
-                              : colorTween.transform(particle.progress))!
-                          .withValues(alpha: opacity),
-                      BlendMode.srcIn,
-                    ),
-                );
-              },
-            ),
-          );
-        },
+    await game.world.add(
+      ParticleSystemComponent(
+        position: parent.positionOfAnchor(Anchor.center),
+        anchor: Anchor.center,
+        particle: Particle.generate(
+          count: 8,
+          lifespan: 3,
+          generator: (i) {
+            final sprite = smallSparkleSprites.random(rnd);
+            final color = colors.random(rnd);
+            final rotation = rnd.nextDouble() * pi * 4;
+            return AcceleratedParticle(
+              speed: Vector2(
+                (rnd.nextDouble() * 300) - 150,
+                (rnd.nextDouble() * 300) - 150,
+              ),
+              child: ComputedParticle(
+                renderer: (canvas, particle) {
+                  final opacity = Tween(begin: 1.0, end: 0.0)
+                      .chain(CurveTween(curve: Curves.easeOutCubic))
+                      .transform(particle.progress);
+                  if (opacity <= 0.01) {
+                    return;
+                  }
+                  canvas.rotate(particle.progress * rotation);
+                  sprite.render(
+                    canvas,
+                    size: Vector2.all((size.x) * (1 - particle.progress)),
+                    anchor: Anchor.center,
+                    overridePaint: _disjointParticlePaint
+                      ..colorFilter = ColorFilter.mode(
+                        (rnd.nextBool()
+                                ? color
+                                : colorTween.transform(particle.progress))!
+                            .withValues(alpha: opacity),
+                        BlendMode.srcIn,
+                      ),
+                  );
+                },
+              ),
+            );
+          },
+        ),
       ),
-    ));
+    );
     add(RemoveEffect());
   }
 }

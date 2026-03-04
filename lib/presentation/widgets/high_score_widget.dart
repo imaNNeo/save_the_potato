@@ -18,11 +18,9 @@ class HighScoreWidget extends StatelessWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                Navigator.of(context).push(
-                  FadeRoute(
-                    page: const LeaderboardPage(),
-                  ),
-                );
+                Navigator.of(
+                  context,
+                ).push(FadeRoute(page: const LeaderboardPage()));
               },
               borderRadius: BorderRadius.circular(16),
               child: Padding(
@@ -35,11 +33,7 @@ class HighScoreWidget extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Trophy(
-                      score: state.myScore,
-                      size: 38,
-                      showNickname: false,
-                    ),
+                    Trophy(score: state.myScore, size: 38, showNickname: false),
                     const SizedBox(width: 8),
                     Column(
                       mainAxisSize: MainAxisSize.min,
@@ -58,9 +52,7 @@ class HighScoreWidget extends StatelessWidget {
                                   state.myScore!.score,
                                 )
                               : '00:00',
-                          style: const TextStyle(
-                            fontSize: 16,
-                          ),
+                          style: const TextStyle(fontSize: 16),
                         ),
                       ],
                     ),

@@ -15,9 +15,8 @@ class LazyValue<T> {
 
   /// Returns either the [_value] if it exists, or a future that will
   /// complete when [setValue] is called
-  Future<T> get value => _value != null
-      ? Future.value(_value)
-      : _valueInitialCompleter.future;
+  Future<T> get value =>
+      _value != null ? Future.value(_value) : _valueInitialCompleter.future;
 
   /// Sets the value and completes the future returned by [value]
   /// if it is the first time

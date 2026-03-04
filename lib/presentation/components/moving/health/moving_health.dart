@@ -56,7 +56,6 @@ class MovingHealth extends MovingComponent {
     super.update(dt);
   }
 
-
   @override
   void render(Canvas canvas) {
     heartSprite1.render(
@@ -65,10 +64,7 @@ class MovingHealth extends MovingComponent {
       anchor: Anchor.center,
       position: size / 2,
       overridePaint: Paint()
-        ..colorFilter = ColorFilter.mode(
-          colors.last,
-          BlendMode.srcIn,
-        ),
+        ..colorFilter = ColorFilter.mode(colors.last, BlendMode.srcIn),
     );
     heartSprite2.render(
       canvas,
@@ -76,23 +72,19 @@ class MovingHealth extends MovingComponent {
       anchor: Anchor.center,
       position: size / 2,
       overridePaint: Paint()
-        ..colorFilter = const ColorFilter.mode(
-          Colors.white,
-          BlendMode.srcIn,
-        ),
+        ..colorFilter = const ColorFilter.mode(Colors.white, BlendMode.srcIn),
     );
   }
 
   void disjoint() {
     getIt.get<AnalyticsHelper>().heartDisjointed();
     _onDisjointCallback?.call();
-    add(HealthDisjointParticleComponent(
-      colors: [...colors, Colors.white],
-      smallSparkleSprites: [
-        heartSprite1,
-        heartSprite2,
-      ],
-    ));
+    add(
+      HealthDisjointParticleComponent(
+        colors: [...colors, Colors.white],
+        smallSparkleSprites: [heartSprite1, heartSprite2],
+      ),
+    );
   }
 
   void onConsumed() {

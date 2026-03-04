@@ -19,34 +19,30 @@ class BaseDialog extends AlertDialog {
     required Widget content,
     bool showCloseButton = true,
   }) : super(
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(28.0),
-            ),
-          ),
-          title: Row(
-            children: [
-              Text(title),
-              Expanded(child: Container()),
-              if (showCloseButton)
-                Builder(
-                  builder: (context) {
-                    return IconButton(
-                      tooltip: 'Close',
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close),
-                    );
-                  }
-                ),
-            ],
-          ),
-          content: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 300,
-            ),
-            child: content,
-          ),
-        );
+         shape: const RoundedRectangleBorder(
+           borderRadius: BorderRadius.all(Radius.circular(28.0)),
+         ),
+         title: Row(
+           children: [
+             Text(title),
+             Expanded(child: Container()),
+             if (showCloseButton)
+               Builder(
+                 builder: (context) {
+                   return IconButton(
+                     tooltip: 'Close',
+                     onPressed: () => Navigator.of(context).pop(),
+                     icon: const Icon(Icons.close),
+                   );
+                 },
+               ),
+           ],
+         ),
+         content: ConstrainedBox(
+           constraints: const BoxConstraints(maxWidth: 300),
+           child: content,
+         ),
+       );
 
   static Future<T?> _showSimpleDialog<T>({
     required BuildContext context,
@@ -57,19 +53,16 @@ class BaseDialog extends AlertDialog {
       context: context,
       barrierLabel: 'Barrier',
       barrierDismissible: barrierDismissible,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha: 0.7),
       transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (_, __, ___) {
+      pageBuilder: (_, _, _) {
         return builder(context);
       },
-      transitionBuilder: (_, anim, __, child) {
+      transitionBuilder: (_, anim, _, child) {
         Tween<double> scaleTween = Tween(begin: 0.0, end: 1.0);
         return ScaleTransition(
           scale: scaleTween.animate(anim),
-          child: FadeTransition(
-            opacity: anim,
-            child: child,
-          ),
+          child: FadeTransition(opacity: anim, child: child),
         );
       },
     );
@@ -78,10 +71,8 @@ class BaseDialog extends AlertDialog {
   static void showSettingsDialog(BuildContext context) {
     _showSimpleDialog(
       context: context,
-      builder: (BuildContext context) => BaseDialog(
-        title: 'Settings',
-        content: const SettingsDialogContent(),
-      ),
+      builder: (BuildContext context) =>
+          BaseDialog(title: 'Settings', content: const SettingsDialogContent()),
     );
   }
 
@@ -98,10 +89,8 @@ class BaseDialog extends AlertDialog {
   static void showAuthDialog(BuildContext context) {
     _showSimpleDialog(
       context: context,
-      builder: (BuildContext context) => BaseDialog(
-        title: 'Sign in',
-        content: const AuthDialogContent(),
-      ),
+      builder: (BuildContext context) =>
+          BaseDialog(title: 'Sign in', content: const AuthDialogContent()),
     );
   }
 
@@ -113,9 +102,7 @@ class BaseDialog extends AlertDialog {
       context: context,
       builder: (BuildContext context) => BaseDialog(
         title: 'Account Exists',
-        content: AccountAlreadyExistsDialogContent(
-          error: error,
-        ),
+        content: AccountAlreadyExistsDialogContent(error: error),
       ),
     );
   }
@@ -137,10 +124,7 @@ class BaseDialog extends AlertDialog {
     );
   }
 
-  static Future<T?> showUpdateDialog<T>(
-    BuildContext context,
-    UpdateInfo info,
-  ) {
+  static Future<T?> showUpdateDialog<T>(BuildContext context, UpdateInfo info) {
     final title = info.forced ? 'Update Required' : 'Update Available';
     return _showSimpleDialog(
       barrierDismissible: !info.forced,
@@ -153,9 +137,7 @@ class BaseDialog extends AlertDialog {
     );
   }
 
-  static Future<bool> showCaptchaDialog<T>(
-    BuildContext context,
-  ) async {
+  static Future<bool> showCaptchaDialog<T>(BuildContext context) async {
     final result = await _showSimpleDialog(
       barrierDismissible: false,
       context: context,

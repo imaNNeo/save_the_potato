@@ -19,10 +19,7 @@ class FormattedGameTime extends StatelessWidget {
   const FormattedGameTime({
     super.key,
     required this.time,
-    this.textStyle = const TextStyle(
-      fontWeight: FontWeight.bold,
-      fontSize: 24,
-    ),
+    this.textStyle = const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
   });
 
   final double time;

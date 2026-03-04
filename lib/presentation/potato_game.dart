@@ -22,16 +22,11 @@ import 'cubit/game/game_cubit.dart';
 
 class PotatoGame extends FlameGame<MyWorld>
     with HasCollisionDetection, KeyboardEvents {
-  PotatoGame(
-    this._gameCubit,
-    this._settingsCubit,
-  ) : super(
-          world: MyWorld(),
-          camera: CameraComponent.withFixedResolution(
-            width: 600,
-            height: 600,
-          ),
-        );
+  PotatoGame(this._gameCubit, this._settingsCubit)
+    : super(
+        world: MyWorld(),
+        camera: CameraComponent.withFixedResolution(width: 600, height: 600),
+      );
 
   @override
   Future<void> onLoad() async {
@@ -42,15 +37,17 @@ class PotatoGame extends FlameGame<MyWorld>
       'two-way-arrow.png',
     ]);
     remove(world);
-    add(FlameMultiBlocProvider(
-      providers: [
-        FlameBlocProvider<GameCubit, GameState>.value(value: _gameCubit),
-        FlameBlocProvider<SettingsCubit, SettingsState>.value(
-          value: _settingsCubit,
-        ),
-      ],
-      children: [world],
-    ));
+    add(
+      FlameMultiBlocProvider(
+        providers: [
+          FlameBlocProvider<GameCubit, GameState>.value(value: _gameCubit),
+          FlameBlocProvider<SettingsCubit, SettingsState>.value(
+            value: _settingsCubit,
+          ),
+        ],
+        children: [world],
+      ),
+    );
   }
 
   final GameCubit _gameCubit;
@@ -71,12 +68,7 @@ class PotatoGame extends FlameGame<MyWorld>
     camera.viewfinder.add(
       MoveEffect.by(
         Vector2(8, 8),
-        NoiseEffectController(
-          duration: 1,
-          noise: PerlinNoise(
-            frequency: 400,
-          ),
-        ),
+        NoiseEffectController(duration: 1, noise: PerlinNoise(frequency: 400)),
       ),
     );
   }
@@ -95,7 +87,9 @@ class PotatoGame extends FlameGame<MyWorld>
 }
 
 class MyWorld extends World
-    with HasGameReference<PotatoGame>, FlameBlocListenable<GameCubit, GameState> {
+    with
+        HasGameReference<PotatoGame>,
+        FlameBlocListenable<GameCubit, GameState> {
   late Potato player;
 
   late StreamSubscription _motivationWordSubscription;
@@ -109,11 +103,9 @@ class MyWorld extends World
           .map((state) => state.playMotivationWord)
           .distinct()
           .where((word) => word != null)
-          .listen(
-        (playMotivationWord) {
-          addMotivationWord(playMotivationWord!);
-        },
-      );
+          .listen((playMotivationWord) {
+            addMotivationWord(playMotivationWord!);
+          });
     });
   }
 
@@ -138,12 +130,12 @@ class MyWorld extends World
     if (state.playingState is PlayingStateGameOver) {
       add(GameOverCameraZoomEffect());
     } else {
-      add(CameraZoomEffect(
-        controller: EffectController(
-          duration: 1.0,
+      add(
+        CameraZoomEffect(
+          controller: EffectController(duration: 1.0),
+          zoomTo: 1.0,
         ),
-        zoomTo: 1.0,
-      ));
+      );
     }
   }
 

@@ -73,129 +73,117 @@ class MotivationComponent extends PositionComponent
     );
 
     final randomPoints = randomParticlePoints(textOffset);
-    add(ParticleSystemComponent(
-      particle: Particle.generate(
-        count: particlesCount,
-        lifespan: particlesLifespan,
-        generator: (i) {
-          return AcceleratedParticle(
-            position: randomPoints[i],
-            child: ComputedParticle(
-              renderer: (canvas, particle) {
-                final sprite = randomSprites[i];
-                final scaleProgress = TweenSequence(
-                  <TweenSequenceItem<double>>[
-                    TweenSequenceItem(
-                      tween: Tween(begin: 0.0, end: 0.8),
-                      weight: 1,
-                    ),
-                    TweenSequenceItem(
-                      tween: Tween(begin: 0.8, end: 1.0),
-                      weight: 3,
-                    ),
-                    TweenSequenceItem(
-                      tween: Tween(begin: 1.0, end: 0.0),
-                      weight: 1,
-                    ),
-                  ],
-                ).transform(
-                  Curves.fastOutSlowIn.transform(
-                    particle.progress,
-                  ),
-                );
-                final size =
-                    Tween(begin: 0.0, end: 18.0).transform(scaleProgress);
+    add(
+      ParticleSystemComponent(
+        particle: Particle.generate(
+          count: particlesCount,
+          lifespan: particlesLifespan,
+          generator: (i) {
+            return AcceleratedParticle(
+              position: randomPoints[i],
+              child: ComputedParticle(
+                renderer: (canvas, particle) {
+                  final sprite = randomSprites[i];
+                  final scaleProgress =
+                      TweenSequence(<TweenSequenceItem<double>>[
+                        TweenSequenceItem(
+                          tween: Tween(begin: 0.0, end: 0.8),
+                          weight: 1,
+                        ),
+                        TweenSequenceItem(
+                          tween: Tween(begin: 0.8, end: 1.0),
+                          weight: 3,
+                        ),
+                        TweenSequenceItem(
+                          tween: Tween(begin: 1.0, end: 0.0),
+                          weight: 1,
+                        ),
+                      ]).transform(
+                        Curves.fastOutSlowIn.transform(particle.progress),
+                      );
+                  final size = Tween(
+                    begin: 0.0,
+                    end: 18.0,
+                  ).transform(scaleProgress);
 
-                final opacityTween = TweenSequence(
-                  <TweenSequenceItem<double>>[
-                    TweenSequenceItem(
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      weight: 1,
-                    ),
-                    TweenSequenceItem(
-                      tween: Tween(begin: 1.0, end: 0.0),
-                      weight: 1,
-                    ),
-                  ],
-                );
-                canvas.rotate(particle.progress * pi * 2);
-                sprite.render(
-                  canvas,
-                  size: Vector2.all(size),
-                  anchor: Anchor.center,
-                  overridePaint: Paint()
-                    ..colorFilter = ColorFilter.mode(
-                      color.withOpacity(
-                        opacityTween.transform(particle.progress),
+                  final opacityTween =
+                      TweenSequence(<TweenSequenceItem<double>>[
+                        TweenSequenceItem(
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          weight: 1,
+                        ),
+                        TweenSequenceItem(
+                          tween: Tween(begin: 1.0, end: 0.0),
+                          weight: 1,
+                        ),
+                      ]);
+                  canvas.rotate(particle.progress * pi * 2);
+                  sprite.render(
+                    canvas,
+                    size: Vector2.all(size),
+                    anchor: Anchor.center,
+                    overridePaint: Paint()
+                      ..colorFilter = ColorFilter.mode(
+                        color.withValues(
+                          alpha: opacityTween.transform(particle.progress),
+                        ),
+                        BlendMode.srcIn,
                       ),
-                      BlendMode.srcIn,
-                    ),
-                );
-              },
-            ),
-          );
-        },
+                  );
+                },
+              ),
+            );
+          },
+        ),
       ),
-    ));
+    );
 
-    add(_textComponent = TextComponent(
-      priority: 2,
-      text: motivationWordType.text,
-      anchor: Anchor.center,
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          fontSize: 28,
-          fontFamily: 'Cookies',
+    add(
+      _textComponent = TextComponent(
+        priority: 2,
+        text: motivationWordType.text,
+        anchor: Anchor.center,
+        textRenderer: TextPaint(
+          style: const TextStyle(fontSize: 28, fontFamily: 'Cookies'),
         ),
+        children: [
+          ScaleEffect.by(
+            Vector2.all(2.5),
+            EffectController(duration: inDuration, curve: Curves.fastOutSlowIn),
+          ),
+          MoveByEffect(
+            textOffset,
+            EffectController(duration: inDuration, curve: Curves.fastOutSlowIn),
+          ),
+          OpacityEffect.to(
+            0.7,
+            target: this as OpacityProvider,
+            EffectController(duration: inDuration, curve: Curves.fastOutSlowIn),
+          ),
+          OpacityEffect.fadeOut(
+            target: this as OpacityProvider,
+            EffectController(
+              duration: outDuration,
+              curve: Curves.easeOutSine,
+              startDelay: inDuration,
+            ),
+          ),
+        ],
       ),
-      children: [
-        ScaleEffect.by(
-          Vector2.all(2.5),
-          EffectController(
-            duration: inDuration,
-            curve: Curves.fastOutSlowIn,
-          ),
-        ),
-        MoveByEffect(
-          textOffset,
-          EffectController(
-            duration: inDuration,
-            curve: Curves.fastOutSlowIn,
-          ),
-        ),
-        OpacityEffect.to(
-          0.7,
-          target: this as OpacityProvider,
-          EffectController(
-            duration: inDuration,
-            curve: Curves.fastOutSlowIn,
-          ),
-        ),
-        OpacityEffect.fadeOut(
-          target: this as OpacityProvider,
-          EffectController(
-            duration: outDuration,
-            curve: Curves.easeOutSine,
-            startDelay: inDuration,
-          ),
-        )
-      ],
-    ));
+    );
     setOpacity(0);
-    add(RemoveEffect(
-      delay: max(totalDuration, particlesLifespan),
-    ));
+    add(RemoveEffect(delay: max(totalDuration, particlesLifespan)));
   }
 
   @override
   void update(double dt) {
     super.update(dt);
-    _textComponent.textRenderer =
-        (_textComponent.textRenderer as TextPaint).copyWith(
-      (style) => style.copyWith(
-        color: const Color(0xFF00FF15).withOpacity(opacity),
-      ),
-    );
+    _textComponent.textRenderer = (_textComponent.textRenderer as TextPaint)
+        .copyWith(
+          (style) => style.copyWith(
+            color: const Color(0xFF00FF15).withValues(alpha: opacity),
+          ),
+        );
   }
 }
 
@@ -229,7 +217,7 @@ const _bestCachedRandomPoints = [
     [174.69711434461112, -164.82644610933437],
     [-69.81371116426408, -86.42134766449172],
     [-106.94452306693196, -100.9749143125868],
-    [178.4371828940727, -109.49882574971055]
+    [178.4371828940727, -109.49882574971055],
   ],
   [
     [-181.42313942178012, -152.70088549385326],
@@ -243,7 +231,7 @@ const _bestCachedRandomPoints = [
     [-181.60335073074398, -98.91698926569669],
     [-112.05405106053084, -186.9164665602473],
     [171.62065348318595, -143.341030612412],
-    [36.29511206635971, -197.33817596261434]
+    [36.29511206635971, -197.33817596261434],
   ],
   [
     [155.11824429927776, -102.16224012885202],
@@ -257,7 +245,7 @@ const _bestCachedRandomPoints = [
     [100.15710543354868, -192.45305516862066],
     [-187.08516096576034, -140.4558732354707],
     [-166.09925935846388, -210.34392182462886],
-    [136.60536523661744, -192.76618187887746]
+    [136.60536523661744, -192.76618187887746],
   ],
   [
     [-134.06062175158453, -104.54142771399202],
@@ -271,7 +259,7 @@ const _bestCachedRandomPoints = [
     [-133.85758029981025, -190.92041551042632],
     [-198.30258671465913, -147.7230978225237],
     [103.10249858044398, -99.15876186454447],
-    [178.50472657777397, -151.3153979043238]
+    [178.50472657777397, -151.3153979043238],
   ],
   [
     [-79.79641439498408, -205.4198027375128],
@@ -285,7 +273,7 @@ const _bestCachedRandomPoints = [
     [176.95495304982427, -90.19385199396592],
     [209.70519743732382, -166.3716445379548],
     [-50.72205812298992, -202.28922589922036],
-    [-65.02466612424408, -111.91315644334301]
+    [-65.02466612424408, -111.91315644334301],
   ],
   [
     [77.24695743045788, -106.46204826461079],
@@ -299,7 +287,7 @@ const _bestCachedRandomPoints = [
     [-168.23357254964347, -189.82019557116956],
     [-187.78772321870855, -160.3476381836348],
     [39.692974438976876, -211.20061665174893],
-    [-199.83025440001035, -122.67902572035175]
+    [-199.83025440001035, -122.67902572035175],
   ],
   [
     [207.05689810095544, -168.40049682988],
@@ -313,7 +301,7 @@ const _bestCachedRandomPoints = [
     [-163.12726540934977, -89.47938347674496],
     [110.74961665559664, -89.82982705095884],
     [184.27425126789677, -90.00722083786906],
-    [86.41993551848174, -186.89352015576827]
+    [86.41993551848174, -186.89352015576827],
   ],
   [
     [16.921078421771938, -200.31841446236984],
@@ -327,7 +315,7 @@ const _bestCachedRandomPoints = [
     [-92.77405299553108, -94.23346832524156],
     [-57.342610004212275, -199.41235180605582],
     [-107.95790457719924, -195.2198380001557],
-    [179.28970960358896, -212.85323861177523]
+    [179.28970960358896, -212.85323861177523],
   ],
   [
     [201.1814767586436, -204.70624985523415],
@@ -341,7 +329,7 @@ const _bestCachedRandomPoints = [
     [-93.67168930630274, -115.16850866948991],
     [184.31685532773213, -109.6379487310275],
     [-195.32211046527544, -106.99338310757916],
-    [101.77906717388925, -200.55795201297758]
+    [101.77906717388925, -200.55795201297758],
   ],
   [
     [112.30592156676852, -93.33430088110846],
@@ -355,7 +343,7 @@ const _bestCachedRandomPoints = [
     [-195.74415185433233, -133.16858128804282],
     [187.06084120958735, -111.45834552130759],
     [41.47711459899162, -193.3147411442162],
-    [-145.1291181823658, -189.51598718284126]
+    [-145.1291181823658, -189.51598718284126],
   ],
   [
     [-19.240476777649803, -108.11423553937203],
@@ -369,7 +357,7 @@ const _bestCachedRandomPoints = [
     [183.92253250451188, -129.39119207973613],
     [170.77032105508886, -93.46944171125446],
     [40.489510355391246, -185.61497317699445],
-    [-124.61778605172643, -204.1964401552802]
+    [-124.61778605172643, -204.1964401552802],
   ],
   [
     [178.13120398609294, -103.24481652855329],
@@ -383,6 +371,6 @@ const _bestCachedRandomPoints = [
     [-153.23462840294962, -109.96803738727655],
     [192.1207744052777, -197.83463026496582],
     [-196.45658631178196, -161.440453432649],
-    [17.666076282183212, -115.6164483298789]
+    [17.666076282183212, -115.6164483298789],
   ],
 ];

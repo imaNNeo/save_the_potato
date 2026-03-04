@@ -2,10 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:rive/rive.dart';
 
 class SplashPotato extends StatefulWidget {
-  const SplashPotato({
-    super.key,
-    this.size = 300,
-  });
+  const SplashPotato({super.key, this.size = 300});
   final double size;
 
   @override
@@ -18,10 +15,7 @@ class _SplashPotatoState extends State<SplashPotato> {
 
   @override
   void initState() {
-    _controller = OneShotAnimation(
-      'Initialize',
-      autoplay: true,
-    );
+    _controller = OneShotAnimation('Initialize', autoplay: true);
     super.initState();
   }
 

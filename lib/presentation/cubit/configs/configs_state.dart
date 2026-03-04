@@ -7,16 +7,10 @@ class ConfigsState extends Equatable {
 
   final GameConfigEntity gameConfig;
 
-  ConfigsState copyWith({
-    GameConfigEntity? gameConfig,
-  }) {
-    return ConfigsState(
-      gameConfig: gameConfig ?? this.gameConfig,
-    );
+  ConfigsState copyWith({GameConfigEntity? gameConfig}) {
+    return ConfigsState(gameConfig: gameConfig ?? this.gameConfig);
   }
 
   @override
-  List<Object> get props => [
-        gameConfig,
-      ];
+  List<Object> get props => [gameConfig];
 }

@@ -8,11 +8,8 @@ import 'score_rank_number.dart';
 
 class ScoreRow extends StatelessWidget {
   static const height = 68.0;
-  const ScoreRow({
-    super.key,
-    required this.scoreEntity,
-    required this.loading,
-  }) : super();
+  const ScoreRow({super.key, required this.scoreEntity, required this.loading})
+    : super();
 
   final OnlineScoreEntity scoreEntity;
   final bool loading;
@@ -39,10 +36,7 @@ class ScoreRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          ScoreRankNumber(
-            rank: scoreEntity.rank,
-            size: height * 0.55,
-          ),
+          ScoreRankNumber(rank: scoreEntity.rank, size: height * 0.55),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
@@ -60,7 +54,9 @@ class ScoreRow extends StatelessWidget {
           Text(
             AppUtils.getHighScoreRepresentation(scoreEntity.score),
             style: TextStyle(
-              color: isMine ? Colors.white : Colors.white.withOpacity(0.8),
+              color: isMine
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.8),
               fontWeight: isMine ? FontWeight.bold : FontWeight.normal,
               fontSize: 16,
             ),
@@ -73,9 +69,7 @@ class ScoreRow extends StatelessWidget {
       return rawWidget;
     }
     return rawWidget
-        .animate(
-          onPlay: (controller) => controller.repeat(),
-        )
+        .animate(onPlay: (controller) => controller.repeat())
         .shimmer(
           color: Colors.white,
           blendMode: BlendMode.dstOut,
@@ -87,27 +81,21 @@ class ScoreRow extends StatelessWidget {
 }
 
 class ScoreRowTemplateShimmer extends StatelessWidget {
-  const ScoreRowTemplateShimmer({
-    super.key,
-    this.showShimmer = true,
-  }) : super();
+  const ScoreRowTemplateShimmer({super.key, this.showShimmer = true}) : super();
 
   final bool showShimmer;
 
   @override
   Widget build(BuildContext context) {
     const height = ScoreRow.height;
-    final color = Colors.white.withOpacity(0.5);
+    final color = Colors.white.withValues(alpha: 0.5);
 
     final template = Container(
       height: height,
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        border: Border.all(
-          color: color,
-          width: 1,
-        ),
+        border: Border.all(color: color, width: 1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -121,18 +109,9 @@ class ScoreRowTemplateShimmer extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          Expanded(
-            child: Container(
-              height: 18,
-              color: color,
-            ),
-          ),
+          Expanded(child: Container(height: 18, color: color)),
           const SizedBox(width: 24),
-          Container(
-            height: 16,
-            width: 48,
-            color: color,
-          ),
+          Container(height: 16, width: 48, color: color),
         ],
       ),
     );
@@ -140,9 +119,7 @@ class ScoreRowTemplateShimmer extends StatelessWidget {
       return template;
     }
     return template
-        .animate(
-          onPlay: (controller) => controller.repeat(),
-        )
+        .animate(onPlay: (controller) => controller.repeat())
         .shimmer(
           size: 5,
           color: Colors.white,

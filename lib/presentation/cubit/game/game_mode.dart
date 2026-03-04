@@ -25,77 +25,63 @@ sealed class GameMode with EquatableMixin {
     final gameMode = this;
     return switch (gameMode) {
       GameModeSingleSpawn() => gameMode.copyWith(
-          passedTime: gameMode.passedTime + dt,
-        ),
+        passedTime: gameMode.passedTime + dt,
+      ),
       GameModeMultiSpawn() => gameMode.copyWith(
-          passedTime: gameMode.passedTime + dt,
-        ),
+        passedTime: gameMode.passedTime + dt,
+      ),
     };
   }
 
-  GameMode increaseDefendedOrbsCount({
-    required int count,
-  }) {
+  GameMode increaseDefendedOrbsCount({required int count}) {
     final gameMode = this;
     return switch (gameMode) {
       GameModeSingleSpawn() => gameMode.copyWith(
-          defendedOrbsCount: gameMode.defendedOrbsCount + count,
-        ),
+        defendedOrbsCount: gameMode.defendedOrbsCount + count,
+      ),
       GameModeMultiSpawn() => gameMode.copyWith(
-          defendedOrbsCount: gameMode.defendedOrbsCount + count,
-        ),
+        defendedOrbsCount: gameMode.defendedOrbsCount + count,
+      ),
     };
   }
 
-  GameMode increaseCollidedOrbsCount({
-    required int count,
-  }) {
+  GameMode increaseCollidedOrbsCount({required int count}) {
     final gameMode = this;
     return switch (gameMode) {
       GameModeSingleSpawn() => gameMode.copyWith(
-          collidedOrbsCount: gameMode.collidedOrbsCount + count,
-        ),
+        collidedOrbsCount: gameMode.collidedOrbsCount + count,
+      ),
       GameModeMultiSpawn() => gameMode.copyWith(
-          collidedOrbsCount: gameMode.collidedOrbsCount + count,
-        ),
+        collidedOrbsCount: gameMode.collidedOrbsCount + count,
+      ),
     };
   }
 
-  GameMode increaseDefendOrbStreakCount({
-    required int count,
-  }) {
+  GameMode increaseDefendOrbStreakCount({required int count}) {
     final gameMode = this;
     return switch (gameMode) {
       GameModeSingleSpawn() => gameMode.copyWith(
-          defendOrbStreakCount: gameMode.defendOrbStreakCount + count,
-        ),
+        defendOrbStreakCount: gameMode.defendOrbStreakCount + count,
+      ),
       GameModeMultiSpawn() => gameMode.copyWith(
-          defendOrbStreakCount: gameMode.defendOrbStreakCount + count,
-        ),
+        defendOrbStreakCount: gameMode.defendOrbStreakCount + count,
+      ),
     };
   }
 
   GameMode resetDefendOrbStreakCount() {
     final gameMode = this;
     return switch (gameMode) {
-      GameModeSingleSpawn() => gameMode.copyWith(
-          defendOrbStreakCount: 0,
-        ),
-      GameModeMultiSpawn() => gameMode.copyWith(
-          defendOrbStreakCount: 0,
-        ),
+      GameModeSingleSpawn() => gameMode.copyWith(defendOrbStreakCount: 0),
+      GameModeMultiSpawn() => gameMode.copyWith(defendOrbStreakCount: 0),
     };
   }
 
   GameMode updateInitialDelay(double delay) {
     final gameMode = this;
     return switch (gameMode) {
-      GameModeSingleSpawn() => gameMode.copyWith(
-          initialDelay: delay,
-        ),
-      GameModeMultiSpawn() => gameMode.copyWith(
-          initialDelay: delay,
-        ),
+      GameModeSingleSpawn() => gameMode.copyWith(initialDelay: delay),
+      GameModeMultiSpawn() => gameMode.copyWith(initialDelay: delay),
     };
   }
 
@@ -110,32 +96,23 @@ class GameModeSingleSpawn extends GameMode {
     super.collidedOrbsCount = 0,
     super.defendOrbStreakCount = 0,
     super.initialDelay = 0,
-  }) : super(
-          increasesDifficulty: true,
-          canSpawnMovingHealth: true,
-        );
+  }) : super(increasesDifficulty: true, canSpawnMovingHealth: true);
 
   /// It takes [difficultyInitialToPeakDuration] seconds to
   /// go from [orbsSpawnEveryInitial] to [orbsSpawnEveryPeak]
   static const orbsSpawnEveryInitial = 2.2;
   static const orbsSpawnEveryPeak = 0.65;
 
-  double getSpawnOrbsEvery(double difficulty) => lerpDouble(
-        orbsSpawnEveryInitial,
-        orbsSpawnEveryPeak,
-        difficulty,
-      )!;
+  double getSpawnOrbsEvery(double difficulty) =>
+      lerpDouble(orbsSpawnEveryInitial, orbsSpawnEveryPeak, difficulty)!;
 
   /// It takes [difficultyInitialToPeakDuration] seconds to
   /// go from [orbsMoveSpeedInitial] to [orbsMoveSpeedPeak]
   static const orbsMoveSpeedInitial = 135.0;
   static const orbsMoveSpeedPeak = 215.0;
 
-  double getSpawnOrbsMoveSpeed(double difficulty) => lerpDouble(
-        orbsMoveSpeedInitial,
-        orbsMoveSpeedPeak,
-        difficulty,
-      )!;
+  double getSpawnOrbsMoveSpeed(double difficulty) =>
+      lerpDouble(orbsMoveSpeedInitial, orbsMoveSpeedPeak, difficulty)!;
 
   GameModeSingleSpawn copyWith({
     double? passedTime,
@@ -155,14 +132,14 @@ class GameModeSingleSpawn extends GameMode {
 
   @override
   List<Object?> get props => [
-        passedTime,
-        defendedOrbsCount,
-        collidedOrbsCount,
-        increasesDifficulty,
-        canSpawnMovingHealth,
-        defendOrbStreakCount,
-        initialDelay,
-      ];
+    passedTime,
+    defendedOrbsCount,
+    collidedOrbsCount,
+    increasesDifficulty,
+    canSpawnMovingHealth,
+    defendOrbStreakCount,
+    initialDelay,
+  ];
 }
 
 class GameModeMultiSpawn extends GameMode {
@@ -173,10 +150,7 @@ class GameModeMultiSpawn extends GameMode {
     super.collidedOrbsCount = 0,
     super.defendOrbStreakCount = 0,
     super.initialDelay = 0,
-  }) : super(
-          increasesDifficulty: false,
-          canSpawnMovingHealth: false,
-        );
+  }) : super(increasesDifficulty: false, canSpawnMovingHealth: false);
 
   bool shouldPlayMotivationWord() => collidedOrbsCount == 0;
 
@@ -189,31 +163,25 @@ class GameModeMultiSpawn extends GameMode {
   static const orbsSpawnEveryInitial = 0.6;
   static const orbsSpawnEveryPeak = 0.2;
 
-  double getSpawnOrbsEvery(double difficulty) => lerpDouble(
-        orbsSpawnEveryInitial,
-        orbsSpawnEveryPeak,
-        difficulty,
-      )!;
+  double getSpawnOrbsEvery(double difficulty) =>
+      lerpDouble(orbsSpawnEveryInitial, orbsSpawnEveryPeak, difficulty)!;
 
   /// It takes [difficultyInitialToPeakDuration] seconds to
   /// go from [orbsMoveSpeedInitial] to [orbsMoveSpeedPeak]
   static const orbsMoveSpeedInitial = 125;
   static const orbsMoveSpeedPeak = 215;
 
-  double getSpawnOrbsMoveSpeed(double difficulty) => lerpDouble(
-        orbsMoveSpeedInitial,
-        orbsMoveSpeedPeak,
-        difficulty,
-      )!;
+  double getSpawnOrbsMoveSpeed(double difficulty) =>
+      lerpDouble(orbsMoveSpeedInitial, orbsMoveSpeedPeak, difficulty)!;
 
   static const orbsSpawnerSpawnEveryInitial = 5.5;
   static const orbsSpawnerSpawnEveryPeak = 2;
 
   double getSpawnOrbsSpawnerEvery(double difficulty) => lerpDouble(
-        orbsSpawnerSpawnEveryInitial,
-        orbsSpawnerSpawnEveryPeak,
-        difficulty,
-      )!;
+    orbsSpawnerSpawnEveryInitial,
+    orbsSpawnerSpawnEveryPeak,
+    difficulty,
+  )!;
 
   GameModeMultiSpawn copyWith({
     int? spawnerSpawnCount,
@@ -235,13 +203,13 @@ class GameModeMultiSpawn extends GameMode {
 
   @override
   List<Object?> get props => [
-        spawnerSpawnCount,
-        passedTime,
-        defendedOrbsCount,
-        collidedOrbsCount,
-        increasesDifficulty,
-        canSpawnMovingHealth,
-        defendOrbStreakCount,
-        initialDelay,
-      ];
+    spawnerSpawnCount,
+    passedTime,
+    defendedOrbsCount,
+    collidedOrbsCount,
+    increasesDifficulty,
+    canSpawnMovingHealth,
+    defendOrbStreakCount,
+    initialDelay,
+  ];
 }

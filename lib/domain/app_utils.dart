@@ -37,23 +37,24 @@ class AppUtils {
           ),
         ),
       );
-      final imageFile = XFile.fromData(
-        bytes,
-        mimeType: 'image/png',
-      );
+      final imageFile = XFile.fromData(bytes, mimeType: 'image/png');
 
       final scoreStr = AppUtils.getHighScoreRepresentation(score.score);
       final shareTextWithRank = gameConfig.shareTextWithRank
           .replaceAll('{{score}}', scoreStr)
           .replaceAll('{{rank}}', score.rank.toString());
 
-      final shareTextWithoutRank =
-          gameConfig.shareTextWithoutRank.replaceAll('{{score}}', scoreStr);
+      final shareTextWithoutRank = gameConfig.shareTextWithoutRank.replaceAll(
+        '{{score}}',
+        scoreStr,
+      );
 
       final shareText = score.rank <= gameConfig.shareTextWithRankThreshold
           ? shareTextWithRank
           : shareTextWithoutRank;
-      await Share.shareXFiles([imageFile], text: shareText);
+      await SharePlus.instance.share(
+        ShareParams(files: [imageFile], text: shareText),
+      );
     } catch (e) {
       debugPrint(e.toString());
       FirebaseCrashlytics.instance.recordError(e, StackTrace.current);

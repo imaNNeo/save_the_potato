@@ -28,10 +28,7 @@ class Shield extends PositionComponent
     this.shieldWidth = 6.0,
     this.shieldSweep = pi / 2,
     this.offset = 12,
-  }) : super(
-          position: Vector2.all(0),
-          anchor: Anchor.center,
-        );
+  }) : super(position: Vector2.all(0), anchor: Anchor.center);
 
   final OrbType type;
   final double shieldWidth;
@@ -64,13 +61,13 @@ class Shield extends PositionComponent
     super.onLoad();
     _smallSparkleSprites = switch (type) {
       OrbType.fire => [
-          await Sprite.load('sparkle/sparkle1.png'),
-          await Sprite.load('sparkle/sparkle2.png'),
-        ],
+        await Sprite.load('sparkle/sparkle1.png'),
+        await Sprite.load('sparkle/sparkle2.png'),
+      ],
       OrbType.ice => [
-          await Sprite.load('snow/snowflake1.png'),
-          await Sprite.load('snow/snowflake2.png'),
-        ],
+        await Sprite.load('snow/snowflake1.png'),
+        await Sprite.load('snow/snowflake2.png'),
+      ],
     };
 
     _shieldFlamePool = ComponentPool<CustomParticle>(
@@ -128,10 +125,7 @@ class Shield extends PositionComponent
       );
     }
 
-    add(PolygonHitbox(
-      vertices,
-      collisionType: CollisionType.active,
-    ));
+    add(PolygonHitbox(vertices, collisionType: CollisionType.active));
   }
 
   final _opacityTween = Tween(begin: 0.4, end: 0.0);
@@ -141,13 +135,17 @@ class Shield extends PositionComponent
 
     final increaseDecreaseTween = TweenSequence<double>([
       TweenSequenceItem<double>(
-        tween: Tween<double>(begin: 0.0, end: 0.8)
-            .chain(CurveTween(curve: Curves.easeIn)),
+        tween: Tween<double>(
+          begin: 0.0,
+          end: 0.8,
+        ).chain(CurveTween(curve: Curves.easeIn)),
         weight: 0.5,
       ),
       TweenSequenceItem<double>(
-        tween: Tween<double>(begin: 0.8, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween<double>(
+          begin: 0.8,
+          end: 0.0,
+        ).chain(CurveTween(curve: Curves.easeOut)),
         weight: 0.5,
       ),
     ]);
@@ -160,11 +158,9 @@ class Shield extends PositionComponent
         final generateAngle =
             minAngle + rnd.nextDouble() * (maxAngle - minAngle);
 
-        final localPos = (size / 2) +
-            Vector2(
-                  cos(generateAngle - angle),
-                  sin(generateAngle - angle),
-                ) *
+        final localPos =
+            (size / 2) +
+            Vector2(cos(generateAngle - angle), sin(generateAngle - angle)) *
                 radius;
         final color = type.colors.random(game.rnd);
 
@@ -177,8 +173,9 @@ class Shield extends PositionComponent
         final place = (generateAngle - angle) / (maxAngle - minAngle);
         final largeFlameAngle = place * (pi / 2);
         final shortFlameAngle = radians((rnd.nextDouble() * 20) - 5);
-        final rotation =
-            isShortFlame ? shortFlameAngle : pi / 2 + largeFlameAngle;
+        final rotation = isShortFlame
+            ? shortFlameAngle
+            : pi / 2 + largeFlameAngle;
 
         /// Trail
         final trailParticle = _shieldFlamePool.get();
@@ -197,10 +194,7 @@ class Shield extends PositionComponent
             }
 
             canvas.drawArc(
-              Rect.fromCircle(
-                center: Offset.zero,
-                radius: radius,
-              ),
+              Rect.fromCircle(center: Offset.zero, radius: radius),
               -(shieldSweep / 2),
               shieldSweep,
               false,
@@ -217,38 +211,32 @@ class Shield extends PositionComponent
         // Main flames (inside and moving out)
         final mainFlame = _shieldFlamePool.get();
         mainFlame.startParticle(
-            lifespan: 2.0,
-            pool: _shieldFlamePool,
-            position: localPos,
-            size: spriteActualSize,
-            anchor: Anchor.topLeft,
-            acceleration: isShortFlame
-                ? Vector2(
-                    rnd.nextDouble() * 20,
-                    -5 + rnd.nextDouble() * 10,
-                  )
-                : Vector2(
-                    0,
-                    -10 + rnd.nextDouble() * 20,
-                  ),
-            renderDelegate: (canvas, overridePaint, particle) {
-              final opacity =
-                  increaseDecreaseTween.transform(particle.progress);
-              canvas.rotate(rotation);
-              if (opacity <= 0.01) {
-                return;
-              }
-              overridePaint.colorFilter = ColorFilter.mode(
-                color.withValues(alpha: opacity),
-                BlendMode.srcIn,
-              );
-              sprite.render(
-                canvas,
-                size: spriteActualSize,
-                anchor: Anchor.center,
-                overridePaint: overridePaint,
-              );
-            });
+          lifespan: 2.0,
+          pool: _shieldFlamePool,
+          position: localPos,
+          size: spriteActualSize,
+          anchor: Anchor.topLeft,
+          acceleration: isShortFlame
+              ? Vector2(rnd.nextDouble() * 20, -5 + rnd.nextDouble() * 10)
+              : Vector2(0, -10 + rnd.nextDouble() * 20),
+          renderDelegate: (canvas, overridePaint, particle) {
+            final opacity = increaseDecreaseTween.transform(particle.progress);
+            canvas.rotate(rotation);
+            if (opacity <= 0.01) {
+              return;
+            }
+            overridePaint.colorFilter = ColorFilter.mode(
+              color.withValues(alpha: opacity),
+              BlendMode.srcIn,
+            );
+            sprite.render(
+              canvas,
+              size: spriteActualSize,
+              anchor: Anchor.center,
+              overridePaint: overridePaint,
+            );
+          },
+        );
         add(mainFlame);
 
         // Sparkles (moving out)
@@ -317,7 +305,9 @@ class Shield extends PositionComponent
 
   @override
   void onCollisionStart(
-      Set<Vector2> intersectionPoints, PositionComponent other) {
+    Set<Vector2> intersectionPoints,
+    PositionComponent other,
+  ) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is MovingComponent) {
       switch (other) {

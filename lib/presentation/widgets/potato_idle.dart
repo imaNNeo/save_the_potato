@@ -2,10 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:rive/rive.dart';
 
 class PotatoIdle extends StatelessWidget {
-  const PotatoIdle({
-    super.key,
-    this.size = 300,
-  });
+  const PotatoIdle({super.key, this.size = 300});
   final double size;
 
   @override

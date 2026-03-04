@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:save_the_potato/domain/models/presentation_message.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
@@ -26,7 +25,8 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
   void initState() {
     _scrollController = ScrollController();
     _scrollController.addListener(() {
-      final lastScoreIsVisible = _scrollController.position.pixels >=
+      final lastScoreIsVisible =
+          _scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - (ScoreRow.height * 1.5);
       if (lastScoreIsVisible) {
         context.read<ScoresCubit>().tryToLoadNextPage();
@@ -42,19 +42,13 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
     return BlocConsumer<ScoresCubit, ScoresState>(
       listener: (context, scoresState) {
         if (scoresState.updateNicknameError.isNotEmpty) {
-          scoresState.updateNicknameError.showAsToast(
-            context,
-          );
+          scoresState.updateNicknameError.showAsToast(context);
         }
         if (scoresState.leaderBoardNextPageError.isNotEmpty) {
-          scoresState.leaderBoardNextPageError.showAsToast(
-            context,
-          );
+          scoresState.leaderBoardNextPageError.showAsToast(context);
         }
         if (scoresState.scoreShareError.isNotEmpty) {
-          scoresState.scoreShareError.showAsToast(
-            context,
-          );
+          scoresState.scoreShareError.showAsToast(context);
         }
       },
       builder: (context, scoresState) {
@@ -92,15 +86,13 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                         final item = scoresState.allShowingScores[index];
                         return switch (item) {
                           LeaderboardLoadedScoreItem() => ScoreRow(
-                              scoreEntity: item.score,
-                              loading: item.refreshing,
-                            ),
+                            scoreEntity: item.score,
+                            loading: item.refreshing,
+                          ),
                           LeaderboardLoadingScoreItem(
-                            showShimmer: bool showShimmer
+                            showShimmer: bool showShimmer,
                           ) =>
-                            ScoreRowTemplateShimmer(
-                              showShimmer: showShimmer,
-                            ),
+                            ScoreRowTemplateShimmer(showShimmer: showShimmer),
                         };
                       },
                       itemCount: scoresState.allShowingScores.length,
@@ -117,9 +109,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                               onRetry: scoresCubit.retryLeaderboardClicked,
                             ),
                           )
-                        : const Center(
-                            child: Text('No score found!'),
-                          ),
+                        : const Center(child: Text('No score found!')),
                   if (scoresState.myScore is OnlineScoreEntity)
                     Align(
                       alignment: Alignment.bottomCenter,

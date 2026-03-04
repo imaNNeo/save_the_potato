@@ -63,7 +63,8 @@ class AuthDialogContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                  "Sign in to:\n1. Be able to change your nickname\n2. Save your high score"),
+                "Sign in to:\n1. Be able to change your nickname\n2. Save your high score",
+              ),
               const SizedBox(height: 16.0),
               RichText(
                 text: TextSpan(
@@ -77,7 +78,8 @@ class AuthDialogContent extends StatelessWidget {
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () => AppUtils.tryToLaunchUrl(
-                            GameConstants.privacyPolicy),
+                          GameConstants.privacyPolicy,
+                        ),
                     ),
                   ],
                 ),

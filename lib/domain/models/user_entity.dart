@@ -20,26 +20,23 @@ sealed class UserEntity {
     );
     return switch (type) {
       UserType.anonymous => AnonymousUserEntity(
-          uid: json['uid'] as String,
-          nickname: json['nickname'] as String,
-        ),
+        uid: json['uid'] as String,
+        nickname: json['nickname'] as String,
+      ),
       UserType.google || UserType.apple => SignedInUserEntity(
-          uid: json['uid'] as String,
-          type: UserType.values.firstWhere(
-            (element) => element.key == json['type'] as String,
-          ),
-          nickname: json['nickname'] as String,
-          email: json['email'] as String,
+        uid: json['uid'] as String,
+        type: UserType.values.firstWhere(
+          (element) => element.key == json['type'] as String,
         ),
+        nickname: json['nickname'] as String,
+        email: json['email'] as String,
+      ),
     };
   }
 }
 
 class AnonymousUserEntity extends UserEntity {
-  AnonymousUserEntity({
-    required this.uid,
-    required this.nickname,
-  });
+  AnonymousUserEntity({required this.uid, required this.nickname});
 
   @override
   final String uid;
@@ -52,10 +49,10 @@ class AnonymousUserEntity extends UserEntity {
 
   @override
   Map<String, dynamic> toJson() => {
-        'uid': uid,
-        'nickname': nickname,
-        'type': type.name,
-      };
+    'uid': uid,
+    'nickname': nickname,
+    'type': type.name,
+  };
 }
 
 class SignedInUserEntity extends UserEntity {
@@ -79,9 +76,9 @@ class SignedInUserEntity extends UserEntity {
 
   @override
   Map<String, dynamic> toJson() => {
-        'uid': uid,
-        'nickname': nickname,
-        'type': type.key,
-        'email': email,
-      };
+    'uid': uid,
+    'nickname': nickname,
+    'type': type.key,
+    'email': email,
+  };
 }

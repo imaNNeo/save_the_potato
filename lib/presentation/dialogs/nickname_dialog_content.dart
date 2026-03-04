@@ -78,9 +78,9 @@ class _NicknameDialogContentState extends State<NicknameDialogContent> {
                         Navigator.of(context).pop();
                         return;
                       }
-                      context
-                          .read<AuthCubit>()
-                          .updateNickname(_controller.text);
+                      context.read<AuthCubit>().updateNickname(
+                        _controller.text,
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
@@ -93,10 +93,7 @@ class _NicknameDialogContentState extends State<NicknameDialogContent> {
                             height: 18,
                             child: CircularProgressIndicator(),
                           )
-                        : const Text(
-                            'Save',
-                            style: TextStyle(fontSize: 20),
-                          ),
+                        : const Text('Save', style: TextStyle(fontSize: 20)),
                   ),
                 ),
               ],

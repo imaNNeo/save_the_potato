@@ -33,16 +33,16 @@ class NewRankCelebrationShareableWidget extends StatelessWidget {
               child: Stack(
                 children: [
                   Container(color: Colors.black),
-                  const VictoryLines(
-                    animated: false,
-                  ),
+                  const VictoryLines(animated: false),
                   Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         SizedBox(height: width * 0.15),
                         Text(
-                          AppUtils.getHighScoreRepresentation(scoreEntity.score),
+                          AppUtils.getHighScoreRepresentation(
+                            scoreEntity.score,
+                          ),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 40,

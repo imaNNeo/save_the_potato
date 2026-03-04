@@ -19,7 +19,7 @@ class SplashCubit extends Cubit<SplashState> {
   final ConfigsRepository _configsRepository;
 
   Future<(int min, int latest, String storeUrl)>
-      _getMinAndLatestVersion() async {
+  _getMinAndLatestVersion() async {
     final gameConfigs = await _configsRepository.getGameConfig();
     if (Platform.isIOS) {
       return (
@@ -39,11 +39,11 @@ class SplashCubit extends Cubit<SplashState> {
   Future<bool> _initialChecks() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     final currentVersionCode = int.parse(packageInfo.buildNumber);
-    emit(state.copyWith(
-      showingVersion: AppUtils.formatVersionName(
-        packageInfo.version,
+    emit(
+      state.copyWith(
+        showingVersion: AppUtils.formatVersionName(packageInfo.version),
       ),
-    ));
+    );
 
     final (minVersion, latestVersion, storeLink) =
         await _getMinAndLatestVersion();
@@ -59,22 +59,19 @@ class SplashCubit extends Cubit<SplashState> {
     try {
       await getIt.get<AudioHelper>().initialize();
     } catch (e) {
-      FirebaseCrashlytics.instance.recordError(
-        e,
-        StackTrace.current,
-      );
+      FirebaseCrashlytics.instance.recordError(e, StackTrace.current);
     }
     await Future.delayed(const Duration(milliseconds: 1000));
 
     if (forceUpdate) {
-      emit(state.copyWith(
-        showUpdatePopup: ValueWrapper(
-          UpdateInfo(forced: true, storeLink: storeLink),
+      emit(
+        state.copyWith(
+          showUpdatePopup: ValueWrapper(
+            UpdateInfo(forced: true, storeLink: storeLink),
+          ),
         ),
-      ));
-      emit(state.copyWith(
-        showUpdatePopup: const ValueWrapper(null),
-      ));
+      );
+      emit(state.copyWith(showUpdatePopup: const ValueWrapper(null)));
       return false;
     }
 
@@ -82,14 +79,14 @@ class SplashCubit extends Cubit<SplashState> {
     final latestVersionMinor = (latestVersion ~/ 100) * 100;
     final minorDiff = latestVersionMinor - currentVersionMinor;
     if (minorDiff >= 100) {
-      emit(state.copyWith(
-        showUpdatePopup: ValueWrapper(
-          UpdateInfo(forced: false, storeLink: storeLink),
+      emit(
+        state.copyWith(
+          showUpdatePopup: ValueWrapper(
+            UpdateInfo(forced: false, storeLink: storeLink),
+          ),
         ),
-      ));
-      emit(state.copyWith(
-        showUpdatePopup: const ValueWrapper(null),
-      ));
+      );
+      emit(state.copyWith(showUpdatePopup: const ValueWrapper(null)));
     }
     return true;
   }
@@ -104,9 +101,7 @@ class SplashCubit extends Cubit<SplashState> {
     final initialChecksDuration = endTimestamp - startTimestamp;
     final splashTotalDuration = (GameConstants.splashDuration * 1000).toInt();
     final splashDuration = splashTotalDuration - initialChecksDuration;
-    await Future.delayed(
-      Duration(milliseconds: splashDuration),
-    );
+    await Future.delayed(Duration(milliseconds: splashDuration));
     emit(state.copyWith(openNextPage: true));
     emit(state.copyWith(openNextPage: false));
   }

@@ -50,8 +50,8 @@ class FirebaseFunctionsWrapper {
   }
 
   Future<UserEntity> _registerAnonymousUser() async {
-    final UserCredential userCredential =
-        await FirebaseAuth.instance.signInAnonymously();
+    final UserCredential userCredential = await FirebaseAuth.instance
+        .signInAnonymously();
     final idToken = (await userCredential.user!.getIdToken())!;
     final user = await registerUser(idToken);
     await _storage.setString(userKey, jsonEncode(user.toJson()));
@@ -113,9 +113,9 @@ class FirebaseFunctionsWrapper {
         }
       }
 
-      final response = await FirebaseFunctions.instanceFor(region: _region)
-          .httpsCallable(name)
-          .call(parameters.removeNullValues());
+      final response = await FirebaseFunctions.instanceFor(
+        region: _region,
+      ).httpsCallable(name).call(parameters.removeNullValues());
       final parsedResponse = _FirebaseFunctionsResponseParser.parseResponse(
         response.data,
       );
@@ -168,9 +168,7 @@ class FirebaseFunctionsWrapper {
   Future<OnlineScoreEntity> submitScore(int score) async {
     final response = await _callFunction(
       name: 'submitScore',
-      parameters: <String, dynamic>{
-        'score': score,
-      },
+      parameters: <String, dynamic>{'score': score},
     );
     return OnlineScoreEntity.fromJson(response['data']);
   }
@@ -190,10 +188,7 @@ class FirebaseFunctionsWrapper {
   ) async {
     final response = await _callFunction(
       name: 'getLeaderboard',
-      parameters: {
-        'page_limit': pageLimit,
-        'page_last_id': pageLastId
-      }
+      parameters: {'page_limit': pageLimit, 'page_last_id': pageLastId},
     );
     return LeaderboardResponseEntity.fromJson(response['data']);
   }
@@ -201,9 +196,7 @@ class FirebaseFunctionsWrapper {
   Future<UserEntity> updateUserNickname(String nickname) async {
     final response = await _callFunction(
       name: 'updateUserNickname',
-      parameters: <String, dynamic>{
-        'nickname': nickname,
-      },
+      parameters: <String, dynamic>{'nickname': nickname},
     );
     return UserEntity.fromJson(response['data']);
   }
@@ -272,7 +265,7 @@ class _FirebaseFunctionsResponseParser {
       .toMap();
 }
 
-DomainError _mapToDomainError(exception) {
+DomainError _mapToDomainError(Object exception) {
   if (exception is DomainError) {
     return exception;
   }
@@ -282,10 +275,7 @@ DomainError _mapToDomainError(exception) {
       return NetworkError();
     }
     return ServerError(
-      errorEntry: ServerErrorEntry(
-        exception.message,
-        exception.details,
-      ),
+      errorEntry: ServerErrorEntry(exception.message, exception.details),
     );
   }
   return UnknownError();

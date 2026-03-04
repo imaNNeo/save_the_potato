@@ -11,9 +11,7 @@ class GuideTitle extends PositionComponent
         HasGameReference<PotatoGame>,
         FlameBlocListenable<GameCubit, GameState>,
         ParentIsA<Potato> {
-  GuideTitle({
-    this.color = const Color(0xB2FFFFFF),
-  }) : super();
+  GuideTitle({this.color = const Color(0xB2FFFFFF)}) : super();
 
   late TextComponent _textComponent;
   late TextPaint _textPaint;
@@ -25,17 +23,15 @@ class GuideTitle extends PositionComponent
     await super.onLoad();
     anchor = Anchor.center;
     _textPaint = TextPaint(
-      style: TextStyle(
-        fontFamily: 'Cookies',
-        fontSize: 36,
-        color: color,
+      style: TextStyle(fontFamily: 'Cookies', fontSize: 36, color: color),
+    );
+    add(
+      _textComponent = TextComponent(
+        text: 'SAVE THE POTATO',
+        anchor: Anchor.center,
+        textRenderer: _textPaint,
       ),
     );
-    add(_textComponent = TextComponent(
-      text: 'SAVE THE POTATO',
-      anchor: Anchor.center,
-      textRenderer: _textPaint,
-    ));
   }
 
   @override

@@ -4,10 +4,7 @@ import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
 
 class VictoryLines extends StatefulWidget {
-  const VictoryLines({
-    super.key,
-    this.animated = true,
-  });
+  const VictoryLines({super.key, this.animated = true});
 
   final bool animated;
 
@@ -30,29 +27,29 @@ class _VictoryLinesState extends State<VictoryLines>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      final width = constraints.maxWidth;
-      final height = constraints.maxHeight;
-      if (!widget.animated) {
-        return CustomPaint(
-          size: Size(width, height),
-          painter: _VictoryLinesPainter(
-            startingPoint: 0,
-          ),
-        );
-      }
-      return AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        if (!widget.animated) {
           return CustomPaint(
             size: Size(width, height),
-            painter: _VictoryLinesPainter(
-              startingPoint: _animationController.value * pi * 2,
-            ),
+            painter: _VictoryLinesPainter(startingPoint: 0),
           );
-        },
-      );
-    });
+        }
+        return AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            return CustomPaint(
+              size: Size(width, height),
+              painter: _VictoryLinesPainter(
+                startingPoint: _animationController.value * pi * 2,
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -67,9 +64,7 @@ class _VictoryLinesPainter extends CustomPainter {
   final Color color1 = Colors.white10;
   final Color color2 = Colors.white24;
 
-  _VictoryLinesPainter({
-    this.startingPoint = 0.0,
-  });
+  _VictoryLinesPainter({this.startingPoint = 0.0});
 
   final Paint _paint = Paint();
 

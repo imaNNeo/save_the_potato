@@ -52,9 +52,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<ConfigsCubit>(
-          create: (context) => ConfigsCubit(
-            getIt.get<ConfigsRepository>(),
-          ),
+          create: (context) => ConfigsCubit(getIt.get<ConfigsRepository>()),
         ),
         BlocProvider<SettingsCubit>(
           create: (context) => SettingsCubit(
@@ -86,17 +84,13 @@ class MyApp extends StatelessWidget {
           ),
         ),
         BlocProvider<SplashCubit>(
-          create: (context) => SplashCubit(
-            getIt.get<ConfigsRepository>(),
-          ),
+          create: (context) => SplashCubit(getIt.get<ConfigsRepository>()),
         ),
       ],
       child: MaterialApp(
         title: 'Save the Potato',
         theme: ThemeData.dark(useMaterial3: true).copyWith(
-          textTheme: ThemeData.dark().textTheme.apply(
-            fontFamily: 'Cookies',
-          ),
+          textTheme: ThemeData.dark().textTheme.apply(fontFamily: 'Cookies'),
           appBarTheme: const AppBarTheme(
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -107,13 +101,9 @@ class MyApp extends StatelessWidget {
               letterSpacing: 8,
               fontFamily: 'Cookies',
             ),
-            iconTheme: IconThemeData(
-              color: Colors.white,
-            ),
+            iconTheme: IconThemeData(color: Colors.white),
           ),
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-          ),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         ),
         home: const SplashPage(),
         navigatorObservers: [routeObserver],
