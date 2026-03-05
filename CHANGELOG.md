@@ -1,3 +1,7 @@
+## 1.5.3
+* Upgrade all the dependencies
+* Minor performance improvement
+
 ## 1.5.2
 * Upgrade some dependencies and android target SDK to 35
 
