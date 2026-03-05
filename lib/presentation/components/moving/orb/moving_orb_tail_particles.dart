@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flutter/widgets.dart';
-import 'package:save_the_potato/domain/extensions/list_extension.dart';
 import 'package:save_the_potato/presentation/components/component_pool.dart';
 import 'package:save_the_potato/presentation/components/custom_particle.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
@@ -23,15 +22,49 @@ class MovingOrbTailParticles extends Component
 
   late ComponentPool<CustomParticle> _particlePool;
 
+  final _cachedSize = Vector2.zero();
+  late List<TweenSequence<Color?>> _colorTweenVariants;
+
   // setter
   set particlePool(ComponentPool<CustomParticle> pool) {
     _particlePool = pool;
+  }
+
+  static List<TweenSequence<Color?>> _buildColorTweenVariants(
+    List<Color> colors,
+  ) {
+    final permutations = <List<Color>>[];
+    _permute(colors, 0, permutations);
+    return permutations.map((perm) {
+      return TweenSequence<Color?>([
+        for (int i = 0; i < perm.length - 1; i++)
+          TweenSequenceItem(
+            weight: 1,
+            tween: ColorTween(begin: perm[i], end: perm[i + 1]),
+          ),
+      ]);
+    }).toList();
+  }
+
+  static void _permute(List<Color> list, int start, List<List<Color>> result) {
+    if (start == list.length - 1) {
+      result.add(List<Color>.from(list));
+      return;
+    }
+    for (int i = start; i < list.length; i++) {
+      final swapped = List<Color>.from(list);
+      final temp = swapped[start];
+      swapped[start] = swapped[i];
+      swapped[i] = temp;
+      _permute(swapped, start + 1, result);
+    }
   }
 
   @override
   Future<void> onLoad() async {
     await super.onLoad();
     particlePaint = Paint();
+    _colorTweenVariants = [];
   }
 
   void _generateParticle() {
@@ -39,15 +72,11 @@ class MovingOrbTailParticles extends Component
       throw Exception('Parent must be of type Orb');
     }
     final parentOrb = (parent as MovingOrb);
+    if (_colorTweenVariants.isEmpty) {
+      _colorTweenVariants = _buildColorTweenVariants(parentOrb.colors);
+    }
     final color = parentOrb.colors.random();
-    final randomOrder = parentOrb.colors.randomOrder();
-    TweenSequence<Color?> colorTween = TweenSequence<Color?>([
-      for (int i = 0; i < randomOrder.length - 1; i++)
-        TweenSequenceItem(
-          weight: 1,
-          tween: ColorTween(begin: randomOrder[i], end: randomOrder[i + 1]),
-        ),
-    ]);
+    final colorTween = _colorTweenVariants.random(game.rnd);
     final sprite = parentOrb.smallSparkleSprites.random();
     final rnd = parentOrb.rnd;
 
@@ -59,10 +88,10 @@ class MovingOrbTailParticles extends Component
         pool: _particlePool,
         position: parentOrb.positionOfAnchor(Anchor.center),
         renderDelegate: (canvas, overridePaint, particle) {
-          final size = Vector2.all(
-            (parentOrb.size.x * parentOrb.trailSizeMultiplier) *
-                (1 - particle.progress),
-          );
+          final s =
+              (parentOrb.size.x * parentOrb.trailSizeMultiplier) *
+              (1 - particle.progress);
+          _cachedSize.setAll(s);
           final showingColor = (randomBool
               ? color
               : colorTween.transform(particle.progress))!;
@@ -74,7 +103,7 @@ class MovingOrbTailParticles extends Component
           }
           sprite.render(
             canvas,
-            size: size,
+            size: _cachedSize,
             anchor: Anchor.center,
             overridePaint: overridePaint
               ..colorFilter = ColorFilter.mode(

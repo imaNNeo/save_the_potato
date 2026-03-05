@@ -8,6 +8,7 @@ sealed class MovingOrb extends MovingComponent {
   List<Color> get colors => type.colors;
 
   int? _overrideCollisionSoundNumber;
+  final _headPaint = Paint();
 
   int? getOverrideCollisionSoundNumber() {
     return _overrideCollisionSoundNumber;
@@ -64,13 +65,7 @@ sealed class MovingOrb extends MovingComponent {
   void _drawHead(Canvas canvas) {
     final offset = (size / 2).toOffset();
     final radius = size.x / 2;
-    canvas.drawCircle(
-      offset,
-      radius,
-      Paint()
-        ..color = colors.last.withValues(alpha: 1)
-        ..maskFilter = null,
-    );
+    canvas.drawCircle(offset, radius, _headPaint..color = colors.last);
   }
 
   void disjoint(double contactAngle) {

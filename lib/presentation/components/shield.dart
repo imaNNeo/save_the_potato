@@ -45,6 +45,7 @@ class Shield extends PositionComponent
   late Paint flamePaint;
   late Paint sparklePaint;
   late Paint shieldLinePaint;
+  late Paint _trailPaint;
 
   late ComponentPool<CustomParticle> _shieldFlamePool;
 
@@ -89,6 +90,12 @@ class Shield extends PositionComponent
     flamePaint = Paint();
 
     sparklePaint = Paint();
+
+    _trailPaint = Paint()
+      ..color = type.intenseColor.withValues(alpha: 0.2)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 8;
     _addHitbox();
 
     _flameSprites = [];
@@ -198,11 +205,7 @@ class Shield extends PositionComponent
               -(shieldSweep / 2),
               shieldSweep,
               false,
-              Paint()
-                ..color = type.intenseColor.withValues(alpha: 0.2)
-                ..style = PaintingStyle.stroke
-                ..strokeCap = StrokeCap.round
-                ..strokeWidth = 8,
+              _trailPaint,
             );
           },
         );
@@ -281,10 +284,7 @@ class Shield extends PositionComponent
     _particleTimer.update(dt);
 
     if (shieldLineColor != shieldTargetColor) {
-      shieldLineColor = ColorTween(
-        begin: shieldLineColor,
-        end: shieldTargetColor,
-      ).lerp(dt)!;
+      shieldLineColor = Color.lerp(shieldLineColor, shieldTargetColor, dt)!;
     }
     super.update(dt);
   }

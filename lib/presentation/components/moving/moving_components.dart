@@ -31,6 +31,7 @@ sealed class MovingComponent extends PositionComponent
 
   late double speed;
   late PositionComponent target;
+  final _direction = Vector2.zero();
 
   void initialize({
     required double speed,
@@ -62,6 +63,7 @@ sealed class MovingComponent extends PositionComponent
       target.position.y - position.y,
       target.position.x - position.x,
     );
-    position += Vector2(cos(angle), sin(angle)) * speed * dt;
+    _direction.setValues(cos(angle), sin(angle));
+    position.addScaled(_direction, speed * dt);
   }
 }

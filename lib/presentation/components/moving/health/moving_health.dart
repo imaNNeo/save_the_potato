@@ -13,6 +13,8 @@ class MovingHealth extends MovingComponent {
   VoidCallback? _onConsumedCallback;
 
   late CircleHitbox _hitbox;
+  late Paint _heartPaint1;
+  late Paint _heartPaint2;
 
   @override
   Future<void> onLoad() async {
@@ -20,6 +22,10 @@ class MovingHealth extends MovingComponent {
     anchor = Anchor.center;
     heartSprite1 = await Sprite.load('heart/heart1.png');
     heartSprite2 = await Sprite.load('heart/heart2.png');
+    _heartPaint1 = Paint()
+      ..colorFilter = ColorFilter.mode(colors.last, BlendMode.srcIn);
+    _heartPaint2 = Paint()
+      ..colorFilter = const ColorFilter.mode(Colors.white, BlendMode.srcIn);
     add(_hitbox = CircleHitbox());
   }
 
@@ -63,16 +69,14 @@ class MovingHealth extends MovingComponent {
       size: size,
       anchor: Anchor.center,
       position: size / 2,
-      overridePaint: Paint()
-        ..colorFilter = ColorFilter.mode(colors.last, BlendMode.srcIn),
+      overridePaint: _heartPaint1,
     );
     heartSprite2.render(
       canvas,
       size: size * 1.2,
       anchor: Anchor.center,
       position: size / 2,
-      overridePaint: Paint()
-        ..colorFilter = const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+      overridePaint: _heartPaint2,
     );
   }
 

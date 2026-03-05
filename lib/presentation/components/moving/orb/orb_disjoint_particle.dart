@@ -23,6 +23,7 @@ class OrbDisjointParticleComponent extends Component
 
   late Paint _disjointParticlePaint;
   final _cachedDirection = Vector2.zero();
+  final _cachedSpriteSize = Vector2.zero();
 
   Random get rnd => game.rnd;
 
@@ -76,11 +77,13 @@ class OrbDisjointParticleComponent extends Component
         position: parent.positionOfAnchor(Anchor.center),
         acceleration: speed,
         renderDelegate: (canvas, overridePaint, particle) {
-          final opacityBegin = lerpDouble(0.9, 0.6, speedProgress);
+          final opacityBegin = lerpDouble(0.9, 0.6, speedProgress)!;
           const opacityEnd = 0.1;
-          final opacity = Tween(begin: opacityBegin, end: opacityEnd)
-              .chain(CurveTween(curve: Curves.linear))
-              .transform(particle.progress);
+          final opacity = lerpDouble(
+            opacityBegin,
+            opacityEnd,
+            particle.progress,
+          )!;
           if (opacity <= 0.01) {
             return;
           }
@@ -102,9 +105,10 @@ class OrbDisjointParticleComponent extends Component
                 ..color = color.withValues(alpha: opacity),
             );
           } else {
+            _cachedSpriteSize.setAll((size.x * 1.8) * sizeScale);
             sprite.render(
               canvas,
-              size: Vector2.all((size.x * 1.8) * sizeScale),
+              size: _cachedSpriteSize,
               anchor: Anchor.center,
               overridePaint: _disjointParticlePaint
                 ..colorFilter = ColorFilter.mode(
