@@ -318,7 +318,7 @@ class OrbEffects extends Component
     );
 
     // The halo around the head
-    _glow.addDisc(x, y, size * 1.4 * breath, colors[1], 0.4 + danger * 0.15);
+    _glow.addDisc(x, y, size * 1.3 * breath, colors[1], 0.4 + danger * 0.15);
 
     // A warning that beats faster and harder the closer it gets
     if (danger > 0.05) {

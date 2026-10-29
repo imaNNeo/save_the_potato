@@ -37,7 +37,7 @@ sealed class MovingOrb extends MovingComponent {
     required double speed,
     required PositionComponent target,
     required Vector2 position,
-    double size = 22.0,
+    double size = 17.0,
     VoidCallback? onDisjointCallback,
     VoidCallback? onPotatoHitCallback,
     int? overrideCollisionSoundNumber,
@@ -96,7 +96,7 @@ sealed class MovingOrb extends MovingComponent {
     canvas
       ..save()
       ..translate(size.x / 2, size.y / 2)
-      ..scale(size.x / 2 * 1.2 * pulse)
+      ..scale(size.x / 2 * 1.1 * pulse)
       ..drawCircle(Offset.zero, 1, style.body);
     _drawCoreBlob(canvas, style, 0, 0, 0.62 + 0.05 * sin(t * 4.5));
     // Six spokes of a crystal
