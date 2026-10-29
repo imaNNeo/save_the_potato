@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:save_the_potato/presentation/background_reactions.dart';
 
 /// Renders the moving stars background (`shaders/background.frag`) and
 /// animates its colors when they change.
@@ -12,6 +13,7 @@ class AnimatedBackgroundStars extends ImplicitlyAnimatedWidget {
     required this.starsColor,
     required this.starsTimeScale,
     required this.starsSize,
+    this.reactions,
     super.duration = const Duration(milliseconds: 300),
   });
 
@@ -19,6 +21,7 @@ class AnimatedBackgroundStars extends ImplicitlyAnimatedWidget {
   final Color starsColor;
   final double starsTimeScale;
   final double starsSize;
+  final BackgroundReactions? reactions;
 
   @override
   AnimatedWidgetBaseState<AnimatedBackgroundStars> createState() =>
@@ -37,6 +40,7 @@ class _AnimatedBackgroundStarsState
       starsColor: _starsColor?.evaluate(animation) ?? Colors.white,
       timeScale: widget.starsTimeScale,
       starsSize: widget.starsSize,
+      reactions: widget.reactions,
     );
   }
 
@@ -56,7 +60,8 @@ class _AnimatedBackgroundStarsState
 }
 
 /// [timeScale] is how fast the stars move, `0.0` freezes them. While frozen
-/// no frames are scheduled and nothing is repainted.
+/// no frames are scheduled and nothing is repainted, unless the
+/// [reactions] to the game are still playing out.
 class BackgroundStars extends StatefulWidget {
   const BackgroundStars({
     super.key,
@@ -64,12 +69,14 @@ class BackgroundStars extends StatefulWidget {
     required this.timeScale,
     this.starsColor = Colors.white,
     required this.starsSize,
+    this.reactions,
   });
 
   final Color backgroundColor;
   final Color starsColor;
   final double timeScale;
   final double starsSize;
+  final BackgroundReactions? reactions;
 
   @override
   State<BackgroundStars> createState() => _BackgroundStarsState();
@@ -120,7 +127,7 @@ class _BackgroundStarsState extends State<BackgroundStars>
   void _onTick(Duration elapsed) {
     final dt = (elapsed - _lastElapsed).inMicroseconds / 1000000;
     _lastElapsed = elapsed;
-    _time.value += dt * widget.timeScale;
+    _time.value += dt * widget.timeScale * (widget.reactions?.speedBoost ?? 1);
   }
 
   @override
@@ -148,6 +155,7 @@ class _BackgroundStarsState extends State<BackgroundStars>
           backgroundColor: widget.backgroundColor,
           starsColor: widget.starsColor,
           starsSize: widget.starsSize,
+          reactions: widget.reactions,
         ),
       ),
     );
@@ -161,13 +169,19 @@ class _BackgroundStarsPainter extends CustomPainter {
     required this.backgroundColor,
     required this.starsColor,
     required this.starsSize,
-  }) : super(repaint: time);
+    required this.reactions,
+  }) : super(
+         repaint: reactions == null
+             ? time
+             : Listenable.merge([time, reactions]),
+       );
 
   final FragmentShader shader;
   final ValueNotifier<double> time;
   final Color backgroundColor;
   final Color starsColor;
   final double starsSize;
+  final BackgroundReactions? reactions;
 
   final Paint _paint = Paint();
 
@@ -184,11 +198,42 @@ class _BackgroundStarsPainter extends CustomPainter {
       ..setFloat(7, starsColor.g)
       ..setFloat(8, starsColor.b)
       ..setFloat(9, starsSize);
+    _setReactions(reactions ?? _noReactions);
     canvas.drawRect(Offset.zero & size, _paint..shader = shader);
+  }
+
+  static final _noReactions = BackgroundReactions();
+
+  void _setReactions(BackgroundReactions reactions) {
+    shader
+      ..setFloat(10, reactions.heat)
+      ..setFloat(11, reactions.power)
+      ..setFloat(12, reactions.hit)
+      ..setFloat(13, reactions.swirlAngle)
+      ..setFloat(14, reactions.swirl)
+      ..setFloat(15, reactions.shakeX)
+      ..setFloat(16, reactions.shakeY)
+      ..setFloat(17, reactions.glowR)
+      ..setFloat(18, reactions.glowG)
+      ..setFloat(19, reactions.glowB)
+      ..setFloat(20, reactions.flash);
+    var i = 21;
+    for (final wave in reactions.waves) {
+      shader
+        ..setFloat(i++, wave.radius)
+        ..setFloat(i++, wave.intensity)
+        ..setFloat(i++, wave.dirX)
+        ..setFloat(i++, wave.dirY)
+        ..setFloat(i++, wave.r)
+        ..setFloat(i++, wave.g)
+        ..setFloat(i++, wave.b)
+        ..setFloat(i++, wave.focus);
+    }
   }
 
   @override
   bool shouldRepaint(covariant _BackgroundStarsPainter oldDelegate) =>
+      oldDelegate.reactions != reactions ||
       oldDelegate.shader != shader ||
       oldDelegate.backgroundColor != backgroundColor ||
       oldDelegate.starsColor != starsColor ||
