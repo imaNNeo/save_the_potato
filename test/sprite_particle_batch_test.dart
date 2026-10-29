@@ -28,4 +28,31 @@ void main() {
     expect(reused.position, Vector2.zero());
     expect(reused.acceleration, Vector2.zero());
   });
+
+  test('drag slows particles down and spin turns them', () async {
+    final sprite = Sprite(await createTestImage(width: 4, height: 4));
+    final batch = SpriteParticleBatch();
+
+    final particle = batch.spawn(sprite: sprite, lifespan: 2.0)
+      ..color = const Color(0xFFFF0000)
+      ..drag = 3
+      ..spin = 2;
+    particle.speed.setValues(100, 0);
+
+    batch.update(0.1);
+    final firstStep = particle.position.x;
+    expect(particle.speed.x, lessThan(100));
+    expect(particle.drawRotation, closeTo(0.2, 1e-9));
+
+    batch.update(0.1);
+    expect(particle.position.x - firstStep, lessThan(firstStep));
+
+    // The recycled particle doesn't keep them
+    batch.update(2);
+    final reused = batch.spawn(sprite: sprite, lifespan: 1.0);
+    expect(identical(reused, particle), isTrue);
+    expect(reused.drag, 0);
+    expect(reused.spin, 0);
+    expect(reused.drawRotation, 0);
+  });
 }
