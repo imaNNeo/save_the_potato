@@ -264,7 +264,7 @@ class OrbEffects extends Component
         ..vy = -direction.y * back + direction.x * out * sideSign
         ..drag = 2.2
         ..size = 2.0 + rnd.nextDouble() * 1.4;
-      if (rnd.nextDouble() < 0.3) {
+      if (rnd.nextDouble() < 0.15) {
         _addCrackle(orb);
       }
     } else {
@@ -307,18 +307,18 @@ class OrbEffects extends Component
     final delay = 0.12 + rnd.nextDouble() * 0.2;
     _addFireMote(x, y, _FireMote.crackleFlash, delay)
       ..lifespan = 0.24
-      ..size = 14 + rnd.nextDouble() * 8;
-    final count = 4 + rnd.nextInt(3);
+      ..size = 7 + rnd.nextDouble() * 4;
+    final count = 3 + rnd.nextInt(2);
     final turn = rnd.nextDouble() * pi * 2;
     for (var i = 0; i < count; i++) {
       final angle = turn + i * pi * 2 / count + (rnd.nextDouble() - 0.5) * 0.6;
-      final speed = 160 + rnd.nextDouble() * 110;
+      final speed = 90 + rnd.nextDouble() * 70;
       _addFireMote(x, y, _FireMote.crackleSpark, delay)
         ..lifespan = 0.22 + rnd.nextDouble() * 0.14
         ..vx = cos(angle) * speed
         ..vy = sin(angle) * speed
         ..drag = 6
-        ..size = 1.6 + rnd.nextDouble() * 0.6;
+        ..size = 1.1 + rnd.nextDouble() * 0.4;
     }
   }
 
@@ -583,39 +583,39 @@ class OrbEffects extends Component
         _glow.addDisc(
           mote.x,
           mote.y,
-          mote.size * (2.5 + 3 * flare),
+          mote.size * (1.8 + 1.2 * flare),
           Color.lerp(colors[1], colors[2], t)!,
-          0.55 * glow,
+          0.3 * glow,
         );
         final speed = sqrt(mote.vx * mote.vx + mote.vy * mote.vy);
         if (speed < 1) {
           return;
         }
-        final length = (speed * 0.1).clamp(2.0, 14.0) * (0.6 + flare * 0.6);
+        final length = (speed * 0.08).clamp(2.0, 10.0);
         _glow.addStreak(
           mote.x,
           mote.y,
           mote.x - mote.vx / speed * length,
           mote.y - mote.vy / speed * length,
-          mote.size * (1.6 + flare * 1.4),
+          mote.size * (1.2 + flare * 0.5),
           t < 0.5
               ? Color.lerp(colors[1], _white, flare)!
               : Color.lerp(colors[2], _white, flare * 0.8)!,
           colors[2],
-          min(1.0, 0.35 + glow),
+          0.3 + 0.55 * glow,
         );
         // At its hottest it shines like a little star, turned so it doesn't
         // look like the ice glints
         if (flare > 0.35) {
           final shine = (flare - 0.35) / 0.65 * flicker;
-          final reach = mote.size * (1.5 + 3.5 * shine);
+          final reach = mote.size * (1.0 + 0.8 * shine);
           final d = reach * 0.7071;
           _glow.addDisc(
             mote.x,
             mote.y,
-            mote.size * 2.2,
-            colors.first,
-            0.7 * shine,
+            mote.size * 1.6,
+            colors[1],
+            0.6 * shine,
           );
           for (final (dx, dy) in [(d, d), (d, -d)]) {
             _glow.addStreak(
@@ -623,9 +623,9 @@ class OrbEffects extends Component
               mote.y + dy,
               mote.x - dx,
               mote.y - dy,
-              1.8,
+              1.6,
               _white,
-              colors[1],
+              colors.first,
               shine,
             );
             _glow.addStreak(
@@ -633,9 +633,9 @@ class OrbEffects extends Component
               mote.y - dy,
               mote.x + dx,
               mote.y + dy,
-              1.8,
+              1.6,
               _white,
-              colors[1],
+              colors.first,
               shine,
             );
           }
@@ -647,14 +647,14 @@ class OrbEffects extends Component
           mote.y,
           mote.size * (0.4 + 0.6 * grow),
           Color.lerp(colors.first, colors[1], t)!,
-          0.95 * pow(1 - t, 2),
+          0.6 * pow(1 - t, 2),
         );
       case _FireMote.crackleSpark:
         final speed = sqrt(mote.vx * mote.vx + mote.vy * mote.vy);
         if (speed < 1) {
           return;
         }
-        final length = (speed * 0.09).clamp(1.5, 18.0);
+        final length = (speed * 0.07).clamp(1.5, 8.0);
         _glow.addStreak(
           mote.x,
           mote.y,
@@ -663,7 +663,7 @@ class OrbEffects extends Component
           mote.size * 1.6,
           Color.lerp(_white, colors.first, t)!,
           colors[1],
-          pow(1 - t, 1.4).toDouble(),
+          0.8 * pow(1 - t, 1.4),
         );
     }
   }
