@@ -28,6 +28,23 @@ void main() {
     expect(batch.vertexCount, 0);
   });
 
+  test('tails get a body and a round cap, invisible ones are skipped', () {
+    final batch = GlowBatch()
+      ..addTail(0, 0, 1, 0, 50, 10, color, color, 0)
+      ..addTail(0, 0, 1, 0, 0, 10, color, color, 1);
+    expect(batch.isEmpty, isTrue);
+
+    batch.addTail(0, 0, 1, 0, 50, 10, color, color, 1, segments: 4);
+    expect(batch.vertexCount, 3 * 5 + 7);
+
+    batch.addTail(0, 0, 0, 1, 50, 10, color, color, 1, wave: 4, wavePhase: 1);
+    expect(batch.vertexCount, 2 * (3 * 5 + 7) + 3 * 4);
+
+    final recorder = PictureRecorder();
+    batch.render(Canvas(recorder));
+    recorder.endRecording().dispose();
+  });
+
   test('bigger circles get more segments', () {
     final small = GlowBatch()..addRing(0, 0, 20, 4, color, 1);
     final big = GlowBatch()..addRing(0, 0, 300, 4, color, 1);

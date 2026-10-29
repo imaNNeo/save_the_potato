@@ -19,6 +19,7 @@ import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
 import 'components/motivation_component.dart';
 import 'components/moving/moving_component_spawner.dart';
 import 'components/potato.dart';
+import 'components/orb_effects.dart';
 import 'components/shield_impact_effects.dart';
 import 'cubit/game/game_cubit.dart';
 
@@ -110,11 +111,14 @@ class MyWorld extends World
 
   late ShieldImpactEffects shieldImpacts;
 
+  late OrbEffects orbEffects;
+
   late StreamSubscription _motivationWordSubscription;
 
   @override
   Future<void> onLoad() async {
     await add(shieldImpacts = ShieldImpactEffects());
+    await add(orbEffects = OrbEffects());
     await add(player = Potato());
     await add(MovingComponentSpawner());
     mounted.then((_) {
