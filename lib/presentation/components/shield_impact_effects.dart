@@ -146,18 +146,19 @@ class ShieldImpactEffects extends Component
     _addWave()
       ..x = x
       ..y = y
-      ..lifespan = 0.34
+      ..lifespan = 0.6
       ..fromRadius = 22
-      ..toRadius = 50 * power
+      ..toRadius = 54 * power
       ..color = colors[1]
-      ..opacity = 0.65 + heat * 0.2;
+      ..opacity = 0.65 + heat * 0.2
+      ..fadePower = 2.4;
     _addWave()
       ..isRing = true
       ..x = x
       ..y = y
-      ..lifespan = 0.36
+      ..lifespan = 0.55
       ..fromRadius = 10
-      ..toRadius = 70 * power
+      ..toRadius = 80 * power
       ..fromWidth = 16
       ..toWidth = 4
       ..color = Color.lerp(colors.first, _white, 0.3)!
@@ -171,9 +172,9 @@ class ShieldImpactEffects extends Component
         ..x = x
         ..y = y
         ..delay = 0.05
-        ..lifespan = 0.42
+        ..lifespan = 0.65
         ..fromRadius = 6
-        ..toRadius = 96 * power
+        ..toRadius = 110 * power
         ..fromWidth = 10
         ..toWidth = 3
         ..color = Color.lerp(colors[1], _white, 0.2)!
@@ -207,8 +208,8 @@ class ShieldImpactEffects extends Component
         ..y = y + cos(angle) * jitter
         ..vx = cos(direction) * speed
         ..vy = sin(direction) * speed
-        ..lifespan = 0.25 + rnd.nextDouble() * 0.25
-        ..drag = 5 + rnd.nextDouble() * 2
+        ..lifespan = 0.4 + rnd.nextDouble() * 0.35
+        ..drag = 4.2 + rnd.nextDouble() * 1.6
         ..width = 2.6 + rnd.nextDouble() * 1.6
         ..headColor = colors.first
         ..tailColor = colors[1 + rnd.nextInt(2)];
@@ -232,10 +233,10 @@ class ShieldImpactEffects extends Component
           _shards.spawn(
               sprite: sprite,
               lifespan:
-                  (0.55 + rnd.nextDouble() * 0.4) * (1 - difficulty * 0.25),
+                  (0.85 + rnd.nextDouble() * 0.5) * (1 - difficulty * 0.25),
             )
             ..color = type.colors.random(rnd)
-            ..drag = 3.2
+            ..drag = 2.6
             ..spin = (rnd.nextDouble() * 2 - 1) * 7
             ..drawRotation = rnd.nextDouble() * pi * 2
             ..baseScale = size / sprite.src.width;
@@ -253,9 +254,9 @@ class ShieldImpactEffects extends Component
     _addWave()
       ..x = center.x
       ..y = center.y
-      ..lifespan = 0.35
+      ..lifespan = 0.5
       ..fromRadius = 70
-      ..toRadius = 130
+      ..toRadius = 140
       ..color = _white
       ..opacity = 0.3;
     for (final (type, facing) in [
@@ -266,9 +267,9 @@ class ShieldImpactEffects extends Component
         ..isRing = true
         ..x = center.x
         ..y = center.y
-        ..lifespan = 0.7
+        ..lifespan = 1.0
         ..fromRadius = 70
-        ..toRadius = 330
+        ..toRadius = 360
         ..fromWidth = 16
         ..toWidth = 3
         ..color = type.colors[1]
@@ -285,7 +286,7 @@ class ShieldImpactEffects extends Component
         final shard =
             _shards.spawn(
                 sprite: sprite,
-                lifespan: 0.7 + rnd.nextDouble() * 0.3,
+                lifespan: 1.0 + rnd.nextDouble() * 0.4,
               )
               ..color = type.colors.random(rnd)
               ..drag = 2.5

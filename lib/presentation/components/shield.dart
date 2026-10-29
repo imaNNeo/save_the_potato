@@ -307,7 +307,7 @@ class Shield extends PositionComponent
         _hits.removeAt(i);
         continue;
       }
-      _flash += hit.strength * exp(-hit.age / 0.07);
+      _flash += hit.strength * exp(-hit.age / 0.1);
     }
     _flash = min(1.0, _flash);
     _aura = 0.35 * pow(heat, 1.3);
@@ -405,16 +405,16 @@ class Shield extends PositionComponent
     var intensity = 0.0;
     for (final hit in _hits) {
       final t = hit.age;
-      if (t >= 0.3) {
+      if (t >= _ShieldHit.glowDuration) {
         continue;
       }
       final d = angle - hit.angle;
       // Bright where it hit, spreading out
-      final fade = 1 - t / 0.3;
-      final width = 0.12 + t * 1.1;
+      final fade = 1 - t / _ShieldHit.glowDuration;
+      final width = 0.12 + t * 0.75;
       intensity += fade * fade * hit.strength * exp(-(d * d) / (width * width));
       // And two waves running to the ends of the shield
-      final travel = pi / 2 * (1 - pow(1 - min(1.0, t / 0.22), 2));
+      final travel = pi / 2 * (1 - pow(1 - min(1.0, t / 0.3), 2));
       final wave = 0.9 * pow(fade, 1.5) * hit.strength;
       final d1 = d - travel, d2 = d + travel;
       intensity += wave * (exp(-(d1 * d1) / 0.01) + exp(-(d2 * d2) / 0.01));
@@ -454,7 +454,7 @@ class Shield extends PositionComponent
     for (var i = 0; i < 4; i++) {
       final a = localAngle + (rnd.nextDouble() - 0.5) * 0.5;
       final sprite = _flameSprites[3 + rnd.nextInt(_flameSprites.length - 3)];
-      final flare = _particles.spawn(sprite: sprite, lifespan: 0.45)
+      final flare = _particles.spawn(sprite: sprite, lifespan: 0.65)
         ..kind = _particleKindFlare
         ..color = type.colors.random(rnd)
         ..drawScale = (1.0 + rnd.nextDouble() * 0.4) / 8
@@ -536,7 +536,10 @@ class Shield extends PositionComponent
 class _ShieldHit {
   _ShieldHit(this.angle, {required this.strength});
 
-  static const duration = 0.45;
+  static const duration = 0.6;
+
+  /// How long the shield glows after the hit
+  static const glowDuration = 0.5;
 
   // The shield bends in, bounces out a little and rests
   static final _spring = DampedSpring(frequency: 2 * pi * 9, damping: 0.32);
