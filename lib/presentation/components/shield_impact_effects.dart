@@ -100,8 +100,8 @@ class ShieldImpactEffects extends Component
     required double radius,
   }) {
     final isMilestone = streak.block();
-    // The hotter the streak, the bigger the hit
-    final heat = streak.targetHeat;
+    // The hotter the streak and the longer the chain, the bigger the hit
+    final heat = min(1.0, streak.targetHeat + streak.targetCharge * 0.35);
     final x = center.x + cos(angle) * radius;
     final y = center.y + sin(angle) * radius;
 
@@ -302,10 +302,37 @@ class ShieldImpactEffects extends Component
     }
   }
 
+  /// A chain of [length] quick blocks is over: the shields let the charge go
+  void _releaseChain(int length) {
+    final power = min(1.0, (length - 2) / (DefendStreak.fullChain - 2));
+    final player = game.world.player;
+    for (final shield in [player.fireShield, player.iceShield]) {
+      shield.releaseCharge(power);
+      final center = shield.absolutePosition;
+      _addWave()
+        ..isRing = true
+        ..x = center.x
+        ..y = center.y
+        ..lifespan = 0.5 + power * 0.25
+        ..fromRadius = shield.size.x / 2
+        ..toRadius = shield.size.x / 2 + 60 + power * 90
+        ..fromWidth = 14
+        ..toWidth = 3
+        ..color = Color.lerp(shield.type.colors[1], _white, 0.25)!
+        ..opacity = 0.6 + power * 0.35
+        ..fadePower = 2.2
+        ..facing = shield.angle
+        ..halfSpread = shield.shieldSweep / 2 + 0.35;
+    }
+  }
+
   @override
   void update(double dt) {
     super.update(dt);
-    streak.update(dt);
+    final chain = streak.update(dt);
+    if (chain >= 3) {
+      _releaseChain(chain);
+    }
 
     for (var i = _waves.length - 1; i >= 0; i--) {
       final wave = _waves[i];
