@@ -49,6 +49,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  shaders:
+    - shaders/background.frag
+
   fonts:
     - family: Cookies
       fonts:

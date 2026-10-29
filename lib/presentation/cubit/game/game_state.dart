@@ -49,13 +49,33 @@ class GameState extends Equatable {
 
   final List<MotivationWordType> motivationWordsPoolToPlay;
 
-  /// Between 0.0 and 1.0
-  double get difficulty => GameConstants.difficultyInitialToPeakCurve.transform(
-    min(
-      1.0,
-      difficultyTimePassed / GameConstants.difficultyInitialToPeakDuration,
-    ),
+  /// Between 0.0 and 1.0, before applying the difficulty curve
+  double get difficultyLinear => min(
+    1.0,
+    difficultyTimePassed / GameConstants.difficultyInitialToPeakDuration,
   );
+
+  /// Between 0.0 and 1.0
+  double get difficulty =>
+      GameConstants.difficultyInitialToPeakCurve.transform(difficultyLinear);
+
+  /// 0 -> When the game starts
+  /// 1 -> From the first game mode change (multi spawn)
+  /// 2 -> When the difficulty is in maximum
+  int get gameDifficultyModeIndex {
+    // Danger
+    if (difficulty >= 1.0) {
+      return 2;
+    }
+
+    // Moderate
+    if (gameModeHistory.isNotEmpty) {
+      return 1;
+    }
+
+    // Safe
+    return 0;
+  }
 
   double get gameOverTimeScale {
     if (playingState.isPaused) {

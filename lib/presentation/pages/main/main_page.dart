@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
@@ -8,8 +9,10 @@ import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
+import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
+import 'package:save_the_potato/presentation/widgets/background_stars.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/game_paused_ui.dart';
@@ -153,6 +156,7 @@ class _MainPageState extends State<MainPage>
             backgroundColor: Colors.black,
             body: Stack(
               children: [
+                const _MainPageBackground(),
                 gameWidget,
                 const Align(
                   alignment: Alignment.topCenter,
@@ -213,5 +217,42 @@ class _MainPageState extends State<MainPage>
     _generalLoadingSubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+}
+
+class _MainPageBackground extends StatelessWidget {
+  const _MainPageBackground();
+
+  /// The stars speed follows the difficulty, but only in these steps, so
+  /// this widget rebuilds a handful of times per round, not every frame.
+  static const _speedSteps = 20;
+
+  @override
+  Widget build(BuildContext context) {
+    final starsSize = min(MediaQuery.sizeOf(context).width * 0.1, 80.0);
+    return BlocSelector<GameCubit, GameState, (int, double)>(
+      selector: (state) => (
+        state.gameDifficultyModeIndex,
+        switch (state.playingState) {
+          PlayingStateGuide() || PlayingStatePlaying() =>
+            0.5 +
+                (state.difficultyLinear * _speedSteps).floor() /
+                    _speedSteps *
+                    1.5,
+          PlayingStateNone() ||
+          PlayingStatePaused() ||
+          PlayingStateGameOver() => 0.0,
+        },
+      ),
+      builder: (context, values) {
+        final (modeIndex, timeScale) = values;
+        return AnimatedBackgroundStars(
+          backgroundColor: GameColors.starsBackground[modeIndex],
+          starsColor: GameColors.starsColors[modeIndex],
+          starsTimeScale: timeScale,
+          starsSize: starsSize,
+        );
+      },
+    );
   }
 }

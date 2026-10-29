@@ -14,6 +14,20 @@ class GameColors {
   static const gameBlue = Color(0xFF0063BE);
   static const greenColor = Color(0xFF3CCE1F);
 
+  /// Indexed by `GameState.gameDifficultyModeIndex`
+  static const starsBackground = [
+    Color(0xFF00004D),
+    Color(0xFF450043),
+    Color(0xFF5F0000),
+  ];
+
+  /// Indexed by `GameState.gameDifficultyModeIndex`
+  static const starsColors = [
+    Color(0xFF7FBBFF),
+    Color(0xFFE3B6FF),
+    Color(0xFFFF9C9C),
+  ];
+
   static Color getRankBgColor(int rank) => switch (rank) {
     1 => GameColors.leaderboardGoldenColor,
     2 => GameColors.leaderboardSilverColor,
