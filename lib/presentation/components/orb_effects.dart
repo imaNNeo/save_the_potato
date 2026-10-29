@@ -245,7 +245,8 @@ class OrbEffects extends Component
     final isFire = orb.type.isFire;
     final radius = orb.size.x / 2;
     final sideSign = rnd.nextBool() ? 1.0 : -1.0;
-    final along = (rnd.nextDouble() - 0.3) * radius;
+    // Starts behind the head, so the shine stays in the trail
+    final along = radius * (0.6 + rnd.nextDouble());
     final across = sideSign * radius * (0.4 + rnd.nextDouble() * 0.6);
     final mote = (_freeMotes.isNotEmpty ? _freeMotes.removeLast() : _Mote())
       ..type = orb.type
@@ -403,43 +404,19 @@ class OrbEffects extends Component
     );
 
     // The halo around the head
-    _glow.addDisc(
-      x,
-      y,
-      size * 1.45 * flicker * (1 + danger * 0.15),
-      colors[1],
-      0.5 + danger * 0.25,
-    );
+    _glow.addDisc(x, y, size * 1.4 * flicker, colors[1], 0.4 + danger * 0.15);
 
-    if (!isFire) {
-      // A slowly turning frosty twinkle on the head
-      final angle = t * 0.9;
-      final twinkle = 0.55 + 0.45 * pow(sin(t * 3.1).abs(), 3);
-      for (var i = 0; i < 2; i++) {
-        final a = angle + i * pi / 2;
-        final reach = size * (i == 0 ? 1.15 : 0.8) * twinkle;
-        final ax = cos(a) * reach, ay = sin(a) * reach;
-        _glow.addStreak(
-          x + ax,
-          y + ay,
-          x - ax,
-          y - ay,
-          2.6,
-          _white,
-          colors.first,
-          0.7 * twinkle,
-        );
-        _glow.addStreak(
-          x - ax,
-          y - ay,
-          x + ax,
-          y + ay,
-          2.6,
-          _white,
-          colors.first,
-          0.7 * twinkle,
-        );
-      }
+    // A warning that beats faster and harder the closer it gets
+    if (danger > 0.05) {
+      final beat = 0.5 + 0.5 * sin(t * (5 + danger * 13));
+      _glow.addRing(
+        x,
+        y,
+        size * (1.0 + 0.35 * beat),
+        size * 0.45,
+        colors[2],
+        pow(danger, 1.4) * (0.25 + 0.55 * beat),
+      );
     }
   }
 
@@ -519,7 +496,7 @@ class OrbEffects extends Component
       } else {
         // Frost glints pop in, twinkle and fade
         final twinkle = 0.5 + 0.5 * sin(mote.age * 18 + mote.phase);
-        final opacity = sin(pi * t) * (0.45 + 0.55 * twinkle);
+        final opacity = 0.8 * sin(pi * t) * (0.45 + 0.55 * twinkle);
         final reach = mote.size * (0.6 + 0.4 * twinkle);
         _glow.addDisc(
           mote.x,
@@ -607,7 +584,7 @@ class OrbEffects extends Component
         // At its hottest it shines like a little star, turned so it doesn't
         // look like the ice glints
         if (flare > 0.35) {
-          final shine = (flare - 0.35) / 0.65 * flicker;
+          final shine = 0.8 * (flare - 0.35) / 0.65 * flicker;
           final reach = mote.size * (1.0 + 0.8 * shine);
           final d = reach * 0.7071;
           _glow.addDisc(
@@ -670,8 +647,9 @@ class OrbEffects extends Component
 
   bool _prepareSparkle(SpriteParticle sparkle) {
     final t = sparkle.progress;
-    // The same fade as the old trail particles (easeOutQuart from 0.8)
-    final opacity = 0.8 * pow(1 - t, 4);
+    // Fades like the old trail particles (easeOutQuart), but dimmer, so the
+    // trail doesn't glitter like a pickup
+    final opacity = 0.55 * pow(1 - t, 4);
     if (opacity <= 0.01) {
       return false;
     }

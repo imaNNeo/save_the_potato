@@ -37,6 +37,8 @@ sealed class MovingOrb extends MovingComponent {
   /// The head swells a little with it, the hitbox stays the same
   double pulse = 1;
 
+  final _flamePath = Path();
+
   @override
   void initialize({
     required double speed,
@@ -91,21 +93,28 @@ sealed class MovingOrb extends MovingComponent {
     add(CircleHitbox(collisionType: CollisionType.passive));
   }
 
-  /// A glowing core: white-hot in the middle, fading out through the orb's
-  /// colors to a soft edge. Fire churns with blobs of plasma, ice has a
-  /// slowly turning crystal in it. Drawn at unit size and scaled, so the
-  /// gradients are made once per orb type.
+  /// A hot (or cold) core that darkens towards its edge, so it reads as
+  /// something flying at the potato rather than a shiny pickup. Fire churns
+  /// with plasma and is licked back by flame tongues, ice has a slowly
+  /// turning crystal in it. Drawn at unit size and scaled, so the gradients
+  /// are made once per orb type.
   void _drawHead(Canvas canvas) {
     final style = _OrbHeadStyle.of(type);
-    final radius = size.x / 2 * 1.2 * pulse;
     final t = effectsTime + seed;
     canvas
       ..save()
       ..translate(size.x / 2, size.y / 2)
-      ..scale(radius)
-      ..drawCircle(Offset.zero, 1, style.body);
+      ..scale(size.x / 2 * 1.2 * pulse);
     if (type.isFire) {
-      // Plasma blobs swirling around a flickering white core
+      if (_direction.x != 0 || _direction.y != 0) {
+        canvas
+          ..save()
+          ..rotate(atan2(_direction.y, _direction.x))
+          ..drawPath(_flameTongues(t), style.tongues)
+          ..restore();
+      }
+      canvas.drawCircle(Offset.zero, 1, style.body);
+      // Plasma blobs swirling around a flickering core
       for (var i = 0; i < 3; i++) {
         final angle = t * 5.5 + i * pi * 2 / 3;
         final reach = 0.3 + 0.08 * sin(t * 9 + i * 2);
@@ -119,6 +128,7 @@ sealed class MovingOrb extends MovingComponent {
       }
       _drawCoreBlob(canvas, style, 0, 0, 0.58 + 0.06 * sin(t * 21));
     } else {
+      canvas.drawCircle(Offset.zero, 1, style.body);
       _drawCoreBlob(canvas, style, 0, 0, 0.62 + 0.05 * sin(t * 4.5));
       // Six spokes of a crystal
       final angle = t * 0.8;
@@ -128,9 +138,30 @@ sealed class MovingOrb extends MovingComponent {
         canvas.drawLine(Offset(x, y), Offset(-x, -y), style.crystal);
       }
     }
-    canvas
-      ..drawCircle(Offset.zero, 0.94, style.rim)
-      ..restore();
+    canvas.restore();
+  }
+
+  /// Three flickering flame tongues licking back from the ball, facing right
+  Path _flameTongues(double t) {
+    final path = _flamePath..reset();
+    for (var i = -1; i <= 1; i++) {
+      final side = i.toDouble();
+      final flick = 0.3 * sin(t * (17 + i * 3) + i * 1.7);
+      final wobble = 0.15 * sin(t * 11 + i * 2.3);
+      final length = (i == 0 ? 2.0 : 1.6) + flick;
+      final half = i == 0 ? 0.5 : 0.35;
+      path
+        ..moveTo(0.2, side * 0.6 + half)
+        ..quadraticBezierTo(
+          -length * 0.5,
+          side * 1.0 + wobble,
+          -length,
+          side * 0.5 + wobble * 2,
+        )
+        ..quadraticBezierTo(-length * 0.45, side * 0.4, 0.2, side * 0.6 - half)
+        ..close();
+    }
+    return path;
   }
 
   void _drawCoreBlob(
@@ -160,19 +191,20 @@ sealed class MovingOrb extends MovingComponent {
 
 /// The paints of an orb's head, at unit size around the origin
 class _OrbHeadStyle {
-  _OrbHeadStyle(List<Color> colors)
+  _OrbHeadStyle(List<Color> colors, Color dark)
     : body = Paint()
         ..shader = ui.Gradient.radial(
           Offset.zero,
           1,
           [
-            const Color(0xFFFFFFFF),
+            Color.lerp(colors[0], const Color(0xFFFFFFFF), 0.5)!,
             colors[0],
             colors[1],
             colors[2],
-            colors[2].withValues(alpha: 0),
+            dark,
+            dark.withValues(alpha: 0),
           ],
-          [0.0, 0.28, 0.62, 0.86, 1.0],
+          [0.0, 0.28, 0.58, 0.8, 0.93, 1.0],
         ),
       core = Paint()
         ..blendMode = BlendMode.plus
@@ -180,30 +212,38 @@ class _OrbHeadStyle {
           Offset.zero,
           1,
           [
-            const Color(0xCCFFFFFF),
-            colors[0].withValues(alpha: 0.5),
+            const Color(0x8CFFFFFF),
+            colors[0].withValues(alpha: 0.4),
             colors[0].withValues(alpha: 0),
           ],
           [0.0, 0.45, 1.0],
         ),
+      tongues = Paint()
+        ..blendMode = BlendMode.plus
+        ..shader = ui.Gradient.linear(
+          const Offset(0.3, 0),
+          const Offset(-2.2, 0),
+          [
+            colors[1],
+            colors[2].withValues(alpha: 0.7),
+            colors[2].withValues(alpha: 0),
+          ],
+          [0.0, 0.5, 1.0],
+        ),
       crystal = Paint()
         ..blendMode = BlendMode.plus
-        ..color = const Color(0xBFFFFFFF)
+        ..color = colors[0].withValues(alpha: 0.5)
         ..strokeWidth = 0.1
-        ..strokeCap = StrokeCap.round,
-      rim = Paint()
-        ..blendMode = BlendMode.plus
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.08
-        ..color = colors[0].withValues(alpha: 0.4);
+        ..strokeCap = StrokeCap.round;
 
   static final _styles = {
-    for (final type in OrbType.values) type: _OrbHeadStyle(type.colors),
+    OrbType.fire: _OrbHeadStyle(OrbType.fire.colors, const Color(0xFF7A1400)),
+    OrbType.ice: _OrbHeadStyle(OrbType.ice.colors, const Color(0xFF00337F)),
   };
 
   static _OrbHeadStyle of(OrbType type) => _styles[type]!;
 
-  final Paint body, core, crystal, rim;
+  final Paint body, core, tongues, crystal;
 }
 
 class FireOrb extends MovingOrb {
