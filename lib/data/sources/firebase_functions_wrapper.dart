@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -8,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:save_the_potato/data/key_value_storage.dart';
+import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/extensions/map_entries_list_extensions.dart';
 import 'package:save_the_potato/domain/extensions/map_extensions.dart';
 import 'package:save_the_potato/domain/models/errors/domain_error.dart';
@@ -113,9 +113,9 @@ class FirebaseFunctionsWrapper {
         }
       }
 
-      final response = await FirebaseFunctions.instanceFor(
-        region: _region,
-      ).httpsCallable(name).call(parameters.removeNullValues());
+      final response = await FirebaseFunctions.instanceFor(region: _region)
+          .httpsCallable(name)
+          .call(parameters.removeNullValues());
       final parsedResponse = _FirebaseFunctionsResponseParser.parseResponse(
         response.data,
       );
@@ -136,9 +136,9 @@ class FirebaseFunctionsWrapper {
   Future<UserEntity> registerUser(String token) async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     late String deviceInfoStr;
-    if (Platform.isAndroid) {
+    if (AppUtils.isAndroid) {
       deviceInfoStr = jsonEncode((await deviceInfo.androidInfo).data);
-    } else if (Platform.isIOS) {
+    } else if (AppUtils.isIOS) {
       deviceInfoStr = jsonEncode((await deviceInfo.iosInfo).data);
     } else {
       deviceInfoStr = '';

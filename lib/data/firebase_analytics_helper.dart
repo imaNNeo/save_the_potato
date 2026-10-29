@@ -1,10 +1,12 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
+import 'package:save_the_potato/domain/app_utils.dart';
 
 class FirebaseAnalyticsHelper extends AnalyticsHelper {
   void _logEvent({required String name, Map<String, Object>? parameters}) {
-    if (kDebugMode) {
+    // Firebase is only initialized on Android and iOS (see main.dart)
+    if (kDebugMode || !(AppUtils.isAndroid || AppUtils.isIOS)) {
       return;
     }
     parameters = parameters?.map((key, value) {

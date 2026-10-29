@@ -3,8 +3,7 @@ import 'package:save_the_potato/domain/models/score_entity.dart';
 
 sealed class LeaderboardScoreItem {}
 
-class LeaderboardLoadedScoreItem extends LeaderboardScoreItem
-    with EquatableMixin {
+class LeaderboardLoadedScoreItem extends LeaderboardScoreItem with Equatable {
   final OnlineScoreEntity score;
   final bool refreshing;
 
@@ -24,8 +23,7 @@ class LeaderboardLoadedScoreItem extends LeaderboardScoreItem
   List<Object?> get props => [score, refreshing];
 }
 
-class LeaderboardLoadingScoreItem extends LeaderboardScoreItem
-    with EquatableMixin {
+class LeaderboardLoadingScoreItem extends LeaderboardScoreItem with Equatable {
   final bool showShimmer;
 
   LeaderboardLoadingScoreItem({this.showShimmer = true});

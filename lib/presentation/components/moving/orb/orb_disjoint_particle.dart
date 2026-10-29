@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:flame/components.dart';
+import 'package:flame/components.dart' hide ComponentPool;
 import 'package:flame/extensions.dart';
 import 'package:flutter/animation.dart';
 import 'package:save_the_potato/domain/extensions/list_extension.dart';

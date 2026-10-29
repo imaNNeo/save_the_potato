@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:flame/extensions.dart';
 
 extension RectExtensions on Rect {

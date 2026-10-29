@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
 
-sealed class GameMode with EquatableMixin {
+sealed class GameMode with Equatable {
   const GameMode({
     required this.increasesDifficulty,
     required this.canSpawnMovingHealth,
@@ -86,7 +86,7 @@ sealed class GameMode with EquatableMixin {
   }
 
   @override
-  bool? get stringify => true;
+  String toString() => '$runtimeType(${props.join(', ')})';
 }
 
 class GameModeSingleSpawn extends GameMode {

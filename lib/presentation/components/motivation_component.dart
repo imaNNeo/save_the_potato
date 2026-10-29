@@ -106,17 +106,18 @@ class MotivationComponent extends PositionComponent
                     end: 18.0,
                   ).transform(scaleProgress);
 
-                  final opacityTween =
-                      TweenSequence(<TweenSequenceItem<double>>[
-                        TweenSequenceItem(
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          weight: 1,
-                        ),
-                        TweenSequenceItem(
-                          tween: Tween(begin: 1.0, end: 0.0),
-                          weight: 1,
-                        ),
-                      ]);
+                  final opacityTween = TweenSequence(
+                    <TweenSequenceItem<double>>[
+                      TweenSequenceItem(
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        weight: 1,
+                      ),
+                      TweenSequenceItem(
+                        tween: Tween(begin: 1.0, end: 0.0),
+                        weight: 1,
+                      ),
+                    ],
+                  );
                   canvas.rotate(particle.progress * pi * 2);
                   sprite.render(
                     canvas,

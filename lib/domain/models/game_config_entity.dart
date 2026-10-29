@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-class GameConfigEntity with EquatableMixin {
+class GameConfigEntity with Equatable {
   /// This is the hard-coded instance for when user opens the app for the
   /// first time without internet.
   /// We will update it later when user connects to internet.
@@ -16,10 +16,8 @@ class GameConfigEntity with EquatableMixin {
         'https://play.google.com/store/apps/details?id=dev.app2pack.ttg',
     iosStoreUrl:
         'https://apps.apple.com/app/ttg-through-the-galaxy/id6444870791',
-    shareTextWithRank:
-        "🌟 I'm in the top 10! Just hit a new high score of {{score}} on Save The Potato and secured the #{{rank}} spot! 🏆 Can you climb higher? Grab the game at savethepotato.com and take on the challenge! 🥔🛡️ #SaveThePotato #HighScore",
-    shareTextWithoutRank:
-        "🏆 New High Score on Save The Potato! 🎉 Just hit a new high score of {{score}} on Save The Potato! 🥔🛡️ Can you climb higher? Grab the game at savethepotato.com and take on the challenge! #SaveThePotato #HighScore",
+    shareTextWithRank: "🌟 I'm in the top 10! Just hit a new high score of {{score}} on Save The Potato and secured the #{{rank}} spot! 🏆 Can you climb higher? Grab the game at savethepotato.com and take on the challenge! 🥔🛡️ #SaveThePotato #HighScore",
+    shareTextWithoutRank: "🏆 New High Score on Save The Potato! 🎉 Just hit a new high score of {{score}} on Save The Potato! 🥔🛡️ Can you climb higher? Grab the game at savethepotato.com and take on the challenge! #SaveThePotato #HighScore",
     shareTextWithRankThreshold: 10,
     showNewScoreCelebrationRankThreshold: 20,
   );

@@ -1,4 +1,5 @@
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/domain/models/game_config_entity.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
@@ -8,6 +9,13 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AppUtils {
+  // dart:io's Platform throws on web, so use these instead.
+  static bool get isAndroid =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+  static bool get isIOS =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
   static String getHighScoreRepresentation(int highScoreMilliseconds) {
     final minutes = highScoreMilliseconds ~/ 60000;
     final seconds = (highScoreMilliseconds % 60000) ~/ 1000;

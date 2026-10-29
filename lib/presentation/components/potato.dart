@@ -1,3 +1,7 @@
+// The potato.riv state machine is driven by inputs, which Rive 0.14
+// deprecates in favour of data binding. They still work as before.
+// ignore_for_file: deprecated_member_use
+
 import 'dart:math';
 
 import 'package:flame/collisions.dart';
@@ -46,14 +50,16 @@ class Potato extends PositionComponent
   * Scared -> ToIdle
   * Scared -> Die
   * */
-  late StateMachineController _controller;
-  late SMITrigger fireHitTrigger;
-  late SMITrigger iceHitTrigger;
-  late SMITrigger heartHitTrigger;
-  late SMITrigger dieTrigger;
-  late SMITrigger scaredTrigger;
-  late SMITrigger toIdleTrigger;
-  late SMITrigger amazedTrigger;
+  late File _riveFile;
+  late Artboard _artboard;
+  late StateMachine _stateMachine;
+  late TriggerInput fireHitTrigger;
+  late TriggerInput iceHitTrigger;
+  late TriggerInput heartHitTrigger;
+  late TriggerInput dieTrigger;
+  late TriggerInput scaredTrigger;
+  late TriggerInput toIdleTrigger;
+  late TriggerInput amazedTrigger;
 
   final _audioHelper = getIt.get<AudioHelper>();
   GameState? _lastState;
@@ -99,25 +105,23 @@ class Potato extends PositionComponent
       ),
     );
 
-    final potatoArtBoard = await loadArtboard(
-      RiveFile.asset('assets/rive/potato.riv'),
-    );
-
-    _controller = StateMachineController.fromArtboard(
-      potatoArtBoard,
-      "State Machine 1",
-    )!;
-    fireHitTrigger = _controller.findInput<bool>('fire-hit') as SMITrigger;
-    iceHitTrigger = _controller.findInput<bool>('ice-hit') as SMITrigger;
-    heartHitTrigger = _controller.findInput<bool>('heart-hit') as SMITrigger;
-    dieTrigger = _controller.findInput<bool>('Die') as SMITrigger;
-    scaredTrigger = _controller.findInput<bool>('Scared') as SMITrigger;
-    toIdleTrigger = _controller.findInput<bool>('ToIdle') as SMITrigger;
-    amazedTrigger = _controller.findInput<bool>('Amazed') as SMITrigger;
-    potatoArtBoard.addController(_controller);
+    _riveFile = (await File.asset(
+      'assets/rive/potato.riv',
+      riveFactory: Factory.flutter,
+    ))!;
+    _artboard = await loadArtboard(_riveFile);
+    _stateMachine = _artboard.stateMachine('State Machine 1')!;
+    fireHitTrigger = _stateMachine.trigger('fire-hit')!;
+    iceHitTrigger = _stateMachine.trigger('ice-hit')!;
+    heartHitTrigger = _stateMachine.trigger('heart-hit')!;
+    dieTrigger = _stateMachine.trigger('Die')!;
+    scaredTrigger = _stateMachine.trigger('Scared')!;
+    toIdleTrigger = _stateMachine.trigger('ToIdle')!;
+    amazedTrigger = _stateMachine.trigger('Amazed')!;
     add(
       RiveComponent(
-        artboard: potatoArtBoard,
+        artboard: _artboard,
+        stateMachine: _stateMachine,
         size: Vector2.all(152),
         anchor: Anchor.center,
         position: size / 2,
@@ -182,7 +186,9 @@ class Potato extends PositionComponent
 
   @override
   void onRemove() {
-    _controller.dispose();
+    _stateMachine.dispose();
+    _artboard.dispose();
+    _riveFile.dispose();
     super.onRemove();
   }
 }

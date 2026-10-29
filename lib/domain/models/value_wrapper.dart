@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 ///
 /// It can be used in the state.copyWith function when we want to pass
 /// a null value for a field in the state class.
-class ValueWrapper<T> with EquatableMixin {
+class ValueWrapper<T> with Equatable {
   final T? value;
 
   T get nonNullValue => value!;

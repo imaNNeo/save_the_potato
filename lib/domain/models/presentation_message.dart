@@ -10,7 +10,7 @@ import 'errors/domain_error.dart';
 /// When presentation wants to show it, we need to pass the context to parse it
 /// At this time, we only have [RawTextMessage].
 /// Later we can add [LocalizedMessage] whic needs context to parse the localized message
-abstract class PresentationMessage with EquatableMixin {
+abstract class PresentationMessage with Equatable {
   String parse(BuildContext context);
 
   void showAsToast(

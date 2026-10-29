@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:equatable/equatable.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,7 +19,7 @@ class SplashCubit extends Cubit<SplashState> {
   Future<(int min, int latest, String storeUrl)>
   _getMinAndLatestVersion() async {
     final gameConfigs = await _configsRepository.getGameConfig();
-    if (Platform.isIOS) {
+    if (AppUtils.isIOS) {
       return (
         gameConfigs.minVersionIos,
         gameConfigs.latestVersionIos,
