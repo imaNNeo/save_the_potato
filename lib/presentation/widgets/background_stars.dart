@@ -42,20 +42,16 @@ class _AnimatedBackgroundStarsState
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
-    _backgroundColor =
-        visitor(
-              _backgroundColor,
-              widget.backgroundColor,
-              (dynamic value) => ColorTween(begin: value as Color),
-            )
-            as ColorTween?;
-    _starsColor =
-        visitor(
-              _starsColor,
-              widget.starsColor,
-              (dynamic value) => ColorTween(begin: value as Color),
-            )
-            as ColorTween?;
+    _backgroundColor = visitor(
+      _backgroundColor,
+      widget.backgroundColor,
+      (dynamic value) => ColorTween(begin: value as Color),
+    ) as ColorTween?;
+    _starsColor = visitor(
+      _starsColor,
+      widget.starsColor,
+      (dynamic value) => ColorTween(begin: value as Color),
+    ) as ColorTween?;
   }
 }
 

@@ -18,6 +18,7 @@ import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
 import 'components/motivation_component.dart';
 import 'components/moving/moving_component_spawner.dart';
 import 'components/potato.dart';
+import 'components/shield_impact_effects.dart';
 import 'cubit/game/game_cubit.dart';
 
 class PotatoGame extends FlameGame<MyWorld>
@@ -96,10 +97,13 @@ class MyWorld extends World
         FlameBlocListenable<GameCubit, GameState> {
   late Potato player;
 
+  late ShieldImpactEffects shieldImpacts;
+
   late StreamSubscription _motivationWordSubscription;
 
   @override
   Future<void> onLoad() async {
+    await add(shieldImpacts = ShieldImpactEffects());
     await add(player = Potato());
     await add(MovingComponentSpawner());
     mounted.then((_) {

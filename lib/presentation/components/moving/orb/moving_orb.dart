@@ -19,7 +19,7 @@ sealed class MovingOrb extends MovingComponent {
     OrbType.ice => 0.7,
   };
 
-  Function(double contactAngle)? _onDisjointCallback;
+  VoidCallback? _onDisjointCallback;
   VoidCallback? _onPotatoHitCallback;
 
   late MovingOrbTailParticles _movingOrbTailParticles;
@@ -31,7 +31,7 @@ sealed class MovingOrb extends MovingComponent {
     required Vector2 position,
     double size = 22.0,
     ComponentPool<CustomParticle>? movingTrailParticlePool,
-    Function(double contactAngle)? onDisjointCallback,
+    VoidCallback? onDisjointCallback,
     VoidCallback? onPotatoHitCallback,
     int? overrideCollisionSoundNumber,
   }) {
@@ -68,8 +68,9 @@ sealed class MovingOrb extends MovingComponent {
     canvas.drawCircle(offset, radius, _headPaint..color = colors.last);
   }
 
-  void disjoint(double contactAngle) {
-    _onDisjointCallback?.call(contactAngle);
+  /// Blocked by a shield, the shield shows the impact
+  void disjoint() {
+    _onDisjointCallback?.call();
   }
 
   void onPotatoHit() {

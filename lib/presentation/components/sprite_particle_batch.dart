@@ -13,13 +13,20 @@ class SpriteParticle {
   final acceleration = Vector2.zero();
   final speed = Vector2.zero();
 
+  /// How quickly [speed] fades away (per second), 0 keeps it
+  double drag = 0.0;
+
+  /// Added to [drawRotation] every second
+  double spin = 0.0;
+
   /// Set by the batch's prepare callback right before drawing
   double drawScale = 1.0;
   double drawRotation = 0.0;
   double drawOpacity = 1.0;
 
-  /// Free slot for the owner to tell particle kinds apart
+  /// Free slots for the owner to tell particle kinds apart and keep their size
   int kind = 0;
+  double baseScale = 1.0;
 
   double get progress => min(1.0, elapsed / lifespan);
 }
@@ -53,7 +60,11 @@ class SpriteParticleBatch {
       ..sprite = sprite
       ..lifespan = lifespan
       ..elapsed = 0
-      ..kind = 0;
+      ..drag = 0
+      ..spin = 0
+      ..drawRotation = 0
+      ..kind = 0
+      ..baseScale = 1;
     particle.position.setZero();
     particle.acceleration.setZero();
     particle.speed.setZero();
@@ -73,9 +84,13 @@ class SpriteParticleBatch {
       }
       p.position.addScaled(p.acceleration, dt);
       p.speed.addScaled(p.acceleration, dt);
+      if (p.drag != 0) {
+        p.speed.scale(exp(-p.drag * dt));
+      }
       p.position
         ..addScaled(p.speed, dt)
         ..addScaled(p.acceleration, -dt * dt * 0.5);
+      p.drawRotation += p.spin * dt;
     }
   }
 
