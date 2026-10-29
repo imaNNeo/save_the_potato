@@ -21,6 +21,9 @@ class _PotatoTopBarState extends State<PotatoTopBar> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<GameCubit, GameState>(
+      buildWhen: (previous, current) =>
+          previous.playingState != current.playingState ||
+          previous.healthPoints != current.healthPoints,
       builder: (context, state) {
         return SafeArea(
           child: Column(

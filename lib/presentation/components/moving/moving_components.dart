@@ -48,6 +48,10 @@ sealed class MovingComponent extends PositionComponent
   Random get rnd => game.rnd;
 
   @override
+  bool listenWhen(GameState previousState, GameState newState) =>
+      previousState.gameOverTimeScale != newState.gameOverTimeScale;
+
+  @override
   void onNewState(GameState state) {
     super.onNewState(state);
     timeScale = state.gameOverTimeScale;

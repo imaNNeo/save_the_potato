@@ -65,6 +65,13 @@ class Potato extends PositionComponent
   GameState? _lastState;
 
   @override
+  bool listenWhen(GameState previousState, GameState newState) =>
+      previousState.playingState != newState.playingState ||
+      previousState.currentGameMode.runtimeType !=
+          newState.currentGameMode.runtimeType ||
+      previousState.playMotivationWord != newState.playMotivationWord;
+
+  @override
   void onNewState(GameState state) {
     if (_lastState?.playingState != state.playingState &&
         state.playingState is PlayingStateGameOver) {

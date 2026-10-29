@@ -62,7 +62,7 @@ class CustomParticle extends PositionComponent {
       return;
     }
     _progressTimer?.update(dt);
-    position += acceleration * dt;
+    position.addScaled(acceleration, dt);
     speed.addScaled(acceleration, dt);
     position
       ..addScaled(speed, dt)

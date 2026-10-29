@@ -97,18 +97,17 @@ class GameCubit extends Cubit<GameState> {
     if (!state.playingState.isPlaying) {
       return;
     }
-    // We calculate the [state.difficulty] based on the time passed
+    // We calculate the [state.difficulty] based on the time passed.
+    // This runs every frame, so emit only once.
     emit(
       state.copyWith(
         levelTimePassed: state.levelTimePassed + dt,
         currentGameMode: state.currentGameMode.updatePassedTime(dt),
+        difficultyTimePassed: state.currentGameMode.increasesDifficulty
+            ? state.difficultyTimePassed + dt
+            : null,
       ),
     );
-    if (state.currentGameMode.increasesDifficulty) {
-      emit(
-        state.copyWith(difficultyTimePassed: state.difficultyTimePassed + dt),
-      );
-    }
   }
 
   void potatoOrbHit() {
