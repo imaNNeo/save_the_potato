@@ -28,6 +28,10 @@ class PotatoGame extends FlameGame<MyWorld>
         camera: CameraComponent.withFixedResolution(width: 600, height: 600),
       );
 
+  /// The stars background is rendered behind the game, see `MainPage`.
+  @override
+  Color backgroundColor() => Colors.transparent;
+
   @override
   Future<void> onLoad() async {
     await Flame.images.loadAll([
