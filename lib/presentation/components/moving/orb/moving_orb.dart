@@ -93,8 +93,9 @@ sealed class MovingOrb extends MovingComponent {
     add(CircleHitbox(collisionType: CollisionType.passive));
   }
 
-  /// A hot (or cold) core that darkens towards its edge, so it reads as
-  /// something flying at the potato rather than a shiny pickup. Fire churns
+  /// A hot (or cold) core with little white, fading softly into its glow,
+  /// so it reads as something flying at the potato rather than a shiny
+  /// pickup. Fire churns
   /// with plasma and is licked back by flame tongues, ice has a slowly
   /// turning crystal in it. Drawn at unit size and scaled, so the gradients
   /// are made once per orb type.
@@ -191,7 +192,7 @@ sealed class MovingOrb extends MovingComponent {
 
 /// The paints of an orb's head, at unit size around the origin
 class _OrbHeadStyle {
-  _OrbHeadStyle(List<Color> colors, Color dark)
+  _OrbHeadStyle(List<Color> colors)
     : body = Paint()
         ..shader = ui.Gradient.radial(
           Offset.zero,
@@ -201,10 +202,9 @@ class _OrbHeadStyle {
             colors[0],
             colors[1],
             colors[2],
-            dark,
-            dark.withValues(alpha: 0),
+            colors[2].withValues(alpha: 0),
           ],
-          [0.0, 0.28, 0.58, 0.8, 0.93, 1.0],
+          [0.0, 0.28, 0.58, 0.82, 1.0],
         ),
       core = Paint()
         ..blendMode = BlendMode.plus
@@ -237,8 +237,7 @@ class _OrbHeadStyle {
         ..strokeCap = StrokeCap.round;
 
   static final _styles = {
-    OrbType.fire: _OrbHeadStyle(OrbType.fire.colors, const Color(0xFF7A1400)),
-    OrbType.ice: _OrbHeadStyle(OrbType.ice.colors, const Color(0xFF00337F)),
+    for (final type in OrbType.values) type: _OrbHeadStyle(type.colors),
   };
 
   static _OrbHeadStyle of(OrbType type) => _styles[type]!;
