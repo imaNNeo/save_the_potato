@@ -5,6 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
+import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 
 import 'damped_spring.dart';
@@ -108,6 +109,7 @@ class ShieldImpactEffects extends Component
     _addSplat(x, y, angle, type.colors, heat);
     _addSparks(x, y, angle, type.colors, heat);
     _addShards(x, y, angle, type, heat);
+    game.background.block(color: type.intenseColor, angle: angle, heat: heat);
 
     // Jolt the world the way the orb was flying
     final kick = 2.2 + heat * 1.8;
@@ -118,6 +120,7 @@ class ShieldImpactEffects extends Component
     );
 
     if (isMilestone) {
+      game.background.milestone();
       _nova(center, game.world.player.fireShield.angle);
     }
   }
@@ -305,6 +308,7 @@ class ShieldImpactEffects extends Component
   /// A chain of [length] quick blocks is over: the shields let it all go
   void _releaseChain(int length) {
     final power = min(1.0, (length - 2) / (DefendStreak.fullChain - 2));
+    game.background.chain(power);
     final player = game.world.player;
     for (final shield in [player.fireShield, player.iceShield]) {
       shield.releaseCharge(power);
@@ -362,6 +366,19 @@ class ShieldImpactEffects extends Component
 
     _shards.update(dt);
     _updateCameraKick(dt);
+
+    final state = bloc.state;
+    game.background.update(
+      dt,
+      heat: streak.heat,
+      power: streak.power,
+      multiOrbWave:
+          state.playingState.isPlaying &&
+          (state.currentGameMode is GameModeMultiSpawn ||
+              state.upcomingGameMode is GameModeMultiSpawn),
+      kickX: _appliedKick.x,
+      kickY: _appliedKick.y,
+    );
   }
 
   void _updateCameraKick(double dt) {

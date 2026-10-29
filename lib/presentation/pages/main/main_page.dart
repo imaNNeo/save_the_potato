@@ -5,6 +5,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/main.dart';
+import 'package:save_the_potato/presentation/background_reactions.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
@@ -36,6 +37,9 @@ class _MainPageState extends State<MainPage>
 
   late PotatoGame _game;
 
+  /// The game makes the stars background react to what happens in it
+  final _backgroundReactions = BackgroundReactions();
+
   late GameCubit _gameCubit;
   late SettingsCubit _settingsCubit;
 
@@ -54,13 +58,13 @@ class _MainPageState extends State<MainPage>
     _gameCubit = context.read<GameCubit>();
     _settingsCubit = context.read<SettingsCubit>();
     _gameCubit.startToShowGuide();
-    _game = PotatoGame(_gameCubit, _settingsCubit);
+    _game = PotatoGame(_gameCubit, _settingsCubit, _backgroundReactions);
     _previousState = _gameCubit.state.playingState;
     _streamSubscription = _gameCubit.stream.listen((state) {
       if ((_previousState.isNone || _previousState.isGameOver) &&
           (state.playingState.isPlaying || state.playingState.isGuide)) {
         setState(() {
-          _game = PotatoGame(_gameCubit, _settingsCubit);
+          _game = PotatoGame(_gameCubit, _settingsCubit, _backgroundReactions);
         });
       }
       _previousState = state.playingState;
@@ -96,7 +100,7 @@ class _MainPageState extends State<MainPage>
   void _restartGameWidgets() {
     setState(() {
       pageRootKey = UniqueKey();
-      _game = PotatoGame(_gameCubit, _settingsCubit);
+      _game = PotatoGame(_gameCubit, _settingsCubit, _backgroundReactions);
     });
   }
 
@@ -156,7 +160,7 @@ class _MainPageState extends State<MainPage>
             backgroundColor: Colors.black,
             body: Stack(
               children: [
-                const _MainPageBackground(),
+                _MainPageBackground(reactions: _backgroundReactions),
                 gameWidget,
                 const Align(
                   alignment: Alignment.topCenter,
@@ -215,13 +219,16 @@ class _MainPageState extends State<MainPage>
     routeObserver.unsubscribe(this);
     _streamSubscription.cancel();
     _generalLoadingSubscription.cancel();
+    _backgroundReactions.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 }
 
 class _MainPageBackground extends StatelessWidget {
-  const _MainPageBackground();
+  const _MainPageBackground({required this.reactions});
+
+  final BackgroundReactions reactions;
 
   /// The stars speed follows the difficulty, but only in these steps, so
   /// this widget rebuilds a handful of times per round, not every frame.
@@ -251,6 +258,7 @@ class _MainPageBackground extends StatelessWidget {
           starsColor: GameColors.starsColors[modeIndex],
           starsTimeScale: timeScale,
           starsSize: starsSize,
+          reactions: reactions,
         );
       },
     );
