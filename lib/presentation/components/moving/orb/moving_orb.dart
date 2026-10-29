@@ -22,7 +22,21 @@ sealed class MovingOrb extends MovingComponent {
   VoidCallback? _onDisjointCallback;
   VoidCallback? _onPotatoHitCallback;
 
-  late MovingOrbTailParticles _movingOrbTailParticles;
+  /// Set once it got its speed, target and position (pooled orbs keep their
+  /// old position until then)
+  bool _initialized = false;
+
+  /// Read and kept by [OrbEffects], which draws the tail and the glow
+  bool get isFlying => _initialized && isMounted;
+  Vector2 get direction => _direction;
+  double effectsTime = 0;
+  double sparkleClock = 0;
+  double puffClock = 0;
+  double moteClock = 0;
+  double seed = 0;
+
+  /// The head swells a little with it, the hitbox stays the same
+  double pulse = 1;
 
   @override
   void initialize({
@@ -30,7 +44,6 @@ sealed class MovingOrb extends MovingComponent {
     required PositionComponent target,
     required Vector2 position,
     double size = 22.0,
-    ComponentPool<CustomParticle>? movingTrailParticlePool,
     VoidCallback? onDisjointCallback,
     VoidCallback? onPotatoHitCallback,
     int? overrideCollisionSoundNumber,
@@ -42,10 +55,29 @@ sealed class MovingOrb extends MovingComponent {
       size: size,
     );
     _overrideCollisionSoundNumber = overrideCollisionSoundNumber;
-    _movingOrbTailParticles.particlePool = movingTrailParticlePool!;
     _onDisjointCallback = onDisjointCallback;
     _onPotatoHitCallback = onPotatoHitCallback;
     anchor = Anchor.center;
+    effectsTime = 0;
+    sparkleClock = 0;
+    puffClock = 0;
+    moteClock = 0;
+    seed = rnd.nextDouble() * 100;
+    pulse = 1;
+    _initialized = true;
+  }
+
+  @override
+  void onMount() {
+    super.onMount();
+    game.world.orbEffects.track(this);
+  }
+
+  @override
+  void onRemove() {
+    game.world.orbEffects.untrack(this);
+    _initialized = false;
+    super.onRemove();
   }
 
   @override
@@ -58,13 +90,12 @@ sealed class MovingOrb extends MovingComponent {
   Future<void> onLoad() async {
     super.onLoad();
     add(CircleHitbox(collisionType: CollisionType.passive));
-    add(_movingOrbTailParticles = MovingOrbTailParticles());
     add(MovingOrbHead());
   }
 
   void _drawHead(Canvas canvas) {
     final offset = (size / 2).toOffset();
-    final radius = size.x / 2;
+    final radius = size.x / 2 * pulse;
     canvas.drawCircle(offset, radius, _headPaint..color = colors.last);
   }
 

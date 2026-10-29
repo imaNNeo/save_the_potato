@@ -202,6 +202,76 @@ class GlowBatch {
     _triangle(body, tail, right);
   }
 
+  /// A soft comet tail from ([headX], [headY]) going [length] back against
+  /// the direction ([dirX], [dirY]) (a unit vector). It is [width] wide at
+  /// the head, thins out towards the end, fades from [headColor] into
+  /// [tailColor], and its edges fade out so it has no hard outline.
+  ///
+  /// With [wave] it wiggles sideways like a flame, more towards the end;
+  /// move [wavePhase] over time to make it flow.
+  void addTail(
+    double headX,
+    double headY,
+    double dirX,
+    double dirY,
+    double length,
+    double width,
+    Color headColor,
+    Color tailColor,
+    double opacity, {
+    double wave = 0,
+    double wavePhase = 0,
+    int segments = 8,
+  }) {
+    if (opacity <= 0.004 || length <= 0 || width <= 0) {
+      return;
+    }
+    const capPoints = 7;
+    if (!_reserve(3 * (segments + 1) + capPoints, segments * 12 + 24)) {
+      return;
+    }
+    final headRgb = headColor.toARGB32() & 0x00FFFFFF;
+    final tailRgb = tailColor.toARGB32() & 0x00FFFFFF;
+    // The normal
+    final nx = -dirY, ny = dirX;
+    final first = _vertexCount;
+    for (var i = 0; i <= segments; i++) {
+      final s = i / segments;
+      final half = width / 2 * pow(1 - s, 0.8);
+      final sway = wave == 0 ? 0.0 : sin(wavePhase - s * 5.5) * wave * s;
+      final cx = headX - dirX * length * s + nx * sway;
+      final cy = headY - dirY * length * s + ny * sway;
+      final rgb = _lerpRgb(headRgb, tailRgb, s);
+      final alpha = opacity * pow(1 - s, 1.4);
+      _vertex(cx - nx * half, cy - ny * half, _argb(rgb, 0));
+      _vertex(cx, cy, _argb(rgb, alpha));
+      _vertex(cx + nx * half, cy + ny * half, _argb(rgb, 0));
+    }
+    for (var i = 0; i < segments; i++) {
+      final a = first + i * 3;
+      final b = a + 3;
+      _triangle(a, b, a + 1);
+      _triangle(a + 1, b, b + 1);
+      _triangle(a + 1, b + 1, a + 2);
+      _triangle(a + 2, b + 1, b + 2);
+    }
+    // A round cap in front of the head, so the tail doesn't end in a line
+    final half = width / 2;
+    final angle = atan2(ny, nx);
+    var previous = first;
+    for (var i = 1; i <= capPoints; i++) {
+      final a = angle + pi + pi * i / (capPoints + 1);
+      final point = _vertex(
+        headX + cos(a) * half,
+        headY + sin(a) * half,
+        _argb(headRgb, 0),
+      );
+      _triangle(first + 1, previous, point);
+      previous = point;
+    }
+    _triangle(first + 1, previous, first + 2);
+  }
+
   /// A soft band that follows an arc around ([x], [y]). [radiusAt] and
   /// [intensityAt] are asked for each of the [segments] + 1 angles along the
   /// arc, so the band can bend and glow more in some places.
@@ -259,6 +329,15 @@ class GlowBatch {
 
   static int _argb(int rgb, double opacity) =>
       ((opacity.clamp(0.0, 1.0) * 255).round() << 24) | rgb;
+
+  static int _lerpRgb(int from, int to, double t) {
+    int channel(int shift) {
+      final a = (from >> shift) & 0xFF, b = (to >> shift) & 0xFF;
+      return (a + (b - a) * t).round() << shift;
+    }
+
+    return channel(16) | channel(8) | channel(0);
+  }
 
   static double _smoothStep(double from, double to, double value) {
     final t = ((value - from) / (to - from)).clamp(0.0, 1.0);

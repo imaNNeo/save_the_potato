@@ -7,6 +7,7 @@ import 'package:save_the_potato/presentation/components/moving/moving_components
 class MovingOrbHead extends PositionComponent with ParentIsA<MovingOrb> {
   late Sprite _sprite1Glow, _sprite2Main, _sprite3Shine;
   late Paint _paint;
+  final _drawSize = Vector2.zero();
 
   MovingOrbHead();
 
@@ -26,9 +27,12 @@ class MovingOrbHead extends PositionComponent with ParentIsA<MovingOrb> {
   void render(Canvas canvas) {
     super.render(canvas);
     final offset = (size / 2).toOffset();
+    final drawSize = _drawSize
+      ..setFrom(size)
+      ..scale(parent.pulse);
     _sprite1Glow.render(
       canvas,
-      size: size,
+      size: drawSize,
       anchor: Anchor.center,
       position: offset.toVector2(),
       overridePaint: _paint
@@ -39,7 +43,7 @@ class MovingOrbHead extends PositionComponent with ParentIsA<MovingOrb> {
     );
     _sprite2Main.render(
       canvas,
-      size: size,
+      size: drawSize,
       anchor: Anchor.center,
       position: offset.toVector2(),
       overridePaint: _paint
@@ -47,7 +51,7 @@ class MovingOrbHead extends PositionComponent with ParentIsA<MovingOrb> {
     );
     _sprite3Shine.render(
       canvas,
-      size: size,
+      size: drawSize,
       anchor: Anchor.center,
       position: offset.toVector2(),
     );

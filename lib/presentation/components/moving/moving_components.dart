@@ -7,15 +7,12 @@ import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
-import 'package:save_the_potato/presentation/components/component_pool.dart';
-import 'package:save_the_potato/presentation/components/custom_particle.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import '../../potato_game.dart';
 import 'health/health_disjoint_particle.dart';
 import 'orb/moving_orb_head.dart';
-import 'orb/moving_orb_tail_particles.dart';
 import 'orb/orb_type.dart';
 
 part 'orb/moving_orb.dart';

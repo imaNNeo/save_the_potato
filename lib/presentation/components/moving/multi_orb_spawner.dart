@@ -1,7 +1,6 @@
 import 'package:flame/components.dart' hide ComponentPool;
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:save_the_potato/presentation/components/component_pool.dart';
-import 'package:save_the_potato/presentation/components/custom_particle.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
@@ -18,7 +17,6 @@ class MultiOrbSpawner extends PositionComponent
   final bool isOpposite;
   final ComponentPool<FireOrb> fireOrbPool;
   final ComponentPool<IceOrb> iceOrbPool;
-  final ComponentPool<CustomParticle> trailOrbPool;
 
   bool firstSpawned = false;
   double timeSinceLastSpawn = 0;
@@ -36,7 +34,6 @@ class MultiOrbSpawner extends PositionComponent
     required this.spawnCount,
     required this.fireOrbPool,
     required this.iceOrbPool,
-    required this.trailOrbPool,
     this.isOpposite = false,
   });
 
@@ -82,7 +79,6 @@ class MultiOrbSpawner extends PositionComponent
             speed: spawnOrbsMoveSpeed,
             target: target,
             position: position,
-            movingTrailParticlePool: trailOrbPool,
             onDisjointCallback: () {
               fireOrbPool.release(orb as FireOrb);
             },
@@ -99,7 +95,6 @@ class MultiOrbSpawner extends PositionComponent
             speed: spawnOrbsMoveSpeed,
             target: target,
             position: position,
-            movingTrailParticlePool: trailOrbPool,
             onDisjointCallback: () {
               iceOrbPool.release(orb as IceOrb);
             },

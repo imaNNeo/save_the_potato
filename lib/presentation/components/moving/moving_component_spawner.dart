@@ -5,7 +5,6 @@ import 'package:flame/extensions.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/components/component_pool.dart';
-import 'package:save_the_potato/presentation/components/custom_particle.dart';
 import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
@@ -51,7 +50,6 @@ class MovingComponentSpawner extends Component
   late ComponentPool<FireOrb> _fireOrbPool;
   late ComponentPool<IceOrb> _iceOrbPool;
   late ComponentPool<MovingHealth> _movingHealthPool;
-  late ComponentPool<CustomParticle> _trailParticlePool;
 
   @override
   void onLoad() {
@@ -73,11 +71,6 @@ class MovingComponentSpawner extends Component
       () => MovingHealth(),
       initialSize: 3,
       debugName: 'MovingHealthPool',
-    );
-    _trailParticlePool = ComponentPool<CustomParticle>(
-      () => CustomParticle(),
-      initialSize: 100,
-      debugName: 'TrailParticlePool',
     );
   }
 
@@ -240,7 +233,6 @@ class MovingComponentSpawner extends Component
       spawnCount: gameMode.orbsSpawnCount(),
       iceOrbPool: _iceOrbPool,
       fireOrbPool: _fireOrbPool,
-      trailOrbPool: _trailParticlePool,
     );
     parent.add(spawner);
     aliveMultiOrbSpawners.add(spawner);
@@ -260,7 +252,6 @@ class MovingComponentSpawner extends Component
         spawnCount: gameMode.orbsSpawnCount(),
         iceOrbPool: _iceOrbPool,
         fireOrbPool: _fireOrbPool,
-        trailOrbPool: _trailParticlePool,
         isOpposite: true,
       );
       parent.add(oppositeSpawner);
@@ -285,7 +276,6 @@ class MovingComponentSpawner extends Component
             speed: moveSpeed,
             target: player,
             position: _getRandomSpawnPositionAroundMap(),
-            movingTrailParticlePool: _trailParticlePool,
             onDisjointCallback: () {
               _fireOrbPool.release(orb as FireOrb);
             },
@@ -302,7 +292,6 @@ class MovingComponentSpawner extends Component
             speed: moveSpeed,
             target: player,
             position: _getRandomSpawnPositionAroundMap(),
-            movingTrailParticlePool: _trailParticlePool,
             onDisjointCallback: () {
               _iceOrbPool.release(orb as IceOrb);
             },
