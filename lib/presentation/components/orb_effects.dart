@@ -163,10 +163,13 @@ class OrbEffects extends Component
     for (var i = _motes.length - 1; i >= 0; i--) {
       final mote = _motes[i];
       mote.age += dt;
-      if (mote.age >= mote.lifespan) {
+      if (mote.age >= mote.delay + mote.lifespan) {
         _motes[i] = _motes.last;
         _motes.removeLast();
         _freeMotes.add(mote);
+        continue;
+      }
+      if (mote.age < mote.delay) {
         continue;
       }
       final slowDown = exp(-mote.drag * dt);
@@ -249,16 +252,21 @@ class OrbEffects extends Component
       ..age = 0
       ..x = orb.position.x - direction.x * along - direction.y * across
       ..y = orb.position.y - direction.y * along + direction.x * across
-      ..phase = rnd.nextDouble() * pi * 2;
+      ..phase = rnd.nextDouble() * pi * 2
+      ..delay = 0
+      ..fire = _FireMote.ember;
     if (isFire) {
-      final out = 50 + rnd.nextDouble() * 70;
-      final back = orb.speed * (0.15 + rnd.nextDouble() * 0.2);
+      final out = 45 + rnd.nextDouble() * 65;
+      final back = orb.speed * (0.1 + rnd.nextDouble() * 0.15);
       mote
-        ..lifespan = 0.3 + rnd.nextDouble() * 0.25
+        ..lifespan = 0.6 + rnd.nextDouble() * 0.4
         ..vx = -direction.x * back - direction.y * out * sideSign
         ..vy = -direction.y * back + direction.x * out * sideSign
-        ..drag = 3.0
-        ..size = 2.2 + rnd.nextDouble() * 1.6;
+        ..drag = 2.2
+        ..size = 2.0 + rnd.nextDouble() * 1.4;
+      if (rnd.nextDouble() < 0.3) {
+        _addCrackle(orb);
+      }
     } else {
       final out = 8 + rnd.nextDouble() * 18;
       mote
@@ -269,6 +277,49 @@ class OrbEffects extends Component
         ..size = 2.5 + rnd.nextDouble() * 3.5;
     }
     _motes.add(mote);
+  }
+
+  _Mote _addFireMote(double x, double y, _FireMote kind, double delay) {
+    final mote = (_freeMotes.isNotEmpty ? _freeMotes.removeLast() : _Mote())
+      ..type = OrbType.fire
+      ..fire = kind
+      ..age = 0
+      ..delay = delay
+      ..x = x
+      ..y = y
+      ..vx = 0
+      ..vy = 0
+      ..drag = 0
+      ..phase = 0;
+    _motes.add(mote);
+    return mote;
+  }
+
+  /// A spot of the fire trail that pops a moment after the orb passed:
+  /// a flash and a few sparks, so the trail keeps crackling behind it
+  void _addCrackle(MovingOrb orb) {
+    final rnd = _rnd;
+    final direction = orb.direction;
+    final back = 8 + rnd.nextDouble() * 30;
+    final across = (rnd.nextDouble() * 2 - 1) * orb.size.x * 0.6;
+    final x = orb.position.x - direction.x * back - direction.y * across;
+    final y = orb.position.y - direction.y * back + direction.x * across;
+    final delay = 0.12 + rnd.nextDouble() * 0.2;
+    _addFireMote(x, y, _FireMote.crackleFlash, delay)
+      ..lifespan = 0.24
+      ..size = 14 + rnd.nextDouble() * 8;
+    final count = 4 + rnd.nextInt(3);
+    final turn = rnd.nextDouble() * pi * 2;
+    for (var i = 0; i < count; i++) {
+      final angle = turn + i * pi * 2 / count + (rnd.nextDouble() - 0.5) * 0.6;
+      final speed = 160 + rnd.nextDouble() * 110;
+      _addFireMote(x, y, _FireMote.crackleSpark, delay)
+        ..lifespan = 0.22 + rnd.nextDouble() * 0.14
+        ..vx = cos(angle) * speed
+        ..vy = sin(angle) * speed
+        ..drag = 6
+        ..size = 1.6 + rnd.nextDouble() * 0.6;
+    }
   }
 
   @override
@@ -457,26 +508,14 @@ class OrbEffects extends Component
 
   void _addMotesGlow() {
     for (final mote in _motes) {
-      final t = mote.age / mote.lifespan;
+      final age = mote.age - mote.delay;
+      if (age < 0) {
+        continue;
+      }
+      final t = age / mote.lifespan;
       final colors = mote.type.colors;
       if (mote.type.isFire) {
-        final speed = sqrt(mote.vx * mote.vx + mote.vy * mote.vy);
-        if (speed < 1) {
-          continue;
-        }
-        final length = (speed * 0.08).clamp(2.0, 12.0);
-        // Embers flicker as they burn out
-        final flicker = 0.7 + 0.3 * sin(mote.age * 40 + mote.phase);
-        _glow.addStreak(
-          mote.x,
-          mote.y,
-          mote.x - mote.vx / speed * length,
-          mote.y - mote.vy / speed * length,
-          mote.size * 2 * (1 - t * 0.5),
-          Color.lerp(_white, colors.first, t)!,
-          colors[2],
-          flicker * pow(1 - t, 1.2),
-        );
+        _addFireMoteGlow(mote, age, t, colors);
       } else {
         // Frost glints pop in, twinkle and fade
         final twinkle = 0.5 + 0.5 * sin(mote.age * 18 + mote.phase);
@@ -533,6 +572,102 @@ class OrbEffects extends Component
     }
   }
 
+  void _addFireMoteGlow(_Mote mote, double age, double t, List<Color> colors) {
+    switch (mote.fire) {
+      case _FireMote.ember:
+        // Dim when it leaves the orb, flares up white-hot as it drifts
+        // away, then cools down to deep red and dies out
+        final flare = sin(pi * pow(t, 0.75)).clamp(0.0, 1.0);
+        final flicker = 0.75 + 0.25 * sin(age * 38 + mote.phase);
+        final glow = flare * flicker;
+        _glow.addDisc(
+          mote.x,
+          mote.y,
+          mote.size * (2.5 + 3 * flare),
+          Color.lerp(colors[1], colors[2], t)!,
+          0.55 * glow,
+        );
+        final speed = sqrt(mote.vx * mote.vx + mote.vy * mote.vy);
+        if (speed < 1) {
+          return;
+        }
+        final length = (speed * 0.1).clamp(2.0, 14.0) * (0.6 + flare * 0.6);
+        _glow.addStreak(
+          mote.x,
+          mote.y,
+          mote.x - mote.vx / speed * length,
+          mote.y - mote.vy / speed * length,
+          mote.size * (1.6 + flare * 1.4),
+          t < 0.5
+              ? Color.lerp(colors[1], _white, flare)!
+              : Color.lerp(colors[2], _white, flare * 0.8)!,
+          colors[2],
+          min(1.0, 0.35 + glow),
+        );
+        // At its hottest it shines like a little star, turned so it doesn't
+        // look like the ice glints
+        if (flare > 0.35) {
+          final shine = (flare - 0.35) / 0.65 * flicker;
+          final reach = mote.size * (1.5 + 3.5 * shine);
+          final d = reach * 0.7071;
+          _glow.addDisc(
+            mote.x,
+            mote.y,
+            mote.size * 2.2,
+            colors.first,
+            0.7 * shine,
+          );
+          for (final (dx, dy) in [(d, d), (d, -d)]) {
+            _glow.addStreak(
+              mote.x + dx,
+              mote.y + dy,
+              mote.x - dx,
+              mote.y - dy,
+              1.8,
+              _white,
+              colors[1],
+              shine,
+            );
+            _glow.addStreak(
+              mote.x - dx,
+              mote.y - dy,
+              mote.x + dx,
+              mote.y + dy,
+              1.8,
+              _white,
+              colors[1],
+              shine,
+            );
+          }
+        }
+      case _FireMote.crackleFlash:
+        final grow = 1 - (1 - t) * (1 - t);
+        _glow.addDisc(
+          mote.x,
+          mote.y,
+          mote.size * (0.4 + 0.6 * grow),
+          Color.lerp(colors.first, colors[1], t)!,
+          0.95 * pow(1 - t, 2),
+        );
+      case _FireMote.crackleSpark:
+        final speed = sqrt(mote.vx * mote.vx + mote.vy * mote.vy);
+        if (speed < 1) {
+          return;
+        }
+        final length = (speed * 0.09).clamp(1.5, 18.0);
+        _glow.addStreak(
+          mote.x,
+          mote.y,
+          mote.x - mote.vx / speed * length,
+          mote.y - mote.vy / speed * length,
+          mote.size * 1.6,
+          Color.lerp(_white, colors.first, t)!,
+          colors[1],
+          pow(1 - t, 1.4).toDouble(),
+        );
+    }
+  }
+
   bool _prepareSparkle(SpriteParticle sparkle) {
     final t = sparkle.progress;
     // The same fade as the old trail particles (easeOutQuart from 0.8)
@@ -582,6 +717,23 @@ class _Mote {
   double drag = 0;
   double size = 1;
   double phase = 0;
+
+  /// Waits this long before it shows up and starts moving
+  double delay = 0;
+
+  /// What kind of fire mote it is, ice motes are always glints
+  _FireMote fire = _FireMote.ember;
+}
+
+enum _FireMote {
+  /// Drifts off the orb and flares up white-hot before it cools down
+  ember,
+
+  /// Bursts out of a crackle that pops behind the orb
+  crackleSpark,
+
+  /// The flash of a crackle
+  crackleFlash,
 }
 
 /// The tail of an orb that is gone
