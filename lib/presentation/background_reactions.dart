@@ -36,7 +36,7 @@ class BackgroundReactions extends ChangeNotifier {
   /// milestone, quickly back to 0
   double flash = 0;
 
-  /// How much the stars swirl around the potato, eases towards 1 while a
+  /// How fast the stars swirl around the potato, eases towards 1 while a
   /// wave of multiple orbs is coming
   double swirl = 0;
 
@@ -105,7 +105,7 @@ class BackgroundReactions extends ChangeNotifier {
       fromRadius: 60,
       toRadius: 1100,
       lifespan: 1.6,
-      intensity: 1.3,
+      intensity: 1.1,
     );
   }
 
@@ -200,7 +200,7 @@ class BackgroundReactions extends ChangeNotifier {
 
     final swirlTarget = multiOrbWave ? 1.0 : 0.0;
     swirl += (swirlTarget - swirl) * (1 - exp(-1.5 * dt));
-    swirlAngle += swirl * 0.9 * dt;
+    swirlAngle = (swirlAngle + swirl * 0.9 * dt) % (2 * pi);
 
     // The stars are far away, they only follow the camera a bit
     final shake = hit * hit * 7;
@@ -241,6 +241,9 @@ class BackgroundWave {
     final t = 1 - progress;
     return lerpDouble(fromRadius, toRadius, 1 - t * t * t)!;
   }
+
+  /// Half the width of its ring, in world units, it widens as it grows
+  double get halfWidth => 2 * (14 + radius * 0.1);
 
   double get intensity {
     if (!isActive) {

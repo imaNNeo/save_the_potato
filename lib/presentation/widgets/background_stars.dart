@@ -210,24 +210,25 @@ class _BackgroundStarsPainter extends CustomPainter {
       ..setFloat(11, reactions.power)
       ..setFloat(12, reactions.hit)
       ..setFloat(13, reactions.swirlAngle)
-      ..setFloat(14, reactions.swirl)
-      ..setFloat(15, reactions.shakeX)
-      ..setFloat(16, reactions.shakeY)
-      ..setFloat(17, reactions.glowR)
-      ..setFloat(18, reactions.glowG)
-      ..setFloat(19, reactions.glowB)
-      ..setFloat(20, reactions.flash);
-    var i = 21;
+      ..setFloat(14, reactions.shakeX)
+      ..setFloat(15, reactions.shakeY)
+      ..setFloat(16, reactions.glowR)
+      ..setFloat(17, reactions.glowG)
+      ..setFloat(18, reactions.glowB)
+      ..setFloat(19, reactions.flash);
+    var i = 20;
     for (final wave in reactions.waves) {
+      final intensity = wave.intensity;
+      final focus = wave.focus;
       shader
         ..setFloat(i++, wave.radius)
-        ..setFloat(i++, wave.intensity)
-        ..setFloat(i++, wave.dirX)
-        ..setFloat(i++, wave.dirY)
-        ..setFloat(i++, wave.r)
-        ..setFloat(i++, wave.g)
-        ..setFloat(i++, wave.b)
-        ..setFloat(i++, wave.focus);
+        ..setFloat(i++, intensity > 0 ? 1 / wave.halfWidth : 0)
+        ..setFloat(i++, wave.dirX * focus)
+        ..setFloat(i++, wave.dirY * focus)
+        ..setFloat(i++, wave.r * intensity)
+        ..setFloat(i++, wave.g * intensity)
+        ..setFloat(i++, wave.b * intensity)
+        ..setFloat(i++, 1 - focus);
     }
   }
 

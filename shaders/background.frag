@@ -15,9 +15,6 @@
 #define STAR_COUNT 50.0
 #define NEIGHBOUR_SECTORS 2
 
-#define RADIUS_SEED 1337.0
-#define START_POS_SEED 2468.0
-#define THETA_SEED 1675.0
 
 uniform float iTime;
 uniform vec2 iResolution;
@@ -29,14 +26,15 @@ uniform float starSize;
 uniform float heat;
 uniform float power;
 uniform float hit;
-// x: how far the stars have swirled (radians), y: how much they swirl now
-uniform vec2 swirl;
+// How far the stars have swirled around the center, in radians
+uniform float swirl;
 uniform vec2 shake;
 // rgb: color of the glow around the potato, a: how much it flashes
 uniform vec4 glow;
-// Shockwaves, xy: radius and intensity, zw: direction they're strongest in.
-// rgb of their color is their color, a: how much it's focused on that
-// direction (0 is a full ring)
+// Shockwaves rolling out, see `BackgroundWave`.
+// wave: x radius, y 1 / its half width (0 when there's none), zw the
+// direction it's strongest in, as long as how much it's focused on it.
+// waveColor: rgb its color times its intensity, a 1 - its focus.
 uniform vec4 wave0;
 uniform vec4 waveColor0;
 uniform vec4 wave1;
@@ -46,8 +44,12 @@ uniform vec4 waveColor2;
 uniform vec4 wave3;
 uniform vec4 waveColor3;
 
-float rand(float s1, float s2) {
-    return fract(sin(dot(vec2(s1, s2), vec2(12.9898, 78.233))) * 43758.5453);
+// Three random numbers from 0 to 1 for star [i]. Only multiplications, a lot
+// cheaper than the usual fract(sin(...)) hash (Dave Hoskins' hash31).
+vec3 rand3(float i) {
+    vec3 p = fract(vec3(i + 0.5) * vec3(0.1031, 0.1030, 0.0973));
+    p += dot(p, p.yzx + 33.33);
+    return fract((p.xxy + p.yzz) * p.zyx);
 }
 
 float saturate(float v) {
@@ -60,43 +62,41 @@ vec3 renderBackground(vec2 uv) {
 }
 
 // How strong [wave] is at [p] (in world units, [r] away from the center)
-float waveAt(vec2 p, float r, vec4 wave, vec4 color) {
-    if (wave.y <= 0.0) {
-        return 0.0;
-    }
-    float width = 14.0 + wave.x * 0.16;
-    float d = (r - wave.x) / width;
-    float ring = exp(-d * d);
-    float facing = dot(p, wave.zw) / max(r, 1.0);
-    float directional = smoothstep(-0.3, 1.0, facing);
-    return ring * wave.y * mix(1.0, directional * directional, color.a);
+// How strong a wave is at [n] (the direction from the center), [r] away
+vec3 waveAt(vec2 n, float r, vec4 wave, vec4 color) {
+    float d = min(abs(r - wave.x) * wave.y, 1.0);
+    float ring = 1.0 - d * d;
+    float directional = saturate(color.a + dot(n, wave.zw));
+    return color.rgb * (ring * ring * directional);
 }
 
-float renderStar(vec2 uv, float i, float aspect, float stretch) {
+// [stretch] is how much to squash the distance behind (x) and in front of
+// (y) the star, to stretch it into a streak
+float renderStar(vec2 uv, float i, float aspect, vec2 stretch) {
     float maxDistance = aspect;
 
     // setup radius
-    float radiusrand = rand(i, RADIUS_SEED);
+    vec3 random = rand3(i);
+    float radiusrand = random.x;
     float rad = MIN_RADIUS + radiusrand * (MAX_RADIUS - MIN_RADIUS);
 
     // compute star position, somewhere inside its own sector
-    float startr = rand(i, START_POS_SEED) * maxDistance;
+    float startr = random.y * maxDistance;
     float speed = radiusrand * MAX_MOVEMENT_SPEED;
     float r = mod(startr + iTime * speed, max(1.0, maxDistance));
-    float theta = (i + rand(i, THETA_SEED)) / STAR_COUNT * TWOPI;
-    vec2 pos = vec2(r * cos(theta) * aspect, r * sin(theta));
+    float theta = (i + random.z) / STAR_COUNT * TWOPI + swirl;
+    vec2 dir = vec2(cos(theta), sin(theta));
+    vec2 pos = r * vec2(dir.x * aspect, dir.y);
 
     // blending/effects, stretched behind the star (towards the center) when
     // powered up, like flying at warp speed
     vec2 diff = uv - pos;
-    vec2 outward = pos / max(r, 0.0001);
-    float along = dot(diff, outward);
-    float across = dot(diff, vec2(-outward.y, outward.x));
-    along /= along < 0.0 ? 1.0 + stretch : 1.0 + stretch * 0.15;
+    float along = dot(diff, dir);
+    along *= along < 0.0 ? stretch.x : stretch.y;
+    float across = dir.x * diff.y - dir.y * diff.x;
     float dist = length(vec2(along, across));
-    float distFromStarCenter = dist / rad;
     float distTraveled = r / maxDistance;
-    float shape = saturate(1.0 / ((100.0 - min(starSize, 100.0)) * (1.0 / distTraveled) * distFromStarCenter) - 0.08);
+    float shape = saturate(distTraveled * rad / ((100.0 - min(starSize, 100.0)) * dist) - 0.08);
 
     return step(dist, rad) * shape;
 }
@@ -116,39 +116,24 @@ void main() {
 
     vec3 waveLight = vec3(0.0);
     float waves = 0.0;
-    float w = waveAt(p, r, wave0, waveColor0);
-    waveLight += waveColor0.rgb * w;
-    waves += w;
-    w = waveAt(p, r, wave1, waveColor1);
-    waveLight += waveColor1.rgb * w;
-    waves += w;
-    w = waveAt(p, r, wave2, waveColor2);
-    waveLight += waveColor2.rgb * w;
-    waves += w;
-    w = waveAt(p, r, wave3, waveColor3);
-    waveLight += waveColor3.rgb * w;
-    waves += w;
+    vec2 n = p / max(r, 1.0);
+    waveLight = waveAt(n, r, wave0, waveColor0) +
+        waveAt(n, r, wave1, waveColor1) +
+        waveAt(n, r, wave2, waveColor2) +
+        waveAt(n, r, wave3, waveColor3);
+    waves = max(waveLight.r, max(waveLight.g, waveLight.b));
 
     // The waves push the stars out as they roll by
     vec2 starUv = uv * (1.0 - min(waves, 1.5) * 0.06);
 
-    // Swirl the stars around the potato, the inner ones more
-    if (swirl.x != 0.0) {
-        float twist = swirl.x + swirl.y * 0.6 / (1.0 + length(starUv) * 1.5);
-        float c = cos(twist);
-        float s = sin(twist);
-        starUv = vec2(c * starUv.x - s * starUv.y, s * starUv.x + c * starUv.y);
-    }
-
     // Star positions are laid out before stretching x by the aspect ratio,
     // so find the sector in that unstretched space.
-    float angle = atan(starUv.y, starUv.x / aspect);
-    if (angle < 0.0) {
-        angle += TWOPI;
-    }
+    // The stars swirling around the center is the same as the pixel turning
+    // the other way
+    float angle = mod(atan(starUv.y, starUv.x / aspect) - swirl, TWOPI);
     float sector = floor(angle / TWOPI * STAR_COUNT);
 
-    float stretch = power * 5.0;
+    vec2 stretch = vec2(1.0 / (1.0 + power * 5.0), 1.0 / (1.0 + power * 0.75));
     float stars = 0.0;
     for (int k = -NEIGHBOUR_SECTORS; k <= NEIGHBOUR_SECTORS; ++k) {
         stars += renderStar(starUv, mod(sector + float(k), STAR_COUNT), aspect, stretch);
