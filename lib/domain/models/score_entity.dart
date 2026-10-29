@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-sealed class ScoreEntity with EquatableMixin {
+sealed class ScoreEntity with Equatable {
   abstract final int score;
 
   static ScoreEntity fromJson(Map<String, dynamic> jsonDecode) =>

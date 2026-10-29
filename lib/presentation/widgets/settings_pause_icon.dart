@@ -12,6 +12,8 @@ class SettingsPauseIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final gameCubit = context.read<GameCubit>();
     return BlocBuilder<GameCubit, GameState>(
+      buildWhen: (previous, current) =>
+          previous.playingState.runtimeType != current.playingState.runtimeType,
       builder: (context, state) {
         return SafeArea(
           child: Padding(

@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flame/collisions.dart';
-import 'package:flame/components.dart';
+import 'package:flame/components.dart' hide ComponentPool;
 import 'package:flame/extensions.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +13,7 @@ import 'package:save_the_potato/service_locator.dart';
 
 import 'component_pool.dart';
 import 'custom_particle.dart';
+import 'sprite_particle_batch.dart';
 import 'moving/moving_components.dart';
 import 'moving/orb/orb_type.dart';
 
@@ -49,7 +50,16 @@ class Shield extends PositionComponent
 
   late ComponentPool<CustomParticle> _shieldFlamePool;
 
+  /// Flames and sparkles, drawn in one batch (there are ~50 alive per shield)
+  final _particles = SpriteParticleBatch();
+  static const _particleKindFlame = 0;
+  static const _particleKindSparkle = 1;
+
   final _audioHelper = getIt.get<AudioHelper>();
+
+  @override
+  bool listenWhen(GameState previousState, GameState newState) =>
+      previousState.gameOverTimeScale != newState.gameOverTimeScale;
 
   @override
   void onNewState(GameState state) {
@@ -73,8 +83,8 @@ class Shield extends PositionComponent
 
     _shieldFlamePool = ComponentPool<CustomParticle>(
       () => CustomParticle(),
-      initialSize: 60,
-      debugName: 'Shield flame',
+      initialSize: 5,
+      debugName: 'Shield trail',
     );
 
     shieldLineColor = type.baseColor.withValues(alpha: 0.0);
@@ -136,11 +146,12 @@ class Shield extends PositionComponent
   }
 
   final _opacityTween = Tween(begin: 0.4, end: 0.0);
+  late TweenSequence<double> _increaseDecreaseTween;
 
   void _addParticles() {
     Random rnd = game.rnd;
 
-    final increaseDecreaseTween = TweenSequence<double>([
+    _increaseDecreaseTween = TweenSequence<double>([
       TweenSequenceItem<double>(
         tween: Tween<double>(
           begin: 0.0,
@@ -212,67 +223,35 @@ class Shield extends PositionComponent
         parent.parent.add(trailParticle);
 
         // Main flames (inside and moving out)
-        final mainFlame = _shieldFlamePool.get();
-        mainFlame.startParticle(
-          lifespan: 2.0,
-          pool: _shieldFlamePool,
-          position: localPos,
-          size: spriteActualSize,
-          anchor: Anchor.topLeft,
-          acceleration: isShortFlame
-              ? Vector2(rnd.nextDouble() * 20, -5 + rnd.nextDouble() * 10)
-              : Vector2(0, -10 + rnd.nextDouble() * 20),
-          renderDelegate: (canvas, overridePaint, particle) {
-            final opacity = increaseDecreaseTween.transform(particle.progress);
-            canvas.rotate(rotation);
-            if (opacity <= 0.01) {
-              return;
-            }
-            overridePaint.colorFilter = ColorFilter.mode(
-              color.withValues(alpha: opacity),
-              BlendMode.srcIn,
-            );
-            sprite.render(
-              canvas,
-              size: spriteActualSize,
-              anchor: Anchor.center,
-              overridePaint: overridePaint,
-            );
-          },
-        );
-        add(mainFlame);
+        final mainFlame = _particles.spawn(sprite: sprite, lifespan: 2.0)
+          ..kind = _particleKindFlame
+          ..color = color
+          ..drawScale = spriteActualSize.x / sprite.src.width
+          ..drawRotation = rotation;
+        mainFlame.position.setFrom(localPos);
+        if (isShortFlame) {
+          mainFlame.acceleration.setValues(
+            rnd.nextDouble() * 20,
+            -5 + rnd.nextDouble() * 10,
+          );
+        } else {
+          mainFlame.acceleration.setValues(0, -10 + rnd.nextDouble() * 20);
+        }
 
         // Sparkles (moving out)
-        final extraParticle = _smallSparkleSprites.random(game.rnd);
-        final sparkleParticle = _shieldFlamePool.get();
-        sparkleParticle.startParticle(
-          lifespan: 1.15,
-          pool: _shieldFlamePool,
-          acceleration: Vector2(
-            (rnd.nextDouble() * 60) - 10,
-            -7.5 + rnd.nextDouble() * 15,
-          ),
-          position: localPos,
-          size: spriteActualSize / 2,
-          anchor: Anchor.topLeft,
-          renderDelegate: (canvas, overridePaint, particle) {
-            final opacity = increaseDecreaseTween.transform(particle.progress);
-            if (opacity <= 0.01) {
-              return;
-            }
-            overridePaint.colorFilter = ColorFilter.mode(
-              color.withValues(alpha: opacity),
-              BlendMode.srcIn,
-            );
-            extraParticle.render(
-              canvas,
-              size: Vector2.all(opacity * 14),
-              anchor: Anchor.center,
-              overridePaint: overridePaint,
-            );
-          },
+        final sparkle =
+            _particles.spawn(
+                sprite: _smallSparkleSprites.random(game.rnd),
+                lifespan: 1.15,
+              )
+              ..kind = _particleKindSparkle
+              ..color = color
+              ..drawRotation = 0;
+        sparkle.position.setFrom(localPos);
+        sparkle.acceleration.setValues(
+          (rnd.nextDouble() * 60) - 10,
+          -7.5 + rnd.nextDouble() * 15,
         );
-        add(sparkleParticle);
       },
       repeat: true,
     );
@@ -282,6 +261,7 @@ class Shield extends PositionComponent
   @override
   void update(double dt) {
     _particleTimer.update(dt);
+    _particles.update(dt);
 
     if (shieldLineColor != shieldTargetColor) {
       shieldLineColor = Color.lerp(shieldLineColor, shieldTargetColor, dt)!;
@@ -301,6 +281,19 @@ class Shield extends PositionComponent
         ..color = shieldLineColor
         ..strokeWidth = shieldWidth,
     );
+    _particles.render(canvas, _prepareParticle);
+  }
+
+  bool _prepareParticle(SpriteParticle particle) {
+    final opacity = _increaseDecreaseTween.transform(particle.progress);
+    if (opacity <= 0.01) {
+      return false;
+    }
+    particle.drawOpacity = opacity;
+    if (particle.kind == _particleKindSparkle) {
+      particle.drawScale = opacity * 14 / particle.sprite.src.width;
+    }
+    return true;
   }
 
   @override
@@ -342,6 +335,7 @@ class Shield extends PositionComponent
   @override
   void onRemove() {
     _particleTimer.stop();
+    _particles.clear();
     super.onRemove();
   }
 }

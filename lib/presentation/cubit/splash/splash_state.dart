@@ -36,7 +36,7 @@ class SplashState extends Equatable {
   ];
 }
 
-class UpdateInfo with EquatableMixin {
+class UpdateInfo with Equatable {
   final bool forced;
   final String storeLink;
 

@@ -1,4 +1,4 @@
-import 'package:flame/components.dart';
+import 'package:flame/components.dart' hide ComponentPool;
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:save_the_potato/presentation/components/component_pool.dart';
 import 'package:save_the_potato/presentation/components/custom_particle.dart';

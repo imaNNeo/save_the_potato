@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flame/components.dart';
+import 'package:flame/components.dart' hide ComponentPool;
 import 'package:flame/extensions.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';

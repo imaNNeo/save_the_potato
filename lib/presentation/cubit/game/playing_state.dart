@@ -30,7 +30,7 @@ class PlayingStatePaused extends PlayingState {
   const PlayingStatePaused();
 }
 
-class PlayingStateGameOver extends PlayingState with EquatableMixin {
+class PlayingStateGameOver extends PlayingState with Equatable {
   final ScoreEntity score;
   final bool isHighScore;
   final ScoreEntity highestScore;

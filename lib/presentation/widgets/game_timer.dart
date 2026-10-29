@@ -8,6 +8,9 @@ class GameTimer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<GameCubit, GameState>(
+      // Only the displayed seconds matter
+      buildWhen: (previous, current) =>
+          previous.levelTimePassed.toInt() != current.levelTimePassed.toInt(),
       builder: (context, state) {
         return FormattedGameTime(time: state.levelTimePassed);
       },

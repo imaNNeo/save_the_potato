@@ -1,11 +1,11 @@
-import 'dart:io';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rive/rive.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
+import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
 import 'package:save_the_potato/domain/repository/settings_repository.dart';
@@ -14,6 +14,7 @@ import 'package:save_the_potato/presentation/cubit/configs/configs_cubit.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/pages/splash/splash_page.dart';
 import 'package:save_the_potato/service_locator.dart';
+
 import 'domain/repository/auth_repository.dart';
 import 'firebase_options.dart';
 import 'presentation/cubit/game/game_cubit.dart';
@@ -25,7 +26,7 @@ final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (Platform.isAndroid || Platform.isIOS) {
+  if (AppUtils.isAndroid || AppUtils.isIOS) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
@@ -40,6 +41,7 @@ Future<void> main() async {
       };
     }
   }
+  await RiveNative.init();
   setupServiceLocator();
   runApp(const MyApp());
 }

@@ -1,12 +1,15 @@
 import 'dart:ui';
 
-import 'package:flame/components.dart';
+import 'package:flame/components.dart' hide ComponentPool;
 import 'package:flame/extensions.dart';
 
 import 'component_pool.dart';
 
-typedef CustomParticleRenderDelegate =
-    void Function(Canvas canvas, Paint overridePaint, CustomParticle particle);
+typedef CustomParticleRenderDelegate = void Function(
+  Canvas canvas,
+  Paint overridePaint,
+  CustomParticle particle,
+);
 
 class CustomParticle extends PositionComponent {
   final _overridePaint = Paint();
@@ -59,7 +62,7 @@ class CustomParticle extends PositionComponent {
       return;
     }
     _progressTimer?.update(dt);
-    position += acceleration * dt;
+    position.addScaled(acceleration, dt);
     speed.addScaled(acceleration, dt);
     position
       ..addScaled(speed, dt)

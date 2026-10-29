@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flame/components.dart';
+import 'package:flame/components.dart' hide ComponentPool;
 import 'package:flame/extensions.dart';
 import 'package:flutter/widgets.dart';
 import 'package:save_the_potato/presentation/components/component_pool.dart';

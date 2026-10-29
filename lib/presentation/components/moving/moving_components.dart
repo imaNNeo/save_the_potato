@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flame/collisions.dart';
-import 'package:flame/components.dart';
+import 'package:flame/components.dart' hide ComponentPool;
 import 'package:flame/extensions.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
@@ -46,6 +46,10 @@ sealed class MovingComponent extends PositionComponent
   }
 
   Random get rnd => game.rnd;
+
+  @override
+  bool listenWhen(GameState previousState, GameState newState) =>
+      previousState.gameOverTimeScale != newState.gameOverTimeScale;
 
   @override
   void onNewState(GameState state) {

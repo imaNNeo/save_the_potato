@@ -36,9 +36,8 @@ class GameColors {
     final mineBorderColor = rank <= 3
         ? GameColors.getRankBgColor(rank)
         : Theme.of(context).colorScheme.primary;
-    final normalBorderColor = Theme.of(
-      context,
-    ).dividerColor.withValues(alpha: 0.3);
+    final normalBorderColor = Theme.of(context).dividerColor
+        .withValues(alpha: 0.3);
     return isMine ? mineBorderColor : normalBorderColor;
   }
 

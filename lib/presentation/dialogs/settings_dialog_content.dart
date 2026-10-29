@@ -37,9 +37,8 @@ class _SettingsDialogContentState extends State<SettingsDialogContent> {
                 value: state.audioEnabled,
                 onChanged: (bool? newValue) {
                   analyticsHelper.logSettingsAudioChanged(newValue!);
-                  BlocProvider.of<SettingsCubit>(
-                    context,
-                  ).setAudioEnabled(newValue);
+                  BlocProvider.of<SettingsCubit>(context)
+                      .setAudioEnabled(newValue);
                 },
               ),
             ),

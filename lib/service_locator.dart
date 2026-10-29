@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:get_it/get_it.dart';
 import 'package:save_the_potato/data/firebase_analytics_helper.dart';
 import 'package:save_the_potato/data/key_value_storage.dart';
@@ -11,6 +9,7 @@ import 'package:save_the_potato/data/sources/firebase_functions_wrapper.dart';
 import 'package:save_the_potato/data/sources/remote/scores_remote_data_source.dart';
 import 'package:save_the_potato/data/sources/local/settings_data_source.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
+import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/settings_repository.dart';
 
@@ -23,7 +22,7 @@ Future<void> setupServiceLocator() async {
   // Helpers
   getIt.registerLazySingleton<AudioHelper>(() => AudioHelper());
   getIt.registerLazySingleton<KeyValueStorage>(() {
-    if (Platform.isIOS || Platform.isAndroid) {
+    if (AppUtils.isIOS || AppUtils.isAndroid) {
       return SecureKeyValueStorage();
     } else {
       return SharedPrefKeyValueStorage();

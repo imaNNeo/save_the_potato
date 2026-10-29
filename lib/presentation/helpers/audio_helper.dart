@@ -51,7 +51,7 @@ class AudioHelper {
     if (_bgmHandle != null) {
       _soLoud.stop(_bgmHandle!);
     }
-    _bgmHandle = await _soLoud.play(
+    _bgmHandle = _soLoud.play(
       _bgm,
       volume: GameConstants.bgmVolume,
       looping: true,

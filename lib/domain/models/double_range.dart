@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
 
-class DoubleRange with EquatableMixin {
+class DoubleRange with Equatable {
   final double min;
   final double max;
 

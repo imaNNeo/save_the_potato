@@ -18,9 +18,8 @@ class HighScoreWidget extends StatelessWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(FadeRoute(page: const LeaderboardPage()));
+                Navigator.of(context)
+                    .push(FadeRoute(page: const LeaderboardPage()));
               },
               borderRadius: BorderRadius.circular(16),
               child: Padding(

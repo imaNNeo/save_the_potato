@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Save The Potato is a cross-platform casual game built with Flutter and the Flame game engine. It won Flame Jam 3 (theme: "Hot & Cold", constraint: "No Text"). Published on Google Play and the App Store.
 
-- **Dart SDK:** >=3.2.3 <4.0.0
+- **Dart SDK:** ^3.13.0 (Flutter >=3.47.0)
 - **Platforms:** Android, iOS, Web, macOS, Linux, Windows
 - **Package name:** `dev.app2pack.savethepotato`
 

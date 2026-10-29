@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:toastification/toastification.dart';
@@ -46,7 +45,7 @@ class AccountAlreadyExistsDialogContent extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    if (Platform.isIOS) {
+                    if (AppUtils.isIOS) {
                       context.read<AuthCubit>().loginWithApple(
                         forceToReplace: true,
                       );

@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/models/presentation_message.dart';
 import 'package:save_the_potato/presentation/cubit/auth/auth_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/configs/configs_cubit.dart';
@@ -35,10 +34,10 @@ class _SplashPageState extends State<SplashPage> {
 
   Future<bool> _isSuspiciousDevice() async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    if (Platform.isAndroid) {
+    if (AppUtils.isAndroid) {
       final info = await deviceInfo.androidInfo;
       return !info.isPhysicalDevice || info.host.contains('ubuntu');
-    } else if (Platform.isIOS) {
+    } else if (AppUtils.isIOS) {
       final info = await deviceInfo.iosInfo;
       return !info.isPhysicalDevice;
     } else {
@@ -56,9 +55,8 @@ class _SplashPageState extends State<SplashPage> {
         if (!mounted) {
           return;
         }
-        PresentationMessage.raw(
-          'Oh, you are a bot!',
-        ).showAsToast(context, type: ToastificationType.error);
+        PresentationMessage.raw('Oh, you are a bot!')
+            .showAsToast(context, type: ToastificationType.error);
         return;
       }
       if (!mounted) {

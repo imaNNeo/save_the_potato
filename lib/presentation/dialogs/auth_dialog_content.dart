@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,14 +12,14 @@ class AuthDialogContent extends StatelessWidget {
   const AuthDialogContent({super.key}) : super();
 
   String get _buttonText {
-    if (Platform.isIOS) {
+    if (AppUtils.isIOS) {
       return 'Sign in with Apple';
     }
     return 'Sign in with Google';
   }
 
   void _signInClicked(BuildContext context) {
-    if (Platform.isIOS) {
+    if (AppUtils.isIOS) {
       context.read<AuthCubit>().loginWithApple();
     } else {
       context.read<AuthCubit>().loginWithGoogle();

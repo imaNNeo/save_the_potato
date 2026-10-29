@@ -119,6 +119,14 @@ class _MainPageState extends State<MainPage>
     final gameWidget = GameWidget(game: _game);
     return BlocConsumer<GameCubit, GameState>(
       key: pageRootKey,
+      // GameState changes every frame while playing, only react to what
+      // this page uses.
+      listenWhen: (previous, current) =>
+          previous.restartGame != current.restartGame ||
+          previous.onNewHighScore != current.onNewHighScore,
+      buildWhen: (previous, current) =>
+          previous.playingState != current.playingState ||
+          previous.showGameOverUI != current.showGameOverUI,
       listener: (context, state) {
         if (state.restartGame) {
           _restartGameWidgets();

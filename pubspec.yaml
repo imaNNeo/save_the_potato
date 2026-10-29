@@ -4,39 +4,40 @@ publish_to: 'none'
 version: 1.5.3+10503
 
 environment:
-  sdk: '>=3.8.0 <4.0.0'
+  sdk: ^3.13.0
+  flutter: '>=3.47.0'
 
 dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.8
-  flame: ^1.35.1
-  flame_noise: ^0.3.2+20
+  cupertino_icons: ^2.0.0
+  flame: ^1.38.2
+  flame_noise: ^0.3.3+23
   flutter_bloc: ^9.1.1
-  flame_bloc: ^1.12.21
-  equatable: ^2.0.8
-  flame_rive: ^1.10.23
-  rive: ^0.13.20
-  shared_preferences: ^2.5.4
-  get_it: ^9.2.1
+  flame_bloc: ^1.12.24
+  equatable: ^3.0.0
+  flame_rive: ^1.11.2
+  rive: ^0.14.11
+  shared_preferences: ^2.5.6
+  get_it: ^9.3.0
   flutter_animate: ^4.5.2
-  flutter_secure_storage: ^10.0.0
-  firebase_core: ^4.5.0
-  firebase_auth: ^6.2.0
-  firebase_crashlytics: ^5.0.8
-  firebase_analytics: ^12.1.3
-  cloud_functions: ^6.0.7
-  toastification: ^3.0.3
-  url_launcher: ^6.3.2
-  device_info_plus: ^12.3.0
-  uuid: ^4.5.3
-  package_info_plus: ^9.0.0
-  flutter_svg: ^2.2.3
+  flutter_secure_storage: ^11.2.0
+  firebase_core: ^5.1.0
+  firebase_auth: ^7.0.1
+  firebase_crashlytics: ^6.0.1
+  firebase_analytics: ^13.0.1
+  cloud_functions: ^7.0.1
+  toastification: ^3.2.2
+  url_launcher: ^6.3.3
+  device_info_plus: ^13.3.0
+  uuid: ^4.6.0
+  package_info_plus: ^10.2.2
+  flutter_svg: ^2.3.2
   screenshot: ^3.0.0
-  share_plus: ^12.0.1
-  stream_transform: ^2.1.1
-  flutter_soloud: ^3.5.0
+  share_plus: ^13.3.1
+  stream_transform: ^2.1.2
+  flutter_soloud: ^5.2.2
 
 dev_dependencies:
   flutter_test:
