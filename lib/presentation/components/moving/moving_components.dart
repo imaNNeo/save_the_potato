@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart' hide ComponentPool;
@@ -12,7 +13,6 @@ import 'package:save_the_potato/service_locator.dart';
 
 import '../../potato_game.dart';
 import 'health/health_disjoint_particle.dart';
-import 'orb/moving_orb_head.dart';
 import 'orb/orb_type.dart';
 
 part 'orb/moving_orb.dart';
