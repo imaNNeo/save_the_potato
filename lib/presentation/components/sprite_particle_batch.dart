@@ -53,9 +53,6 @@ class SpriteParticleBatch {
 
   int get length => _alive.length;
 
-  /// The particles alive right now, to move them all at once
-  Iterable<SpriteParticle> get particles => _alive;
-
   /// Returns a reset particle that is already alive; set its fields.
   SpriteParticle spawn({required Sprite sprite, required double lifespan}) {
     final particle = _free.isNotEmpty ? _free.removeLast() : SpriteParticle();

@@ -91,15 +91,6 @@ class Shield extends PositionComponent
   double? _lastAngle;
   static const _maxTurnSpeed = pi * 1.8;
 
-  /// Flames and sparkles drift behind when the shield turns
-  static const _flameLag = 0.3;
-  static const _sparkleLag = 0.45;
-
-  /// The shield's look lags a little when it starts turning and swings past
-  /// when it stops. Only the look, it still blocks orbs where it really is.
-  double _sway = 0;
-  double _swaySpeed = 0;
-
   /// The streak and chain, read once per frame
   double _heat = 0;
   double _charge = 0;
@@ -330,8 +321,7 @@ class Shield extends PositionComponent
     super.update(dt);
   }
 
-  /// Follows how fast the shield turns, drags the flames behind it and
-  /// swings its look
+  /// Follows how fast the shield turns, for its trail
   void _updateTurning(double dt) {
     if (dt <= 0) {
       return;
@@ -349,61 +339,14 @@ class Shield extends PositionComponent
     final targetSpin = (turnSpeed.abs() / _maxTurnSpeed).clamp(0.0, 1.0);
     final rate = targetSpin > _spin ? 12.0 : 5.0;
     _spin += (targetSpin - _spin) * (1 - exp(-rate * dt));
-    _trailLength = 0.9 * _spin;
-
-    if (turn != 0) {
-      // Flames and sparkles live in the shield's own space, turn them back
-      // a bit so they trail behind
-      final flameTurn = -turn * _flameLag;
-      final sparkleTurn = -turn * _sparkleLag;
-      final flameCos = cos(flameTurn), flameSin = sin(flameTurn);
-      final sparkleCos = cos(sparkleTurn), sparkleSin = sin(sparkleTurn);
-      final cx = size.x / 2, cy = size.y / 2;
-      for (final particle in _particles.particles) {
-        final double c, s, by;
-        switch (particle.kind) {
-          case _particleKindFlame:
-            (c, s, by) = (flameCos, flameSin, flameTurn);
-          case _particleKindSparkle:
-            (c, s, by) = (sparkleCos, sparkleSin, sparkleTurn);
-          default:
-            continue;
-        }
-        final x = particle.position.x - cx, y = particle.position.y - cy;
-        particle.position.setValues(cx + x * c - y * s, cy + x * s + y * c);
-        final ax = particle.acceleration.x, ay = particle.acceleration.y;
-        particle.acceleration.setValues(ax * c - ay * s, ax * s + ay * c);
-        particle.drawRotation += by;
-      }
-    }
-
-    // A springy sway: lags behind while turning, swings past on a stop
-    final target = (-turnSpeed * 0.012).clamp(-0.06, 0.06);
-    const stiffness = 631.0; // (2π·4)²
-    const damping = 15.0; // 2·0.3·2π·4
-    var remaining = min(dt, 0.1);
-    while (remaining > 0) {
-      final step = min(remaining, 1 / 120);
-      _swaySpeed +=
-          (stiffness * (target - _sway) - damping * _swaySpeed) * step;
-      _sway += _swaySpeed * step;
-      remaining -= step;
-    }
+    // Kept short so the shield is always easy to find
+    _trailLength = 0.5 * _spin;
   }
 
   @override
   void render(Canvas canvas) {
     super.render(canvas);
     final cx = size.x / 2, cy = size.y / 2;
-    final swayed = _sway.abs() > 0.0005;
-    if (swayed) {
-      canvas
-        ..save()
-        ..translate(cx, cy)
-        ..rotate(_sway)
-        ..translate(-cx, -cy);
-    }
-
     _linePath.reset();
     const segments = 24;
     for (var i = 0; i <= segments; i++) {
@@ -487,10 +430,6 @@ class Shield extends PositionComponent
     }
     _addEmbers(cx, cy);
     _glow.render(canvas);
-
-    if (swayed) {
-      canvas.restore();
-    }
   }
 
   /// A soft glow under the shield that streams out behind it when it turns
