@@ -172,7 +172,7 @@ class Potato extends PositionComponent
           break;
         case FireOrb():
           _audioHelper.playOrbHitSound();
-          game.onOrbHit();
+          game.onOrbHit(_angleTo(other));
           if (bloc.state.healthPoints > 0) {
             fireHitTrigger.fire();
           }
@@ -180,7 +180,7 @@ class Potato extends PositionComponent
           break;
         case IceOrb():
           _audioHelper.playOrbHitSound();
-          game.onOrbHit();
+          game.onOrbHit(_angleTo(other));
           if (bloc.state.healthPoints > 0) {
             iceHitTrigger.fire();
           }
@@ -189,6 +189,11 @@ class Potato extends PositionComponent
       }
       other.removeFromParent();
     }
+  }
+
+  double _angleTo(PositionComponent other) {
+    final diff = other.absoluteCenter - absoluteCenter;
+    return atan2(diff.y, diff.x);
   }
 
   @override
