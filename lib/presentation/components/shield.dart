@@ -76,7 +76,7 @@ class Shield extends PositionComponent
   late final double Function(double) _trailAtAngle = _trailAt;
   late final double Function(double) _currentAtAngle = _currentAt;
 
-  /// A thin white-hot line on top of the shield when it's hot or charged
+  /// A thin white-hot line on top of the shield when it's hot or powered up
   final _corePaint = Paint()
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round
@@ -91,9 +91,9 @@ class Shield extends PositionComponent
   double? _lastAngle;
   static const _maxTurnSpeed = pi * 1.8;
 
-  /// The streak and chain, read once per frame
+  /// The streak's heat and power, read once per frame
   double _heat = 0;
-  double _charge = 0;
+  double _power = 0;
 
   /// The shield bumps out when a chain of quick blocks is released
   double _releaseAge = double.infinity;
@@ -231,9 +231,9 @@ class Shield extends PositionComponent
         final spriteIndex = rnd.nextInt(_flameSprites.length);
         final isShortFlame = spriteIndex <= 2;
         final sprite = _flameSprites[spriteIndex];
-        // The hotter and more charged, the bigger the flames
+        // The hotter and more powered up, the bigger the flames
         final spriteActualSize =
-            sprite.originalSize / 8 * (1 + _heat * 0.3 + _charge * 0.2);
+            sprite.originalSize / 8 * (1 + _heat * 0.3 + _power * 0.6);
 
         /// -0.5 to 0.5
         final place = (generateAngle - angle) / (maxAngle - minAngle);
@@ -283,9 +283,10 @@ class Shield extends PositionComponent
   void update(double dt) {
     final streak = _impacts.streak;
     _heat = streak.heat;
-    _charge = streak.charge;
-    // The hotter the streak, the more the shield burns
-    _particleTimer.limit = lerpDouble(0.06, 0.042, _heat)!;
+    _power = streak.power;
+    // The hotter and more powered up, the more the shield burns
+    _particleTimer.limit =
+        lerpDouble(0.06, 0.042, _heat)! * (1 - _power * 0.45);
     _particleTimer.update(dt);
     _particles.update(dt);
 
@@ -311,7 +312,7 @@ class Shield extends PositionComponent
       _flash += _releasePower * exp(-_releaseAge / 0.12);
     }
     _flash = min(1.0, _flash);
-    _aura = 0.35 * pow(_heat, 1.3);
+    _aura = min(1.0, 0.35 * pow(_heat, 1.3) + _power * 0.45);
 
     if (_lastStreakCount >= 5 && streak.count == 0) {
       _fizzle = 1;
@@ -364,7 +365,7 @@ class Shield extends PositionComponent
     var lineColor = Color.lerp(
       shieldLineColor,
       Colors.white,
-      min(1.0, _flash * 0.7 + _heat * 0.12 + _charge * 0.3),
+      min(1.0, _flash * 0.7 + _heat * 0.12 + _power * 0.35),
     )!;
     if (_fizzle > 0) {
       final flicker = 0.6 + 0.4 * sin(_time * 50);
@@ -372,10 +373,10 @@ class Shield extends PositionComponent
     }
     shieldLinePaint
       ..color = lineColor
-      ..strokeWidth = shieldWidth + _flash * 3 + _charge * 2.5 + _heat;
+      ..strokeWidth = shieldWidth + _flash * 3 + _power * 4.5 + _heat;
     canvas.drawPath(_linePath, shieldLinePaint);
 
-    final core = min(1.0, _smoothStep(0.35, 0.8, _heat) * 0.8 + _charge * 0.7);
+    final core = min(1.0, _smoothStep(0.35, 0.8, _heat) * 0.8 + _power * 0.8);
     if (core > 0.02 && _fizzle < 0.5) {
       _corePaint
         ..color = Colors.white.withValues(alpha: core * 0.85)
@@ -401,8 +402,8 @@ class Shield extends PositionComponent
         _auraAtAngle,
       );
     }
-    if (_charge > 0.01) {
-      // Quick blocks charge it up, energy races along it
+    if (_power > 0.01) {
+      // Every block powers it up, energy races along it
       _glow.addArcBand(
         cx,
         cy,
@@ -518,10 +519,10 @@ class Shield extends PositionComponent
     return body * f * f;
   }
 
-  /// Pulses of energy racing along a charged shield
+  /// Pulses of energy racing along a powered up shield
   double _currentAt(double angle) {
     final pulse = 0.5 + 0.5 * sin(_time * 16 - angle * 9 * _spinDirection);
-    return _charge * 0.6 * (0.25 + 0.75 * pulse * pulse) * _endsFade(angle);
+    return _power * 0.75 * (0.25 + 0.75 * pulse * pulse) * _endsFade(angle);
   }
 
   /// How bright the streak makes the shield glow at [angle]
@@ -575,8 +576,8 @@ class Shield extends PositionComponent
     if (_hits.length >= _maxHits) {
       _hits.removeAt(0);
     }
-    final chain = _impacts.streak.targetCharge;
-    _hits.add(_ShieldHit(localAngle, strength: 1 + heat * 0.4 + chain * 0.3));
+    final power = _impacts.streak.power;
+    _hits.add(_ShieldHit(localAngle, strength: 1 + heat * 0.4 + power * 0.3));
 
     // The shield flares up where it was hit
     final rnd = game.rnd;

@@ -100,8 +100,8 @@ class ShieldImpactEffects extends Component
     required double radius,
   }) {
     final isMilestone = streak.block();
-    // The hotter the streak and the longer the chain, the bigger the hit
-    final heat = min(1.0, streak.targetHeat + streak.targetCharge * 0.35);
+    // The hotter and more powered up, the bigger the hit
+    final heat = min(1.0, streak.targetHeat + streak.power * 0.35);
     final x = center.x + cos(angle) * radius;
     final y = center.y + sin(angle) * radius;
 
@@ -302,7 +302,7 @@ class ShieldImpactEffects extends Component
     }
   }
 
-  /// A chain of [length] quick blocks is over: the shields let the charge go
+  /// A chain of [length] quick blocks is over: the shields let it all go
   void _releaseChain(int length) {
     final power = min(1.0, (length - 2) / (DefendStreak.fullChain - 2));
     final player = game.world.player;
