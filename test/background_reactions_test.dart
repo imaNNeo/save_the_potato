@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -61,20 +62,47 @@ void main() {
     expect(reactions.shakeX.abs(), lessThan(0.01));
   });
 
-  test('stars swirl only during a multi orb wave', () {
+  test('gets tense only during a multi orb wave, in the chosen style', () {
     final reactions = BackgroundReactions();
+    final style = BackgroundReactions.tenseStyle;
+    addTearDown(() => BackgroundReactions.tenseStyle = style);
+
+    BackgroundReactions.tenseStyle = TenseStyle.warpAndRedEdges;
     for (var i = 0; i < 120; i++) {
       update(reactions, 0.016, multi: true);
     }
-    expect(reactions.swirl, greaterThan(0.9));
-    final angle = reactions.swirlAngle;
-    expect(angle, greaterThan(0));
+    expect(reactions.tension, greaterThan(0.9));
+    expect(reactions.warp, greaterThan(0.9));
+    expect(reactions.redEdges, greaterThan(0));
+    expect(reactions.speedLines, 0);
+    expect(reactions.speedBoost, greaterThan(3));
+    expect(reactions.stretch, greaterThan(0.5));
+
+    BackgroundReactions.tenseStyle = TenseStyle.speedLines;
+    expect(reactions.warp, 0);
+    expect(reactions.redEdges, 0);
+    expect(reactions.speedLines, greaterThan(0.9));
 
     for (var i = 0; i < 600; i++) {
       update(reactions, 0.016);
     }
-    expect(reactions.swirl, lessThan(0.01));
-    expect(reactions.swirlAngle, greaterThan(angle));
+    expect(reactions.tension, lessThan(0.01));
+    expect(reactions.speedLines, lessThan(0.01));
+  });
+
+  test('the red edges pulse like a heartbeat', () {
+    final reactions = BackgroundReactions();
+    final style = BackgroundReactions.tenseStyle;
+    addTearDown(() => BackgroundReactions.tenseStyle = style);
+    BackgroundReactions.tenseStyle = TenseStyle.redEdges;
+
+    final values = <double>[];
+    for (var i = 0; i < 300; i++) {
+      update(reactions, 0.016, multi: true);
+      values.add(reactions.redEdges);
+    }
+    final last = values.sublist(200);
+    expect(last.reduce(max) - last.reduce(min), greaterThan(0.2));
   });
 
   test('stops notifying once everything has calmed down', () {

@@ -207,16 +207,17 @@ class _BackgroundStarsPainter extends CustomPainter {
   void _setReactions(BackgroundReactions reactions) {
     shader
       ..setFloat(10, reactions.heat)
-      ..setFloat(11, reactions.power)
+      ..setFloat(11, reactions.stretch)
       ..setFloat(12, reactions.hit)
-      ..setFloat(13, reactions.swirlAngle)
-      ..setFloat(14, reactions.shakeX)
-      ..setFloat(15, reactions.shakeY)
-      ..setFloat(16, reactions.glowR)
-      ..setFloat(17, reactions.glowG)
-      ..setFloat(18, reactions.glowB)
-      ..setFloat(19, reactions.flash);
-    var i = 20;
+      ..setFloat(13, reactions.redEdges)
+      ..setFloat(14, reactions.speedLines)
+      ..setFloat(15, reactions.shakeX)
+      ..setFloat(16, reactions.shakeY)
+      ..setFloat(17, reactions.glowR)
+      ..setFloat(18, reactions.glowG)
+      ..setFloat(19, reactions.glowB)
+      ..setFloat(20, reactions.flash);
+    var i = 21;
     for (final wave in reactions.waves) {
       final intensity = wave.intensity;
       final focus = wave.focus;

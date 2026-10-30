@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:save_the_potato/presentation/helpers/tense_style/tense_style_override.dart';
 
 /// What the stars background (`shaders/background.frag`) should be doing to
 /// follow the game: the game tells it what happened (an orb blocked, a chain
@@ -36,12 +37,35 @@ class BackgroundReactions extends ChangeNotifier {
   /// milestone, quickly back to 0
   double flash = 0;
 
-  /// How fast the stars swirl around the potato, eases towards 1 while a
-  /// wave of multiple orbs is coming
-  double swirl = 0;
+  /// How the background gets tense while a wave of multiple orbs is coming
+  static TenseStyle tenseStyle = TenseStyle.values.firstWhere(
+    (style) => style.name == tenseStyleOverride(),
+    orElse: () => TenseStyle.warpAndRedEdges,
+  );
 
-  /// How far the stars have swirled so far, in radians
-  double swirlAngle = 0;
+  /// Eases towards 1 while a wave of multiple orbs is coming
+  double tension = 0;
+
+  /// The stars racing out at warp speed, from 0 to 1
+  double get warp => tenseStyle.hasWarp ? tension : 0;
+
+  /// Red pulsing like a heartbeat at the edges of the screen, from 0 to 1
+  double get redEdges => tenseStyle.hasRedEdges ? tension * _heartbeat : 0;
+
+  /// Flickering speed lines around the edges of the screen, from 0 to 1
+  double get speedLines => tenseStyle.hasSpeedLines ? tension : 0;
+
+  /// How much the stars are stretched into streaks, from 0 to 1
+  double get stretch => max(power, warp * 0.65);
+
+  double _tenseTime = 0;
+
+  /// A quick thump, then a pause, about 100 beats per minute
+  double get _heartbeat {
+    final beat = (_tenseTime * 1.65) % 1;
+    final thump = exp(-beat * 9) + 0.6 * exp(-(beat - 0.22).abs() * 18);
+    return 0.45 + 0.55 * min(1.0, thump);
+  }
 
   /// Offset of the stars in world units, follows the camera kicks and shakes
   /// when the potato is hit
@@ -56,13 +80,13 @@ class BackgroundReactions extends ChangeNotifier {
   double _hitTime = 0;
 
   /// How much faster than usual the stars should fly right now
-  double get speedBoost => 1 + power * 1.8 + heat * 0.35 + swirl * 0.4;
+  double get speedBoost => 1 + power * 1.8 + heat * 0.35 + warp * 3;
 
   bool get _isActive =>
       power > 0.001 ||
       hit > 0.001 ||
       flash > 0.001 ||
-      swirl > 0.001 ||
+      tension > 0.001 ||
       shakeX.abs() > 0.01 ||
       shakeY.abs() > 0.01 ||
       waves.any((wave) => wave.isActive);
@@ -198,9 +222,9 @@ class BackgroundReactions extends ChangeNotifier {
     _hitTime += dt;
     hit *= exp(-2.6 * dt);
 
-    final swirlTarget = multiOrbWave ? 1.0 : 0.0;
-    swirl += (swirlTarget - swirl) * (1 - exp(-1.5 * dt));
-    swirlAngle = (swirlAngle + swirl * 0.9 * dt) % (2 * pi);
+    final tenseTarget = multiOrbWave ? 1.0 : 0.0;
+    tension += (tenseTarget - tension) * (1 - exp(-1.5 * dt));
+    _tenseTime = tension > 0.001 ? _tenseTime + dt : 0;
 
     // The stars are far away, they only follow the camera a bit
     final shake = hit * hit * 7;
@@ -216,6 +240,25 @@ class BackgroundReactions extends ChangeNotifier {
       notifyListeners();
     }
   }
+}
+
+/// Ways the background can get tense while a wave of multiple orbs is coming
+enum TenseStyle {
+  warp(hasWarp: true),
+  redEdges(hasRedEdges: true),
+  speedLines(hasSpeedLines: true),
+  warpAndRedEdges(hasWarp: true, hasRedEdges: true),
+  all(hasWarp: true, hasRedEdges: true, hasSpeedLines: true);
+
+  const TenseStyle({
+    this.hasWarp = false,
+    this.hasRedEdges = false,
+    this.hasSpeedLines = false,
+  });
+
+  final bool hasWarp;
+  final bool hasRedEdges;
+  final bool hasSpeedLines;
 }
 
 /// A shockwave rolling out of the potato through the stars

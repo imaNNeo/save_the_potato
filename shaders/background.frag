@@ -24,10 +24,12 @@ uniform float starSize;
 
 // Reactions to the game, see `BackgroundReactions`
 uniform float heat;
+// How much the stars are stretched into streaks
 uniform float power;
 uniform float hit;
-// How far the stars have swirled around the center, in radians
-uniform float swirl;
+// While a wave of multiple orbs is coming, x: red at the edges of the screen,
+// y: speed lines
+uniform vec2 tension;
 uniform vec2 shake;
 // rgb: color of the glow around the potato, a: how much it flashes
 uniform vec4 glow;
@@ -84,7 +86,7 @@ float renderStar(vec2 uv, float i, float aspect, vec2 stretch) {
     float startr = random.y * maxDistance;
     float speed = radiusrand * MAX_MOVEMENT_SPEED;
     float r = mod(startr + iTime * speed, max(1.0, maxDistance));
-    float theta = (i + random.z) / STAR_COUNT * TWOPI + swirl;
+    float theta = (i + random.z) / STAR_COUNT * TWOPI;
     vec2 dir = vec2(cos(theta), sin(theta));
     vec2 pos = r * vec2(dir.x * aspect, dir.y);
 
@@ -128,9 +130,7 @@ void main() {
 
     // Star positions are laid out before stretching x by the aspect ratio,
     // so find the sector in that unstretched space.
-    // The stars swirling around the center is the same as the pixel turning
-    // the other way
-    float angle = mod(atan(starUv.y, starUv.x / aspect) - swirl, TWOPI);
+    float angle = mod(atan(starUv.y, starUv.x / aspect), TWOPI);
     float sector = floor(angle / TWOPI * STAR_COUNT);
 
     vec2 stretch = vec2(1.0 / (1.0 + power * 5.0), 1.0 / (1.0 + power * 0.75));
@@ -153,6 +153,21 @@ void main() {
     color += waveLight * (0.12 + 0.18 * centerGlow);
     float vignette = smoothstep(0.4, 1.6, dist);
     color = mix(color, vec3(0.45, 0.0, 0.04), hit * vignette * 0.7);
+
+    // Flickering speed lines rushing in from the edges, every slice around
+    // the center gets a new random line a few times per second
+    float slices = angle / TWOPI * 120.0;
+    vec3 line = rand3(floor(slices) + floor(iTime * 4.0) * 131.0);
+    float lineShape = 1.0 - smoothstep(0.04, 0.22, abs(fract(slices) - 0.5));
+    float lineStart = 0.45 + line.z * 0.45;
+    float lines = step(0.62, line.x) * lineShape *
+        smoothstep(lineStart, lineStart + 0.4, dist) * (0.5 + 0.5 * line.y);
+    color += mix(vec3(1.0), starColor, 0.4) * lines * tension.y * 0.45;
+
+    // Red creeping in from the edges of the screen, pulsing like a heartbeat
+    vec2 edge = abs(FlutterFragCoord().xy / iResolution.xy * 2.0 - 1.0);
+    float edges = smoothstep(0.6, 1.35, length(edge));
+    color = mix(color, vec3(0.8, 0.02, 0.08), edges * tension.x * 0.7);
 
     fragColor = vec4(color, 1.0);
 }
