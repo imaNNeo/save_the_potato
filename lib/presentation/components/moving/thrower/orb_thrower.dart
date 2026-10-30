@@ -34,7 +34,7 @@ class OrbThrower extends PositionComponent
     required this.type,
     required this.look,
     required double ringAngle,
-    this.ringRadius = 250,
+    this.ringRadius = 230,
     this.radius = 21,
   }) : _angle = ringAngle,
        _seed = type.isFire ? 0 : 2,
