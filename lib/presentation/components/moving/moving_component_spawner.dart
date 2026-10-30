@@ -13,6 +13,7 @@ import 'package:save_the_potato/presentation/potato_game.dart';
 import 'moving_components.dart';
 import 'multi_orb_spawner.dart';
 import 'orb/orb_type.dart';
+import 'thrower/orb_thrower.dart';
 
 class MovingComponentSpawner extends Component
     with ParentIsA<MyWorld>, FlameBlocListenable<GameCubit, GameState> {
@@ -51,6 +52,16 @@ class MovingComponentSpawner extends Component
   late ComponentPool<IceOrb> _iceOrbPool;
   late ComponentPool<MovingHealth> _movingHealthPool;
 
+  /// The two enemies that throw the orbs
+  late OrbThrower _fireThrower;
+  late OrbThrower _iceThrower;
+
+  OrbThrower _throwerOf(OrbType type) =>
+      type.isFire ? _fireThrower : _iceThrower;
+
+  /// Orbs that are still winding up in a thrower's hands
+  int _pendingThrows = 0;
+
   @override
   void onLoad() {
     super.onLoad();
@@ -72,6 +83,36 @@ class MovingComponentSpawner extends Component
       initialSize: 3,
       debugName: 'MovingHealthPool',
     );
+    final look = ThrowerLook.current;
+    parent.addAll([
+      _fireThrower = OrbThrower(
+        type: OrbType.fire,
+        look: look,
+        ringAngle: -pi * 0.75,
+      ),
+      _iceThrower = OrbThrower(
+        type: OrbType.ice,
+        look: look,
+        ringAngle: pi * 0.25,
+      ),
+    ]);
+  }
+
+  /// A random spot on the throwers' ring, away from both throwers
+  double _randomThrowerAngle({double minGap = pi / 3}) {
+    final rnd = Random();
+    var angle = rnd.nextDouble() * pi * 2;
+    for (var i = 0; i < 8; i++) {
+      final farEnough = [
+        _fireThrower,
+        _iceThrower,
+      ].every((t) => cos(angle - t.ringAngle) < cos(minGap));
+      if (farEnough) {
+        break;
+      }
+      angle = rnd.nextDouble() * pi * 2;
+    }
+    return angle;
   }
 
   @override
@@ -81,6 +122,11 @@ class MovingComponentSpawner extends Component
       return;
     }
     final gameMode = bloc.state.currentGameMode;
+    final angry =
+        gameMode is GameModeMultiSpawn ||
+        bloc.state.upcomingGameMode is GameModeMultiSpawn;
+    _fireThrower.angry = angry;
+    _iceThrower.angry = angry;
     aliveSingleMovingOrbs.removeWhere((e) => e.isRemoved);
     aliveMultiOrbSpawners.removeWhere((e) => e.isRemoved);
 
@@ -99,7 +145,9 @@ class MovingComponentSpawner extends Component
     switch (gameMode) {
       case GameModeSingleSpawn():
         if (bloc.state.upcomingGameMode != null) {
-          if (aliveSingleMovingOrbs.isEmpty && movingHealth == null) {
+          if (aliveSingleMovingOrbs.isEmpty &&
+              _pendingThrows == 0 &&
+              movingHealth == null) {
             bloc.switchToUpcomingMode();
           }
           return;
@@ -221,11 +269,15 @@ class MovingComponentSpawner extends Component
     if (!game.playingState.isPlaying) {
       return;
     }
-    final position = _getRandomSpawnPositionAroundMap();
     final difficulty = bloc.state.difficulty;
     final orbType = OrbType.values.random();
+    final thrower = _throwerOf(orbType);
+    final angle = _randomThrowerAngle();
+    thrower.moveTo(angle, duration: _throwerGlideToWave);
     final spawner = MultiOrbSpawner(
-      position: position,
+      position: Vector2(cos(angle), sin(angle)) * thrower.ringRadius,
+      thrower: thrower,
+      startDelay: _throwerGlideToWave + 0.1,
       spawnOrbsEvery: gameMode.getSpawnOrbsEvery(difficulty),
       spawnOrbsMoveSpeed: gameMode.getSpawnOrbsMoveSpeed(difficulty),
       orbType: orbType,
@@ -238,13 +290,17 @@ class MovingComponentSpawner extends Component
     aliveMultiOrbSpawners.add(spawner);
 
     if (Random().nextDouble() <= 2 / 3) {
-      final oppositePosition = position.clone()..negate();
       final oppositeOrbType = switch (orbType) {
         OrbType.fire => OrbType.ice,
         OrbType.ice => OrbType.fire,
       };
+      final oppositeThrower = _throwerOf(oppositeOrbType);
+      oppositeThrower.moveTo(angle + pi, duration: _throwerGlideToWave);
       final oppositeSpawner = MultiOrbSpawner(
-        position: oppositePosition,
+        position:
+            Vector2(cos(angle + pi), sin(angle + pi)) * thrower.ringRadius,
+        thrower: oppositeThrower,
+        startDelay: _throwerGlideToWave + 0.1,
         spawnOrbsEvery: gameMode.getSpawnOrbsEvery(difficulty),
         spawnOrbsMoveSpeed: gameMode.getSpawnOrbsMoveSpeed(difficulty),
         orbType: oppositeOrbType,
@@ -266,16 +322,35 @@ class MovingComponentSpawner extends Component
     if (!game.playingState.isPlaying) {
       return;
     }
-    final moveSpeed = gameMode.getSpawnOrbsMoveSpeed(bloc.state.difficulty);
+    final difficulty = bloc.state.difficulty;
+    final moveSpeed = gameMode.getSpawnOrbsMoveSpeed(difficulty);
+    final orbType = OrbType.values.random();
+    final thrower = _throwerOf(orbType);
+    // The wind-up shrinks with the spawn rate so throws never pile up
+    final windUp = gameMode.getSpawnOrbsEvery(difficulty) * 0.35;
+    _pendingThrows++;
+    thrower.windUpAndThrow(windUp, (releasePosition) {
+      _pendingThrows--;
+      if (!game.playingState.isPlaying) {
+        return;
+      }
+      _throwOrb(orbType, moveSpeed, releasePosition);
+      thrower.moveTo(_randomThrowerAngle(), duration: 0.9);
+    });
+  }
+
+  static const _throwerGlideToWave = 0.5;
+
+  void _throwOrb(OrbType orbType, double moveSpeed, Vector2 position) {
     late MovingOrb orb;
-    switch (OrbType.values.random()) {
+    switch (orbType) {
       case OrbType.fire:
         orb = _fireOrbPool.get();
         orb.loaded.then(
           (_) => orb.initialize(
             speed: moveSpeed,
             target: player,
-            position: _getRandomSpawnPositionAroundMap(),
+            position: position,
             onDisjointCallback: () {
               _fireOrbPool.release(orb as FireOrb);
             },
@@ -284,14 +359,13 @@ class MovingComponentSpawner extends Component
             },
           ),
         );
-        break;
       case OrbType.ice:
         orb = _iceOrbPool.get();
         orb.loaded.then(
           (_) => orb.initialize(
             speed: moveSpeed,
             target: player,
-            position: _getRandomSpawnPositionAroundMap(),
+            position: position,
             onDisjointCallback: () {
               _iceOrbPool.release(orb as IceOrb);
             },
@@ -300,7 +374,6 @@ class MovingComponentSpawner extends Component
             },
           ),
         );
-        break;
     }
     parent.add(orb);
     aliveSingleMovingOrbs.add(orb);

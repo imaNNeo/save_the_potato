@@ -6,6 +6,7 @@ import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 
 import 'moving_components.dart';
+import 'thrower/orb_thrower.dart';
 
 class MultiOrbSpawner extends PositionComponent
     with ParentIsA<MyWorld>, FlameBlocListenable<GameCubit, GameState> {
@@ -17,6 +18,12 @@ class MultiOrbSpawner extends PositionComponent
   final bool isOpposite;
   final ComponentPool<FireOrb> fireOrbPool;
   final ComponentPool<IceOrb> iceOrbPool;
+
+  /// The enemy that throws this series, it jolts on every orb
+  final OrbThrower? thrower;
+
+  /// Lets the thrower get into place before the first orb
+  double startDelay;
 
   bool firstSpawned = false;
   double timeSinceLastSpawn = 0;
@@ -35,6 +42,8 @@ class MultiOrbSpawner extends PositionComponent
     required this.fireOrbPool,
     required this.iceOrbPool,
     this.isOpposite = false,
+    this.thrower,
+    this.startDelay = 0,
   });
 
   @override
@@ -55,6 +64,10 @@ class MultiOrbSpawner extends PositionComponent
     if (isRemoved) {
       return;
     }
+    if (startDelay > 0) {
+      startDelay -= dt;
+      return;
+    }
     if (!firstSpawned) {
       firstSpawned = true;
       spawnOrb(spawnedCount);
@@ -70,6 +83,8 @@ class MultiOrbSpawner extends PositionComponent
   }
 
   void spawnOrb(int spawnedCount) {
+    thrower?.kick();
+    final position = thrower?.releasePosition ?? this.position;
     late MovingOrb orb;
     switch (orbType) {
       case OrbType.fire:
