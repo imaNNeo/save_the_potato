@@ -45,7 +45,7 @@ class MovingComponentSpawner extends Component
 
   PotatoGame get game => parent.game;
 
-  late GameState _previousGameState;
+  GameState? _previousGameState;
 
   late ComponentPool<FireOrb> _fireOrbPool;
   late ComponentPool<IceOrb> _iceOrbPool;
@@ -85,8 +85,10 @@ class MovingComponentSpawner extends Component
     aliveMultiOrbSpawners.removeWhere((e) => e.isRemoved);
 
     // Check for initial delay
-    if (_previousGameState.currentGameMode.runtimeType !=
-        gameMode.runtimeType) {
+    // On the first playing frame there is no previous state yet (it was set
+    // asynchronously before), which happens when the player taps right away.
+    final previousGameMode = (_previousGameState ?? bloc.state).currentGameMode;
+    if (previousGameMode.runtimeType != gameMode.runtimeType) {
       initialDelayTimeRemaining = gameMode.initialDelay;
     }
     _previousGameState = bloc.state;
