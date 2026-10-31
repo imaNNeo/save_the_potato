@@ -269,23 +269,50 @@ class _PortalPainter {
     final spin = t * (angry ? 5 : 2.5) + raw * raw * 9;
     _bloom(jitter, reach, c[1], 0.3 * life);
     final arms = angry ? 3 : 2;
+    // Per arm: one blurred glow along its thick inner part, then thin hot
+    // segments that taper and brighten toward the middle. Only one blur
+    // per arm keeps it cheap.
+    const steps = 16;
+    final hot = Paint()
+      ..blendMode = BlendMode.plus
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final hotColor = Color.lerp(c[0], _white, 0.35)!;
     for (var arm = 0; arm < arms; arm++) {
-      const steps = 28;
-      Offset? last;
-      for (var i = 0; i <= steps; i++) {
+      final points = [
+        for (var i = 0; i <= steps; i++)
+          () {
+            final k = i / steps;
+            final a = spin + arm * pi * 2 / arms + k * pi * 2.2;
+            return jitter + Offset(cos(a), sin(a)) * (reach * pow(1 - k, 1.25));
+          }(),
+      ];
+      final glow = Path()..moveTo(points[5].dx, points[5].dy);
+      for (final p in points.skip(6)) {
+        glow.lineTo(p.dx, p.dy);
+      }
+      canvas.drawPath(
+        glow,
+        Paint()
+          ..blendMode = BlendMode.plus
+          ..color = c[1].withValues(alpha: _clamp01(life * 0.65))
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5 * size
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 2.5 * size),
+      );
+      for (var i = 1; i <= steps; i++) {
         final k = i / steps;
-        final a = spin + arm * pi * 2 / arms + k * pi * 2.2;
-        final p = jitter + Offset(cos(a), sin(a)) * (reach * pow(1 - k, 1.25));
-        if (last != null) {
-          _lightStroke(
-            Path()
-              ..moveTo(last.dx, last.dy)
-              ..lineTo(p.dx, p.dy),
-            (0.4 + 2.0 * k) * size,
-            life * (0.15 + 0.85 * k),
-          );
-        }
-        last = p;
+        canvas.drawLine(
+          points[i - 1],
+          points[i],
+          hot
+            ..color = hotColor.withValues(
+              alpha: _clamp01(life * (0.15 + 0.85 * k)),
+            )
+            ..strokeWidth = (0.4 + 2.0 * k) * size,
+        );
       }
     }
     _bloom(jitter, 6 * size, _white, life * 0.6);
