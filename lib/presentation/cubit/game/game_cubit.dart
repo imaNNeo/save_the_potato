@@ -16,6 +16,7 @@ import 'package:save_the_potato/domain/repository/scores_repository.dart';
 import 'package:save_the_potato/presentation/components/motivation_component.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
+import 'package:save_the_potato/presentation/cubit/game/opening_pacing.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 
 part 'game_state.dart';
@@ -63,9 +64,47 @@ class GameCubit extends Cubit<GameState> {
     _analyticsHelper.logLevelStart(afterGuideDurationMills);
     emit(state.copyWith(playingState: const PlayingStatePlaying()));
     _audioHelper.playBackgroundMusic();
+    calmTime = 0;
+    _wavesStarted = 0;
+    _nextWaveAt = OpeningPacing.firstWaveAfter;
+  }
+
+  /// Seconds played outside the waves this round
+  double calmTime = 0;
+  int _wavesStarted = 0;
+  double _nextWaveAt = OpeningPacing.firstWaveAfter;
+
+  /// The wave director: starts a wave after enough calm play
+  void _directWaves(double dt) {
+    if (state.currentGameMode is! GameModeSingleSpawn ||
+        state.upcomingGameMode != null) {
+      return;
+    }
+    calmTime += dt;
+    if (calmTime < _nextWaveAt) {
+      return;
+    }
+    final rnd = Random();
+    emit(
+      state.copyWith(
+        upcomingGameMode: ValueWrapper(
+          GameModeMultiSpawn(
+            spawnerSpawnCount: OpeningPacing.waveSpawnerCount(
+              _wavesStarted,
+              rnd,
+            ),
+          ),
+        ),
+      ),
+    );
+    _wavesStarted++;
+    _nextWaveAt = calmTime + OpeningPacing.nextWaveAfter(rnd);
   }
 
   void _tryToSwitchToMultiSpawnGameMode() {
+    if (OpeningPacing.current.hasDirector) {
+      return;
+    }
     if (state.currentGameMode is GameModeMultiSpawn) {
       return;
     }
@@ -108,6 +147,9 @@ class GameCubit extends Cubit<GameState> {
             : null,
       ),
     );
+    if (OpeningPacing.current.hasDirector) {
+      _directWaves(dt);
+    }
   }
 
   void potatoOrbHit() {

@@ -8,6 +8,7 @@ import 'package:save_the_potato/presentation/components/component_pool.dart';
 import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
+import 'package:save_the_potato/presentation/cubit/game/opening_pacing.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 
 import 'moving_components.dart';
@@ -141,9 +142,10 @@ class MovingComponentSpawner extends Component
           return;
         }
         timeSinceLastSingleOrbSpawn += dt;
-        final spawnOrbsEvery = gameMode.getSpawnOrbsEvery(
-          bloc.state.difficulty,
-        );
+        var spawnOrbsEvery = gameMode.getSpawnOrbsEvery(bloc.state.difficulty);
+        if (OpeningPacing.current == OpeningPacing.breathing) {
+          spawnOrbsEvery *= OpeningPacing.breathingFactor(bloc.calmTime);
+        }
         if (timeSinceLastSingleOrbSpawn >= spawnOrbsEvery &&
             bloc.state.upcomingGameMode == null &&
             movingHealth == null) {
@@ -308,9 +310,21 @@ class MovingComponentSpawner extends Component
     if (!game.playingState.isPlaying) {
       return;
     }
+    final pair =
+        OpeningPacing.current == OpeningPacing.doubles &&
+        Random().nextDouble() <
+            OpeningPacing.doubleChance(bloc.state.levelTimePassed);
+    if (pair) {
+      _spawnFromPortal(gameMode, OrbType.fire);
+      _spawnFromPortal(gameMode, OrbType.ice);
+    } else {
+      _spawnFromPortal(gameMode, OrbType.values.random());
+    }
+  }
+
+  void _spawnFromPortal(GameModeSingleSpawn gameMode, OrbType orbType) {
     final difficulty = bloc.state.difficulty;
     final moveSpeed = gameMode.getSpawnOrbsMoveSpeed(difficulty);
-    final orbType = OrbType.values.random();
     final spawnEvery = gameMode.getSpawnOrbsEvery(difficulty);
     // It forms slower early on, so new players see where the orb comes from
     final formDuration = (spawnEvery * 0.5).clamp(0.4, 1.0);
