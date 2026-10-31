@@ -14,6 +14,7 @@ import 'package:save_the_potato/presentation/rhythm/rhythm_hit.dart';
 import 'moving_components.dart';
 import 'multi_orb_spawner.dart';
 import 'orb/orb_type.dart';
+import 'portal/orb_portal.dart';
 
 class MovingComponentSpawner extends Component
     with ParentIsA<MyWorld>, FlameBlocListenable<GameCubit, GameState> {
@@ -52,6 +53,12 @@ class MovingComponentSpawner extends Component
   late ComponentPool<IceOrb> _iceOrbPool;
   late ComponentPool<MovingHealth> _movingHealthPool;
 
+  /// Portals still forming, their orb hasn't left yet
+  final List<OrbPortal> _formingPortals = [];
+
+  /// Where the last portals were, so the next one forms somewhere else
+  final List<double> _recentPortalAngles = [];
+
   @override
   void onLoad() {
     super.onLoad();
@@ -75,6 +82,32 @@ class MovingComponentSpawner extends Component
     );
   }
 
+  /// A random spot around the potato, away from the last few portals. It
+  /// stays on screen on phones (the world is at least 600 wide).
+  Vector2 _randomPortalPosition() {
+    final rnd = Random();
+    var angle = rnd.nextDouble() * pi * 2;
+    for (var i = 0; i < 10; i++) {
+      final farEnough = _recentPortalAngles.every(
+        (a) => cos(angle - a) < cos(pi / 3),
+      );
+      if (farEnough) {
+        break;
+      }
+      angle = rnd.nextDouble() * pi * 2;
+    }
+    _rememberPortalAngle(angle);
+    final distance = 185 + rnd.nextDouble() * 40;
+    return Vector2(cos(angle), sin(angle)) * distance;
+  }
+
+  void _rememberPortalAngle(double angle) {
+    _recentPortalAngles.add(angle);
+    if (_recentPortalAngles.length > 2) {
+      _recentPortalAngles.removeAt(0);
+    }
+  }
+
   @override
   void update(double dt) {
     super.update(dt);
@@ -86,6 +119,7 @@ class MovingComponentSpawner extends Component
       return;
     }
     final gameMode = bloc.state.currentGameMode;
+    _formingPortals.removeWhere((p) => p.isRemoved || p.isOpen);
     aliveSingleMovingOrbs.removeWhere((e) => e.isRemoved);
     aliveMultiOrbSpawners.removeWhere((e) => e.isRemoved);
 
@@ -104,7 +138,9 @@ class MovingComponentSpawner extends Component
     switch (gameMode) {
       case GameModeSingleSpawn():
         if (bloc.state.upcomingGameMode != null) {
-          if (aliveSingleMovingOrbs.isEmpty && movingHealth == null) {
+          if (aliveSingleMovingOrbs.isEmpty &&
+              _formingPortals.isEmpty &&
+              movingHealth == null) {
             bloc.switchToUpcomingMode();
           }
           return;
@@ -272,11 +308,39 @@ class MovingComponentSpawner extends Component
     if (!game.playingState.isPlaying) {
       return;
     }
-    final position = _getRandomSpawnPositionAroundMap();
-    final difficulty = bloc.state.difficulty;
     final orbType = OrbType.values.random();
+    final position = _randomPortalPosition();
+    _addWaveSeries(gameMode, orbType, position);
+
+    if (Random().nextDouble() > 2 / 3) {
+      return;
+    }
+    final oppositeOrbType = switch (orbType) {
+      OrbType.fire => OrbType.ice,
+      OrbType.ice => OrbType.fire,
+    };
+    final oppositePosition = position.clone()..negate();
+    _rememberPortalAngle(atan2(oppositePosition.y, oppositePosition.x));
+    _addWaveSeries(
+      gameMode,
+      oppositeOrbType,
+      oppositePosition,
+      isOpposite: true,
+    );
+  }
+
+  /// An angry portal that sweeps around the potato while it pours a series
+  void _addWaveSeries(
+    GameModeMultiSpawn gameMode,
+    OrbType orbType,
+    Vector2 position, {
+    bool isOpposite = false,
+  }) {
+    final difficulty = bloc.state.difficulty;
     final spawner = MultiOrbSpawner(
       position: position,
+      portal: _openWavePortal(orbType, position),
+      startDelay: _wavePortalFormDuration,
       spawnOrbsEvery: gameMode.getSpawnOrbsEvery(difficulty),
       spawnOrbsMoveSpeed: gameMode.getSpawnOrbsMoveSpeed(difficulty),
       orbType: orbType,
@@ -284,31 +348,16 @@ class MovingComponentSpawner extends Component
       spawnCount: gameMode.orbsSpawnCount(),
       iceOrbPool: _iceOrbPool,
       fireOrbPool: _fireOrbPool,
+      isOpposite: isOpposite,
     );
     parent.add(spawner);
     aliveMultiOrbSpawners.add(spawner);
-
-    if (Random().nextDouble() <= 2 / 3) {
-      final oppositePosition = position.clone()..negate();
-      final oppositeOrbType = switch (orbType) {
-        OrbType.fire => OrbType.ice,
-        OrbType.ice => OrbType.fire,
-      };
-      final oppositeSpawner = MultiOrbSpawner(
-        position: oppositePosition,
-        spawnOrbsEvery: gameMode.getSpawnOrbsEvery(difficulty),
-        spawnOrbsMoveSpeed: gameMode.getSpawnOrbsMoveSpeed(difficulty),
-        orbType: oppositeOrbType,
-        target: player,
-        spawnCount: gameMode.orbsSpawnCount(),
-        iceOrbPool: _iceOrbPool,
-        fireOrbPool: _fireOrbPool,
-        isOpposite: true,
-      );
-      parent.add(oppositeSpawner);
-      aliveMultiOrbSpawners.add(oppositeSpawner);
-    }
   }
+
+  /// Which way the wave portals sweep this wave. Both ends of a pair turn
+  /// the same way, so they stay opposite.
+  double get _waveSweepDirection =>
+      multiOrbSpawnerSpawnCounter.isEven ? 1.0 : -1.0;
 
   void singleSpawn(GameModeSingleSpawn gameMode) {
     if (bloc.state.upcomingGameMode != null) {
@@ -317,16 +366,57 @@ class MovingComponentSpawner extends Component
     if (!game.playingState.isPlaying) {
       return;
     }
-    final moveSpeed = gameMode.getSpawnOrbsMoveSpeed(bloc.state.difficulty);
+    final difficulty = bloc.state.difficulty;
+    final moveSpeed = gameMode.getSpawnOrbsMoveSpeed(difficulty);
+    final orbType = OrbType.values.random();
+    final spawnEvery = gameMode.getSpawnOrbsEvery(difficulty);
+    // It forms slower early on, so new players see where the orb comes from
+    final formDuration = (spawnEvery * 0.5).clamp(0.4, 1.0);
+    // It slides around the potato while forming, so the player follows it
+    final drift = (Random().nextBool() ? 1 : -1) * 0.9;
+    late OrbPortal portal;
+    portal = OrbPortal(
+      type: orbType,
+      position: _randomPortalPosition(),
+      formDuration: formDuration,
+      drift: drift,
+      onOpen: () {
+        portal.close();
+        if (game.playingState.isPlaying) {
+          _throwOrb(orbType, moveSpeed, portal.position.clone());
+        }
+      },
+    );
+    parent.add(portal);
+    _formingPortals.add(portal);
+  }
+
+  static const _wavePortalFormDuration = 0.7;
+
+  /// An angry portal that stays open while its wave pours out of it
+  OrbPortal _openWavePortal(OrbType type, Vector2 position) {
+    final portal = OrbPortal(
+      type: type,
+      position: position,
+      formDuration: _wavePortalFormDuration,
+      angry: true,
+      drift: _waveSweepDirection * 1.1,
+      driftWhileOpen: true,
+    );
+    parent.add(portal);
+    return portal;
+  }
+
+  void _throwOrb(OrbType orbType, double moveSpeed, Vector2 position) {
     late MovingOrb orb;
-    switch (OrbType.values.random()) {
+    switch (orbType) {
       case OrbType.fire:
         orb = _fireOrbPool.get();
         orb.loaded.then(
           (_) => orb.initialize(
             speed: moveSpeed,
             target: player,
-            position: _getRandomSpawnPositionAroundMap(),
+            position: position,
             onDisjointCallback: () {
               _fireOrbPool.release(orb as FireOrb);
             },
@@ -335,14 +425,13 @@ class MovingComponentSpawner extends Component
             },
           ),
         );
-        break;
       case OrbType.ice:
         orb = _iceOrbPool.get();
         orb.loaded.then(
           (_) => orb.initialize(
             speed: moveSpeed,
             target: player,
-            position: _getRandomSpawnPositionAroundMap(),
+            position: position,
             onDisjointCallback: () {
               _iceOrbPool.release(orb as IceOrb);
             },
@@ -351,7 +440,6 @@ class MovingComponentSpawner extends Component
             },
           ),
         );
-        break;
     }
     parent.add(orb);
     aliveSingleMovingOrbs.add(orb);

@@ -36,12 +36,16 @@ class BackgroundReactions extends ChangeNotifier {
   /// milestone, quickly back to 0
   double flash = 0;
 
-  /// How fast the stars swirl around the potato, eases towards 1 while a
-  /// wave of multiple orbs is coming
-  double swirl = 0;
+  /// Eases towards 1 from when a wave of multiple orbs is announced until
+  /// it's over. The stars fly faster and a few long streaks glide out past
+  /// them, to show something special is happening.
+  double tension = 0;
 
-  /// How far the stars have swirled so far, in radians
-  double swirlAngle = 0;
+  /// How much the stars are stretched into streaks, from 0 to 1
+  double get stretch => max(power, tension * 0.7);
+
+  /// How much faster than usual the stars should fly right now
+  double get speedBoost => 1 + power * 1.8 + heat * 0.35 + tension * 9;
 
   /// Offset of the stars in world units, follows the camera kicks and shakes
   /// when the potato is hit
@@ -55,14 +59,11 @@ class BackgroundReactions extends ChangeNotifier {
 
   double _hitTime = 0;
 
-  /// How much faster than usual the stars should fly right now
-  double get speedBoost => 1 + power * 1.8 + heat * 0.35 + swirl * 0.4;
-
   bool get _isActive =>
       power > 0.001 ||
       hit > 0.001 ||
       flash > 0.001 ||
-      swirl > 0.001 ||
+      tension > 0.001 ||
       shakeX.abs() > 0.01 ||
       shakeY.abs() > 0.01 ||
       waves.any((wave) => wave.isActive);
@@ -198,9 +199,8 @@ class BackgroundReactions extends ChangeNotifier {
     _hitTime += dt;
     hit *= exp(-2.6 * dt);
 
-    final swirlTarget = multiOrbWave ? 1.0 : 0.0;
-    swirl += (swirlTarget - swirl) * (1 - exp(-1.5 * dt));
-    swirlAngle = (swirlAngle + swirl * 0.9 * dt) % (2 * pi);
+    final tenseTarget = multiOrbWave ? 1.0 : 0.0;
+    tension += (tenseTarget - tension) * (1 - exp(-1.5 * dt));
 
     // The stars are far away, they only follow the camera a bit
     final shake = hit * hit * 7;

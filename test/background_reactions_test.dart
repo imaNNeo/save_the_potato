@@ -61,20 +61,20 @@ void main() {
     expect(reactions.shakeX.abs(), lessThan(0.01));
   });
 
-  test('stars swirl only during a multi orb wave', () {
+  test('during a multi orb wave the stars rush and streaks glide out', () {
     final reactions = BackgroundReactions();
     for (var i = 0; i < 120; i++) {
       update(reactions, 0.016, multi: true);
     }
-    expect(reactions.swirl, greaterThan(0.9));
-    final angle = reactions.swirlAngle;
-    expect(angle, greaterThan(0));
+    expect(reactions.tension, greaterThan(0.9));
+    expect(reactions.speedBoost, greaterThan(9));
+    expect(reactions.stretch, greaterThan(0.3));
 
     for (var i = 0; i < 600; i++) {
       update(reactions, 0.016);
     }
-    expect(reactions.swirl, lessThan(0.01));
-    expect(reactions.swirlAngle, greaterThan(angle));
+    expect(reactions.tension, lessThan(0.01));
+    expect(reactions.speedBoost, closeTo(1, 0.05));
   });
 
   test('stops notifying once everything has calmed down', () {
