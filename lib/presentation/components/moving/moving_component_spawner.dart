@@ -257,49 +257,82 @@ class MovingComponentSpawner extends Component
     if (!game.playingState.isPlaying) {
       return;
     }
-    final difficulty = bloc.state.difficulty;
     final orbType = OrbType.values.random();
     final position = _randomPortalPosition();
-    final portal = _openWavePortal(orbType, position);
+    final pattern = WavePattern.current;
+    _addWaveSeries(gameMode, orbType, position, pattern);
+
+    // Crossfire always has the opposite portal, a beat behind
+    final withOpposite =
+        pattern == WavePattern.crossfire || Random().nextDouble() <= 2 / 3;
+    if (!withOpposite) {
+      return;
+    }
+    final oppositeOrbType = switch (orbType) {
+      OrbType.fire => OrbType.ice,
+      OrbType.ice => OrbType.fire,
+    };
+    final oppositePosition = position.clone()..negate();
+    _rememberPortalAngle(atan2(oppositePosition.y, oppositePosition.x));
+    _addWaveSeries(
+      gameMode,
+      oppositeOrbType,
+      oppositePosition,
+      pattern,
+      isOpposite: true,
+    );
+  }
+
+  void _addWaveSeries(
+    GameModeMultiSpawn gameMode,
+    OrbType orbType,
+    Vector2 position,
+    WavePattern pattern, {
+    bool isOpposite = false,
+  }) {
+    final difficulty = bloc.state.difficulty;
+    final spawnEvery = gameMode.getSpawnOrbsEvery(difficulty);
+    // Both ends of a sweep turn the same way, so they stay opposite
+    final sweep = pattern == WavePattern.sweep
+        ? _waveSweepDirection * 1.1
+        : 0.0;
+    var hopAngle = atan2(position.y, position.x);
+    final hopStep = (Random().nextBool() ? 1 : -1) * pi / 4;
     final spawner = MultiOrbSpawner(
       position: position,
-      portal: portal,
-      startDelay: _wavePortalFormDuration,
-      spawnOrbsEvery: gameMode.getSpawnOrbsEvery(difficulty),
+      portal: _openWavePortal(orbType, position, drift: sweep),
+      startDelay:
+          _wavePortalFormDuration +
+          (pattern == WavePattern.crossfire && isOpposite ? spawnEvery / 2 : 0),
+      spawnOrbsEvery: spawnEvery,
       spawnOrbsMoveSpeed: gameMode.getSpawnOrbsMoveSpeed(difficulty),
       orbType: orbType,
       target: player,
       spawnCount: gameMode.orbsSpawnCount(),
       iceOrbPool: _iceOrbPool,
       fireOrbPool: _fireOrbPool,
+      isOpposite: isOpposite,
+      hopTo: pattern == WavePattern.scatter
+          ? () {
+              hopAngle += hopStep;
+              return _openWavePortal(
+                orbType,
+                Vector2(cos(hopAngle), sin(hopAngle)) * position.length,
+                formDuration: _scatterPortalFormDuration,
+              );
+            }
+          : null,
+      hopDelay: _scatterPortalFormDuration,
     );
     parent.add(spawner);
     aliveMultiOrbSpawners.add(spawner);
-
-    if (Random().nextDouble() <= 2 / 3) {
-      final oppositeOrbType = switch (orbType) {
-        OrbType.fire => OrbType.ice,
-        OrbType.ice => OrbType.fire,
-      };
-      final oppositePosition = position.clone()..negate();
-      _rememberPortalAngle(atan2(oppositePosition.y, oppositePosition.x));
-      final oppositeSpawner = MultiOrbSpawner(
-        position: oppositePosition,
-        portal: _openWavePortal(oppositeOrbType, oppositePosition),
-        startDelay: _wavePortalFormDuration,
-        spawnOrbsEvery: gameMode.getSpawnOrbsEvery(difficulty),
-        spawnOrbsMoveSpeed: gameMode.getSpawnOrbsMoveSpeed(difficulty),
-        orbType: oppositeOrbType,
-        target: player,
-        spawnCount: gameMode.orbsSpawnCount(),
-        iceOrbPool: _iceOrbPool,
-        fireOrbPool: _fireOrbPool,
-        isOpposite: true,
-      );
-      parent.add(oppositeSpawner);
-      aliveMultiOrbSpawners.add(oppositeSpawner);
-    }
   }
+
+  /// Which way the sweeping wave portals turn this wave
+  double get _waveSweepDirection =>
+      multiOrbSpawnerSpawnCounter.isEven ? 1.0 : -1.0;
+
+  static const _scatterPortalFormDuration = 0.35;
 
   void singleSpawn(GameModeSingleSpawn gameMode) {
     if (bloc.state.upcomingGameMode != null) {
@@ -336,12 +369,19 @@ class MovingComponentSpawner extends Component
   static const _wavePortalFormDuration = 0.7;
 
   /// An angry portal that stays open while its wave pours out of it
-  OrbPortal _openWavePortal(OrbType type, Vector2 position) {
+  OrbPortal _openWavePortal(
+    OrbType type,
+    Vector2 position, {
+    double drift = 0,
+    double formDuration = _wavePortalFormDuration,
+  }) {
     final portal = OrbPortal(
       type: type,
       position: position,
-      formDuration: _wavePortalFormDuration,
+      formDuration: formDuration,
       angry: true,
+      drift: drift,
+      driftWhileOpen: drift != 0,
     );
     parent.add(portal);
     return portal;
@@ -384,4 +424,25 @@ class MovingComponentSpawner extends Component
     parent.add(orb);
     aliveSingleMovingOrbs.add(orb);
   }
+}
+
+/// How a wave pours its orbs out. Candidates while we pick one, the web build
+/// reads it from `?wave=` in the page URL.
+enum WavePattern {
+  /// One angry portal pours the whole series from one spot (today)
+  stream,
+
+  /// The angry portal slides around the potato while it pours
+  sweep,
+
+  /// Always a fire and an ice portal facing each other, throwing in turns
+  crossfire,
+
+  /// The series hops: a new portal every two orbs, 45 degrees along
+  scatter;
+
+  static final WavePattern current = WavePattern.values.firstWhere(
+    (pattern) => pattern.name == Uri.base.queryParameters['wave'],
+    orElse: () => WavePattern.stream,
+  );
 }

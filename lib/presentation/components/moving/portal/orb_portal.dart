@@ -21,6 +21,7 @@ class OrbPortal extends PositionComponent
     this.onOpen,
     this.angry = false,
     this.drift = 0,
+    this.driftWhileOpen = false,
   }) : _seed = Random().nextDouble() * 100,
        super(position: position, anchor: Anchor.center, priority: 0);
 
@@ -31,6 +32,9 @@ class OrbPortal extends PositionComponent
 
   /// How fast it slides around the potato while forming (radians/second)
   final double drift;
+
+  /// Keeps sliding while open, so a wave's stream sweeps around the potato
+  final bool driftWhileOpen;
   final double _seed;
 
   static const closeDuration = 0.35;
@@ -66,11 +70,11 @@ class OrbPortal extends PositionComponent
       }
       return;
     }
+    if (drift != 0 && (!_opened || driftWhileOpen)) {
+      position.rotate(drift * dt);
+    }
     if (!_opened) {
       _form = min(1, _form + dt / formDuration);
-      if (drift != 0) {
-        position.rotate(drift * dt);
-      }
       if (_form >= 1) {
         _opened = true;
         _kick = 1;
@@ -264,12 +268,13 @@ class _PortalPainter {
     final reach = 36 * size * (1 - 0.45 * Curves.easeIn.transform(raw));
     final spin = t * (angry ? 5 : 2.5) + raw * raw * 9;
     _bloom(jitter, reach, c[1], 0.3 * life);
-    for (var arm = 0; arm < 2; arm++) {
+    final arms = angry ? 3 : 2;
+    for (var arm = 0; arm < arms; arm++) {
       const steps = 28;
       Offset? last;
       for (var i = 0; i <= steps; i++) {
         final k = i / steps;
-        final a = spin + arm * pi + k * pi * 2.2;
+        final a = spin + arm * pi * 2 / arms + k * pi * 2.2;
         final p = jitter + Offset(cos(a), sin(a)) * (reach * pow(1 - k, 1.25));
         if (last != null) {
           _lightStroke(
@@ -284,7 +289,38 @@ class _PortalPainter {
       }
     }
     _bloom(jitter, 6 * size, _white, life * 0.6);
+    if (angry) {
+      _throwPulse();
+    }
     _core(_lateCore);
     _release();
+  }
+
+  /// An angry portal's punch on every throw: a ring and sparks flying out
+  void _throwPulse() {
+    if (kick <= 0 || closing > 0) {
+      return;
+    }
+    final out = 1 - kick;
+    _lightStroke(
+      Path()..addOval(
+        Rect.fromCircle(center: jitter, radius: (10 + 28 * out) * size),
+      ),
+      1.6 * kick * size,
+      kick,
+    );
+    for (var i = 0; i < 6; i++) {
+      final a = i * pi / 3 + t * 0.7;
+      final dir = Offset(cos(a), sin(a));
+      final from = jitter + dir * ((12 + 30 * out) * size);
+      final to = from + dir * (7 * kick * size);
+      _lightStroke(
+        Path()
+          ..moveTo(from.dx, from.dy)
+          ..lineTo(to.dx, to.dy),
+        1.4 * size,
+        kick,
+      );
+    }
   }
 }
