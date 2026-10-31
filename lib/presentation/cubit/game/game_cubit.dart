@@ -79,7 +79,7 @@ class GameCubit extends Cubit<GameState> {
     }
 
     // If the difficulty is too low, we don't want to switch to multi spawn yet
-    if (state.difficulty < 0.5) {
+    if (state.difficulty < GameConstants.wavesFromDifficulty) {
       return;
     }
 
@@ -124,6 +124,11 @@ class GameCubit extends Cubit<GameState> {
       state.copyWith(
         healthPoints: max(0, state.healthPoints - 1),
         currentGameMode: updatedGameMode,
+        // A hit eases the game a little, so it stays playable
+        difficultyTimePassed: max(
+          0.0,
+          state.difficultyTimePassed - GameConstants.difficultyRewindOnHit,
+        ),
       ),
     );
     if (state.healthPoints <= 0) {
