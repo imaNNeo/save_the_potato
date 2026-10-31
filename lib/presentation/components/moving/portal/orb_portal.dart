@@ -7,21 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
-/// Candidate looks for the white hole, while we pick one. The web build
-/// reads it from `?hole=` in the page URL.
-enum HoleLook {
-  classic,
-  pinch,
-  spiral,
-  lens,
-  orbit;
-
-  static final HoleLook current = HoleLook.values.firstWhere(
-    (look) => look.name == Uri.base.queryParameters['hole'],
-    orElse: () => HoleLook.classic,
-  );
-}
-
 /// A hole in space that forms at a spot, turns into an orb, then collapses.
 ///
 /// It calls [onOpen] once it has formed, which is when the orb leaves. It
@@ -107,18 +92,7 @@ class OrbPortal extends PositionComponent
       kick: _kick,
       angry: angry,
     );
-    switch (HoleLook.current) {
-      case HoleLook.classic:
-        painter.whiteHole();
-      case HoleLook.pinch:
-        painter.pinch();
-      case HoleLook.spiral:
-        painter.spiral();
-      case HoleLook.lens:
-        painter.lens();
-      case HoleLook.orbit:
-        painter.orbit();
-    }
+    painter.spiral();
   }
 }
 
@@ -163,9 +137,6 @@ class _PortalPainter {
       ? const [Color(0xFFFFB27A), Color(0xFFFF2F00), Color(0xFFB80F00)]
       : const [Color(0xFFD2EEFF), Color(0xFF2F7BFF), Color(0xFF3A2DD8)];
 
-  /// How alive the portal is overall: grows in, dies out
-  double get _life => min(1.0, form * 4) * (1 - closing);
-
   void _glow(Offset p, double radius, Color color, double alpha) {
     if (radius <= 0 || alpha <= 0) {
       return;
@@ -207,73 +178,7 @@ class _PortalPainter {
     );
   }
 
-  /// A ring that rushes out and fades when it collapses
-  void _shockwave() {
-    if (closing <= 0) {
-      return;
-    }
-    canvas.drawCircle(
-      jitter,
-      (14 + 40 * closing) * size,
-      Paint()
-        ..color = c[0].withValues(alpha: 0.6 * (1 - closing))
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3 * (1 - closing) + 0.5,
-    );
-  }
-
-  /// The orb's size: grows while forming, pops out on a kick, then
-  /// shrinks away as the portal collapses
-  double get _coreRadius =>
-      _orbRadius * form * (1 - closing) * (1 - 0.45 * kick);
-
-  /// A reversed black hole. Sparks spiral in and gather into the orb
-  void whiteHole() {
-    final life = _life;
-    final reach = 46.0 * size;
-    _glow(jitter, reach * 1.2, c[1], 0.45 * life);
-    // Faint swirl arms
-    final spin = t * (angry ? 3.2 : 1.6);
-    for (var arm = 0; arm < 3; arm++) {
-      final path = Path();
-      for (var i = 0; i <= 16; i++) {
-        final k = i / 16;
-        final a = spin + arm * pi * 2 / 3 + k * 2.6;
-        final r = reach * (1 - k * 0.85) * (0.6 + 0.4 * form);
-        final p = jitter + Offset(cos(a), sin(a)) * r;
-        i == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
-      }
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = c[1].withValues(alpha: 0.75 * life)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.6 * size
-          ..strokeCap = StrokeCap.round
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
-      );
-    }
-    // Sparks falling inward along a spiral
-    final count = angry ? 26 : 18;
-    for (var i = 0; i < count; i++) {
-      final phase = (i * 0.618034) % 1;
-      final k = (t * (angry ? 1.4 : 0.9) + phase) % 1;
-      final a = i * 2.39996 + spin * 0.6 + k * 3.0;
-      final r = reach * (1 - k);
-      final p = jitter + Offset(cos(a), sin(a)) * r;
-      final alpha = life * sin(k * pi) * 0.95;
-      canvas.drawCircle(
-        p,
-        (1.2 + 2.0 * (1 - k)) * size,
-        Paint()
-          ..color = Color.lerp(c[0], _white, 0.4)!.withValues(alpha: alpha),
-      );
-    }
-    _core(_coreRadius);
-    _shockwave();
-  }
-
-  // ---- Minimal looks: few shapes, additive light, a hard snap at release
+  // Few shapes, additive light, a hard snap at release
 
   static double _clamp01(double x) => x.clamp(0.0, 1.0);
 
@@ -353,35 +258,7 @@ class _PortalPainter {
     return _orbRadius * grow * (1 - closing) * (1 - 0.45 * kick);
   }
 
-  /// B: one thin ring of light pinches in to a point, the point blooms into
-  /// the orb
-  void pinch() {
-    final life = min(1.0, raw * 5) * (1 - closing);
-    final reach = 34 * size;
-    final squeeze = Curves.easeInCubic.transform(raw);
-    final hold = 1.6 + 0.15 * sin(t * (angry ? 18 : 9));
-    final r = isHeld
-        ? _orbRadius * hold
-        : ui.lerpDouble(reach, _orbRadius * 1.5, squeeze)!;
-    _bloom(jitter, reach * 1.1, c[1], 0.3 * life + 0.45 * squeeze * life);
-    final ring = Path()..addOval(Rect.fromCircle(center: jitter, radius: r));
-    _lightStroke(
-      ring,
-      (1.8 + 2.4 * squeeze) * size,
-      life * (0.7 + 0.3 * squeeze),
-    );
-    // A tiny spark waiting in the middle
-    _bloom(
-      jitter,
-      (4 + 6 * squeeze) * size,
-      _white,
-      life * (0.5 + 0.4 * sin(t * 14)),
-    );
-    _core(_lateCore);
-    _release();
-  }
-
-  /// C: a single tapered spiral of light winding in faster and faster
+  /// A reversed black hole: a single tapered spiral of light winding in faster and faster
   void spiral() {
     final life = min(1.0, raw * 5) * (1 - closing);
     final reach = 36 * size * (1 - 0.45 * Curves.easeIn.transform(raw));
@@ -410,64 +287,4 @@ class _PortalPainter {
     _core(_lateCore);
     _release();
   }
-
-  /// D: a dark lens with a razor-thin rim that flips bright into the orb
-  void lens() {
-    final life = min(1.0, raw * 5) * (1 - closing);
-    final grow = Curves.easeOutBack.transform(_clamp01(raw * 1.4));
-    final r = 15 * size * grow;
-    final flip = Curves.easeInCubic.transform(_late(0.65));
-    _bloom(jitter, r * 2.6, c[1], 0.4 * life);
-    if (r > 0.5) {
-      canvas.drawCircle(
-        jitter,
-        r * (1 - flip),
-        Paint()..color = const Color(0xFF02030A).withValues(alpha: life),
-      );
-      final rim = Path()..addOval(Rect.fromCircle(center: jitter, radius: r));
-      _lightStroke(rim, (1.0 + 1.5 * flip) * size, life);
-      // A sliver of light sweeping round the rim
-      final sweep = t * (angry ? 7 : 3.5);
-      _lightStroke(
-        Path()..addArc(Rect.fromCircle(center: jitter, radius: r), sweep, 1.1),
-        2.2 * size,
-        life,
-      );
-    }
-    _core(_orbRadius * flip * (1 - closing) * (1 - 0.45 * kick));
-    _release();
-  }
-
-  /// E: three motes of light circle in, faster and tighter, and merge
-  void orbit() {
-    final life = min(1.0, raw * 5) * (1 - closing);
-    final squeeze = Curves.easeInCubic.transform(raw);
-    final radius = isHeld
-        ? _orbRadius * 1.9
-        : ui.lerpDouble(30 * size, _orbRadius * 0.6, squeeze)!;
-    final spin = t * (angry ? 7 : 3) + squeeze * 12;
-    _bloom(jitter, 34 * size, c[1], 0.3 * life + 0.4 * squeeze * life);
-    for (var i = 0; i < 3; i++) {
-      final base = spin + i * pi * 2 / 3;
-      // A short trail behind each mote
-      final trail = Path();
-      for (var j = 0; j <= 8; j++) {
-        final a = base - j * 0.11;
-        final p = jitter + Offset(cos(a), sin(a)) * (radius + j * 0.6);
-        j == 0 ? trail.moveTo(p.dx, p.dy) : trail.lineTo(p.dx, p.dy);
-      }
-      _lightStroke(trail, 2.4 * size, life);
-      _bloom(
-        jitter + Offset(cos(base), sin(base)) * radius,
-        8 * size,
-        _white,
-        life,
-      );
-    }
-    _core(_lateCore);
-    _release();
-  }
-
-  /// Wave portals stay open, the minimal looks then idle around the orb
-  bool get isHeld => raw >= 1 && closing == 0;
 }
