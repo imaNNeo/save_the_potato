@@ -134,6 +134,7 @@ class _ThemesOverlayState extends State<_ThemesOverlay> with _BotTimer {
   void _select(int index) {
     if (!ShieldThemes.tryUnlock(index)) {
       setState(() => _denied = index);
+      Autopilot.holdOnGuide = false;
       return;
     }
     ShieldThemes.selectedIndex = index;

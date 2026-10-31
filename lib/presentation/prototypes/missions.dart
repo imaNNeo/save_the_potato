@@ -39,12 +39,12 @@ class Missions extends ChangeNotifier {
 
   static final instance = Missions._();
 
-  static const xpPerLevel = 150;
+  static const xpPerLevel = 120;
 
   final active = <Mission>[
-    Mission(MissionKind.blockFire, 15),
-    Mission(MissionKind.survive, 30),
-    Mission(MissionKind.streak, 12),
+    Mission(MissionKind.blockFire, 8),
+    Mission(MissionKind.survive, 20),
+    Mission(MissionKind.streak, 6),
   ];
 
   int xp = 0;
