@@ -259,13 +259,9 @@ class MovingComponentSpawner extends Component
     }
     final orbType = OrbType.values.random();
     final position = _randomPortalPosition();
-    final pattern = WavePattern.current;
-    _addWaveSeries(gameMode, orbType, position, pattern);
+    _addWaveSeries(gameMode, orbType, position);
 
-    // Crossfire always has the opposite portal, a beat behind
-    final withOpposite =
-        pattern == WavePattern.crossfire || Random().nextDouble() <= 2 / 3;
-    if (!withOpposite) {
+    if (Random().nextDouble() > 2 / 3) {
       return;
     }
     final oppositeOrbType = switch (orbType) {
@@ -278,33 +274,23 @@ class MovingComponentSpawner extends Component
       gameMode,
       oppositeOrbType,
       oppositePosition,
-      pattern,
       isOpposite: true,
     );
   }
 
+  /// An angry portal that sweeps around the potato while it pours a series
   void _addWaveSeries(
     GameModeMultiSpawn gameMode,
     OrbType orbType,
-    Vector2 position,
-    WavePattern pattern, {
+    Vector2 position, {
     bool isOpposite = false,
   }) {
     final difficulty = bloc.state.difficulty;
-    final spawnEvery = gameMode.getSpawnOrbsEvery(difficulty);
-    // Both ends of a sweep turn the same way, so they stay opposite
-    final sweep = pattern == WavePattern.sweep
-        ? _waveSweepDirection * 1.1
-        : 0.0;
-    var hopAngle = atan2(position.y, position.x);
-    final hopStep = (Random().nextBool() ? 1 : -1) * pi / 4;
     final spawner = MultiOrbSpawner(
       position: position,
-      portal: _openWavePortal(orbType, position, drift: sweep),
-      startDelay:
-          _wavePortalFormDuration +
-          (pattern == WavePattern.crossfire && isOpposite ? spawnEvery / 2 : 0),
-      spawnOrbsEvery: spawnEvery,
+      portal: _openWavePortal(orbType, position),
+      startDelay: _wavePortalFormDuration,
+      spawnOrbsEvery: gameMode.getSpawnOrbsEvery(difficulty),
       spawnOrbsMoveSpeed: gameMode.getSpawnOrbsMoveSpeed(difficulty),
       orbType: orbType,
       target: player,
@@ -312,27 +298,15 @@ class MovingComponentSpawner extends Component
       iceOrbPool: _iceOrbPool,
       fireOrbPool: _fireOrbPool,
       isOpposite: isOpposite,
-      hopTo: pattern == WavePattern.scatter
-          ? () {
-              hopAngle += hopStep;
-              return _openWavePortal(
-                orbType,
-                Vector2(cos(hopAngle), sin(hopAngle)) * position.length,
-                formDuration: _scatterPortalFormDuration,
-              );
-            }
-          : null,
-      hopDelay: _scatterPortalFormDuration,
     );
     parent.add(spawner);
     aliveMultiOrbSpawners.add(spawner);
   }
 
-  /// Which way the sweeping wave portals turn this wave
+  /// Which way the wave portals sweep this wave. Both ends of a pair turn
+  /// the same way, so they stay opposite.
   double get _waveSweepDirection =>
       multiOrbSpawnerSpawnCounter.isEven ? 1.0 : -1.0;
-
-  static const _scatterPortalFormDuration = 0.35;
 
   void singleSpawn(GameModeSingleSpawn gameMode) {
     if (bloc.state.upcomingGameMode != null) {
@@ -369,19 +343,14 @@ class MovingComponentSpawner extends Component
   static const _wavePortalFormDuration = 0.7;
 
   /// An angry portal that stays open while its wave pours out of it
-  OrbPortal _openWavePortal(
-    OrbType type,
-    Vector2 position, {
-    double drift = 0,
-    double formDuration = _wavePortalFormDuration,
-  }) {
+  OrbPortal _openWavePortal(OrbType type, Vector2 position) {
     final portal = OrbPortal(
       type: type,
       position: position,
-      formDuration: formDuration,
+      formDuration: _wavePortalFormDuration,
       angry: true,
-      drift: drift,
-      driftWhileOpen: drift != 0,
+      drift: _waveSweepDirection * 1.1,
+      driftWhileOpen: true,
     );
     parent.add(portal);
     return portal;
@@ -424,25 +393,4 @@ class MovingComponentSpawner extends Component
     parent.add(orb);
     aliveSingleMovingOrbs.add(orb);
   }
-}
-
-/// How a wave pours its orbs out. Candidates while we pick one, the web build
-/// reads it from `?wave=` in the page URL.
-enum WavePattern {
-  /// One angry portal pours the whole series from one spot (today)
-  stream,
-
-  /// The angry portal slides around the potato while it pours
-  sweep,
-
-  /// Always a fire and an ice portal facing each other, throwing in turns
-  crossfire,
-
-  /// The series hops: a new portal every two orbs, 45 degrees along
-  scatter;
-
-  static final WavePattern current = WavePattern.values.firstWhere(
-    (pattern) => pattern.name == Uri.base.queryParameters['wave'],
-    orElse: () => WavePattern.stream,
-  );
 }

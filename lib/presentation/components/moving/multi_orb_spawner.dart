@@ -20,12 +20,7 @@ class MultiOrbSpawner extends PositionComponent
   final ComponentPool<IceOrb> iceOrbPool;
 
   /// The portal this series pours out of, it closes when the series is done
-  OrbPortal? portal;
-
-  /// [WavePattern.scatter]: opens the next portal after [orbsPerPortal] orbs
-  final OrbPortal Function()? hopTo;
-  final int orbsPerPortal;
-  final double hopDelay;
+  final OrbPortal? portal;
 
   /// Lets the portal form before the first orb
   double startDelay;
@@ -49,9 +44,6 @@ class MultiOrbSpawner extends PositionComponent
     this.isOpposite = false,
     this.portal,
     this.startDelay = 0,
-    this.hopTo,
-    this.orbsPerPortal = 2,
-    this.hopDelay = 0,
   });
 
   @override
@@ -88,14 +80,6 @@ class MultiOrbSpawner extends PositionComponent
       timeSinceLastSpawn = 0;
       spawnOrb(spawnedCount);
       spawnedCount++;
-      final hop = hopTo;
-      if (hop != null &&
-          spawnedCount < spawnCount &&
-          spawnedCount % orbsPerPortal == 0) {
-        portal?.close();
-        portal = hop();
-        startDelay = hopDelay;
-      }
     }
   }
 
