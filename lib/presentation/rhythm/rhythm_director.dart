@@ -220,7 +220,7 @@ class RhythmDirector extends Component
   // ---- portals (the white holes the orbs come out of) ----
 
   static const _maxPortalRadius = 225.0;
-  static const _maxFormTime = 1.0;
+  static const _maxFormTime = PortalMove.maxFormDuration;
   static const _wavePortalFormTime = 0.7;
   static const _wavePortalRadius = 205.0;
 
@@ -229,7 +229,7 @@ class RhythmDirector extends Component
   double get _singleFormTime =>
       (const GameModeSingleSpawn().getSpawnOrbsEvery(_difficulty) * 0.5).clamp(
         0.4,
-        _maxFormTime,
+        1.0,
       );
 
   void _openPortal(_PlannedOrb orb) {
@@ -256,14 +256,17 @@ class RhythmDirector extends Component
     if (orb.portal != null) {
       return;
     }
-    final ahead = orb.launchAt - _songTime;
-    final angle = orb.angle - orb.drift * ahead;
+    // Starts back along its glide, so it ends up at the planned spot
+    final ahead = max(0.05, orb.launchAt - _songTime);
+    final move = orb.move!;
+    final angle = orb.angle - move.travel;
     parent.add(
       orb.portal = OrbPortal(
         type: orb.type,
         position: Vector2(cos(angle), sin(angle)) * orb.radius,
-        formDuration: max(0.05, ahead),
-        drift: orb.drift,
+        formDuration: ahead,
+        travel: move.travel,
+        travelTime: min(move.travelTime, ahead),
       ),
     );
   }
@@ -356,16 +359,18 @@ class RhythmDirector extends Component
         ? _wavePortalRadius
         : 185 + _rnd.nextDouble() * 40;
     final launchAt = land - _flightTime(speed, radius) - _mountDelay;
+    final move = series != null
+        ? null
+        : PortalMove.random(_singleFormTime, random: _rnd);
     _planned.add(
       _PlannedOrb(
         land: land,
         launchAt: launchAt,
-        portalAt:
-            launchAt - (series != null ? _wavePortalFormTime : _singleFormTime),
+        portalAt: launchAt - (move?.formDuration ?? _wavePortalFormTime),
         type: type,
         angle: angle ?? _pickAngle(type, land),
         radius: radius,
-        drift: series != null ? 0 : (_rnd.nextBool() ? 1 : -1) * 0.9,
+        move: move,
         speed: speed,
         hit: hit,
         overrideSound: overrideSound,
@@ -462,9 +467,10 @@ class RhythmDirector extends Component
       wave.halfBeats = _difficulty > 0.8;
       // Both ends of a pair sweep the same way, so they stay opposite
       wave.sweepDirection = -wave.sweepDirection;
-      wave.portal = _SeriesPortal(sweep: wave.sweepDirection * 1.1, left: 6);
+      final sweep = wave.sweepDirection * (0.6 + _rnd.nextDouble() * 0.9);
+      wave.portal = _SeriesPortal(sweep: sweep, left: 6);
       wave.twinPortal = wave.mirrored
-          ? _SeriesPortal(sweep: wave.sweepDirection * 1.1, left: 6)
+          ? _SeriesPortal(sweep: sweep, left: 6)
           : null;
     }
     final steps = wave.halfBeats ? [0.0, 0.5] : [0.0];
@@ -569,7 +575,7 @@ class _PlannedOrb {
     required this.type,
     required this.angle,
     required this.radius,
-    required this.drift,
+    required this.move,
     required this.speed,
     this.hit,
     this.overrideSound,
@@ -584,8 +590,8 @@ class _PlannedOrb {
   /// Where it should leave from, and how far out
   final double angle, radius;
 
-  /// How fast its own portal slides round while forming (rad/s)
-  final double drift;
+  /// How its own portal moves before the throw (null for wave orbs)
+  final PortalMove? move;
   final double speed;
   final RhythmHit? hit;
   final int? overrideSound;

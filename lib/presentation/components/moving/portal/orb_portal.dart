@@ -22,7 +22,10 @@ class OrbPortal extends PositionComponent
     this.angry = false,
     this.drift = 0,
     this.driftWhileOpen = false,
-  }) : _seed = Random().nextDouble() * 100,
+    this.travel = 0,
+    this.travelTime = 0,
+  }) : _start = position.clone(),
+       _seed = Random().nextDouble() * 100,
        super(position: position, anchor: Anchor.center, priority: 0);
 
   final OrbType type;
@@ -35,6 +38,12 @@ class OrbPortal extends PositionComponent
 
   /// Keeps sliding while open, so a wave's stream sweeps around the potato
   final bool driftWhileOpen;
+
+  /// How far it glides round the potato while forming (radians), eased in
+  /// and out over [travelTime] seconds, then it waits until it opens
+  final double travel;
+  final double travelTime;
+  final Vector2 _start;
   final double _seed;
 
   static const closeDuration = 0.35;
@@ -73,6 +82,12 @@ class OrbPortal extends PositionComponent
     if (drift != 0 && (!_opened || driftWhileOpen)) {
       position.rotate(drift * dt);
     }
+    if (travel != 0 && !_opened) {
+      final k = travelTime <= 0 ? 1.0 : min(1.0, _time / travelTime);
+      position
+        ..setFrom(_start)
+        ..rotate(travel * Curves.easeInOutSine.transform(k));
+    }
     if (!_opened) {
       _form = min(1, _form + dt / formDuration);
       if (_form >= 1) {
@@ -98,6 +113,57 @@ class OrbPortal extends PositionComponent
     );
     painter.spiral();
   }
+}
+
+/// How a single portal moves before it throws, picked at random so the
+/// throws don't get predictable
+class PortalMove {
+  const PortalMove({
+    required this.formDuration,
+    required this.travel,
+    required this.travelTime,
+  });
+
+  /// [baseForm] is the usual forming time for the current difficulty
+  factory PortalMove.random(double baseForm, {Random? random}) {
+    final rnd = random ?? Random();
+    double between(double a, double b) => a + rnd.nextDouble() * (b - a);
+    final dir = rnd.nextBool() ? 1.0 : -1.0;
+    final roll = rnd.nextDouble();
+    if (roll < 0.3) {
+      // Snap: pops up and throws right away
+      final form = between(0.32, 0.45);
+      return PortalMove(
+        formDuration: form,
+        travel: dir * between(0, 0.25),
+        travelTime: form,
+      );
+    }
+    if (roll < 0.7) {
+      // Drift: slides a bit while it forms
+      final form = baseForm * between(0.9, 1.3);
+      return PortalMove(
+        formDuration: form,
+        travel: dir * between(0.4, 1.0),
+        travelTime: form,
+      );
+    }
+    // Glide: travels a long way, stops, then throws
+    final pause = between(0.2, 0.4);
+    final form = min(maxFormDuration, baseForm * 1.2 + between(0.4, 0.8));
+    return PortalMove(
+      formDuration: form,
+      travel: dir * between(1.2, 2.0),
+      travelTime: form - pause,
+    );
+  }
+
+  /// The longest a single portal takes to form
+  static const maxFormDuration = 1.8;
+
+  final double formDuration;
+  final double travel;
+  final double travelTime;
 }
 
 /// Draws one portal around the origin.

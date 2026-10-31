@@ -370,16 +370,16 @@ class MovingComponentSpawner extends Component
     final moveSpeed = gameMode.getSpawnOrbsMoveSpeed(difficulty);
     final orbType = OrbType.values.random();
     final spawnEvery = gameMode.getSpawnOrbsEvery(difficulty);
-    // It forms slower early on, so new players see where the orb comes from
-    final formDuration = (spawnEvery * 0.5).clamp(0.4, 1.0);
-    // It slides around the potato while forming, so the player follows it
-    final drift = (Random().nextBool() ? 1 : -1) * 0.9;
+    // It forms slower early on, so new players see where the orb comes
+    // from, and moves a random way so the throws stay surprising
+    final move = PortalMove.random((spawnEvery * 0.5).clamp(0.4, 1.0));
     late OrbPortal portal;
     portal = OrbPortal(
       type: orbType,
       position: _randomPortalPosition(),
-      formDuration: formDuration,
-      drift: drift,
+      formDuration: move.formDuration,
+      travel: move.travel,
+      travelTime: move.travelTime,
       onOpen: () {
         portal.close();
         if (game.playingState.isPlaying) {
@@ -400,7 +400,7 @@ class MovingComponentSpawner extends Component
       position: position,
       formDuration: _wavePortalFormDuration,
       angry: true,
-      drift: _waveSweepDirection * 1.1,
+      drift: _waveSweepDirection * (0.6 + Random().nextDouble() * 0.9),
       driftWhileOpen: true,
     );
     parent.add(portal);
