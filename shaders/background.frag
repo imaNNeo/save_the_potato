@@ -24,13 +24,12 @@ uniform float starSize;
 
 // Reactions to the game, see `BackgroundReactions`
 uniform float heat;
-// How much the stars are stretched into streaks, negative stretches them
-// outwards (for stars flying in)
+// How much the stars are stretched into streaks
 uniform float power;
 uniform float hit;
-// While a wave of multiple orbs is coming, x: long streaks gliding out past
-// the stars, y: how much the stars are dimmed
-uniform vec2 tension;
+// From 0 to 1 while a wave of multiple orbs is coming: a few long streaks
+// glide out past the stars
+uniform float tension;
 uniform vec2 shake;
 // rgb: color of the glow around the potato, a: how much it flashes
 uniform vec4 glow;
@@ -46,12 +45,6 @@ uniform vec4 wave2;
 uniform vec4 waveColor2;
 uniform vec4 wave3;
 uniform vec4 waveColor3;
-// The lanes a wave of orbs flies in on, xy: their direction, z: how much
-// they glow. laneColor rgb: their color.
-uniform vec4 lane0;
-uniform vec4 laneColor0;
-uniform vec4 lane1;
-uniform vec4 laneColor1;
 
 // Three random numbers from 0 to 1 for star [i]. Only multiplications, a lot
 // cheaper than the usual fract(sin(...)) hash (Dave Hoskins' hash31).
@@ -81,15 +74,6 @@ vec3 waveAt(vec2 n, float r, vec4 wave, vec4 color) {
 
 // [stretch] is how much to squash the distance behind (x) and in front of
 // (y) the star, to stretch it into a streak
-// How much a lane glows at [p] (in world units)
-float laneAt(vec2 p, vec4 lane) {
-    float along = dot(p, lane.xy);
-    float across = abs(p.x * lane.y - p.y * lane.x);
-    float d = min(across / (18.0 + max(along, 0.0) * 0.12), 1.0);
-    float beam = 1.0 - d * d;
-    return beam * beam * smoothstep(70.0, 320.0, along) * lane.z;
-}
-
 float renderStar(vec2 uv, float i, float aspect, vec2 stretch) {
     float maxDistance = aspect;
 
@@ -149,16 +133,12 @@ void main() {
     float angle = mod(atan(starUv.y, starUv.x / aspect), TWOPI);
     float sector = floor(angle / TWOPI * STAR_COUNT);
 
-    float outward = max(power, 0.0);
-    float inward = max(-power, 0.0);
-    vec2 stretch = vec2(
-        1.0 / (1.0 + outward * 5.0 + inward * 0.75),
-        1.0 / (1.0 + inward * 5.0 + outward * 0.75));
+    vec2 stretch = vec2(1.0 / (1.0 + power * 5.0), 1.0 / (1.0 + power * 0.75));
     float stars = 0.0;
     for (int k = -NEIGHBOUR_SECTORS; k <= NEIGHBOUR_SECTORS; ++k) {
         stars += renderStar(starUv, mod(sector + float(k), STAR_COUNT), aspect, stretch);
     }
-    stars *= (1.0 + heat * 0.6 + abs(power) * 0.8 + waves * 2.5) * (1.0 - tension.y * 0.75);
+    stars *= 1.0 + heat * 0.6 + power * 0.8 + waves * 2.5;
 
     // The glow around the potato grows with the streak and flashes on blocks
     float dist = length(uv);
@@ -183,14 +163,7 @@ void main() {
     float streaks = step(0.78, streak.x) * tail * tail * step(dist, head) *
         (1.0 - smoothstep(0.02, 0.09, abs(fract(slices) - 0.5) * (1.0 + dist))) *
         smoothstep(0.25, 0.6, dist);
-    color += mix(vec3(1.0), starColor, 0.5) * streaks * tension.x * 0.55;
-
-    // The lanes the orbs fly in on
-    color += laneColor0.rgb * laneAt(p, lane0) * 0.16 +
-        laneColor1.rgb * laneAt(p, lane1) * 0.16;
-
-    // The calm before the storm dims everything a bit
-    color *= 1.0 - tension.y * 0.25;
+    color += mix(vec3(1.0), starColor, 0.5) * streaks * tension * 0.55;
 
     fragColor = vec4(color, 1.0);
 }

@@ -11,7 +11,6 @@ import 'package:save_the_potato/presentation/potato_game.dart';
 import 'damped_spring.dart';
 import 'defend_streak.dart';
 import 'glow_batch.dart';
-import 'moving/multi_orb_spawner.dart';
 import 'moving/orb/orb_type.dart';
 import 'sprite_particle_batch.dart';
 
@@ -369,14 +368,6 @@ class ShieldImpactEffects extends Component
     _updateCameraKick(dt);
 
     final state = bloc.state;
-    final player = game.world.player;
-    for (final spawner in game.world.children.whereType<MultiOrbSpawner>()) {
-      final diff = spawner.absolutePosition - player.absoluteCenter;
-      game.background.updateLanes(
-        atan2(diff.y, diff.x),
-        spawner.orbType.baseColor,
-      );
-    }
     game.background.update(
       dt,
       heat: streak.heat,
@@ -385,9 +376,6 @@ class ShieldImpactEffects extends Component
           state.playingState.isPlaying &&
           (state.currentGameMode is GameModeMultiSpawn ||
               state.upcomingGameMode is GameModeMultiSpawn),
-      multiOrbWaveFlying:
-          state.playingState.isPlaying &&
-          state.currentGameMode is GameModeMultiSpawn,
       kickX: _appliedKick.x,
       kickY: _appliedKick.y,
     );

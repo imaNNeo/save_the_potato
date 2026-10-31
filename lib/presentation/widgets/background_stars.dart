@@ -209,15 +209,14 @@ class _BackgroundStarsPainter extends CustomPainter {
       ..setFloat(10, reactions.heat)
       ..setFloat(11, reactions.stretch)
       ..setFloat(12, reactions.hit)
-      ..setFloat(13, reactions.streaks)
-      ..setFloat(14, reactions.dim)
-      ..setFloat(15, reactions.shakeX)
-      ..setFloat(16, reactions.shakeY)
-      ..setFloat(17, reactions.glowR)
-      ..setFloat(18, reactions.glowG)
-      ..setFloat(19, reactions.glowB)
-      ..setFloat(20, reactions.flash);
-    var i = 21;
+      ..setFloat(13, reactions.tension)
+      ..setFloat(14, reactions.shakeX)
+      ..setFloat(15, reactions.shakeY)
+      ..setFloat(16, reactions.glowR)
+      ..setFloat(17, reactions.glowG)
+      ..setFloat(18, reactions.glowB)
+      ..setFloat(19, reactions.flash);
+    var i = 20;
     for (final wave in reactions.waves) {
       final intensity = wave.intensity;
       final focus = wave.focus;
@@ -230,17 +229,6 @@ class _BackgroundStarsPainter extends CustomPainter {
         ..setFloat(i++, wave.g * intensity)
         ..setFloat(i++, wave.b * intensity)
         ..setFloat(i++, 1 - focus);
-    }
-    for (final lane in reactions.lanes) {
-      shader
-        ..setFloat(i++, lane.dirX)
-        ..setFloat(i++, lane.dirY)
-        ..setFloat(i++, lane.amount)
-        ..setFloat(i++, 0)
-        ..setFloat(i++, lane.r)
-        ..setFloat(i++, lane.g)
-        ..setFloat(i++, lane.b)
-        ..setFloat(i++, 0);
     }
   }
 
