@@ -24,10 +24,12 @@ uniform float starSize;
 
 // Reactions to the game, see `BackgroundReactions`
 uniform float heat;
+// How much the stars are stretched into streaks
 uniform float power;
 uniform float hit;
-// How far the stars have swirled around the center, in radians
-uniform float swirl;
+// From 0 to 1 while a wave of multiple orbs is coming: a few long streaks
+// glide out past the stars
+uniform float tension;
 uniform vec2 shake;
 // rgb: color of the glow around the potato, a: how much it flashes
 uniform vec4 glow;
@@ -84,7 +86,7 @@ float renderStar(vec2 uv, float i, float aspect, vec2 stretch) {
     float startr = random.y * maxDistance;
     float speed = radiusrand * MAX_MOVEMENT_SPEED;
     float r = mod(startr + iTime * speed, max(1.0, maxDistance));
-    float theta = (i + random.z) / STAR_COUNT * TWOPI + swirl;
+    float theta = (i + random.z) / STAR_COUNT * TWOPI;
     vec2 dir = vec2(cos(theta), sin(theta));
     vec2 pos = r * vec2(dir.x * aspect, dir.y);
 
@@ -128,9 +130,7 @@ void main() {
 
     // Star positions are laid out before stretching x by the aspect ratio,
     // so find the sector in that unstretched space.
-    // The stars swirling around the center is the same as the pixel turning
-    // the other way
-    float angle = mod(atan(starUv.y, starUv.x / aspect) - swirl, TWOPI);
+    float angle = mod(atan(starUv.y, starUv.x / aspect), TWOPI);
     float sector = floor(angle / TWOPI * STAR_COUNT);
 
     vec2 stretch = vec2(1.0 / (1.0 + power * 5.0), 1.0 / (1.0 + power * 0.75));
@@ -153,6 +153,17 @@ void main() {
     color += waveLight * (0.12 + 0.18 * centerGlow);
     float vignette = smoothstep(0.4, 1.6, dist);
     color = mix(color, vec3(0.45, 0.0, 0.04), hit * vignette * 0.7);
+
+    // A few long streaks gliding out past the stars, each slice around the
+    // center may have one
+    float slices = angle / TWOPI * 48.0;
+    vec3 streak = rand3(floor(slices) + 777.0);
+    float head = fract(streak.y + iTime * (0.18 + 0.12 * streak.z)) * 1.9;
+    float tail = saturate((dist - head + 0.45) / 0.45);
+    float streaks = step(0.78, streak.x) * tail * tail * step(dist, head) *
+        (1.0 - smoothstep(0.02, 0.09, abs(fract(slices) - 0.5) * (1.0 + dist))) *
+        smoothstep(0.25, 0.6, dist);
+    color += mix(vec3(1.0), starColor, 0.5) * streaks * tension * 0.55;
 
     fragColor = vec4(color, 1.0);
 }

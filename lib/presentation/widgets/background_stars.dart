@@ -207,9 +207,9 @@ class _BackgroundStarsPainter extends CustomPainter {
   void _setReactions(BackgroundReactions reactions) {
     shader
       ..setFloat(10, reactions.heat)
-      ..setFloat(11, reactions.power)
+      ..setFloat(11, reactions.stretch)
       ..setFloat(12, reactions.hit)
-      ..setFloat(13, reactions.swirlAngle)
+      ..setFloat(13, reactions.tension)
       ..setFloat(14, reactions.shakeX)
       ..setFloat(15, reactions.shakeY)
       ..setFloat(16, reactions.glowR)
