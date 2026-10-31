@@ -67,7 +67,7 @@ void main() {
       update(reactions, 0.016, multi: true);
     }
     expect(reactions.tension, greaterThan(0.9));
-    expect(reactions.speedBoost, greaterThan(2.5));
+    expect(reactions.speedBoost, greaterThan(5));
     expect(reactions.stretch, greaterThan(0.3));
 
     for (var i = 0; i < 600; i++) {
