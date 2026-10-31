@@ -10,7 +10,7 @@ class GameState extends Equatable {
     this.shieldsAngleRotationSpeed = 0,
     this.restartGame = false,
     this.onNewHighScore,
-    this.firstHealthReceived = false,
+    this.heartCharge = 0,
     this.shieldHitCounter = 0,
     this.gameModeHistory = const [],
     this.currentGameMode = const GameModeSingleSpawn(),
@@ -35,7 +35,10 @@ class GameState extends Equatable {
 
   final OnlineScoreEntity? onNewHighScore;
 
-  final bool firstHealthReceived;
+  /// Orbs blocked in a row towards the next heart, see
+  /// [GameConstants.blocksToEarnHeart]. It only fills while a heart is
+  /// missing, and getting hit empties it.
+  final int heartCharge;
 
   final int shieldHitCounter;
 
@@ -102,7 +105,7 @@ class GameState extends Equatable {
     double? shieldsAngleRotationSpeed,
     bool? restartGame,
     ValueWrapper<OnlineScoreEntity>? onNewHighScore,
-    bool? firstHealthReceived,
+    int? heartCharge,
     int? shieldHitCounter,
     List<GameMode>? gameModeHistory,
     GameMode? currentGameMode,
@@ -121,7 +124,7 @@ class GameState extends Equatable {
     onNewHighScore: onNewHighScore != null
         ? onNewHighScore.value
         : this.onNewHighScore,
-    firstHealthReceived: firstHealthReceived ?? this.firstHealthReceived,
+    heartCharge: heartCharge ?? this.heartCharge,
     shieldHitCounter: shieldHitCounter ?? this.shieldHitCounter,
     gameModeHistory: gameModeHistory ?? this.gameModeHistory,
     currentGameMode: currentGameMode ?? this.currentGameMode,
@@ -145,7 +148,7 @@ class GameState extends Equatable {
     shieldsAngleRotationSpeed,
     restartGame,
     onNewHighScore,
-    firstHealthReceived,
+    heartCharge,
     shieldHitCounter,
     gameModeHistory,
     currentGameMode,

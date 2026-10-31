@@ -6,19 +6,13 @@ import 'package:flame/components.dart' hide ComponentPool;
 import 'package:flame/extensions.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:save_the_potato/domain/analytics_helper.dart';
-import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/rhythm/rhythm_hit.dart';
-import 'package:save_the_potato/service_locator.dart';
 
 import '../../potato_game.dart';
-import 'health/health_disjoint_particle.dart';
 import 'orb/orb_type.dart';
 
 part 'orb/moving_orb.dart';
-
-part 'health/moving_health.dart';
 
 sealed class MovingComponent extends PositionComponent
     with

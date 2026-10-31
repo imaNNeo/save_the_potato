@@ -8,9 +8,7 @@ import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
-import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
-import 'package:save_the_potato/service_locator.dart';
 
 import 'damped_spring.dart';
 import 'glow_batch.dart';
@@ -54,8 +52,6 @@ class Shield extends PositionComponent
   static const _particleKindFlame = 0;
   static const _particleKindSparkle = 1;
   static const _particleKindFlare = 2;
-
-  final _audioHelper = getIt.get<AudioHelper>();
 
   /// Orbs that hit the shield recently, they bend it and light it up
   final _hits = <_ShieldHit>[];
@@ -635,16 +631,11 @@ class Shield extends PositionComponent
     super.onCollisionStart(intersectionPoints, other);
     if (other is MovingComponent) {
       switch (other) {
-        case MovingHealth():
-          bloc.onShieldHit(other);
-          _audioHelper.playHeartPickupSound();
-          other.disjoint();
-          break;
         case FireOrb():
         case IceOrb():
           final orb = other as MovingOrb;
           if (orb.type == type) {
-            bloc.onShieldHit(other);
+            bloc.onShieldHit();
             final rhythmHit = orb.rhythmHit;
             if (rhythmHit != null) {
               game.world.rhythm.onBlocked(orb, rhythmHit);

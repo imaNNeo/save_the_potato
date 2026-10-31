@@ -188,9 +188,6 @@ class AudioHelper {
     );
   }
 
-  /// The shield caught a heart: a high A, in key with the song
-  void playHeartPickupSound() => playNote('ice', 81, volume: 0.8);
-
   void playVictorySound() async {
     if (!(await _audioEnabled.value)) {
       return;

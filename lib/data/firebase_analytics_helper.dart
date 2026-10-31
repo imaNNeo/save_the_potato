@@ -92,8 +92,5 @@ class FirebaseAnalyticsHelper extends AnalyticsHelper {
   );
 
   @override
-  void heartDisjointed() => _logEvent(name: 'heart_disjointed');
-
-  @override
   void heartReceived() => _logEvent(name: 'heart_received');
 }

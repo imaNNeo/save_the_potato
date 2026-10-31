@@ -16,6 +16,7 @@ import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart'
 import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
 
+import 'components/heart_charge.dart';
 import 'components/motivation_component.dart';
 import 'components/moving/moving_component_spawner.dart';
 import 'components/moving/portal/orb_portal.dart';
@@ -91,11 +92,6 @@ class PotatoGame extends FlameGame<MyWorld>
     );
   }
 
-  void onHealthPointReceived() {
-    background.healed();
-    _gameCubit.onPotatoHealthPointReceived();
-  }
-
   @override
   KeyEventResult onKeyEvent(
     KeyEvent event,
@@ -124,6 +120,7 @@ class MyWorld extends World
     await add(shieldImpacts = ShieldImpactEffects());
     await add(orbEffects = OrbEffects());
     await add(player = Potato());
+    await add(HeartCharge());
     final spawner = MovingComponentSpawner();
     rhythm = RhythmDirector(spawner: spawner);
     await add(rhythm);

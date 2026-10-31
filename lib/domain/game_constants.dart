@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../presentation/cubit/game/game_mode.dart';
-
 class GameConstants {
   static const int maxHealthPoints = 3;
 
@@ -18,13 +16,9 @@ class GameConstants {
   static const double topBarPlayingOpacity = 1.0;
   static const double topBarNonPlayingOpacity = 0.2;
 
-  static const double chanceToSpawnHeart = 0.02;
-  static const double chanceToSpawnHeartForFirstTime = 1.0;
-  static const int spawnHeartForFirstTimeMaxCount = 3;
-  static const double movingHealthPointSpeedMultiplier = 0.9;
-  static double movingHealthMinSpeed = GameModeSingleSpawn.orbsMoveSpeedInitial;
-  static double movingHealthMaxSpeed =
-      GameModeSingleSpawn.orbsMoveSpeedPeak * 0.8;
+  /// Orbs to block in a row to earn back a missing heart
+  static const int blocksToEarnHeart = 5;
+
   static const double bgmVolume = 4.0;
   static const double soundEffectsVolume = 7.0;
 

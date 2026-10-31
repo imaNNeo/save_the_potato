@@ -14,7 +14,6 @@ import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:save_the_potato/domain/repository/scores_repository.dart';
 import 'package:save_the_potato/presentation/components/motivation_component.dart';
-import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 
@@ -43,14 +42,9 @@ class GameCubit extends Cubit<GameState> {
   late int gameShowGuideTimestamp;
   late int gameStartedTimestamp;
 
-  void startToShowGuide() async {
+  void startToShowGuide() {
     gameShowGuideTimestamp = DateTime.now().millisecondsSinceEpoch;
     emit(const GameState().copyWith(playingState: const PlayingStateGuide()));
-    emit(
-      state.copyWith(
-        firstHealthReceived: await _configsRepository.isFirstHealthReceived(),
-      ),
-    );
   }
 
   void _guideInteracted() async {
@@ -90,6 +84,7 @@ class GameCubit extends Cubit<GameState> {
     emit(
       state.copyWith(
         healthPoints: max(0, state.healthPoints - 1),
+        heartCharge: 0,
         currentGameMode: updatedGameMode,
       ),
     );
@@ -97,19 +92,6 @@ class GameCubit extends Cubit<GameState> {
       _gameOver();
       return;
     }
-  }
-
-  void onPotatoHealthPointReceived() {
-    emit(
-      state.copyWith(
-        healthPoints: min(
-          GameConstants.maxHealthPoints,
-          state.healthPoints + 1,
-        ),
-        firstHealthReceived: true,
-      ),
-    );
-    _configsRepository.setFirstHealthReceived(true);
   }
 
   void _gameOver() async {
@@ -318,25 +300,39 @@ class GameCubit extends Cubit<GameState> {
     emit(state.copyWith(restartGame: false));
   }
 
-  void onShieldHit(MovingComponent movingComponent) {
-    switch (movingComponent) {
-      case MovingHealth():
-        break;
-      case FireOrb():
-      case IceOrb():
-        var updatedGameMode = state.currentGameMode.increaseDefendedOrbsCount(
-          count: 1,
-        );
-        updatedGameMode = updatedGameMode.increaseDefendOrbStreakCount(
-          count: 1,
-        );
-        emit(
-          state.copyWith(
-            shieldHitCounter: state.shieldHitCounter + 1,
-            currentGameMode: updatedGameMode,
-          ),
-        );
-        break;
+  /// The shield blocked an orb of its own type
+  void onShieldHit() {
+    var updatedGameMode = state.currentGameMode.increaseDefendedOrbsCount(
+      count: 1,
+    );
+    updatedGameMode = updatedGameMode.increaseDefendOrbStreakCount(count: 1);
+
+    // Blocking orbs in a row fills up the next heart, while one is missing
+    var healthPoints = state.healthPoints;
+    var heartCharge = state.heartCharge;
+    var heartEarned = false;
+    if (healthPoints < GameConstants.maxHealthPoints) {
+      heartCharge++;
+      if (heartCharge >= GameConstants.blocksToEarnHeart) {
+        healthPoints++;
+        heartCharge = 0;
+        heartEarned = true;
+      }
+    } else {
+      heartCharge = 0;
+    }
+
+    emit(
+      state.copyWith(
+        shieldHitCounter: state.shieldHitCounter + 1,
+        currentGameMode: updatedGameMode,
+        healthPoints: healthPoints,
+        heartCharge: heartCharge,
+      ),
+    );
+    if (heartEarned) {
+      _analyticsHelper.heartReceived();
+      _audioHelper.playHeartHitSound();
     }
   }
 

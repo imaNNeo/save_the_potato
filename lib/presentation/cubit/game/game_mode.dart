@@ -5,7 +5,6 @@ import 'package:equatable/equatable.dart';
 sealed class GameMode with Equatable {
   const GameMode({
     required this.increasesDifficulty,
-    required this.canSpawnMovingHealth,
     required this.passedTime,
     required this.defendedOrbsCount,
     required this.collidedOrbsCount,
@@ -14,7 +13,6 @@ sealed class GameMode with Equatable {
   });
 
   final bool increasesDifficulty;
-  final bool canSpawnMovingHealth;
   final double passedTime;
   final int defendedOrbsCount;
   final int collidedOrbsCount;
@@ -96,7 +94,7 @@ class GameModeSingleSpawn extends GameMode {
     super.collidedOrbsCount = 0,
     super.defendOrbStreakCount = 0,
     super.initialDelay = 0,
-  }) : super(increasesDifficulty: true, canSpawnMovingHealth: true);
+  }) : super(increasesDifficulty: true);
 
   /// It takes [difficultyInitialToPeakDuration] seconds to
   /// go from [orbsSpawnEveryInitial] to [orbsSpawnEveryPeak]
@@ -136,7 +134,6 @@ class GameModeSingleSpawn extends GameMode {
     defendedOrbsCount,
     collidedOrbsCount,
     increasesDifficulty,
-    canSpawnMovingHealth,
     defendOrbStreakCount,
     initialDelay,
   ];
@@ -150,7 +147,7 @@ class GameModeMultiSpawn extends GameMode {
     super.collidedOrbsCount = 0,
     super.defendOrbStreakCount = 0,
     super.initialDelay = 0,
-  }) : super(increasesDifficulty: false, canSpawnMovingHealth: false);
+  }) : super(increasesDifficulty: false);
 
   bool shouldPlayMotivationWord() => collidedOrbsCount == 0;
 
@@ -208,7 +205,6 @@ class GameModeMultiSpawn extends GameMode {
     defendedOrbsCount,
     collidedOrbsCount,
     increasesDifficulty,
-    canSpawnMovingHealth,
     defendOrbStreakCount,
     initialDelay,
   ];

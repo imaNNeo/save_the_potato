@@ -50,7 +50,6 @@ class RhythmDirector extends Component
   int _nextBeat = 0;
   double _lastLand = -10;
   double _lastShieldAngle = 0;
-  int _beatsUntilHeartCheck = 8;
 
   /// Orb hitbox radius (17 / 2) plus the outer radius of the shield
   static const _contactDistance = 8.5 + 68.0;
@@ -94,7 +93,6 @@ class RhythmDirector extends Component
     _nextBeat = 4;
     _lastLand = -10;
     _lastShieldAngle = _rnd.nextDouble() * pi * 2;
-    _beatsUntilHeartCheck = 8;
   }
 
   // ------------------------------------------------------------------
@@ -233,19 +231,7 @@ class RhythmDirector extends Component
   // Planning
 
   void _planBeat(int beat, double speed) {
-    _maybePlanHeart();
     _planMelodyBeat(beat, speed);
-  }
-
-  void _maybePlanHeart() {
-    _beatsUntilHeartCheck--;
-    if (_beatsUntilHeartCheck > 0) {
-      return;
-    }
-    _beatsUntilHeartCheck = 4;
-    if (!spawner.hasMovingHealth) {
-      spawner.tryToSpawnHealthPoint();
-    }
   }
 
   double get _difficulty => bloc.state.difficulty;

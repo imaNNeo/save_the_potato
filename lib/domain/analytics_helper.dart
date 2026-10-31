@@ -25,8 +25,6 @@ abstract class AnalyticsHelper {
 
   void logSettingsAudioChanged(bool enabled);
 
-  void heartDisjointed();
-
   void heartReceived();
 }
 
