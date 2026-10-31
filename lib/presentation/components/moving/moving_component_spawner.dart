@@ -99,7 +99,7 @@ class MovingComponentSpawner extends Component
       angle = rnd.nextDouble() * pi * 2;
     }
     _rememberPortalAngle(angle);
-    final distance = 195 + rnd.nextDouble() * 45;
+    final distance = 185 + rnd.nextDouble() * 40;
     return Vector2(cos(angle), sin(angle)) * distance;
   }
 

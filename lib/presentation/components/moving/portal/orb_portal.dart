@@ -130,7 +130,7 @@ class _PortalPainter {
     required this.angry,
   }) : c = angry ? _angryColors(type) : type.colors,
        // Wave portals are bigger and shake
-       size = angry ? 1.35 : 1.0,
+       size = angry ? 1.75 : 1.35,
        jitter = angry
            ? Offset(sin(t * 53) * 1.2, cos(t * 47) * 1.2)
            : Offset.zero;
@@ -153,7 +153,7 @@ class _PortalPainter {
       : const [Color(0xFFD2EEFF), Color(0xFF2F7BFF), Color(0xFF3A2DD8)];
 
   /// How alive the portal is overall: grows in, dies out
-  double get _life => form * (1 - closing);
+  double get _life => min(1.0, form * 4) * (1 - closing);
 
   void _glow(Offset p, double radius, Color color, double alpha) {
     if (radius <= 0 || alpha <= 0) {
@@ -214,13 +214,13 @@ class _PortalPainter {
   /// The orb's size: grows while forming, pops out on a kick, then
   /// shrinks away as the portal collapses
   double get _coreRadius =>
-      _orbRadius * size * form * (1 - closing) * (1 - 0.45 * kick);
+      _orbRadius * form * (1 - closing) * (1 - 0.45 * kick);
 
   /// A: a reversed black hole. Sparks spiral in and gather into the orb
   void whiteHole() {
     final life = _life;
     final reach = 46.0 * size;
-    _glow(jitter, reach * 1.1, c[2], 0.25 * life);
+    _glow(jitter, reach * 1.2, c[1], 0.45 * life);
     // Faint swirl arms
     final spin = t * (angry ? 3.2 : 1.6);
     for (var arm = 0; arm < 3; arm++) {
@@ -235,9 +235,9 @@ class _PortalPainter {
       canvas.drawPath(
         path,
         Paint()
-          ..color = c[1].withValues(alpha: 0.35 * life)
+          ..color = c[1].withValues(alpha: 0.75 * life)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.2 * size
+          ..strokeWidth = 2.6 * size
           ..strokeCap = StrokeCap.round
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
       );
@@ -253,7 +253,7 @@ class _PortalPainter {
       final alpha = life * sin(k * pi) * 0.95;
       canvas.drawCircle(
         p,
-        (1.0 + 1.6 * (1 - k)) * size,
+        (1.2 + 2.0 * (1 - k)) * size,
         Paint()
           ..color = Color.lerp(c[0], _white, 0.4)!.withValues(alpha: alpha),
       );
@@ -273,7 +273,7 @@ class _PortalPainter {
       ..save()
       ..translate(jitter.dx, jitter.dy)
       ..rotate(tilt);
-    _glow(Offset.zero, length * 0.9, c[1], 0.35 * life);
+    _glow(Offset.zero, length * 1.1, c[1], 0.55 * life);
     // A jagged lens shape, its edges flicker
     Path edge(double w) {
       final path = Path()..moveTo(-length, 0);
@@ -326,8 +326,8 @@ class _PortalPainter {
     final life = _life;
     // The ring starts wide and lands on the orb's size when it's formed
     final ringRadius = _orbRadius * size + 52 * size * (1 - form);
-    final alpha = (0.25 + 0.75 * form) * (1 - closing);
-    _glow(jitter, 34 * size, c[1], 0.3 * life);
+    final alpha = (0.5 + 0.5 * form) * min(1.0, form * 4) * (1 - closing);
+    _glow(jitter, 34 * size, c[1], 0.5 * life);
     final spin = t * (angry ? 2.5 : 1.0);
     final ticks = Paint()
       ..color = c[0].withValues(alpha: alpha)
@@ -359,7 +359,7 @@ class _PortalPainter {
   void vortex() {
     final life = _life;
     final r = 22.0 * size * (0.3 + 0.7 * Curves.easeOut.transform(form));
-    _glow(jitter, r * 2.2, c[1], 0.4 * life);
+    _glow(jitter, r * 2.4, c[1], 0.6 * life);
     final spin = t * (angry ? 4.0 : 2.0);
     // Glowing disc squashed like seen at an angle
     canvas
