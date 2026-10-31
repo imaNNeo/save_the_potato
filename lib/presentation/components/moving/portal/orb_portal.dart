@@ -363,12 +363,12 @@ class _PortalPainter {
     final r = isHeld
         ? _orbRadius * hold
         : ui.lerpDouble(reach, _orbRadius * 1.5, squeeze)!;
-    _bloom(jitter, reach * 0.9, c[1], 0.18 * life + 0.35 * squeeze * life);
+    _bloom(jitter, reach * 1.1, c[1], 0.3 * life + 0.45 * squeeze * life);
     final ring = Path()..addOval(Rect.fromCircle(center: jitter, radius: r));
     _lightStroke(
       ring,
-      (0.9 + 1.8 * squeeze) * size,
-      life * (0.45 + 0.55 * squeeze),
+      (1.8 + 2.4 * squeeze) * size,
+      life * (0.7 + 0.3 * squeeze),
     );
     // A tiny spark waiting in the middle
     _bloom(
@@ -446,7 +446,7 @@ class _PortalPainter {
         ? _orbRadius * 1.9
         : ui.lerpDouble(30 * size, _orbRadius * 0.6, squeeze)!;
     final spin = t * (angry ? 7 : 3) + squeeze * 12;
-    _bloom(jitter, 30 * size, c[1], 0.15 * life + 0.3 * squeeze * life);
+    _bloom(jitter, 34 * size, c[1], 0.3 * life + 0.4 * squeeze * life);
     for (var i = 0; i < 3; i++) {
       final base = spin + i * pi * 2 / 3;
       // A short trail behind each mote
@@ -456,10 +456,10 @@ class _PortalPainter {
         final p = jitter + Offset(cos(a), sin(a)) * (radius + j * 0.6);
         j == 0 ? trail.moveTo(p.dx, p.dy) : trail.lineTo(p.dx, p.dy);
       }
-      _lightStroke(trail, 1.4 * size, life * 0.8);
+      _lightStroke(trail, 2.4 * size, life);
       _bloom(
         jitter + Offset(cos(base), sin(base)) * radius,
-        5 * size,
+        8 * size,
         _white,
         life,
       );
