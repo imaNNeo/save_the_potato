@@ -36,7 +36,7 @@ class ShieldImpactEffects extends Component
   static const _white = Color(0xFFFFFFFF);
 
   final streak = DefendStreak();
-  int _healthPoints = 0;
+  double _life = 0;
 
   final _glow = GlowBatch();
   final _shards = SpriteParticleBatch();
@@ -73,23 +73,23 @@ class ShieldImpactEffects extends Component
   @override
   void onInitialState(GameState state) {
     super.onInitialState(state);
-    _healthPoints = state.healthPoints;
+    _life = state.life;
     timeScale = state.gameOverTimeScale;
   }
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
-      previousState.healthPoints != newState.healthPoints ||
+      previousState.life != newState.life ||
       previousState.gameOverTimeScale != newState.gameOverTimeScale;
 
   @override
   void onNewState(GameState state) {
     super.onNewState(state);
     timeScale = state.gameOverTimeScale;
-    if (state.healthPoints < _healthPoints) {
+    if (state.life < _life) {
       streak.reset();
     }
-    _healthPoints = state.healthPoints;
+    _life = state.life;
   }
 
   /// An orb of [type] crashed into its shield at [angle] (around [center]),

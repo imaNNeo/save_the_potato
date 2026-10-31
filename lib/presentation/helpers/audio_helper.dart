@@ -191,6 +191,10 @@ class AudioHelper {
   /// The shield caught a heart: a high A, in key with the song
   void playHeartPickupSound() => playNote('ice', 81, volume: 0.8);
 
+  /// The life bar reached a new [stage]: a higher note of A for each one
+  void playLifeStageUpSound(int stage) =>
+      playNote('ice', const [69, 69, 76, 81, 88][stage], volume: 0.8);
+
   void playVictorySound() async {
     if (!(await _audioEnabled.value)) {
       return;

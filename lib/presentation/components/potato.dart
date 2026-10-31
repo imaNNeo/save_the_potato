@@ -173,7 +173,7 @@ class Potato extends PositionComponent
         case FireOrb():
           _audioHelper.playOrbHitSound();
           game.onOrbHit(_angleTo(other));
-          if (bloc.state.healthPoints > 0) {
+          if (bloc.state.life > 0) {
             fireHitTrigger.fire();
           }
           other.onPotatoHit();
@@ -181,7 +181,7 @@ class Potato extends PositionComponent
         case IceOrb():
           _audioHelper.playOrbHitSound();
           game.onOrbHit(_angleTo(other));
-          if (bloc.state.healthPoints > 0) {
+          if (bloc.state.life > 0) {
             iceHitTrigger.fire();
           }
           other.onPotatoHit();
