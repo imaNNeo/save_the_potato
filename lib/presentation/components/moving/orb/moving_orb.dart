@@ -7,13 +7,7 @@ sealed class MovingOrb extends MovingComponent {
 
   List<Color> get colors => type.colors;
 
-  int? _overrideCollisionSoundNumber;
-
-  int? getOverrideCollisionSoundNumber() {
-    return _overrideCollisionSoundNumber;
-  }
-
-  /// Set by the rhythm modes right after [initialize]
+  /// Set by the rhythm director right after [initialize]
   RhythmHit? rhythmHit;
 
   VoidCallback? _onDisjointCallback;
@@ -43,7 +37,6 @@ sealed class MovingOrb extends MovingComponent {
     double size = 17.0,
     VoidCallback? onDisjointCallback,
     VoidCallback? onPotatoHitCallback,
-    int? overrideCollisionSoundNumber,
   }) {
     super.initialize(
       speed: speed,
@@ -51,7 +44,6 @@ sealed class MovingOrb extends MovingComponent {
       position: position,
       size: size,
     );
-    _overrideCollisionSoundNumber = overrideCollisionSoundNumber;
     rhythmHit = null;
     _onDisjointCallback = onDisjointCallback;
     _onPotatoHitCallback = onPotatoHitCallback;

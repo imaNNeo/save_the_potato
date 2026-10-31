@@ -4,7 +4,6 @@ import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/lazy_value.dart';
 import 'package:save_the_potato/presentation/components/motivation_component.dart';
-import 'package:save_the_potato/presentation/rhythm/rhythm_mode.dart';
 
 class AudioHelper {
   bool isPaused = false;
@@ -15,15 +14,11 @@ class AudioHelper {
 
   late final SoLoud _soLoud;
 
-  late final AudioSource _bgm;
-  late final List<AudioSource> shieldNotes;
   late final AudioSource _heartHit, _orbHit1, _orbHit2;
   late final AudioSource _victory, _gameOver;
 
-  SoundHandle? _bgmHandle;
-
-  /// Rhythm prototype: one-shot notes pitched with the play speed, and the
-  /// looping 120 BPM stems that are of the melody song
+  /// One-shot notes pitched with the play speed, and the looping 120 BPM
+  /// stems of the song the shield plays the melody over
   static const _rhythmStems = ['kick', 'pad', 'hats', 'bass', 'claps'];
   static const _noteBaseMidi = {'fire': 60, 'ice': 72};
   final _notes = <String, AudioSource>{};
@@ -34,15 +29,9 @@ class AudioHelper {
   Future<void> initialize() async {
     _soLoud = SoLoud.instance;
     await _soLoud.init();
-    // The stems alone take 7 voices
+    // The stems alone take 5 voices
     _soLoud.setMaxActiveVoiceCount(40);
     const baseAssets = 'assets/audio';
-    _bgm = await _soLoud.loadAsset('$baseAssets/bg_120_140c_bpm.ogg');
-    shieldNotes = [];
-    for (var i = 1; i <= 6; i++) {
-      shieldNotes.add(await _soLoud.loadAsset('$baseAssets/Shield$i.wav'));
-    }
-
     _heartHit = await _soLoud.loadAsset('$baseAssets/heart.wav');
     _orbHit1 = await _soLoud.loadAsset('$baseAssets/hit1.wav');
     _orbHit2 = await _soLoud.loadAsset('$baseAssets/hit2.wav');
@@ -71,22 +60,8 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    if (_bgmHandle != null) {
-      _soLoud.stop(_bgmHandle!);
-      _bgmHandle = null;
-    }
     _stopStems();
-    if (RhythmMode.current.value.usesStems) {
-      _playStems();
-      return;
-    }
-    _bgmHandle = _soLoud.play(
-      _bgm,
-      volume: GameConstants.bgmVolume,
-      looping: true,
-      loopingStartAt: const Duration(minutes: 3, seconds: 0, milliseconds: 480),
-    );
-    _soLoud.setProtectVoice(_bgmHandle!, true);
+    _playStems();
   }
 
   void setAudioEnabled(bool enabled) {
@@ -94,11 +69,8 @@ class AudioHelper {
   }
 
   void pauseBackgroundMusic() {
-    if (_bgmHandle == null && _stemGroup == null) {
+    if (_stemGroup == null) {
       return;
-    }
-    if (_bgmHandle != null) {
-      _soLoud.setPause(_bgmHandle!, true);
     }
     isPaused = true;
     for (var element in _soLoud.activeSounds) {
@@ -113,9 +85,6 @@ class AudioHelper {
       return;
     }
     if (isPaused) {
-      if (_bgmHandle != null) {
-        _soLoud.setPause(_bgmHandle!, false);
-      }
       if (_stemGroup != null) {
         _soLoud.setPause(_stemGroup!, false);
       }
@@ -130,29 +99,19 @@ class AudioHelper {
     for (final handle in stems) {
       _soLoud.fadeVolume(handle, 0, duration);
     }
-    if (_bgmHandle == null) {
-      await Future.delayed(duration);
-      _stopStems(only: stems);
-      return;
-    }
-    final bgm = _bgmHandle!;
-    _soLoud.fadeVolume(bgm, 0, duration);
     await Future.delayed(duration);
-    _soLoud.stop(bgm);
     _stopStems(only: stems);
   }
 
   /// Where the music is now, in seconds of the file (it wraps when it loops).
   /// Null when nothing plays.
   double? get musicPosition {
-    final handle = _bgmHandle ?? _stemHandles['kick'];
+    final handle = _stemHandles['kick'];
     if (handle == null || !_soLoud.getIsValidVoiceHandle(handle)) {
       return null;
     }
     return _soLoud.getPosition(handle).inMicroseconds / 1e6;
   }
-
-  bool get isPlayingStems => _stemGroup != null;
 
   void _playStems() {
     final group = _soLoud.createVoiceGroup();
@@ -229,16 +188,8 @@ class AudioHelper {
     );
   }
 
-  void playShieldSound(int seed) async {
-    if (!(await _audioEnabled.value)) {
-      return;
-    }
-    if (seed < 0) {
-      return;
-    }
-    final shield = shieldNotes[seed % shieldNotes.length];
-    _soLoud.play(shield, volume: GameConstants.soundEffectsVolume);
-  }
+  /// The shield caught a heart: a high A, in key with the song
+  void playHeartPickupSound() => playNote('ice', 81, volume: 0.8);
 
   void playVictorySound() async {
     if (!(await _audioEnabled.value)) {

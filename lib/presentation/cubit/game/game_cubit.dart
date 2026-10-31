@@ -17,7 +17,6 @@ import 'package:save_the_potato/presentation/components/motivation_component.dar
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
-import 'package:save_the_potato/presentation/rhythm/rhythm_mode.dart';
 
 part 'game_state.dart';
 
@@ -64,38 +63,6 @@ class GameCubit extends Cubit<GameState> {
     _analyticsHelper.logLevelStart(afterGuideDurationMills);
     emit(state.copyWith(playingState: const PlayingStatePlaying()));
     _audioHelper.playBackgroundMusic();
-  }
-
-  void _tryToSwitchToMultiSpawnGameMode() {
-    if (RhythmMode.playing != RhythmMode.off) {
-      // The rhythm director plans its own waves
-      return;
-    }
-    if (state.currentGameMode is GameModeMultiSpawn) {
-      return;
-    }
-    if (state.upcomingGameMode != null) {
-      return;
-    }
-
-    // If the difficulty is too low, we don't want to switch to multi spawn yet
-    if (state.difficulty < GameConstants.wavesFromDifficulty) {
-      return;
-    }
-
-    // If there is a chance
-    if (Random().nextDouble() > GameConstants.multiShieldGameModeChance) {
-      return;
-    }
-    // 2 to 5
-    final count = Random().nextInt(4) + 2;
-    emit(
-      state.copyWith(
-        upcomingGameMode: ValueWrapper(
-          GameModeMultiSpawn(spawnerSpawnCount: count),
-        ),
-      ),
-    );
   }
 
   void update(double dt) {
@@ -375,10 +342,6 @@ class GameCubit extends Cubit<GameState> {
           ),
         );
         break;
-    }
-
-    if (state.shieldHitCounter % GameConstants.tryToSwitchGameModeEvery == 0) {
-      _tryToSwitchToMultiSpawnGameMode();
     }
   }
 

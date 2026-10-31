@@ -12,9 +12,4 @@ class SettingsDataSource {
   Future<void> setAudioEnabled(bool enabled) async {
     await _storage.setBool('audio_enabled', enabled);
   }
-
-  Future<String?> rhythmMode() => _storage.getString('rhythm_mode');
-
-  Future<void> setRhythmMode(String mode) =>
-      _storage.setString('rhythm_mode', mode);
 }

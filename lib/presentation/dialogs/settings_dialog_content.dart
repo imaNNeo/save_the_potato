@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
-import 'package:save_the_potato/presentation/rhythm/rhythm_mode.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 class SettingsDialogContent extends StatefulWidget {
@@ -46,25 +45,6 @@ class _SettingsDialogContentState extends State<SettingsDialogContent> {
             Text(
               state.versionName,
               style: const TextStyle(fontFamily: 'Roboto'),
-            ),
-            // Prototype: a quiet switch for the rhythm modes
-            ValueListenableBuilder<RhythmMode>(
-              valueListenable: RhythmMode.current,
-              builder: (context, mode, _) => GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: context.read<SettingsCubit>().nextRhythmMode,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Text(
-                    'Rhythm: ${mode.title}',
-                    style: const TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 11,
-                      color: Colors.white38,
-                    ),
-                  ),
-                ),
-              ),
             ),
           ],
         );
