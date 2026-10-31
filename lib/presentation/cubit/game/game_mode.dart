@@ -101,7 +101,7 @@ class GameModeSingleSpawn extends GameMode {
   /// It takes [difficultyInitialToPeakDuration] seconds to
   /// go from [orbsSpawnEveryInitial] to [orbsSpawnEveryPeak]
   static const orbsSpawnEveryInitial = 2.2;
-  static const orbsSpawnEveryPeak = 0.65;
+  static const orbsSpawnEveryPeak = 0.8;
 
   double getSpawnOrbsEvery(double difficulty) =>
       lerpDouble(orbsSpawnEveryInitial, orbsSpawnEveryPeak, difficulty)!;
@@ -109,7 +109,7 @@ class GameModeSingleSpawn extends GameMode {
   /// It takes [difficultyInitialToPeakDuration] seconds to
   /// go from [orbsMoveSpeedInitial] to [orbsMoveSpeedPeak]
   static const orbsMoveSpeedInitial = 135.0;
-  static const orbsMoveSpeedPeak = 215.0;
+  static const orbsMoveSpeedPeak = 200.0;
 
   double getSpawnOrbsMoveSpeed(double difficulty) =>
       lerpDouble(orbsMoveSpeedInitial, orbsMoveSpeedPeak, difficulty)!;
@@ -161,7 +161,7 @@ class GameModeMultiSpawn extends GameMode {
   /// It takes [difficultyInitialToPeakDuration] seconds to
   /// go from [orbsSpawnEveryInitial] to [orbsSpawnEveryPeak]
   static const orbsSpawnEveryInitial = 0.6;
-  static const orbsSpawnEveryPeak = 0.2;
+  static const orbsSpawnEveryPeak = 0.3;
 
   double getSpawnOrbsEvery(double difficulty) =>
       lerpDouble(orbsSpawnEveryInitial, orbsSpawnEveryPeak, difficulty)!;
@@ -169,13 +169,13 @@ class GameModeMultiSpawn extends GameMode {
   /// It takes [difficultyInitialToPeakDuration] seconds to
   /// go from [orbsMoveSpeedInitial] to [orbsMoveSpeedPeak]
   static const orbsMoveSpeedInitial = 125;
-  static const orbsMoveSpeedPeak = 215;
+  static const orbsMoveSpeedPeak = 200;
 
   double getSpawnOrbsMoveSpeed(double difficulty) =>
       lerpDouble(orbsMoveSpeedInitial, orbsMoveSpeedPeak, difficulty)!;
 
   static const orbsSpawnerSpawnEveryInitial = 5.5;
-  static const orbsSpawnerSpawnEveryPeak = 2;
+  static const orbsSpawnerSpawnEveryPeak = 2.5;
 
   double getSpawnOrbsSpawnerEvery(double difficulty) => lerpDouble(
     orbsSpawnerSpawnEveryInitial,

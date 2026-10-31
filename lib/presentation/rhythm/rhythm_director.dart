@@ -5,6 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_component_spawner.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
@@ -391,8 +392,9 @@ class RhythmDirector extends Component
     final every = const GameModeSingleSpawn().getSpawnOrbsEvery(_difficulty);
     _beatsUntilSingle = max(1, (every / beatLength).round());
 
-    // Same odds as today's waves: half way up the difficulty, now and then
-    if (_difficulty >= 0.5 && _rnd.nextDouble() < 0.07) {
+    // Same odds as today's waves, now and then once they are allowed
+    if (_difficulty >= GameConstants.wavesFromDifficulty &&
+        _rnd.nextDouble() < 0.07) {
       _wave = _Wave(series: 2 + _rnd.nextInt(4));
       _planWaveBeat(_wave!, beat, t, beatLength, speed);
       return;

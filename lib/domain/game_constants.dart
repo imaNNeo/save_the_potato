@@ -9,13 +9,22 @@ class GameConstants {
   static const showRetryAfterGameOverDelay = Duration(seconds: 3);
   static const showShieldLineAnimDuration = 2.0;
 
-  static const difficultyInitialToPeakDuration = 300.0;
+  /// It takes 8 minutes to reach the peak difficulty
+  static const difficultyInitialToPeakDuration = 480.0;
   static int tryToSwitchGameModeEvery = 3;
   static const multiShieldGameModeChance = 0.10;
 
-  /// https://cubic-bezier.com/#.23,1,.45,.87
-  /// Something like very vast in and very slow out
-  static const difficultyInitialToPeakCurve = Cubic(0.23, 1.0, 0.45, 0.87);
+  /// https://cubic-bezier.com/#.3,.5,.6,1
+  /// A gentle, almost steady climb that eases off near the top:
+  /// 1:00 -> 21%, 2:00 -> 40%, 3:00 -> 58%, 5:00 -> 85%, 8:00 -> 100%
+  static const difficultyInitialToPeakCurve = Cubic(0.3, 0.5, 0.6, 1.0);
+
+  /// Waves (orb series) can start from this difficulty, about 1:00 in
+  static const wavesFromDifficulty = 0.2;
+
+  /// Each time the potato gets hit, the difficulty steps back by this many
+  /// seconds, so a struggling player gets a breather
+  static const difficultyRewindOnHit = 20.0;
 
   static const double topBarPlayingOpacity = 1.0;
   static const double topBarNonPlayingOpacity = 0.2;
