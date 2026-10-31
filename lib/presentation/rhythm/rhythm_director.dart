@@ -224,14 +224,6 @@ class RhythmDirector extends Component
   static const _wavePortalFormTime = 0.7;
   static const _wavePortalRadius = 205.0;
 
-  /// Same as the timer spawner: slower to form early on, so new players see
-  /// where the orb comes from
-  double get _singleFormTime =>
-      (const GameModeSingleSpawn().getSpawnOrbsEvery(_difficulty) * 0.5).clamp(
-        0.4,
-        1.0,
-      );
-
   void _openPortal(_PlannedOrb orb) {
     final series = orb.series;
     if (series != null) {
@@ -361,7 +353,7 @@ class RhythmDirector extends Component
     final launchAt = land - _flightTime(speed, radius) - _mountDelay;
     final move = series != null
         ? null
-        : PortalMove.random(_singleFormTime, random: _rnd);
+        : PortalMove.random(_difficulty, random: _rnd);
     _planned.add(
       _PlannedOrb(
         land: land,
@@ -467,7 +459,7 @@ class RhythmDirector extends Component
       wave.halfBeats = _difficulty > 0.8;
       // Both ends of a pair sweep the same way, so they stay opposite
       wave.sweepDirection = -wave.sweepDirection;
-      final sweep = wave.sweepDirection * (0.6 + _rnd.nextDouble() * 0.9);
+      final sweep = wave.sweepDirection * 1.1;
       wave.portal = _SeriesPortal(sweep: sweep, left: 6);
       wave.twinPortal = wave.mirrored
           ? _SeriesPortal(sweep: sweep, left: 6)

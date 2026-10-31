@@ -369,10 +369,7 @@ class MovingComponentSpawner extends Component
     final difficulty = bloc.state.difficulty;
     final moveSpeed = gameMode.getSpawnOrbsMoveSpeed(difficulty);
     final orbType = OrbType.values.random();
-    final spawnEvery = gameMode.getSpawnOrbsEvery(difficulty);
-    // It forms slower early on, so new players see where the orb comes
-    // from, and moves a random way so the throws stay surprising
-    final move = PortalMove.random((spawnEvery * 0.5).clamp(0.4, 1.0));
+    final move = PortalMove.random(difficulty);
     late OrbPortal portal;
     portal = OrbPortal(
       type: orbType,
@@ -400,7 +397,7 @@ class MovingComponentSpawner extends Component
       position: position,
       formDuration: _wavePortalFormDuration,
       angry: true,
-      drift: _waveSweepDirection * (0.6 + Random().nextDouble() * 0.9),
+      drift: _waveSweepDirection * 1.1,
       driftWhileOpen: true,
     );
     parent.add(portal);
