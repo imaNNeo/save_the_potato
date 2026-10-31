@@ -52,9 +52,6 @@ class MovingComponentSpawner extends Component
   late ComponentPool<IceOrb> _iceOrbPool;
   late ComponentPool<MovingHealth> _movingHealthPool;
 
-  /// Every orb comes out of a portal that forms somewhere around the potato
-  final PortalStyle _portalStyle = PortalStyle.current;
-
   /// Portals still forming, their orb hasn't left yet
   final List<OrbPortal> _formingPortals = [];
 
@@ -323,7 +320,6 @@ class MovingComponentSpawner extends Component
     late OrbPortal portal;
     portal = OrbPortal(
       type: orbType,
-      style: _portalStyle,
       position: position,
       formDuration: formDuration,
       onOpen: () {
@@ -343,7 +339,6 @@ class MovingComponentSpawner extends Component
   OrbPortal _openWavePortal(OrbType type, Vector2 position) {
     final portal = OrbPortal(
       type: type,
-      style: _portalStyle,
       position: position,
       formDuration: _wavePortalFormDuration,
       angry: true,

@@ -7,24 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
-/// The candidate looks of the portals the orbs come out of.
-///
-/// While we pick one, the web build reads it from `?portal=` in the page URL.
-enum PortalStyle {
-  whiteHole,
-  rift,
-  closingRing,
-  vortex;
-
-  static PortalStyle get current {
-    final name = Uri.base.queryParameters['portal'];
-    return PortalStyle.values.firstWhere(
-      (style) => style.name == name,
-      orElse: () => PortalStyle.whiteHole,
-    );
-  }
-}
-
 /// A hole in space that forms at a spot, turns into an orb, then collapses.
 ///
 /// It calls [onOpen] once it has formed, which is when the orb leaves. It
@@ -34,7 +16,6 @@ class OrbPortal extends PositionComponent
     with FlameBlocListenable<GameCubit, GameState> {
   OrbPortal({
     required this.type,
-    required this.style,
     required Vector2 position,
     required this.formDuration,
     this.onOpen,
@@ -43,7 +24,6 @@ class OrbPortal extends PositionComponent
        super(position: position, anchor: Anchor.center, priority: 0);
 
   final OrbType type;
-  final PortalStyle style;
   final double formDuration;
   final VoidCallback? onOpen;
   final bool angry;
@@ -102,16 +82,7 @@ class OrbPortal extends PositionComponent
       kick: _kick,
       angry: angry,
     );
-    switch (style) {
-      case PortalStyle.whiteHole:
-        painter.whiteHole();
-      case PortalStyle.rift:
-        painter.rift();
-      case PortalStyle.closingRing:
-        painter.closingRing();
-      case PortalStyle.vortex:
-        painter.vortex();
-    }
+    painter.whiteHole();
   }
 }
 
@@ -216,7 +187,7 @@ class _PortalPainter {
   double get _coreRadius =>
       _orbRadius * form * (1 - closing) * (1 - 0.45 * kick);
 
-  /// A: a reversed black hole. Sparks spiral in and gather into the orb
+  /// A reversed black hole. Sparks spiral in and gather into the orb
   void whiteHole() {
     final life = _life;
     final reach = 46.0 * size;
@@ -259,156 +230,6 @@ class _PortalPainter {
       );
     }
     _core(_coreRadius);
-    _shockwave();
-  }
-
-  /// B: a crack of light tears open, the orb pushes through, it seals
-  void rift() {
-    final life = _life;
-    final open = Curves.easeOut.transform(form) * (1 - closing);
-    final length = 46.0 * size * (0.25 + 0.75 * open);
-    final width = (5.0 + 9.0 * open + 6 * kick) * size * (1 - closing * 0.8);
-    final tilt = 0.6 + sin(t * 0.3) * 0.08;
-    canvas
-      ..save()
-      ..translate(jitter.dx, jitter.dy)
-      ..rotate(tilt);
-    _glow(Offset.zero, length * 1.1, c[1], 0.55 * life);
-    // A jagged lens shape, its edges flicker
-    Path edge(double w) {
-      final path = Path()..moveTo(-length, 0);
-      const steps = 10;
-      for (var i = 1; i < steps; i++) {
-        final x = -length + 2 * length * i / steps;
-        final bulge = sin(pi * i / steps);
-        final jag = (i.isOdd ? 1 : -1) * 0.35 + 0.25 * sin(t * 13 + i);
-        path.lineTo(x, -w * bulge * (1 + jag * 0.5));
-      }
-      path.lineTo(length, 0);
-      for (var i = steps - 1; i > 0; i--) {
-        final x = -length + 2 * length * i / steps;
-        final bulge = sin(pi * i / steps);
-        final jag = (i.isOdd ? -1 : 1) * 0.35 + 0.25 * cos(t * 11 + i);
-        path.lineTo(x, w * bulge * (1 + jag * 0.5));
-      }
-      return path..close();
-    }
-
-    canvas
-      ..drawPath(
-        edge(width * 1.5),
-        Paint()
-          ..color = c[1].withValues(alpha: 0.7 * life)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
-      )
-      ..drawPath(edge(width), Paint()..color = c[0].withValues(alpha: life))
-      ..drawPath(
-        edge(width * 0.45),
-        Paint()..color = Color.lerp(c[0], _white, 0.7)!.withValues(alpha: life),
-      );
-    // Little sparks leaking from the tips
-    for (var i = 0; i < 6; i++) {
-      final k = (t * 1.7 + i / 6) % 1;
-      final side = i.isEven ? 1 : -1;
-      canvas.drawCircle(
-        Offset(side * length * (0.9 + k * 0.4), (k - 0.5) * 10 * side),
-        1.4 * size,
-        Paint()..color = c[0].withValues(alpha: life * (1 - k)),
-      );
-    }
-    canvas.restore();
-    _core(_coreRadius * 0.95);
-    _shockwave();
-  }
-
-  /// C: a ring closes in on the spot like a countdown, the orb pops out
-  void closingRing() {
-    final life = _life;
-    // The ring starts wide and lands on the orb's size when it's formed
-    final ringRadius = _orbRadius * size + 52 * size * (1 - form);
-    final alpha = (0.5 + 0.5 * form) * min(1.0, form * 4) * (1 - closing);
-    _glow(jitter, 34 * size, c[1], 0.5 * life);
-    final spin = t * (angry ? 2.5 : 1.0);
-    final ticks = Paint()
-      ..color = c[0].withValues(alpha: alpha)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.4 * size
-      ..strokeCap = StrokeCap.round;
-    final rect = Rect.fromCircle(center: jitter, radius: ringRadius);
-    for (var i = 0; i < 4; i++) {
-      canvas.drawArc(rect, spin + i * pi / 2, pi / 2 - 0.5, false, ticks);
-    }
-    canvas.drawCircle(
-      jitter,
-      ringRadius,
-      Paint()
-        ..color = c[1].withValues(alpha: alpha * 0.35)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 6 * size
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
-    );
-    // Inner dot charging up
-    _core(_coreRadius);
-    if (form < 1) {
-      _glow(jitter, 6 * size * form, _white, 0.8 * form);
-    }
-    _shockwave();
-  }
-
-  /// D: a dark hole with a glowing rim that flips bright into an orb
-  void vortex() {
-    final life = _life;
-    final r = 22.0 * size * (0.3 + 0.7 * Curves.easeOut.transform(form));
-    _glow(jitter, r * 2.4, c[1], 0.6 * life);
-    final spin = t * (angry ? 4.0 : 2.0);
-    // Glowing disc squashed like seen at an angle
-    canvas
-      ..save()
-      ..translate(jitter.dx, jitter.dy)
-      ..rotate(0.35);
-    for (var i = 0; i < 3; i++) {
-      final rr = r * (1.25 + i * 0.22);
-      canvas.drawArc(
-        Rect.fromCenter(center: Offset.zero, width: rr * 2, height: rr * 0.8),
-        spin * (1 - i * 0.2) + i,
-        pi * 1.3,
-        false,
-        Paint()
-          ..color = (i == 0 ? c[0] : c[1]).withValues(
-            alpha: life * (0.8 - i * 0.2),
-          )
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = (2.5 - i * 0.6) * size
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-    canvas.restore();
-    // The dark middle with a bright rim; it lights up as the orb forms
-    final dark = Color.lerp(const Color(0xFF02030A), c[2], 0.15)!;
-    canvas.drawCircle(
-      jitter,
-      r,
-      Paint()
-        ..shader = ui.Gradient.radial(
-          jitter,
-          r,
-          [
-            dark.withValues(alpha: life),
-            dark.withValues(alpha: life),
-            c[0].withValues(alpha: life),
-          ],
-          [0, 0.72, 1],
-        ),
-    );
-    canvas.drawCircle(
-      jitter,
-      r,
-      Paint()
-        ..color = Color.lerp(c[0], _white, 0.5)!.withValues(alpha: life)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.6 * size,
-    );
-    _core(_coreRadius * (form >= 1 ? 1 : max(0, form - 0.6) / 0.4));
     _shockwave();
   }
 }
