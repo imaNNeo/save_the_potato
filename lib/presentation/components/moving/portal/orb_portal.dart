@@ -20,6 +20,7 @@ class OrbPortal extends PositionComponent
     required this.formDuration,
     this.onOpen,
     this.angry = false,
+    this.drift = 0,
   }) : _seed = Random().nextDouble() * 100,
        super(position: position, anchor: Anchor.center, priority: 0);
 
@@ -27,6 +28,9 @@ class OrbPortal extends PositionComponent
   final double formDuration;
   final VoidCallback? onOpen;
   final bool angry;
+
+  /// How fast it slides around the potato while forming (radians/second)
+  final double drift;
   final double _seed;
 
   static const closeDuration = 0.35;
@@ -38,6 +42,8 @@ class OrbPortal extends PositionComponent
   bool _opened = false;
 
   bool get isOpen => _opened && _closing == null;
+
+  bool get isClosing => _closing != null;
 
   /// Collapses and removes itself
   void close() => _closing ??= 0;
@@ -62,6 +68,9 @@ class OrbPortal extends PositionComponent
     }
     if (!_opened) {
       _form = min(1, _form + dt / formDuration);
+      if (drift != 0) {
+        position.rotate(drift * dt);
+      }
       if (_form >= 1) {
         _opened = true;
         _kick = 1;
