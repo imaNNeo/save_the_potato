@@ -7,6 +7,21 @@ import 'package:flutter/material.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
+/// Candidate looks for the white hole, while we pick one. The web build
+/// reads it from `?hole=` in the page URL.
+enum HoleLook {
+  classic,
+  pinch,
+  spiral,
+  lens,
+  orbit;
+
+  static final HoleLook current = HoleLook.values.firstWhere(
+    (look) => look.name == Uri.base.queryParameters['hole'],
+    orElse: () => HoleLook.classic,
+  );
+}
+
 /// A hole in space that forms at a spot, turns into an orb, then collapses.
 ///
 /// It calls [onOpen] once it has formed, which is when the orb leaves. It
@@ -87,11 +102,23 @@ class OrbPortal extends PositionComponent
       type: type,
       t: _time + _seed,
       form: Curves.easeIn.transform(_form),
+      raw: _form,
       closing: _closing == null ? 0 : Curves.easeIn.transform(_closing!),
       kick: _kick,
       angry: angry,
     );
-    painter.whiteHole();
+    switch (HoleLook.current) {
+      case HoleLook.classic:
+        painter.whiteHole();
+      case HoleLook.pinch:
+        painter.pinch();
+      case HoleLook.spiral:
+        painter.spiral();
+      case HoleLook.lens:
+        painter.lens();
+      case HoleLook.orbit:
+        painter.orbit();
+    }
   }
 }
 
@@ -105,6 +132,7 @@ class _PortalPainter {
     required this.type,
     required this.t,
     required this.form,
+    required this.raw,
     required this.closing,
     required this.kick,
     required this.angry,
@@ -118,6 +146,9 @@ class _PortalPainter {
   final Canvas canvas;
   final OrbType type;
   final double t, form, closing, kick;
+
+  /// [form] without easing, each look eases it its own way
+  final double raw;
   final bool angry;
   final List<Color> c;
   final double size;
@@ -241,4 +272,202 @@ class _PortalPainter {
     _core(_coreRadius);
     _shockwave();
   }
+
+  // ---- Minimal looks: few shapes, additive light, a hard snap at release
+
+  static double _clamp01(double x) => x.clamp(0.0, 1.0);
+
+  /// 0 until [from], then eases up to 1 at the end of forming
+  double _late(double from) => _clamp01((raw - from) / (1 - from));
+
+  /// A soft additive bloom
+  void _bloom(Offset p, double radius, Color color, double alpha) {
+    if (radius <= 0 || alpha <= 0) {
+      return;
+    }
+    canvas.drawCircle(
+      p,
+      radius,
+      Paint()
+        ..blendMode = BlendMode.plus
+        ..shader = ui.Gradient.radial(
+          p,
+          radius,
+          [
+            color.withValues(alpha: _clamp01(alpha)),
+            color.withValues(alpha: _clamp01(alpha) * 0.25),
+            color.withValues(alpha: 0),
+          ],
+          [0, 0.35, 1],
+        ),
+    );
+  }
+
+  /// A glowing line: a blurred wide stroke under a thin hot one
+  void _lightStroke(Path path, double width, double alpha) {
+    if (alpha <= 0) {
+      return;
+    }
+    canvas
+      ..drawPath(
+        path,
+        Paint()
+          ..blendMode = BlendMode.plus
+          ..color = c[1].withValues(alpha: _clamp01(alpha * 0.8))
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = width * 3
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, width * 1.5),
+      )
+      ..drawPath(
+        path,
+        Paint()
+          ..blendMode = BlendMode.plus
+          ..color = Color.lerp(
+            c[0],
+            _white,
+            0.35,
+          )!.withValues(alpha: _clamp01(alpha))
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = width
+          ..strokeCap = StrokeCap.round,
+      );
+  }
+
+  /// The pop when the orb leaves: a white flash and a crisp ring
+  void _release() {
+    final k = closing;
+    if (k <= 0) {
+      return;
+    }
+    final fade = 1 - k;
+    _bloom(jitter, (10 + 18 * k) * size, _white, 0.9 * fade * fade);
+    final ring = Path()
+      ..addOval(Rect.fromCircle(center: jitter, radius: (8 + 46 * k) * size));
+    _lightStroke(ring, 2.2 * fade + 0.3, fade);
+  }
+
+  /// The orb growing in the middle near the end, with a little overshoot
+  double get _lateCore {
+    final grow = Curves.easeOutBack.transform(_late(0.72));
+    return _orbRadius * grow * (1 - closing) * (1 - 0.45 * kick);
+  }
+
+  /// B: one thin ring of light pinches in to a point, the point blooms into
+  /// the orb
+  void pinch() {
+    final life = min(1.0, raw * 5) * (1 - closing);
+    final reach = 34 * size;
+    final squeeze = Curves.easeInCubic.transform(raw);
+    final hold = 1.6 + 0.15 * sin(t * (angry ? 18 : 9));
+    final r = isHeld
+        ? _orbRadius * hold
+        : ui.lerpDouble(reach, _orbRadius * 1.5, squeeze)!;
+    _bloom(jitter, reach * 0.9, c[1], 0.18 * life + 0.35 * squeeze * life);
+    final ring = Path()..addOval(Rect.fromCircle(center: jitter, radius: r));
+    _lightStroke(
+      ring,
+      (0.9 + 1.8 * squeeze) * size,
+      life * (0.45 + 0.55 * squeeze),
+    );
+    // A tiny spark waiting in the middle
+    _bloom(
+      jitter,
+      (4 + 6 * squeeze) * size,
+      _white,
+      life * (0.5 + 0.4 * sin(t * 14)),
+    );
+    _core(_lateCore);
+    _release();
+  }
+
+  /// C: a single tapered spiral of light winding in faster and faster
+  void spiral() {
+    final life = min(1.0, raw * 5) * (1 - closing);
+    final reach = 36 * size * (1 - 0.45 * Curves.easeIn.transform(raw));
+    final spin = t * (angry ? 5 : 2.5) + raw * raw * 9;
+    _bloom(jitter, reach, c[1], 0.3 * life);
+    for (var arm = 0; arm < 2; arm++) {
+      const steps = 28;
+      Offset? last;
+      for (var i = 0; i <= steps; i++) {
+        final k = i / steps;
+        final a = spin + arm * pi + k * pi * 2.2;
+        final p = jitter + Offset(cos(a), sin(a)) * (reach * pow(1 - k, 1.25));
+        if (last != null) {
+          _lightStroke(
+            Path()
+              ..moveTo(last.dx, last.dy)
+              ..lineTo(p.dx, p.dy),
+            (0.4 + 2.0 * k) * size,
+            life * (0.15 + 0.85 * k),
+          );
+        }
+        last = p;
+      }
+    }
+    _bloom(jitter, 6 * size, _white, life * 0.6);
+    _core(_lateCore);
+    _release();
+  }
+
+  /// D: a dark lens with a razor-thin rim that flips bright into the orb
+  void lens() {
+    final life = min(1.0, raw * 5) * (1 - closing);
+    final grow = Curves.easeOutBack.transform(_clamp01(raw * 1.4));
+    final r = 15 * size * grow;
+    final flip = Curves.easeInCubic.transform(_late(0.65));
+    _bloom(jitter, r * 2.6, c[1], 0.4 * life);
+    if (r > 0.5) {
+      canvas.drawCircle(
+        jitter,
+        r * (1 - flip),
+        Paint()..color = const Color(0xFF02030A).withValues(alpha: life),
+      );
+      final rim = Path()..addOval(Rect.fromCircle(center: jitter, radius: r));
+      _lightStroke(rim, (1.0 + 1.5 * flip) * size, life);
+      // A sliver of light sweeping round the rim
+      final sweep = t * (angry ? 7 : 3.5);
+      _lightStroke(
+        Path()..addArc(Rect.fromCircle(center: jitter, radius: r), sweep, 1.1),
+        2.2 * size,
+        life,
+      );
+    }
+    _core(_orbRadius * flip * (1 - closing) * (1 - 0.45 * kick));
+    _release();
+  }
+
+  /// E: three motes of light circle in, faster and tighter, and merge
+  void orbit() {
+    final life = min(1.0, raw * 5) * (1 - closing);
+    final squeeze = Curves.easeInCubic.transform(raw);
+    final radius = isHeld
+        ? _orbRadius * 1.9
+        : ui.lerpDouble(30 * size, _orbRadius * 0.6, squeeze)!;
+    final spin = t * (angry ? 7 : 3) + squeeze * 12;
+    _bloom(jitter, 30 * size, c[1], 0.15 * life + 0.3 * squeeze * life);
+    for (var i = 0; i < 3; i++) {
+      final base = spin + i * pi * 2 / 3;
+      // A short trail behind each mote
+      final trail = Path();
+      for (var j = 0; j <= 8; j++) {
+        final a = base - j * 0.11;
+        final p = jitter + Offset(cos(a), sin(a)) * (radius + j * 0.6);
+        j == 0 ? trail.moveTo(p.dx, p.dy) : trail.lineTo(p.dx, p.dy);
+      }
+      _lightStroke(trail, 1.4 * size, life * 0.8);
+      _bloom(
+        jitter + Offset(cos(base), sin(base)) * radius,
+        5 * size,
+        _white,
+        life,
+      );
+    }
+    _core(_lateCore);
+    _release();
+  }
+
+  /// Wave portals stay open, the minimal looks then idle around the orb
+  bool get isHeld => raw >= 1 && closing == 0;
 }
