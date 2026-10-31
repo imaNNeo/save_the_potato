@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../presentation/cubit/game/game_mode.dart';
 
 class GameConstants {
-  static const int maxHealthPoints = 3;
-
   static const double gameOverTimeScale = 0.1;
   static const showRetryAfterGameOverDelay = Duration(seconds: 3);
   static const showShieldLineAnimDuration = 2.0;
