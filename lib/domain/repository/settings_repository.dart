@@ -9,8 +9,4 @@ class SettingsRepository {
       _dataSource.setAudioEnabled(enabled);
 
   Future<bool> audioEnabled() => _dataSource.audioEnabled();
-
-  Future<String?> rhythmMode() => _dataSource.rhythmMode();
-
-  Future<void> setRhythmMode(String mode) => _dataSource.setRhythmMode(mode);
 }

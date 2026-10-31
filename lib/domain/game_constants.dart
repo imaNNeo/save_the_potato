@@ -10,8 +10,6 @@ class GameConstants {
   static const showShieldLineAnimDuration = 2.0;
 
   static const difficultyInitialToPeakDuration = 300.0;
-  static int tryToSwitchGameModeEvery = 3;
-  static const multiShieldGameModeChance = 0.10;
 
   /// https://cubic-bezier.com/#.23,1,.45,.87
   /// Something like very vast in and very slow out
