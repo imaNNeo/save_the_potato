@@ -3,18 +3,14 @@ class RhythmHit {
   const RhythmHit({
     required this.timbre,
     this.midi = 60,
-    this.bar = 0,
     this.land = 0,
     this.silent = false,
   });
 
-  /// fire, ice, boom or ting (see `AudioHelper.playNote`), or chord for
+  /// fire or ice (see `AudioHelper.playNote`), or chord for
   /// today's shield chords, where [midi] is the chord number
   final String timbre;
   final int midi;
-
-  /// The bar of the song it lands in
-  final int bar;
 
   /// Song time it should land at
   final double land;

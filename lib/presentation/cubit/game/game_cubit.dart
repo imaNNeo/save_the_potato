@@ -67,7 +67,7 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void _tryToSwitchToMultiSpawnGameMode() {
-    if (RhythmMode.current.value != RhythmMode.off) {
+    if (RhythmMode.playing != RhythmMode.off) {
       // The rhythm director plans its own waves
       return;
     }

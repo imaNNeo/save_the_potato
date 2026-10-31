@@ -64,10 +64,6 @@ class RhythmDirector extends Component
   double _lastShieldAngle = 0;
   int _beatsUntilHeartCheck = 8;
 
-  // ---- streak song ----
-  int _streak = 0;
-  double _dipTimer = 0;
-
   /// Orb hitbox radius (17 / 2) plus the outer radius of the shield
   static const _contactDistance = 8.5 + 68.0;
 
@@ -104,6 +100,7 @@ class RhythmDirector extends Component
       case PlayingStateGuide() || PlayingStateGameOver() || PlayingStateNone():
         _running = false;
         _mode = RhythmMode.off;
+        RhythmMode.playing = _mode;
         _planned.clear();
     }
   }
@@ -113,6 +110,7 @@ class RhythmDirector extends Component
   void _startRun() {
     _running = true;
     _mode = RhythmMode.current.value;
+    RhythmMode.playing = _mode;
     _songTime = 0;
     _audioTime = 0;
     _lastPosition = null;
@@ -125,15 +123,6 @@ class RhythmDirector extends Component
     _lastLand = -10;
     _lastShieldAngle = _rnd.nextDouble() * pi * 2;
     _beatsUntilHeartCheck = 8;
-    _streak = 0;
-    _dipTimer = 0;
-    final levels = switch (_mode) {
-      RhythmMode.melody => RhythmSongs.melodyLayers,
-      RhythmMode.drumBell => RhythmSongs.drumBellLayers,
-      RhythmMode.streakSong => RhythmSongs.streakLayersFor(0),
-      _ => const <String>{},
-    };
-    _applyLayers(levels, fadeSeconds: 0);
   }
 
   // ------------------------------------------------------------------
@@ -181,13 +170,6 @@ class RhythmDirector extends Component
       return;
     }
     _tickClock(dt);
-
-    if (_dipTimer > 0) {
-      _dipTimer -= dt;
-      if (_dipTimer <= 0) {
-        _applyLayers(RhythmSongs.streakLayersFor(_streak), fadeSeconds: 1.2);
-      }
-    }
 
     final speed = _orbSpeed;
     final flight = _flightTime(speed);
@@ -258,10 +240,6 @@ class RhythmDirector extends Component
         _planGameMusicBeat(beat, speed);
       case RhythmMode.melody:
         _planMelodyBeat(beat, speed);
-      case RhythmMode.drumBell:
-        _planDrumBeat(beat, speed);
-      case RhythmMode.streakSong:
-        _planStreakBeat(beat, speed);
       case RhythmMode.off:
         break;
     }
@@ -458,76 +436,10 @@ class RhythmDirector extends Component
         hit: RhythmHit(
           timbre: ice ? 'ice' : 'fire',
           midi: ice ? note.midi : note.midi - 12,
-          bar: bar,
           land: land,
         ),
       );
     }
-  }
-
-  void _planDrumBeat(int beat, double speed) {
-    final bar = _barOf(beat);
-    final patterns = RhythmSongs.drumPatterns[_tier];
-    final pattern = patterns[bar % patterns.length];
-    final chord = RhythmSongs.chordOfBar(bar);
-    final beatInBar = beat % 4;
-    for (var half = 0; half < 2; half++) {
-      final step = beatInBar * 2 + half;
-      final c = pattern[step];
-      if (c == '.') {
-        continue;
-      }
-      final land = _beatTime(beat) + half * RhythmSongs.beatSeconds / 2;
-      final fire = c == 'F';
-      _add(
-        land,
-        fire ? OrbType.fire : OrbType.ice,
-        speed,
-        hit: fire
-            ? RhythmHit(
-                timbre: 'boom',
-                midi: chord.root + 12,
-                bar: bar,
-                land: land,
-              )
-            : RhythmHit(
-                timbre: 'ting',
-                midi: chord.voicing[(step ~/ 2) % 3] + 24,
-                bar: bar,
-                land: land,
-              ),
-      );
-    }
-  }
-
-  void _planStreakBeat(int beat, double speed) {
-    _beatsUntilSingle--;
-    final t = _beatTime(beat);
-    if (_beatsUntilSingle <= 0) {
-      final every = const GameModeSingleSpawn().getSpawnOrbsEvery(_difficulty);
-      _beatsUntilSingle = max(
-        1,
-        (every / RhythmSongs.beatSeconds).round(),
-      ).clamp(1, 4);
-      _addStreakOrb(t, beat, speed);
-    }
-    if (_difficulty > 0.75 && beat % 4 == 1) {
-      _addStreakOrb(t + RhythmSongs.beatSeconds / 2, beat, speed);
-    }
-  }
-
-  void _addStreakOrb(double land, int beat, double speed) {
-    final type = _randomType();
-    _add(
-      land,
-      type,
-      speed,
-      hit: RhythmHit(
-        timbre: type == OrbType.fire ? 'fire' : 'ice',
-        bar: _barOf(beat),
-        land: land,
-      ),
-    );
   }
 
   // ------------------------------------------------------------------
@@ -540,26 +452,6 @@ class RhythmDirector extends Component
       debugPrint('rhythm block ${hit.timbre} off by ${ms}ms');
     }
     final pan = cos(atan2(orb.position.y, orb.position.x)) * 0.5;
-    if (_mode == RhythmMode.streakSong) {
-      _streak++;
-      final chord = RhythmSongs.chordOfBar(hit.bar);
-      final pool = chord.climbPool;
-      final k = _streak - 1;
-      final midi = k < pool.length ? pool[k] : pool[pool.length - 3 + k % 3];
-      _audio.playNote(
-        hit.timbre,
-        hit.timbre == 'ice' ? midi + 12 : midi,
-        pan: pan,
-      );
-      final unlocked = RhythmSongs.streakUnlocks.contains(_streak);
-      if (unlocked) {
-        _audio.playNote('ice', midi + 24, volume: 0.6);
-      }
-      if (_dipTimer <= 0) {
-        _applyLayers(RhythmSongs.streakLayersFor(_streak), fadeSeconds: 0.25);
-      }
-      return;
-    }
     if (hit.silent) {
       return;
     }
@@ -570,30 +462,6 @@ class RhythmDirector extends Component
       return;
     }
     _audio.playNote(hit.timbre, hit.midi, pan: pan);
-  }
-
-  /// An orb got through to the potato
-  void onMissed() {
-    if (_mode != RhythmMode.streakSong) {
-      return;
-    }
-    _streak = 0;
-    // Strip the song back and duck what is left for a moment
-    _applyLayers(const {}, fadeSeconds: 0.08, base: 0.35);
-    _dipTimer = 0.5;
-  }
-
-  void _applyLayers(
-    Set<String> on, {
-    required double fadeSeconds,
-    double base = 1,
-  }) {
-    for (final name in AudioHelper.rhythmStems) {
-      final level = RhythmSongs.alwaysOn(_mode).contains(name)
-          ? base
-          : (on.contains(name) ? 1.0 : 0.0);
-      _audio.setStemLevel(name, level, fadeSeconds: fadeSeconds);
-    }
   }
 }
 

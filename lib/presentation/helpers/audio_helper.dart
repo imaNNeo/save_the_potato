@@ -23,21 +23,12 @@ class AudioHelper {
   SoundHandle? _bgmHandle;
 
   /// Rhythm prototype: one-shot notes pitched with the play speed, and the
-  /// looping 120 BPM stems that are faded in and out as layers
-  static const rhythmStems = [
-    'kick',
-    'pad',
-    'hats',
-    'bass',
-    'claps',
-    'arp',
-    'hats16',
-  ];
-  static const _noteBaseMidi = {'fire': 60, 'ice': 72, 'boom': 48, 'ting': 88};
+  /// looping 120 BPM stems that are of the melody song
+  static const _rhythmStems = ['kick', 'pad', 'hats', 'bass', 'claps'];
+  static const _noteBaseMidi = {'fire': 60, 'ice': 72};
   final _notes = <String, AudioSource>{};
   final _stems = <String, AudioSource>{};
   final _stemHandles = <String, SoundHandle>{};
-  final _stemLevels = <String, double>{};
   SoundHandle? _stemGroup;
 
   Future<void> initialize() async {
@@ -64,7 +55,7 @@ class AudioHelper {
         '$baseAssets/rhythm/note_$name.ogg',
       );
     }
-    for (final name in rhythmStems) {
+    for (final name in _rhythmStems) {
       _stems[name] = await _soLoud.loadAsset(
         '$baseAssets/rhythm/stem_$name.ogg',
       );
@@ -165,15 +156,13 @@ class AudioHelper {
 
   void _playStems() {
     final group = _soLoud.createVoiceGroup();
-    for (final name in rhythmStems) {
+    for (final name in _rhythmStems) {
       final handle = _soLoud.play(
         _stems[name]!,
-        volume: GameConstants.bgmVolume * (_stemLevels[name] ?? 0),
+        volume: GameConstants.bgmVolume,
         looping: true,
         paused: true,
       );
-      // Silent layers must keep running so they stay in sync
-      _soLoud.setInaudibleBehavior(handle, true, false);
       _soLoud.setProtectVoice(handle, true);
       _stemHandles[name] = handle;
     }
@@ -197,21 +186,7 @@ class AudioHelper {
     }
   }
 
-  /// Sets how loud a stem is (0 to 1), for the next play as well
-  void setStemLevel(String name, double level, {double fadeSeconds = 0.2}) {
-    _stemLevels[name] = level;
-    final handle = _stemHandles[name];
-    if (handle == null || !_soLoud.getIsValidVoiceHandle(handle)) {
-      return;
-    }
-    _soLoud.fadeVolume(
-      handle,
-      GameConstants.bgmVolume * level,
-      Duration(milliseconds: (fadeSeconds * 1000).round()),
-    );
-  }
-
-  /// Plays a rhythm note sample ([timbre] is fire, ice, boom or ting)
+  /// Plays a rhythm note sample ([timbre] is fire or ice)
   /// pitched to [midi]
   void playNote(
     String timbre,
