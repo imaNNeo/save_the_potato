@@ -42,10 +42,10 @@ class BackgroundReactions extends ChangeNotifier {
   double tension = 0;
 
   /// How much the stars are stretched into streaks, from 0 to 1
-  double get stretch => max(power, tension * 0.5);
+  double get stretch => max(power, tension * 0.7);
 
   /// How much faster than usual the stars should fly right now
-  double get speedBoost => 1 + power * 1.8 + heat * 0.35 + tension * 5;
+  double get speedBoost => 1 + power * 1.8 + heat * 0.35 + tension * 11;
 
   /// Offset of the stars in world units, follows the camera kicks and shakes
   /// when the potato is hit
