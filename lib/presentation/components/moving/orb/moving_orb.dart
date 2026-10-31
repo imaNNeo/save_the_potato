@@ -13,6 +13,9 @@ sealed class MovingOrb extends MovingComponent {
     return _overrideCollisionSoundNumber;
   }
 
+  /// Set by the rhythm modes right after [initialize]
+  RhythmHit? rhythmHit;
+
   VoidCallback? _onDisjointCallback;
   VoidCallback? _onPotatoHitCallback;
 
@@ -49,6 +52,7 @@ sealed class MovingOrb extends MovingComponent {
       size: size,
     );
     _overrideCollisionSoundNumber = overrideCollisionSoundNumber;
+    rhythmHit = null;
     _onDisjointCallback = onDisjointCallback;
     _onPotatoHitCallback = onPotatoHitCallback;
     anchor = Anchor.center;

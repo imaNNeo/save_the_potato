@@ -69,6 +69,7 @@ flutter:
     - assets/images/
     - assets/fonts/
     - assets/audio/
+    - assets/audio/rhythm/
     - assets/audio/motivation/
     - assets/rive/
     - assets/logo/

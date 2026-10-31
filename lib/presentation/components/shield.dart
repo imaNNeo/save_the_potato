@@ -645,7 +645,10 @@ class Shield extends PositionComponent
           final orb = other as MovingOrb;
           if (orb.type == type) {
             bloc.onShieldHit(other);
-            if (orb.getOverrideCollisionSoundNumber() != null) {
+            final rhythmHit = orb.rhythmHit;
+            if (rhythmHit != null) {
+              game.world.rhythm.onBlocked(orb, rhythmHit);
+            } else if (orb.getOverrideCollisionSoundNumber() != null) {
               _audioHelper.playShieldSound(
                 orb.getOverrideCollisionSoundNumber()!,
               );

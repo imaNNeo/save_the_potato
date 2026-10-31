@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/repository/settings_repository.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/presentation/rhythm/rhythm_mode.dart';
 
 part 'settings_state.dart';
 
@@ -19,6 +20,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   void initialize() async {
     emit(state.copyWith(audioEnabled: await _repository.audioEnabled()));
     _audioHelper.setAudioEnabled(state.audioEnabled);
+    RhythmMode.restore(await _repository.rhythmMode());
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     emit(
       state.copyWith(
@@ -30,6 +32,12 @@ class SettingsCubit extends Cubit<SettingsState> {
   void setAudioEnabled(bool enabled) async {
     await _repository.setAudioEnabled(enabled);
     emit(state.copyWith(audioEnabled: enabled));
+  }
+
+  /// Prototype: cycles the rhythm mode, see [RhythmMode]
+  void nextRhythmMode() {
+    RhythmMode.next();
+    _repository.setRhythmMode(RhythmMode.current.value.name);
   }
 
   @override

@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
+import 'package:save_the_potato/presentation/rhythm/rhythm_hit.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import '../../potato_game.dart';

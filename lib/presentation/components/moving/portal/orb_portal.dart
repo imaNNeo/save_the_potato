@@ -22,7 +22,10 @@ class OrbPortal extends PositionComponent
     this.angry = false,
     this.drift = 0,
     this.driftWhileOpen = false,
-  }) : _seed = Random().nextDouble() * 100,
+    this.travel = 0,
+    this.travelTime = 0,
+  }) : _start = position.clone(),
+       _seed = Random().nextDouble() * 100,
        super(position: position, anchor: Anchor.center, priority: 0);
 
   final OrbType type;
@@ -35,6 +38,12 @@ class OrbPortal extends PositionComponent
 
   /// Keeps sliding while open, so a wave's stream sweeps around the potato
   final bool driftWhileOpen;
+
+  /// How far it glides round the potato while forming (radians), eased in
+  /// and out over [travelTime] seconds, then it waits until it opens
+  final double travel;
+  final double travelTime;
+  final Vector2 _start;
   final double _seed;
 
   static const closeDuration = 0.35;
@@ -73,6 +82,12 @@ class OrbPortal extends PositionComponent
     if (drift != 0 && (!_opened || driftWhileOpen)) {
       position.rotate(drift * dt);
     }
+    if (travel != 0 && !_opened) {
+      final k = travelTime <= 0 ? 1.0 : min(1.0, _time / travelTime);
+      position
+        ..setFrom(_start)
+        ..rotate(travel * Curves.easeInOutSine.transform(k));
+    }
     if (!_opened) {
       _form = min(1, _form + dt / formDuration);
       if (_form >= 1) {
@@ -98,6 +113,132 @@ class OrbPortal extends PositionComponent
     );
     painter.spiral();
   }
+}
+
+/// Draws every look a portal can have for the first few frames, clipped to
+/// a single pixel under the potato so nobody sees it. The GPU compiles a
+/// shader the first time it sees an effect, which drops frames; this makes
+/// that happen on the home screen instead of when the first portal, wave or
+/// game over shows up mid-game.
+///
+/// It draws straight on the game canvas (not into a layer), because the GPU
+/// keeps separate shaders for layers and the screen.
+class PortalWarmUp extends Component {
+  PortalWarmUp() : super(priority: -100);
+
+  int _frames = 0;
+
+  @override
+  void render(Canvas canvas) {
+    canvas
+      ..save()
+      ..clipRect(const Rect.fromLTWH(0, 0, 1, 1));
+    for (final type in OrbType.values) {
+      for (final angry in [false, true]) {
+        for (final (raw, closing, kick) in [
+          (0.3, 0.0, 0.0),
+          (0.9, 0.0, 0.0),
+          (1.0, 0.0, 0.6),
+          (1.0, 0.5, 0.0),
+        ]) {
+          _PortalPainter(
+            canvas: canvas,
+            type: type,
+            t: raw * 3,
+            form: Curves.easeIn.transform(raw),
+            raw: raw,
+            closing: closing,
+            kick: kick,
+            angry: angry,
+          ).spiral();
+        }
+      }
+    }
+    // The blur shader changes with the blur's size on screen, which changes
+    // with the camera zoom, so warm up the whole range
+    final line = Path()
+      ..moveTo(-6, 0.5)
+      ..lineTo(6, 0.5);
+    for (var sigma = 0.25; sigma <= 8; sigma += 0.25) {
+      canvas.drawPath(
+        line,
+        Paint()
+          ..blendMode = BlendMode.plus
+          ..color = const Color(0xFFFFFFFF)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, sigma),
+      );
+    }
+    // The game over screen blurs what is behind it, growing to 16
+    for (var sigma = 0.5; sigma <= 16; sigma += 0.5) {
+      canvas
+        ..saveLayer(
+          const Rect.fromLTWH(0, 0, 1, 1),
+          Paint()
+            ..imageFilter = ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+        )
+        ..drawRect(
+          const Rect.fromLTWH(-2, -2, 5, 5),
+          Paint()..color = const Color(0xFF000000),
+        )
+        ..restore();
+    }
+    canvas.restore();
+    if (++_frames >= 3) {
+      removeFromParent();
+    }
+  }
+}
+
+/// How a single portal moves before it throws, picked at random so the
+/// throws don't get predictable
+class PortalMove {
+  const PortalMove({
+    required this.formDuration,
+    required this.travel,
+    required this.travelTime,
+  });
+
+  /// Mostly it stays put and throws quickly. From [trickFrom] difficulty
+  /// on, a small and growing chance makes it slide a little first, to
+  /// trick the player.
+  factory PortalMove.random(double difficulty, {Random? random}) {
+    final rnd = random ?? Random();
+    double between(double a, double b) => a + rnd.nextDouble() * (b - a);
+    final trickChance =
+        ((difficulty - trickFrom) / (1 - trickFrom)).clamp(0.0, 1.0) *
+        maxTrickChance;
+    if (rnd.nextDouble() >= trickChance) {
+      // Appears in place and throws shortly after
+      return PortalMove(
+        formDuration: between(0.4, 0.5),
+        travel: 0,
+        travelTime: 0,
+      );
+    }
+    // Trick: slides a short way, stops for a beat, then throws
+    final dir = rnd.nextBool() ? 1.0 : -1.0;
+    final form = between(0.75, 0.95);
+    return PortalMove(
+      formDuration: form,
+      travel: dir * between(0.35, 0.7),
+      travelTime: form - between(0.15, 0.25),
+    );
+  }
+
+  /// No tricks below this difficulty
+  static const trickFrom = 0.3;
+
+  /// The chance of a trick at full difficulty
+  static const maxTrickChance = 0.15;
+
+  /// The longest a single portal takes to form
+  static const maxFormDuration = 0.95;
+
+  final double formDuration;
+  final double travel;
+  final double travelTime;
 }
 
 /// Draws one portal around the origin.
@@ -212,6 +353,8 @@ class _PortalPainter {
     );
   }
 
+  static const _strokeBlur = MaskFilter.blur(BlurStyle.normal, 2.5);
+
   /// A glowing line: a blurred wide stroke under a thin hot one
   void _lightStroke(Path path, double width, double alpha) {
     if (alpha <= 0) {
@@ -226,7 +369,9 @@ class _PortalPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = width * 3
           ..strokeCap = StrokeCap.round
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, width * 1.5),
+          // A fixed blur: every new blur size compiles a new GPU shader,
+          // which drops frames the first time it shows up
+          ..maskFilter = _strokeBlur,
       )
       ..drawPath(
         path,

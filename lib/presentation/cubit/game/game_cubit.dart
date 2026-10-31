@@ -17,6 +17,7 @@ import 'package:save_the_potato/presentation/components/motivation_component.dar
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/presentation/rhythm/rhythm_mode.dart';
 
 part 'game_state.dart';
 
@@ -66,6 +67,10 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void _tryToSwitchToMultiSpawnGameMode() {
+    if (RhythmMode.playing != RhythmMode.off) {
+      // The rhythm director plans its own waves
+      return;
+    }
     if (state.currentGameMode is GameModeMultiSpawn) {
       return;
     }
