@@ -171,6 +171,7 @@ class Potato extends PositionComponent
           other.onConsumed();
           break;
         case FireOrb():
+          parent.rhythm.onMissed();
           _audioHelper.playOrbHitSound();
           game.onOrbHit(_angleTo(other));
           if (bloc.state.healthPoints > 0) {
@@ -179,6 +180,7 @@ class Potato extends PositionComponent
           other.onPotatoHit();
           break;
         case IceOrb():
+          parent.rhythm.onMissed();
           _audioHelper.playOrbHitSound();
           game.onOrbHit(_angleTo(other));
           if (bloc.state.healthPoints > 0) {

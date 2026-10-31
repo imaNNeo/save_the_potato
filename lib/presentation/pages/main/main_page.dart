@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:save_the_potato/presentation/rhythm/rhythm_mode_picker.dart';
 import 'package:save_the_potato/main.dart';
 import 'package:save_the_potato/presentation/background_reactions.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
@@ -176,6 +177,10 @@ class _MainPageState extends State<MainPage>
                   onLeftUp: _gameCubit.onLeftTapUp,
                   onRightDown: _gameCubit.onRightTapDown,
                   onRightUp: _gameCubit.onRightTapUp,
+                ),
+                const Align(
+                  alignment: Alignment.topCenter,
+                  child: RhythmModePicker(),
                 ),
                 if (state.playingState.isPaused) const GamePausedUI(),
                 if (state.showGameOverUI) const GameOverUI(),

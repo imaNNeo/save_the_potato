@@ -9,6 +9,7 @@ import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
+import 'package:save_the_potato/presentation/rhythm/rhythm_hit.dart';
 
 import 'moving_components.dart';
 import 'multi_orb_spawner.dart';
@@ -80,6 +81,10 @@ class MovingComponentSpawner extends Component
     if (!bloc.state.playingState.isPlaying) {
       return;
     }
+    if (parent.rhythm.isActive) {
+      // The rhythm director spawns the orbs on the beat
+      return;
+    }
     final gameMode = bloc.state.currentGameMode;
     aliveSingleMovingOrbs.removeWhere((e) => e.isRemoved);
     aliveMultiOrbSpawners.removeWhere((e) => e.isRemoved);
@@ -148,8 +153,54 @@ class MovingComponentSpawner extends Component
     }
   }
 
+  /// How far from the potato orbs spawn
+  double get spawnDistance => (game.size.x / 2) + (game.size.x * 0.05);
+
+  bool get hasMovingHealth => movingHealth != null;
+
+  /// Used by the rhythm director, which picks its own moments for hearts
+  bool tryToSpawnHealthPoint() => _tryToSpawnHealthPoint();
+
+  /// Spawns one orb for the rhythm director
+  void spawnRhythmOrb({
+    required OrbType type,
+    required Vector2 position,
+    required double speed,
+    RhythmHit? rhythmHit,
+    int? overrideCollisionSoundNumber,
+  }) {
+    late MovingOrb orb;
+    switch (type) {
+      case OrbType.fire:
+        orb = _fireOrbPool.get();
+      case OrbType.ice:
+        orb = _iceOrbPool.get();
+    }
+    orb.loaded.then((_) {
+      orb.initialize(
+        speed: speed,
+        target: player,
+        position: position,
+        onDisjointCallback: () => _release(orb),
+        onPotatoHitCallback: () => _release(orb),
+        overrideCollisionSoundNumber: overrideCollisionSoundNumber,
+      );
+      orb.rhythmHit = rhythmHit;
+    });
+    parent.add(orb);
+  }
+
+  void _release(MovingOrb orb) {
+    switch (orb) {
+      case FireOrb():
+        _fireOrbPool.release(orb);
+      case IceOrb():
+        _iceOrbPool.release(orb);
+    }
+  }
+
   Vector2 _getRandomSpawnPositionAroundMap() {
-    final distance = (game.size.x / 2) + (game.size.x * 0.05);
+    final distance = spawnDistance;
     final angle = Random().nextDouble() * pi * 2;
     return Vector2(cos(angle), sin(angle)) * distance;
   }
