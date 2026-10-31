@@ -54,3 +54,5 @@ keystore.jks
 google_play_credentials.json
 
 firebase.json
+# Gradle build output under android/
+/android/build/
