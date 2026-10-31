@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 
-/// Prototype switch for the rhythm experiments. [off] is the game as it is
-/// today. Pick one on the home screen, with `?rhythm=` on the web, or with
+/// Prototype switch for the rhythm experiments. [off] is the game as it was
+/// before; [onBeat] is the default. Pick one on the home screen, with `?rhythm=` on the web, or with
 /// `--dart-define=RHYTHM=` on mobile.
 enum RhythmMode {
-  off('Off (today)', null),
+  off('Off (old timing)', 'off'),
   onBeat('On the beat', 'onBeat'),
   inKey('On the beat, in key', 'inKey'),
   melody('Shield plays the melody', 'melody'),
@@ -33,7 +33,7 @@ enum RhythmMode {
     }
     return RhythmMode.values.firstWhere(
       (m) => m.key == key || m.name == key,
-      orElse: () => RhythmMode.off,
+      orElse: () => RhythmMode.onBeat,
     );
   }
 
