@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_component_spawner.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
+import 'package:save_the_potato/presentation/components/moving/portal/orb_portal.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
@@ -172,20 +173,26 @@ class RhythmDirector extends Component
     _tickClock(dt);
 
     final speed = _orbSpeed;
-    final flight = _flightTime(speed);
-    while (_beatTime(_nextBeat) < _songTime + flight + 0.4) {
+    final lookahead = _flightTime(speed, _maxPortalRadius) + _maxFormTime + 0.3;
+    while (_beatTime(_nextBeat) < _songTime + lookahead) {
       _planBeat(_nextBeat, speed);
       _nextBeat++;
     }
 
+    // Portals form ahead of their throw, so the player sees them coming
+    for (final orb in _planned) {
+      if (orb.portalAt <= _songTime) {
+        _openPortal(orb);
+      }
+    }
+
     while (_planned.isNotEmpty) {
       final next = _planned.first;
-      final launchAt = next.land - _flightTime(next.speed) - _mountDelay;
-      if (launchAt > _songTime) {
+      if (next.launchAt > _songTime) {
         break;
       }
       _planned.removeAt(0);
-      _launch(next, late: _songTime - launchAt);
+      _launch(next, late: _songTime - next.launchAt);
     }
 
     if (autopilot) {
@@ -199,31 +206,93 @@ class RhythmDirector extends Component
       return;
     }
     final next = _inFlight.first;
-    final need = next.type == OrbType.fire ? next.angle : next.angle + pi;
+    final angle = next.thrownAngle;
+    final need = next.type == OrbType.fire ? angle : angle + pi;
     parent.player.fireShield.angle = need;
   }
 
   double get _orbSpeed =>
       const GameModeSingleSpawn().getSpawnOrbsMoveSpeed(bloc.state.difficulty);
 
-  double _flightTime(double speed) =>
-      (spawner.spawnDistance - _contactDistance) / speed;
+  double _flightTime(double speed, double radius) =>
+      (radius - _contactDistance) / speed;
+
+  // ---- portals (the white holes the orbs come out of) ----
+
+  static const _maxPortalRadius = 225.0;
+  static const _maxFormTime = 1.0;
+  static const _wavePortalFormTime = 0.7;
+  static const _wavePortalRadius = 205.0;
+
+  /// Same as the timer spawner: slower to form early on, so new players see
+  /// where the orb comes from
+  double get _singleFormTime =>
+      (const GameModeSingleSpawn().getSpawnOrbsEvery(_difficulty) * 0.5).clamp(
+        0.4,
+        _maxFormTime,
+      );
+
+  void _openPortal(_PlannedOrb orb) {
+    final series = orb.series;
+    if (series != null) {
+      if (series.portal != null) {
+        return;
+      }
+      // Rewind the sweep so the portal is at the planned spot on the throw
+      final ahead = orb.launchAt - _songTime;
+      final angle = orb.angle - series.sweep * ahead;
+      parent.add(
+        series.portal = OrbPortal(
+          type: orb.type,
+          position: Vector2(cos(angle), sin(angle)) * orb.radius,
+          formDuration: _wavePortalFormTime,
+          angry: true,
+          drift: series.sweep,
+          driftWhileOpen: true,
+        ),
+      );
+      return;
+    }
+    if (orb.portal != null) {
+      return;
+    }
+    final ahead = orb.launchAt - _songTime;
+    final angle = orb.angle - orb.drift * ahead;
+    parent.add(
+      orb.portal = OrbPortal(
+        type: orb.type,
+        position: Vector2(cos(angle), sin(angle)) * orb.radius,
+        formDuration: max(0.05, ahead),
+        drift: orb.drift,
+      ),
+    );
+  }
 
   void _launch(_PlannedOrb orb, {required double late}) {
+    _openPortal(orb);
+    final portal = orb.series?.portal ?? orb.portal!;
+    if (orb.series case final series?) {
+      portal.kick();
+      series.left--;
+      if (series.left <= 0) {
+        portal.close();
+      }
+    } else {
+      portal.close();
+    }
     if (late > 0.25) {
       // Too late to fly in properly, skip it
       return;
     }
+    // Leaves from where the portal is now, it may have drifted a little
+    orb.thrownAngle = atan2(portal.position.y, portal.position.x);
     if (autopilot) {
       _inFlight.add(orb);
     }
-    final distance = max(
-      _contactDistance + 4,
-      spawner.spawnDistance - orb.speed * late,
-    );
+    final distance = max(_contactDistance + 4, orb.radius - orb.speed * late);
     spawner.spawnRhythmOrb(
       type: orb.type,
-      position: Vector2(cos(orb.angle), sin(orb.angle)) * distance,
+      position: Vector2(cos(orb.thrownAngle), sin(orb.thrownAngle)) * distance,
       speed: orb.speed,
       rhythmHit: orb.hit,
       overrideCollisionSoundNumber: orb.overrideSound,
@@ -281,18 +350,29 @@ class RhythmDirector extends Component
     RhythmHit? hit,
     int? overrideSound,
     double? angle,
+    _SeriesPortal? series,
   }) {
+    final radius = series != null
+        ? _wavePortalRadius
+        : 185 + _rnd.nextDouble() * 40;
+    final launchAt = land - _flightTime(speed, radius) - _mountDelay;
     _planned.add(
       _PlannedOrb(
         land: land,
+        launchAt: launchAt,
+        portalAt:
+            launchAt - (series != null ? _wavePortalFormTime : _singleFormTime),
         type: type,
         angle: angle ?? _pickAngle(type, land),
+        radius: radius,
+        drift: series != null ? 0 : (_rnd.nextBool() ? 1 : -1) * 0.9,
         speed: speed,
         hit: hit,
         overrideSound: overrideSound,
+        series: series,
       ),
     );
-    _planned.sort((a, b) => a.land.compareTo(b.land));
+    _planned.sort((a, b) => a.launchAt.compareTo(b.launchAt));
   }
 
   OrbType _randomType() => OrbType.values[_rnd.nextInt(2)];
@@ -380,6 +460,12 @@ class RhythmDirector extends Component
       wave.angle = _pickAngle(wave.type, t);
       wave.mirrored = _rnd.nextDouble() <= 2 / 3;
       wave.halfBeats = _difficulty > 0.8;
+      // Both ends of a pair sweep the same way, so they stay opposite
+      wave.sweepDirection = -wave.sweepDirection;
+      wave.portal = _SeriesPortal(sweep: wave.sweepDirection * 1.1, left: 6);
+      wave.twinPortal = wave.mirrored
+          ? _SeriesPortal(sweep: wave.sweepDirection * 1.1, left: 6)
+          : null;
     }
     final steps = wave.halfBeats ? [0.0, 0.5] : [0.0];
     for (final step in steps) {
@@ -389,15 +475,25 @@ class RhythmDirector extends Component
       final land = t + step * beatLength;
       final index = 6 - wave.orbsLeft;
       final hit = _gameMusicHit(wave.type, beat, land, index + 1);
-      _add(land, wave.type, speed, angle: wave.angle, hit: hit);
-      if (wave.mirrored) {
+      // The portal sweeps, so each orb leaves a bit further round
+      final sweep = wave.portal!.sweep * index * beatLength / steps.length;
+      _add(
+        land,
+        wave.type,
+        speed,
+        angle: wave.angle + sweep,
+        hit: hit,
+        series: wave.portal,
+      );
+      if (wave.twinPortal case final twinPortal?) {
         final twin = wave.type == OrbType.fire ? OrbType.ice : OrbType.fire;
         _add(
           land,
           twin,
           speed,
-          angle: wave.angle + pi,
+          angle: wave.angle + sweep + pi,
           hit: _gameMusicHit(twin, beat, land, index + 1, silent: true),
+          series: twinPortal,
         );
       }
       wave.orbsLeft--;
@@ -468,19 +564,44 @@ class RhythmDirector extends Component
 class _PlannedOrb {
   _PlannedOrb({
     required this.land,
+    required this.launchAt,
+    required this.portalAt,
     required this.type,
     required this.angle,
+    required this.radius,
+    required this.drift,
     required this.speed,
     this.hit,
     this.overrideSound,
-  });
+    this.series,
+  }) : thrownAngle = angle;
 
-  final double land;
+  /// Song times: when it hits the shield, leaves its portal, and the portal
+  /// starts to form
+  final double land, launchAt, portalAt;
   final OrbType type;
-  final double angle;
+
+  /// Where it should leave from, and how far out
+  final double angle, radius;
+
+  /// How fast its own portal slides round while forming (rad/s)
+  final double drift;
   final double speed;
   final RhythmHit? hit;
   final int? overrideSound;
+
+  /// Set for wave orbs, which share one portal per series
+  final _SeriesPortal? series;
+  OrbPortal? portal;
+  double thrownAngle;
+}
+
+class _SeriesPortal {
+  _SeriesPortal({required this.sweep, required this.left});
+
+  final double sweep;
+  int left;
+  OrbPortal? portal;
 }
 
 class _Wave {
@@ -493,4 +614,7 @@ class _Wave {
   double angle = 0;
   bool mirrored = false;
   bool halfBeats = false;
+  double sweepDirection = 1;
+  _SeriesPortal? portal;
+  _SeriesPortal? twinPortal;
 }
