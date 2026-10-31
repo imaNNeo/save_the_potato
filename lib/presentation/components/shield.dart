@@ -637,7 +637,7 @@ class Shield extends PositionComponent
       switch (other) {
         case MovingHealth():
           bloc.onShieldHit(other);
-          _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
+          _audioHelper.playHeartPickupSound();
           other.disjoint();
           break;
         case FireOrb():
@@ -648,12 +648,6 @@ class Shield extends PositionComponent
             final rhythmHit = orb.rhythmHit;
             if (rhythmHit != null) {
               game.world.rhythm.onBlocked(orb, rhythmHit);
-            } else if (orb.getOverrideCollisionSoundNumber() != null) {
-              _audioHelper.playShieldSound(
-                orb.getOverrideCollisionSoundNumber()!,
-              );
-            } else {
-              _audioHelper.playShieldSound(bloc.state.shieldHitCounter);
             }
             final orbPos = other.absolutePosition;
             final diff = orbPos - absolutePosition;
