@@ -10,6 +10,7 @@ import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
+import 'package:save_the_potato/presentation/prototypes/prototypes.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import 'damped_spring.dart';
@@ -29,13 +30,18 @@ class Shield extends PositionComponent
   Shield({
     required this.type,
     this.shieldWidth = 6.0,
-    this.shieldSweep = pi / 2,
+    this.baseSweep = pi / 2,
     this.offset = 12,
   }) : super(position: Vector2.all(0), anchor: Anchor.center);
 
   final OrbType type;
   final double shieldWidth;
-  final double shieldSweep;
+  final double baseSweep;
+
+  /// The perks prototype can make the shields wider
+  double _sweepScale = 1;
+  double get shieldSweep => baseSweep * _sweepScale;
+  PolygonHitbox? _hitbox;
   final double offset;
 
   late Timer _particleTimer;
@@ -189,7 +195,8 @@ class Shield extends PositionComponent
       );
     }
 
-    add(PolygonHitbox(vertices, collisionType: CollisionType.active));
+    _hitbox?.removeFromParent();
+    add(_hitbox = PolygonHitbox(vertices, collisionType: CollisionType.active));
   }
 
   late TweenSequence<double> _increaseDecreaseTween;
@@ -281,6 +288,11 @@ class Shield extends PositionComponent
 
   @override
   void update(double dt) {
+    final sweepScale = ProtoHooks.shieldSweepScale;
+    if (sweepScale != _sweepScale) {
+      _sweepScale = sweepScale;
+      _addHitbox();
+    }
     final streak = _impacts.streak;
     _heat = streak.heat;
     _power = streak.power;

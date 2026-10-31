@@ -14,6 +14,7 @@ import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/presentation/prototypes/prototypes.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import '../potato_game.dart';
@@ -150,12 +151,19 @@ class Potato extends PositionComponent
   void update(double dt) {
     super.update(dt);
     if (bloc.state.playingState.isPlaying) {
-      final rotationSpeed = bloc.state.shieldsAngleRotationSpeed;
+      final rotationSpeed =
+          bloc.state.shieldsAngleRotationSpeed * ProtoHooks.turnSpeedScale;
       if (rotationSpeed != 0) {
         fireShield.angle += rotationSpeed * dt;
       }
+      if (Prototypes.coop) {
+        iceShield.angle += ProtoHooks.iceShieldSpeed * dt;
+      }
     }
-    iceShield.angle = fireShield.angle - pi;
+    // In co-op each player turns their own shield
+    if (!Prototypes.coop || bloc.state.playingState.isGuide) {
+      iceShield.angle = fireShield.angle - pi;
+    }
   }
 
   @override

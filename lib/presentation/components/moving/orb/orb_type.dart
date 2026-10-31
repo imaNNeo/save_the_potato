@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:save_the_potato/domain/game_constants.dart';
+import 'package:save_the_potato/presentation/prototypes/prototypes.dart';
 
 enum OrbType {
   fire,
@@ -10,10 +11,12 @@ enum OrbType {
 
   bool get isIce => this == OrbType.ice;
 
-  List<Color> get colors => switch (this) {
-    OrbType.fire => GameConstants.redColors,
-    OrbType.ice => GameConstants.blueColors,
-  };
+  List<Color> get colors =>
+      ProtoHooks.colorsFor(this) ??
+      switch (this) {
+        OrbType.fire => GameConstants.redColors,
+        OrbType.ice => GameConstants.blueColors,
+      };
 
   Color get baseColor => colors.first;
 

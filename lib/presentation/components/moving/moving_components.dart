@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
+import 'package:save_the_potato/presentation/prototypes/prototypes.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import '../../potato_game.dart';
@@ -65,6 +66,6 @@ sealed class MovingComponent extends PositionComponent
       target.position.x - position.x,
     );
     _direction.setValues(cos(angle), sin(angle));
-    position.addScaled(_direction, speed * dt);
+    position.addScaled(_direction, speed * ProtoHooks.orbSpeedScale * dt);
   }
 }

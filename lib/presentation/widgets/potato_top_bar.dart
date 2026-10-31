@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
+import 'package:save_the_potato/presentation/prototypes/prototypes.dart';
 
 import 'game_timer.dart';
 
@@ -37,7 +38,7 @@ class _PotatoTopBarState extends State<PotatoTopBar> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  GameConstants.maxHealthPoints,
+                  ProtoHooks.maxHealthPoints,
                   (index) => Padding(
                     padding: const EdgeInsets.only(right: 4.0),
                     child: SizedBox(

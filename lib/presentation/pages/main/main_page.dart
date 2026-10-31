@@ -13,6 +13,9 @@ import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
+import 'package:save_the_potato/presentation/prototypes/coop_controls.dart';
+import 'package:save_the_potato/presentation/prototypes/proto_overlay.dart';
+import 'package:save_the_potato/presentation/prototypes/prototypes.dart';
 import 'package:save_the_potato/presentation/widgets/background_stars.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
@@ -170,15 +173,23 @@ class _MainPageState extends State<MainPage>
                   alignment: Alignment.bottomLeft,
                   child: DebugPanel(),
                 ),
-                RotationControls(
-                  showGuide: state.playingState.isGuide,
-                  onLeftDown: _gameCubit.onLeftTapDown,
-                  onLeftUp: _gameCubit.onLeftTapUp,
-                  onRightDown: _gameCubit.onRightTapDown,
-                  onRightUp: _gameCubit.onRightTapUp,
-                ),
-                if (state.playingState.isPaused) const GamePausedUI(),
+                if (Prototypes.coop)
+                  CoopControls(
+                    cubit: _gameCubit,
+                    showGuide: state.playingState.isGuide,
+                  )
+                else
+                  RotationControls(
+                    showGuide: state.playingState.isGuide,
+                    onLeftDown: _gameCubit.onLeftTapDown,
+                    onLeftUp: _gameCubit.onLeftTapUp,
+                    onRightDown: _gameCubit.onRightTapDown,
+                    onRightUp: _gameCubit.onRightTapUp,
+                  ),
+                if (state.playingState.isPaused && !ProtoHooks.frozen)
+                  const GamePausedUI(),
                 if (state.showGameOverUI) const GameOverUI(),
+                if (Prototypes.isOn) const PrototypeOverlay(),
                 const Align(
                   alignment: Alignment.topRight,
                   child: SettingsPauseIcon(),
@@ -254,7 +265,10 @@ class _MainPageBackground extends StatelessWidget {
       builder: (context, values) {
         final (modeIndex, timeScale) = values;
         return AnimatedBackgroundStars(
-          backgroundColor: GameColors.starsBackground[modeIndex],
+          backgroundColor: ProtoHooks.skyFor(
+            modeIndex,
+            GameColors.starsBackground[modeIndex],
+          ),
           starsColor: GameColors.starsColors[modeIndex],
           starsTimeScale: timeScale,
           starsSize: starsSize,

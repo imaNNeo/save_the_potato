@@ -15,6 +15,9 @@ import 'package:save_the_potato/presentation/background_reactions.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
 import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
+import 'package:save_the_potato/presentation/prototypes/autopilot.dart';
+import 'package:save_the_potato/presentation/prototypes/boss.dart';
+import 'package:save_the_potato/presentation/prototypes/prototypes.dart';
 
 import 'components/motivation_component.dart';
 import 'components/moving/moving_component_spawner.dart';
@@ -69,10 +72,15 @@ class PotatoGame extends FlameGame<MyWorld>
 
   PlayingState get playingState => _gameCubit.state.playingState;
 
+  GameState get gameCubitState => _gameCubit.state;
+
   Random rnd = Random();
 
   @override
   void update(double dt) {
+    if (Prototypes.autopilot) {
+      Autopilot.drive(this, _gameCubit, dt);
+    }
     _gameCubit.update(dt);
     super.update(dt);
   }
@@ -121,6 +129,9 @@ class MyWorld extends World
     await add(orbEffects = OrbEffects());
     await add(player = Potato());
     await add(MovingComponentSpawner());
+    if (Prototypes.boss) {
+      await add(BossFight());
+    }
     mounted.then((_) {
       _motivationWordSubscription = bloc.stream
           .map((state) => state.playMotivationWord)

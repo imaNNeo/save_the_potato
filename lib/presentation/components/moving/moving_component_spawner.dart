@@ -9,6 +9,7 @@ import 'package:save_the_potato/presentation/components/potato.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
+import 'package:save_the_potato/presentation/prototypes/prototypes.dart';
 
 import 'moving_components.dart';
 import 'multi_orb_spawner.dart';
@@ -80,6 +81,9 @@ class MovingComponentSpawner extends Component
     if (!bloc.state.playingState.isPlaying) {
       return;
     }
+    if (ProtoHooks.pauseNormalSpawns) {
+      return;
+    }
     final gameMode = bloc.state.currentGameMode;
     aliveSingleMovingOrbs.removeWhere((e) => e.isRemoved);
     aliveMultiOrbSpawners.removeWhere((e) => e.isRemoved);
@@ -116,6 +120,17 @@ class MovingComponentSpawner extends Component
           }
           timeSinceLastSingleOrbSpawn = 0.0;
           singleSpawn(gameMode);
+          if (Random().nextDouble() < ProtoHooks.extraOrbChance) {
+            // Co-op: the second orb is for the other player
+            final orb = throwOrb(
+              aliveSingleMovingOrbs.last.type == OrbType.fire
+                  ? OrbType.ice
+                  : OrbType.fire,
+              _getRandomSpawnPositionAroundMap(),
+              gameMode.getSpawnOrbsMoveSpeed(bloc.state.difficulty),
+            );
+            aliveSingleMovingOrbs.add(orb);
+          }
         }
       case GameModeMultiSpawn():
         if (bloc.state.upcomingGameMode != null) {
@@ -175,7 +190,8 @@ class MovingComponentSpawner extends Component
       _firstTimeHealthGeneratedCount++;
     }
 
-    return Random().nextDouble() <= generateHealthChance;
+    return Random().nextDouble() <=
+        generateHealthChance * ProtoHooks.heartChanceScale;
   }
 
   bool _tryToSpawnHealthPoint() {
@@ -257,6 +273,37 @@ class MovingComponentSpawner extends Component
       parent.add(oppositeSpawner);
       aliveMultiOrbSpawners.add(oppositeSpawner);
     }
+  }
+
+  /// Throws one orb from [position], used by the boss prototype
+  MovingOrb throwOrb(OrbType type, Vector2 position, double speed) {
+    late MovingOrb orb;
+    switch (type) {
+      case OrbType.fire:
+        orb = _fireOrbPool.get();
+        orb.loaded.then(
+          (_) => orb.initialize(
+            speed: speed,
+            target: player,
+            position: position,
+            onDisjointCallback: () => _fireOrbPool.release(orb as FireOrb),
+            onPotatoHitCallback: () => _fireOrbPool.release(orb as FireOrb),
+          ),
+        );
+      case OrbType.ice:
+        orb = _iceOrbPool.get();
+        orb.loaded.then(
+          (_) => orb.initialize(
+            speed: speed,
+            target: player,
+            position: position,
+            onDisjointCallback: () => _iceOrbPool.release(orb as IceOrb),
+            onPotatoHitCallback: () => _iceOrbPool.release(orb as IceOrb),
+          ),
+        );
+    }
+    parent.add(orb);
+    return orb;
   }
 
   void singleSpawn(GameModeSingleSpawn gameMode) {

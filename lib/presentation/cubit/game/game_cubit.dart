@@ -17,6 +17,8 @@ import 'package:save_the_potato/presentation/components/motivation_component.dar
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/presentation/prototypes/proto_events.dart';
+import 'package:save_the_potato/presentation/prototypes/prototypes.dart';
 
 part 'game_state.dart';
 
@@ -63,7 +65,11 @@ class GameCubit extends Cubit<GameState> {
     _analyticsHelper.logLevelStart(afterGuideDurationMills);
     emit(state.copyWith(playingState: const PlayingStatePlaying()));
     _audioHelper.playBackgroundMusic();
+    ProtoEvents.runStarted(this);
   }
+
+  /// Starts the round, like holding a button on the guide
+  void startFromGuide() => _guideInteracted();
 
   void _tryToSwitchToMultiSpawnGameMode() {
     if (state.currentGameMode is GameModeMultiSpawn) {
@@ -108,6 +114,9 @@ class GameCubit extends Cubit<GameState> {
             : null,
       ),
     );
+    if (Prototypes.isOn) {
+      ProtoEvents.tick(this);
+    }
   }
 
   void potatoOrbHit() {
@@ -115,6 +124,7 @@ class GameCubit extends Cubit<GameState> {
       count: 1,
     );
     updatedGameMode = updatedGameMode.resetDefendOrbStreakCount();
+    ProtoEvents.potatoHit();
     emit(
       state.copyWith(
         healthPoints: max(0, state.healthPoints - 1),
@@ -130,18 +140,17 @@ class GameCubit extends Cubit<GameState> {
   void onPotatoHealthPointReceived() {
     emit(
       state.copyWith(
-        healthPoints: min(
-          GameConstants.maxHealthPoints,
-          state.healthPoints + 1,
-        ),
+        healthPoints: min(ProtoHooks.maxHealthPoints, state.healthPoints + 1),
         firstHealthReceived: true,
       ),
     );
     _configsRepository.setFirstHealthReceived(true);
+    ProtoEvents.heartReceived();
   }
 
   void _gameOver() async {
     _audioHelper.playGameOverSound();
+    ProtoEvents.gameOver(state.levelTimePassed);
     final score = (state.levelTimePassed * 1000).toInt();
     final previousScore = await _scoresRepository.getHighScore();
     final bool isHighScore = score > previousScore.score;
@@ -252,6 +261,14 @@ class GameCubit extends Cubit<GameState> {
     KeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
   ) {
+    final coop = ProtoEvents.handleCoopKeys(
+      this,
+      keysPressed,
+      _shieldAngleRotationAmount,
+    );
+    if (coop != null) {
+      return coop;
+    }
     final containsLeftArrow = keysPressed.contains(
       LogicalKeyboardKey.arrowLeft,
     );
@@ -305,6 +322,29 @@ class GameCubit extends Cubit<GameState> {
       ),
     );
     emit(state.copyWith(playMotivationWord: ValueWrapper.nullValue()));
+  }
+
+  /// Turns the shields at [fraction] of the full speed, from -1 to 1
+  void steer(double fraction) =>
+      _updateShieldsRotationSpeed(fraction * _shieldAngleRotationAmount);
+
+  /// Levels prototype: each level starts at its own point of the curve
+  void setDifficultyTime(double seconds) =>
+      emit(state.copyWith(difficultyTimePassed: seconds));
+
+  /// Starts a wave of [spawners] right away, unless one is on its way
+  void startWave(int spawners) {
+    if (state.currentGameMode is GameModeMultiSpawn ||
+        state.upcomingGameMode != null) {
+      return;
+    }
+    emit(
+      state.copyWith(
+        upcomingGameMode: ValueWrapper(
+          GameModeMultiSpawn(spawnerSpawnCount: spawners),
+        ),
+      ),
+    );
   }
 
   void _updateShieldsRotationSpeed(double speed) {
@@ -364,6 +404,7 @@ class GameCubit extends Cubit<GameState> {
             currentGameMode: updatedGameMode,
           ),
         );
+        ProtoEvents.blocked(this, movingComponent);
         break;
     }
 
@@ -392,6 +433,7 @@ class GameCubit extends Cubit<GameState> {
     final currentGameMode = state.currentGameMode;
     bool showMotivation = false;
     if (currentGameMode is GameModeMultiSpawn) {
+      ProtoEvents.waveFinished(currentGameMode);
       if (currentGameMode.shouldPlayMotivationWord()) {
         _playMotivationWord();
         showMotivation = true;
