@@ -105,8 +105,9 @@ class ScoresCubit extends Cubit<ScoresState> {
     emit(state.copyWith(leaderboardLoading: true));
     bool isFirstPage = pageLastId == null;
     if (isFirstPage) {
+      // Keep the rest of the state (such as myScore), only reset the list
       emit(
-        const ScoresState().copyWith(
+        state.copyWith(
           leaderBoardFirstPageError: PresentationMessage.empty,
           allShowingScores: List.generate(
             ScoresState.maxItemsToLoad,
@@ -139,7 +140,10 @@ class ScoresCubit extends Cubit<ScoresState> {
         state.copyWith(
           allShowingScores: newShowingItems,
           leaderboardLoading: false,
-          myScore: ValueWrapper(leaderboardResponse.myScore),
+          // Don't replace the local high score when the server has none
+          myScore: leaderboardResponse.myScore != null
+              ? ValueWrapper(leaderboardResponse.myScore)
+              : null,
         ),
       );
       return true;
@@ -227,7 +231,8 @@ class ScoresCubit extends Cubit<ScoresState> {
     if (state.leaderboardLoading) {
       return;
     }
-    final hasMore = state.allShowingScores.last is LeaderboardLoadingScoreItem;
+    final hasMore =
+        state.allShowingScores.lastOrNull is LeaderboardLoadingScoreItem;
     if (!hasMore) {
       return;
     }
