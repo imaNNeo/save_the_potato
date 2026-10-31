@@ -13,7 +13,7 @@ import 'package:save_the_potato/presentation/potato_game.dart';
 import 'moving_components.dart';
 import 'multi_orb_spawner.dart';
 import 'orb/orb_type.dart';
-import 'thrower/orb_thrower.dart';
+import 'portal/orb_portal.dart';
 
 class MovingComponentSpawner extends Component
     with ParentIsA<MyWorld>, FlameBlocListenable<GameCubit, GameState> {
@@ -52,15 +52,14 @@ class MovingComponentSpawner extends Component
   late ComponentPool<IceOrb> _iceOrbPool;
   late ComponentPool<MovingHealth> _movingHealthPool;
 
-  /// The two enemies that throw the orbs
-  late OrbThrower _fireThrower;
-  late OrbThrower _iceThrower;
+  /// Every orb comes out of a portal that forms somewhere around the potato
+  final PortalStyle _portalStyle = PortalStyle.current;
 
-  OrbThrower _throwerOf(OrbType type) =>
-      type.isFire ? _fireThrower : _iceThrower;
+  /// Portals still forming, their orb hasn't left yet
+  final List<OrbPortal> _formingPortals = [];
 
-  /// Orbs that are still winding up in a thrower's hands
-  int _pendingThrows = 0;
+  /// Where the last portals were, so the next one forms somewhere else
+  final List<double> _recentPortalAngles = [];
 
   @override
   void onLoad() {
@@ -83,36 +82,32 @@ class MovingComponentSpawner extends Component
       initialSize: 3,
       debugName: 'MovingHealthPool',
     );
-    final look = ThrowerLook.current;
-    parent.addAll([
-      _fireThrower = OrbThrower(
-        type: OrbType.fire,
-        look: look,
-        ringAngle: -pi * 0.75,
-      ),
-      _iceThrower = OrbThrower(
-        type: OrbType.ice,
-        look: look,
-        ringAngle: pi * 0.25,
-      ),
-    ]);
   }
 
-  /// A random spot on the throwers' ring, away from both throwers
-  double _randomThrowerAngle({double minGap = pi / 3}) {
+  /// A random spot around the potato, away from the last few portals. It
+  /// stays on screen on phones (the world is at least 600 wide).
+  Vector2 _randomPortalPosition() {
     final rnd = Random();
     var angle = rnd.nextDouble() * pi * 2;
-    for (var i = 0; i < 8; i++) {
-      final farEnough = [
-        _fireThrower,
-        _iceThrower,
-      ].every((t) => cos(angle - t.ringAngle) < cos(minGap));
+    for (var i = 0; i < 10; i++) {
+      final farEnough = _recentPortalAngles.every(
+        (a) => cos(angle - a) < cos(pi / 3),
+      );
       if (farEnough) {
         break;
       }
       angle = rnd.nextDouble() * pi * 2;
     }
-    return angle;
+    _rememberPortalAngle(angle);
+    final distance = 195 + rnd.nextDouble() * 45;
+    return Vector2(cos(angle), sin(angle)) * distance;
+  }
+
+  void _rememberPortalAngle(double angle) {
+    _recentPortalAngles.add(angle);
+    if (_recentPortalAngles.length > 2) {
+      _recentPortalAngles.removeAt(0);
+    }
   }
 
   @override
@@ -122,11 +117,7 @@ class MovingComponentSpawner extends Component
       return;
     }
     final gameMode = bloc.state.currentGameMode;
-    final angry =
-        gameMode is GameModeMultiSpawn ||
-        bloc.state.upcomingGameMode is GameModeMultiSpawn;
-    _fireThrower.angry = angry;
-    _iceThrower.angry = angry;
+    _formingPortals.removeWhere((p) => p.isRemoved || p.isOpen);
     aliveSingleMovingOrbs.removeWhere((e) => e.isRemoved);
     aliveMultiOrbSpawners.removeWhere((e) => e.isRemoved);
 
@@ -146,7 +137,7 @@ class MovingComponentSpawner extends Component
       case GameModeSingleSpawn():
         if (bloc.state.upcomingGameMode != null) {
           if (aliveSingleMovingOrbs.isEmpty &&
-              _pendingThrows == 0 &&
+              _formingPortals.isEmpty &&
               movingHealth == null) {
             bloc.switchToUpcomingMode();
           }
@@ -271,13 +262,12 @@ class MovingComponentSpawner extends Component
     }
     final difficulty = bloc.state.difficulty;
     final orbType = OrbType.values.random();
-    final thrower = _throwerOf(orbType);
-    final angle = _randomThrowerAngle();
-    thrower.moveTo(angle, duration: _throwerGlideToWave);
+    final position = _randomPortalPosition();
+    final portal = _openWavePortal(orbType, position);
     final spawner = MultiOrbSpawner(
-      position: Vector2(cos(angle), sin(angle)) * thrower.ringRadius,
-      thrower: thrower,
-      startDelay: _throwerGlideToWave + 0.1,
+      position: position,
+      portal: portal,
+      startDelay: _wavePortalFormDuration,
       spawnOrbsEvery: gameMode.getSpawnOrbsEvery(difficulty),
       spawnOrbsMoveSpeed: gameMode.getSpawnOrbsMoveSpeed(difficulty),
       orbType: orbType,
@@ -294,13 +284,12 @@ class MovingComponentSpawner extends Component
         OrbType.fire => OrbType.ice,
         OrbType.ice => OrbType.fire,
       };
-      final oppositeThrower = _throwerOf(oppositeOrbType);
-      oppositeThrower.moveTo(angle + pi, duration: _throwerGlideToWave);
+      final oppositePosition = position.clone()..negate();
+      _rememberPortalAngle(atan2(oppositePosition.y, oppositePosition.x));
       final oppositeSpawner = MultiOrbSpawner(
-        position:
-            Vector2(cos(angle + pi), sin(angle + pi)) * thrower.ringRadius,
-        thrower: oppositeThrower,
-        startDelay: _throwerGlideToWave + 0.1,
+        position: oppositePosition,
+        portal: _openWavePortal(oppositeOrbType, oppositePosition),
+        startDelay: _wavePortalFormDuration,
         spawnOrbsEvery: gameMode.getSpawnOrbsEvery(difficulty),
         spawnOrbsMoveSpeed: gameMode.getSpawnOrbsMoveSpeed(difficulty),
         orbType: oppositeOrbType,
@@ -325,21 +314,43 @@ class MovingComponentSpawner extends Component
     final difficulty = bloc.state.difficulty;
     final moveSpeed = gameMode.getSpawnOrbsMoveSpeed(difficulty);
     final orbType = OrbType.values.random();
-    final thrower = _throwerOf(orbType);
-    // The wind-up shrinks with the spawn rate so throws never pile up
-    final windUp = gameMode.getSpawnOrbsEvery(difficulty) * 0.35;
-    _pendingThrows++;
-    thrower.windUpAndThrow(windUp, (releasePosition) {
-      _pendingThrows--;
-      if (!game.playingState.isPlaying) {
-        return;
-      }
-      _throwOrb(orbType, moveSpeed, releasePosition);
-      thrower.moveTo(_randomThrowerAngle(), duration: 0.9);
-    });
+    // It forms slower early on, so new players see where the orb comes from
+    final formDuration = (gameMode.getSpawnOrbsEvery(difficulty) * 0.5).clamp(
+      0.4,
+      1.0,
+    );
+    final position = _randomPortalPosition();
+    late OrbPortal portal;
+    portal = OrbPortal(
+      type: orbType,
+      style: _portalStyle,
+      position: position,
+      formDuration: formDuration,
+      onOpen: () {
+        portal.close();
+        if (game.playingState.isPlaying) {
+          _throwOrb(orbType, moveSpeed, position);
+        }
+      },
+    );
+    parent.add(portal);
+    _formingPortals.add(portal);
   }
 
-  static const _throwerGlideToWave = 0.5;
+  static const _wavePortalFormDuration = 0.7;
+
+  /// An angry portal that stays open while its wave pours out of it
+  OrbPortal _openWavePortal(OrbType type, Vector2 position) {
+    final portal = OrbPortal(
+      type: type,
+      style: _portalStyle,
+      position: position,
+      formDuration: _wavePortalFormDuration,
+      angry: true,
+    );
+    parent.add(portal);
+    return portal;
+  }
 
   void _throwOrb(OrbType orbType, double moveSpeed, Vector2 position) {
     late MovingOrb orb;

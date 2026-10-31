@@ -6,7 +6,7 @@ import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 
 import 'moving_components.dart';
-import 'thrower/orb_thrower.dart';
+import 'portal/orb_portal.dart';
 
 class MultiOrbSpawner extends PositionComponent
     with ParentIsA<MyWorld>, FlameBlocListenable<GameCubit, GameState> {
@@ -19,10 +19,10 @@ class MultiOrbSpawner extends PositionComponent
   final ComponentPool<FireOrb> fireOrbPool;
   final ComponentPool<IceOrb> iceOrbPool;
 
-  /// The enemy that throws this series, it jolts on every orb
-  final OrbThrower? thrower;
+  /// The portal this series pours out of, it closes when the series is done
+  final OrbPortal? portal;
 
-  /// Lets the thrower get into place before the first orb
+  /// Lets the portal form before the first orb
   double startDelay;
 
   bool firstSpawned = false;
@@ -42,7 +42,7 @@ class MultiOrbSpawner extends PositionComponent
     required this.fireOrbPool,
     required this.iceOrbPool,
     this.isOpposite = false,
-    this.thrower,
+    this.portal,
     this.startDelay = 0,
   });
 
@@ -56,6 +56,7 @@ class MultiOrbSpawner extends PositionComponent
     final spawnFinished = spawnedCount >= spawnCount;
     aliveMovingOrbs.removeWhere((e) => e.isRemoved);
     if (spawnFinished) {
+      portal?.close();
       if (aliveMovingOrbs.isEmpty) {
         removeFromParent();
       }
@@ -83,8 +84,7 @@ class MultiOrbSpawner extends PositionComponent
   }
 
   void spawnOrb(int spawnedCount) {
-    thrower?.kick();
-    final position = thrower?.releasePosition ?? this.position;
+    portal?.kick();
     late MovingOrb orb;
     switch (orbType) {
       case OrbType.fire:
