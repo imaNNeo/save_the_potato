@@ -209,8 +209,8 @@ class _BackgroundStarsPainter extends CustomPainter {
       ..setFloat(10, reactions.heat)
       ..setFloat(11, reactions.stretch)
       ..setFloat(12, reactions.hit)
-      ..setFloat(13, reactions.redEdges)
-      ..setFloat(14, reactions.speedLines)
+      ..setFloat(13, reactions.streaks)
+      ..setFloat(14, reactions.dim)
       ..setFloat(15, reactions.shakeX)
       ..setFloat(16, reactions.shakeY)
       ..setFloat(17, reactions.glowR)
@@ -230,6 +230,17 @@ class _BackgroundStarsPainter extends CustomPainter {
         ..setFloat(i++, wave.g * intensity)
         ..setFloat(i++, wave.b * intensity)
         ..setFloat(i++, 1 - focus);
+    }
+    for (final lane in reactions.lanes) {
+      shader
+        ..setFloat(i++, lane.dirX)
+        ..setFloat(i++, lane.dirY)
+        ..setFloat(i++, lane.amount)
+        ..setFloat(i++, 0)
+        ..setFloat(i++, lane.r)
+        ..setFloat(i++, lane.g)
+        ..setFloat(i++, lane.b)
+        ..setFloat(i++, 0);
     }
   }
 

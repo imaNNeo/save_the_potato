@@ -62,47 +62,92 @@ void main() {
     expect(reactions.shakeX.abs(), lessThan(0.01));
   });
 
-  test('gets tense only during a multi orb wave, in the chosen style', () {
+  void wave(
+    BackgroundReactions reactions,
+    int frames, {
+    bool coming = false,
+    bool flying = false,
+  }) {
+    for (var i = 0; i < frames; i++) {
+      reactions.update(
+        0.016,
+        heat: 0,
+        power: 0,
+        multiOrbWave: coming || flying,
+        multiOrbWaveFlying: flying,
+        kickX: 0,
+        kickY: 0,
+      );
+    }
+  }
+
+  void withStyle(TenseStyle style) {
+    final previous = BackgroundReactions.tenseStyle;
+    addTearDown(() => BackgroundReactions.tenseStyle = previous);
+    BackgroundReactions.tenseStyle = style;
+  }
+
+  test('rush: faster stars and gliding streaks, only during a wave', () {
+    withStyle(TenseStyle.rush);
     final reactions = BackgroundReactions();
-    final style = BackgroundReactions.tenseStyle;
-    addTearDown(() => BackgroundReactions.tenseStyle = style);
-
-    BackgroundReactions.tenseStyle = TenseStyle.warpAndRedEdges;
-    for (var i = 0; i < 120; i++) {
-      update(reactions, 0.016, multi: true);
-    }
+    wave(reactions, 120, flying: true);
     expect(reactions.tension, greaterThan(0.9));
-    expect(reactions.warp, greaterThan(0.9));
-    expect(reactions.redEdges, greaterThan(0));
-    expect(reactions.speedLines, 0);
-    expect(reactions.speedBoost, greaterThan(3));
-    expect(reactions.stretch, greaterThan(0.5));
+    expect(reactions.streaks, greaterThan(0.9));
+    expect(reactions.speedBoost, greaterThan(2.5));
 
-    BackgroundReactions.tenseStyle = TenseStyle.speedLines;
-    expect(reactions.warp, 0);
-    expect(reactions.redEdges, 0);
-    expect(reactions.speedLines, greaterThan(0.9));
-
-    for (var i = 0; i < 600; i++) {
-      update(reactions, 0.016);
-    }
+    wave(reactions, 600);
     expect(reactions.tension, lessThan(0.01));
-    expect(reactions.speedLines, lessThan(0.01));
+    expect(reactions.streaks, lessThan(0.01));
+    expect(reactions.speedBoost, closeTo(1, 0.05));
   });
 
-  test('the red edges pulse like a heartbeat', () {
+  test('inward: the stars fly in towards the potato', () {
+    withStyle(TenseStyle.inward);
     final reactions = BackgroundReactions();
-    final style = BackgroundReactions.tenseStyle;
-    addTearDown(() => BackgroundReactions.tenseStyle = style);
-    BackgroundReactions.tenseStyle = TenseStyle.redEdges;
+    wave(reactions, 120, flying: true);
+    expect(reactions.speedBoost, lessThan(-0.5));
+    expect(reactions.stretch, lessThan(0));
+  });
 
-    final values = <double>[];
-    for (var i = 0; i < 300; i++) {
-      update(reactions, 0.016, multi: true);
-      values.add(reactions.redEdges);
+  test('hush: slow and dim when announced, rushing once flying', () {
+    withStyle(TenseStyle.hush);
+    final reactions = BackgroundReactions();
+    wave(reactions, 150, coming: true);
+    expect(reactions.dim, greaterThan(0.6));
+    expect(reactions.speedBoost, lessThan(0.5));
+
+    wave(reactions, 150, flying: true);
+    expect(reactions.dim, lessThan(0.1));
+    expect(reactions.speedBoost, greaterThan(2.5));
+  });
+
+  test('lanes glow where the orbs come from and fade after', () {
+    withStyle(TenseStyle.lanes);
+    final reactions = BackgroundReactions();
+    for (var i = 0; i < 120; i++) {
+      reactions.updateLanes(0, const Color(0xFFFF0000));
+      reactions.updateLanes(pi, const Color(0xFF0000FF));
+      wave(reactions, 1, flying: true);
     }
-    final last = values.sublist(200);
-    expect(last.reduce(max) - last.reduce(min), greaterThan(0.2));
+    final lanes = [...reactions.lanes]
+      ..sort((a, b) => b.dirX.compareTo(a.dirX));
+    expect(lanes.first.amount, greaterThan(0.9));
+    expect(lanes.first.dirX, closeTo(1, 0.001));
+    expect(lanes.first.r, 1);
+    expect(lanes.last.amount, greaterThan(0.9));
+    expect(lanes.last.dirX, closeTo(-1, 0.001));
+    expect(lanes.last.b, 1);
+
+    wave(reactions, 120);
+    expect(reactions.lanes.every((lane) => lane.amount < 0.01), isTrue);
+  });
+
+  test('more lanes than slots are skipped', () {
+    final reactions = BackgroundReactions();
+    for (var i = 0; i < 4; i++) {
+      reactions.updateLanes(i * pi / 2, const Color(0xFFFF0000));
+    }
+    wave(reactions, 1, flying: true);
   });
 
   test('stops notifying once everything has calmed down', () {

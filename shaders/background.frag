@@ -24,11 +24,12 @@ uniform float starSize;
 
 // Reactions to the game, see `BackgroundReactions`
 uniform float heat;
-// How much the stars are stretched into streaks
+// How much the stars are stretched into streaks, negative stretches them
+// outwards (for stars flying in)
 uniform float power;
 uniform float hit;
-// While a wave of multiple orbs is coming, x: red at the edges of the screen,
-// y: speed lines
+// While a wave of multiple orbs is coming, x: long streaks gliding out past
+// the stars, y: how much the stars are dimmed
 uniform vec2 tension;
 uniform vec2 shake;
 // rgb: color of the glow around the potato, a: how much it flashes
@@ -45,6 +46,12 @@ uniform vec4 wave2;
 uniform vec4 waveColor2;
 uniform vec4 wave3;
 uniform vec4 waveColor3;
+// The lanes a wave of orbs flies in on, xy: their direction, z: how much
+// they glow. laneColor rgb: their color.
+uniform vec4 lane0;
+uniform vec4 laneColor0;
+uniform vec4 lane1;
+uniform vec4 laneColor1;
 
 // Three random numbers from 0 to 1 for star [i]. Only multiplications, a lot
 // cheaper than the usual fract(sin(...)) hash (Dave Hoskins' hash31).
@@ -74,6 +81,15 @@ vec3 waveAt(vec2 n, float r, vec4 wave, vec4 color) {
 
 // [stretch] is how much to squash the distance behind (x) and in front of
 // (y) the star, to stretch it into a streak
+// How much a lane glows at [p] (in world units)
+float laneAt(vec2 p, vec4 lane) {
+    float along = dot(p, lane.xy);
+    float across = abs(p.x * lane.y - p.y * lane.x);
+    float d = min(across / (18.0 + max(along, 0.0) * 0.12), 1.0);
+    float beam = 1.0 - d * d;
+    return beam * beam * smoothstep(70.0, 320.0, along) * lane.z;
+}
+
 float renderStar(vec2 uv, float i, float aspect, vec2 stretch) {
     float maxDistance = aspect;
 
@@ -133,12 +149,16 @@ void main() {
     float angle = mod(atan(starUv.y, starUv.x / aspect), TWOPI);
     float sector = floor(angle / TWOPI * STAR_COUNT);
 
-    vec2 stretch = vec2(1.0 / (1.0 + power * 5.0), 1.0 / (1.0 + power * 0.75));
+    float outward = max(power, 0.0);
+    float inward = max(-power, 0.0);
+    vec2 stretch = vec2(
+        1.0 / (1.0 + outward * 5.0 + inward * 0.75),
+        1.0 / (1.0 + inward * 5.0 + outward * 0.75));
     float stars = 0.0;
     for (int k = -NEIGHBOUR_SECTORS; k <= NEIGHBOUR_SECTORS; ++k) {
         stars += renderStar(starUv, mod(sector + float(k), STAR_COUNT), aspect, stretch);
     }
-    stars *= 1.0 + heat * 0.6 + power * 0.8 + waves * 2.5;
+    stars *= (1.0 + heat * 0.6 + abs(power) * 0.8 + waves * 2.5) * (1.0 - tension.y * 0.75);
 
     // The glow around the potato grows with the streak and flashes on blocks
     float dist = length(uv);
@@ -154,20 +174,23 @@ void main() {
     float vignette = smoothstep(0.4, 1.6, dist);
     color = mix(color, vec3(0.45, 0.0, 0.04), hit * vignette * 0.7);
 
-    // Flickering speed lines rushing in from the edges, every slice around
-    // the center gets a new random line a few times per second
-    float slices = angle / TWOPI * 120.0;
-    vec3 line = rand3(floor(slices) + floor(iTime * 4.0) * 131.0);
-    float lineShape = 1.0 - smoothstep(0.04, 0.22, abs(fract(slices) - 0.5));
-    float lineStart = 0.45 + line.z * 0.45;
-    float lines = step(0.62, line.x) * lineShape *
-        smoothstep(lineStart, lineStart + 0.4, dist) * (0.5 + 0.5 * line.y);
-    color += mix(vec3(1.0), starColor, 0.4) * lines * tension.y * 0.45;
+    // A few long streaks gliding out past the stars, each slice around the
+    // center may have one
+    float slices = angle / TWOPI * 48.0;
+    vec3 streak = rand3(floor(slices) + 777.0);
+    float head = fract(streak.y + iTime * (0.18 + 0.12 * streak.z)) * 1.9;
+    float tail = saturate((dist - head + 0.45) / 0.45);
+    float streaks = step(0.78, streak.x) * tail * tail * step(dist, head) *
+        (1.0 - smoothstep(0.02, 0.09, abs(fract(slices) - 0.5) * (1.0 + dist))) *
+        smoothstep(0.25, 0.6, dist);
+    color += mix(vec3(1.0), starColor, 0.5) * streaks * tension.x * 0.55;
 
-    // Red creeping in from the edges of the screen, pulsing like a heartbeat
-    vec2 edge = abs(FlutterFragCoord().xy / iResolution.xy * 2.0 - 1.0);
-    float edges = smoothstep(0.6, 1.35, length(edge));
-    color = mix(color, vec3(0.8, 0.02, 0.08), edges * tension.x * 0.7);
+    // The lanes the orbs fly in on
+    color += laneColor0.rgb * laneAt(p, lane0) * 0.16 +
+        laneColor1.rgb * laneAt(p, lane1) * 0.16;
+
+    // The calm before the storm dims everything a bit
+    color *= 1.0 - tension.y * 0.25;
 
     fragColor = vec4(color, 1.0);
 }
