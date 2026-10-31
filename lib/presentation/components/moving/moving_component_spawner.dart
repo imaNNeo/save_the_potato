@@ -52,12 +52,6 @@ class MovingComponentSpawner extends Component
   late ComponentPool<IceOrb> _iceOrbPool;
   late ComponentPool<MovingHealth> _movingHealthPool;
 
-  /// How the portals appear, while we pick one (`?pacing=` on web)
-  final PortalPacing _pacing = PortalPacing.current;
-
-  /// [PortalPacing.twins]: the one fire and one ice portal waiting to throw
-  final Map<OrbType, OrbPortal> _twins = {};
-
   /// Portals still forming, their orb hasn't left yet
   final List<OrbPortal> _formingPortals = [];
 
@@ -156,18 +150,10 @@ class MovingComponentSpawner extends Component
           if (_tryToSpawnHealthPoint()) {
             return;
           }
-          if (_pacing == PortalPacing.twins) {
-            // Waits until a portal is ready to throw
-            if (_twinsSpawn(gameMode)) {
-              timeSinceLastSingleOrbSpawn = 0.0;
-            }
-            return;
-          }
           timeSinceLastSingleOrbSpawn = 0.0;
           singleSpawn(gameMode);
         }
       case GameModeMultiSpawn():
-        _closeTwins();
         if (bloc.state.upcomingGameMode != null) {
           if (aliveMultiOrbSpawners.isEmpty && movingHealth == null) {
             bloc.switchToUpcomingMode();
@@ -326,15 +312,10 @@ class MovingComponentSpawner extends Component
     final moveSpeed = gameMode.getSpawnOrbsMoveSpeed(difficulty);
     final orbType = OrbType.values.random();
     final spawnEvery = gameMode.getSpawnOrbsEvery(difficulty);
-    final formDuration = switch (_pacing) {
-      // The next portal is already forming while the last orb flies
-      PortalPacing.preview => (spawnEvery * 1.1).clamp(0.7, 2.0),
-      // It forms slower early on, so new players see where the orb comes from
-      _ => (spawnEvery * 0.5).clamp(0.4, 1.0),
-    };
-    final drift = _pacing == PortalPacing.drift
-        ? (Random().nextBool() ? 1 : -1) * 0.9
-        : 0.0;
+    // It forms slower early on, so new players see where the orb comes from
+    final formDuration = (spawnEvery * 0.5).clamp(0.4, 1.0);
+    // It slides around the potato while forming, so the player follows it
+    final drift = (Random().nextBool() ? 1 : -1) * 0.9;
     late OrbPortal portal;
     portal = OrbPortal(
       type: orbType,
@@ -350,53 +331,6 @@ class MovingComponentSpawner extends Component
     );
     parent.add(portal);
     _formingPortals.add(portal);
-  }
-
-  /// One fire and one ice portal are always around. On each beat one that is
-  /// ready throws, collapses, and forms again somewhere else. Returns false
-  /// when neither is ready yet.
-  bool _twinsSpawn(GameModeSingleSpawn gameMode) {
-    if (!game.playingState.isPlaying) {
-      return false;
-    }
-    final difficulty = bloc.state.difficulty;
-    final spawnEvery = gameMode.getSpawnOrbsEvery(difficulty);
-    for (final type in OrbType.values) {
-      final twin = _twins[type];
-      if (twin == null || twin.isRemoved || twin.isClosing) {
-        _formTwin(type, spawnEvery);
-      }
-    }
-    final ready = OrbType.values.where((t) => _twins[t]!.isOpen).toList();
-    if (ready.isEmpty) {
-      return false;
-    }
-    final type = ready.random();
-    final portal = _twins[type]!..close();
-    _throwOrb(
-      type,
-      gameMode.getSpawnOrbsMoveSpeed(difficulty),
-      portal.position.clone(),
-    );
-    _formTwin(type, spawnEvery);
-    return true;
-  }
-
-  void _formTwin(OrbType type, double spawnEvery) {
-    final portal = OrbPortal(
-      type: type,
-      position: _randomPortalPosition(),
-      formDuration: (spawnEvery * 1.2).clamp(0.6, 1.8),
-    );
-    parent.add(portal);
-    _twins[type] = portal;
-  }
-
-  void _closeTwins() {
-    for (final twin in _twins.values) {
-      twin.close();
-    }
-    _twins.clear();
   }
 
   static const _wavePortalFormDuration = 0.7;
@@ -449,29 +383,5 @@ class MovingComponentSpawner extends Component
     }
     parent.add(orb);
     aliveSingleMovingOrbs.add(orb);
-  }
-}
-
-/// How the portals appear in the calm phase. Candidates while we pick one,
-/// the web build reads it from `?pacing=` in the page URL.
-enum PortalPacing {
-  /// Every orb gets its own portal at a random spot
-  popUp,
-
-  /// One fire and one ice portal; each throws, collapses and re-forms
-  twins,
-
-  /// Like [popUp], but the portal slides around the potato while forming
-  drift,
-
-  /// Like [popUp], but the next portal starts forming a whole beat early
-  preview;
-
-  static PortalPacing get current {
-    final name = Uri.base.queryParameters['pacing'];
-    return PortalPacing.values.firstWhere(
-      (pacing) => pacing.name == name,
-      orElse: () => PortalPacing.twins,
-    );
   }
 }

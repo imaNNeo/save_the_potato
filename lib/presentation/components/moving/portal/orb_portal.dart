@@ -110,7 +110,7 @@ class _PortalPainter {
     required this.angry,
   }) : c = angry ? _angryColors(type) : type.colors,
        // Wave portals are bigger and shake
-       size = angry ? 1.75 : 1.35,
+       size = angry ? 1.2 : 0.85,
        jitter = angry
            ? Offset(sin(t * 53) * 1.2, cos(t * 47) * 1.2)
            : Offset.zero;
