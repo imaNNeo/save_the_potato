@@ -9,11 +9,10 @@ import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
 /// The edge of the arena: a circle just inside the visible square. Orbs
-/// come in from it, so it sits as far out as fits on every screen, and
-/// everything outside it is dimmed so the cut on long screens looks meant.
+/// come in from it, so it sits as far out as fits on every screen.
 class ArenaRing {
   /// Just inside the square, with room for the ring's glow
-  static double get radius => GameConstants.viewSize * 0.475;
+  static double get radius => GameConstants.viewSize * 0.485;
 }
 
 Vector2 _polar(double angle, double radius) =>
@@ -135,15 +134,6 @@ class ArenaRingComponent extends PositionComponent
   void render(Canvas canvas) {
     super.render(canvas);
     final r = ArenaRing.radius;
-    // Dim everything outside the ring
-    final outside = Path()
-      ..fillType = PathFillType.evenOdd
-      ..addRect(Rect.fromCircle(center: Offset.zero, radius: r * 4))
-      ..addOval(Rect.fromCircle(center: Offset.zero, radius: r));
-    canvas.drawPath(
-      outside,
-      Paint()..color = Color.fromRGBO(0, 0, 0, 0.45 * _visible),
-    );
     // A soft inner glow and a thin line
     final breathe = 0.85 + 0.15 * sin(_time * 1.3);
     canvas

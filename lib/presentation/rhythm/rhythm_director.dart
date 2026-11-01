@@ -107,6 +107,17 @@ class RhythmDirector extends Component
     if (position == null) {
       // Muted: run on game time
       _songTime += dt;
+      _lastPosition = null;
+      return;
+    }
+    if (_lastPosition == null && _songTime > 0.5) {
+      // The music just started mid-run (it was muted): move the music to
+      // where the game is, instead of rewinding the game to the music
+      final at = (_songTime + dt) % _loopEnd;
+      _audio.seekMusic(at);
+      _songTime += dt;
+      _audioTime = _songTime;
+      _lastPosition = at;
       return;
     }
     if (_lastPosition == null) {
@@ -253,8 +264,34 @@ class RhythmDirector extends Component
 
   double get _difficulty => bloc.state.difficulty;
 
-  /// 0: only the strongest notes, 1: every beat note, 2: everything
-  int get _tier => _difficulty < 0.3 ? 0 : (_difficulty < 0.6 ? 1 : 2);
+  /// The difficulty each melody note joins in at. The first note of each
+  /// bar is always there. The other notes on a beat join one by one between
+  /// [_beatNotesFrom] and [_beatNotesTo], then the notes between beats
+  /// between [_offbeatNotesFrom] and [_offbeatNotesTo]. So the song fills in
+  /// gradually instead of doubling all at once.
+  static final Map<MelodyNote, double> _noteJoinsAt = () {
+    final joins = <MelodyNote, double>{};
+    for (final (tier, from, to) in [
+      (1, _beatNotesFrom, _beatNotesTo),
+      (2, _offbeatNotesFrom, _offbeatNotesTo),
+    ]) {
+      final notes = RhythmSongs.melody.where((n) => n.tier == tier).toList()
+        // A fixed shuffle, so they join spread over the song, not bar by bar
+        ..shuffle(Random(tier));
+      for (var i = 0; i < notes.length; i++) {
+        joins[notes[i]] = from + (to - from) * (i + 0.5) / notes.length;
+      }
+    }
+    return joins;
+  }();
+
+  static const _beatNotesFrom = 0.12;
+  static const _beatNotesTo = 0.45;
+  static const _offbeatNotesFrom = 0.5;
+  static const _offbeatNotesTo = 0.85;
+
+  bool _notePlays(MelodyNote note) =>
+      note.tier == 0 || _difficulty >= (_noteJoinsAt[note] ?? 0);
 
   /// Picks where an orb comes from so the shield can actually get there
   /// from where the last orb needed it
@@ -302,7 +339,7 @@ class RhythmDirector extends Component
       if (note.beat.floor() != beatInBar) {
         continue;
       }
-      if (note.tier > _tier) {
+      if (!_notePlays(note)) {
         continue;
       }
       final land = _beatTime(beat) + (note.beat - beatInBar) * 0.5;
