@@ -1,8 +1,10 @@
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/presentation/components/moving/rift/ring_rift.dart';
+import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
 
 /// Draws the rifts and blurs the game uses for the first few frames,
@@ -23,6 +25,13 @@ class GameShaderWarmUp extends Component {
     canvas
       ..save()
       ..clipRect(const Rect.fromLTWH(0, 0, 1, 1));
+    // Rifts sit on the ring, far from the pixel we draw into, and things
+    // drawn fully outside the clip are skipped (no shader gets compiled),
+    // so move the ring's right edge onto the pixel
+    final r = ArenaRing.radius;
+    canvas
+      ..save()
+      ..translate(-r + 4, 0);
     for (final type in OrbType.values) {
       for (final (form, closing) in [(0.3, 0.0), (0.9, 0.0), (1.0, 0.5)]) {
         RingRift.paint(
@@ -35,12 +44,43 @@ class GameShaderWarmUp extends Component {
         );
       }
     }
+    ArenaRingComponent.paintRing(canvas, visible: 1, time: 0);
+    canvas.restore();
+    warmUpOrbHeads(canvas);
+    // Other glows: radial gradients, each number of color stops is
+    // its own shader
+    for (var stops = 2; stops <= 6; stops++) {
+      final colors = [
+        for (var i = 0; i < stops; i++)
+          Color.fromRGBO(255, 255 - i * 30, 200, 1 - i / stops),
+      ];
+      // Evenly spaced stops get their own faster shader, so warm both
+      final even = [for (var i = 0; i < stops; i++) i / (stops - 1)];
+      final uneven = [
+        for (var i = 0; i < stops; i++) pow(i / (stops - 1), 1.3).toDouble(),
+      ];
+      for (final (positions, blend) in [
+        (even, BlendMode.srcOver),
+        (even, BlendMode.plus),
+        (uneven, BlendMode.srcOver),
+        (uneven, BlendMode.plus),
+      ]) {
+        canvas.drawCircle(
+          Offset.zero,
+          4,
+          Paint()
+            ..blendMode = blend
+            ..shader = ui.Gradient.radial(Offset.zero, 4, colors, positions),
+        );
+      }
+    }
+
     // The blur shader changes with the blur's size on screen, which changes
     // with the camera zoom, so warm up the whole range
     final line = Path()
       ..moveTo(-6, 0.5)
       ..lineTo(6, 0.5);
-    for (var sigma = 0.25; sigma <= 8; sigma += 0.25) {
+    for (var sigma = 0.25; sigma <= 16; sigma += 0.25) {
       canvas.drawPath(
         line,
         Paint()

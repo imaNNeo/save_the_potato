@@ -113,8 +113,13 @@ class OrbEffects extends Component
     );
   }
 
-  static double _tailLength(MovingOrb orb) =>
-      (orb.speed * 0.42).clamp(40.0, 110.0) * 0.85;
+  /// The tail grows out of the rift as the orb comes through, instead of
+  /// clipping it to the ring: a clip makes the GPU compile new versions of
+  /// every effect's shader, which drops frames the first time
+  static double _tailLength(MovingOrb orb) => min(
+    (orb.speed * 0.42).clamp(40.0, 110.0) * 0.85,
+    max(0.0, ArenaRing.radius - orb.position.length),
+  );
 
   @override
   void update(double dt) {
@@ -262,23 +267,15 @@ class OrbEffects extends Component
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    // Orbs come from outside the arena ring and only show once they are
-    // through their rift
-    canvas
-      ..save()
-      ..clipPath(ArenaRing.clip);
-    _render(canvas);
-    canvas.restore();
-  }
-
-  void _render(Canvas canvas) {
     _glow.clear();
     _addPuffsGlow();
     for (final ghost in _ghosts) {
       _addGhostGlow(ghost);
     }
     for (final orb in _orbs) {
-      if (orb.isFlying) {
+      // Orbs come from outside the arena ring and only show once they are
+      // through their rift
+      if (orb.isFlying && !ArenaRing.isOutside(orb.position)) {
         _addOrbGlow(orb);
       }
     }

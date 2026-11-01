@@ -14,10 +14,6 @@ class ArenaRing {
   /// Just inside the square, with room for the ring's glow
   static const double radius = GameConstants.viewSize * 0.485;
 
-  /// The inside of the ring, for clipping what comes from outside
-  static final Path clip = Path()
-    ..addOval(Rect.fromCircle(center: Offset.zero, radius: radius));
-
   static bool isOutside(Vector2 p) => p.length2 > radius * radius;
 }
 
@@ -31,7 +27,6 @@ double _clamp01(double x) => x.clamp(0.0, 1.0);
 
 const _white = Color(0xFFFFFFFF);
 const _strokeBlur = MaskFilter.blur(BlurStyle.normal, 2.5);
-const _wideBlur = MaskFilter.blur(BlurStyle.normal, 6);
 
 /// A glowing line: a blurred wide stroke under a thin hot one
 void _lightStroke(
@@ -114,29 +109,44 @@ class ArenaRingComponent extends PositionComponent
   @override
   void render(Canvas canvas) {
     super.render(canvas);
+    paintRing(canvas, visible: _visible, time: _time);
+  }
+
+  /// Draws the ring around [center]. No blur: a blurred circle this big
+  /// costs a lot every frame on phones, so the soft glow is a few faint
+  /// strokes instead.
+  static void paintRing(
+    Canvas canvas, {
+    required double visible,
+    required double time,
+    Offset center = Offset.zero,
+  }) {
     final r = ArenaRing.radius;
-    // A soft inner glow and a thin line
-    final breathe = 0.85 + 0.15 * sin(_time * 1.3);
-    canvas
-      ..drawCircle(
-        Offset.zero,
-        r - 3,
-        Paint()
-          ..blendMode = BlendMode.plus
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 6
-          ..color = Color.fromRGBO(140, 170, 255, 0.07 * _visible * breathe)
-          ..maskFilter = _wideBlur,
-      )
-      ..drawCircle(
-        Offset.zero,
-        r,
-        Paint()
-          ..blendMode = BlendMode.plus
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.2
-          ..color = Color.fromRGBO(200, 215, 255, 0.22 * _visible * breathe),
+    final breathe = 0.85 + 0.15 * sin(time * 1.3);
+    final paint = Paint()
+      ..blendMode = BlendMode.plus
+      ..style = PaintingStyle.stroke;
+    for (var i = 1; i <= 3; i++) {
+      canvas.drawCircle(
+        center,
+        r - i * 2.2,
+        paint
+          ..strokeWidth = 2.2
+          ..color = Color.fromRGBO(
+            140,
+            170,
+            255,
+            0.035 * (4 - i) / 3 * visible * breathe,
+          ),
       );
+    }
+    canvas.drawCircle(
+      center,
+      r,
+      paint
+        ..strokeWidth = 1.2
+        ..color = Color.fromRGBO(200, 215, 255, 0.22 * visible * breathe),
+    );
   }
 }
 
