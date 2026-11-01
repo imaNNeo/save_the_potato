@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../presentation/cubit/game/game_mode.dart';
@@ -23,19 +22,8 @@ class GameConstants {
   /// How many world units fit across the shorter side of the screen. The
   /// potato, shields and orbs keep their world size, so a bigger view makes
   /// them smaller on screen and leaves more room for the orbs to travel.
-  /// On web, `?view=720` (500 to 1000) overrides it for comparing.
-  static final double viewSize = _viewSizeFromUrl() ?? 600;
-
-  static double? _viewSizeFromUrl() {
-    if (!kIsWeb) {
-      return null;
-    }
-    final value = double.tryParse(Uri.base.queryParameters['view'] ?? '');
-    if (value == null || value < 500 || value > 1000) {
-      return null;
-    }
-    return value;
-  }
+  /// Was 600 before the arena ring.
+  static const double viewSize = 720;
 
   static const double topBarPlayingOpacity = 1.0;
   static const double topBarNonPlayingOpacity = 0.2;

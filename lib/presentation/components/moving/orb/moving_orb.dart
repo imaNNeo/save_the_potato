@@ -73,6 +73,12 @@ sealed class MovingOrb extends MovingComponent {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
+    // Orbs come from outside the arena ring and show once they are through
+    // their rift. No clipping: a clip makes the GPU compile new shaders,
+    // which drops frames the first time, and the rift's glow hides the pop.
+    if (ArenaRing.isOutside(position)) {
+      return;
+    }
     _drawHead(canvas);
   }
 
@@ -210,5 +216,24 @@ class IceOrb extends MovingOrb {
     _smallSparkleSprites = await Future.wait(
       List.generate(2, (i) => Sprite.load('snow/snowflake${i + 1}.png')),
     );
+  }
+}
+
+/// Draws each orb type's head once, the same way a flying orb does, so the
+/// GPU compiles its shaders before the first orb shows up (see
+/// `GameShaderWarmUp`)
+void warmUpOrbHeads(Canvas canvas) {
+  for (final type in OrbType.values) {
+    final style = _OrbHeadStyle.of(type);
+    canvas
+      ..save()
+      ..scale(9.4)
+      ..drawCircle(Offset.zero, 1, style.body)
+      ..save()
+      ..scale(0.62)
+      ..drawCircle(Offset.zero, 1, style.core)
+      ..restore()
+      ..drawLine(const Offset(0.6, 0), const Offset(-0.6, 0), style.crystal)
+      ..restore();
   }
 }

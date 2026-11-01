@@ -15,6 +15,7 @@ import 'package:save_the_potato/service_locator.dart';
 import '../../potato_game.dart';
 import 'health/health_disjoint_particle.dart';
 import 'orb/orb_type.dart';
+import 'rift/ring_rift.dart';
 
 part 'orb/moving_orb.dart';
 

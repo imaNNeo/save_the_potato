@@ -12,7 +12,9 @@ import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 /// come in from it, so it sits as far out as fits on every screen.
 class ArenaRing {
   /// Just inside the square, with room for the ring's glow
-  static double get radius => GameConstants.viewSize * 0.485;
+  static const double radius = GameConstants.viewSize * 0.485;
+
+  static bool isOutside(Vector2 p) => p.length2 > radius * radius;
 }
 
 Vector2 _polar(double angle, double radius) =>
@@ -25,7 +27,6 @@ double _clamp01(double x) => x.clamp(0.0, 1.0);
 
 const _white = Color(0xFFFFFFFF);
 const _strokeBlur = MaskFilter.blur(BlurStyle.normal, 2.5);
-const _wideBlur = MaskFilter.blur(BlurStyle.normal, 6);
 
 /// A glowing line: a blurred wide stroke under a thin hot one
 void _lightStroke(
@@ -86,31 +87,6 @@ void _bloom(Canvas canvas, Offset p, double radius, Color color, double a) {
   );
 }
 
-/// The orb taking shape, like a flying orb's head
-void _orbHead(Canvas canvas, Offset p, double radius, List<Color> c) {
-  if (radius <= 0.2) {
-    return;
-  }
-  _bloom(canvas, p, radius * 2.6, c[1], 0.5);
-  canvas.drawCircle(
-    p,
-    radius,
-    Paint()
-      ..shader = ui.Gradient.radial(
-        p,
-        radius,
-        [
-          Color.lerp(c[0], _white, 0.5)!,
-          c[0],
-          c[1],
-          c[2],
-          c[2].withValues(alpha: 0),
-        ],
-        [0, 0.28, 0.58, 0.82, 1],
-      ),
-  );
-}
-
 Path _arc(double radius, double from, double sweep) => Path()
   ..addArc(Rect.fromCircle(center: Offset.zero, radius: radius), from, sweep);
 
@@ -133,29 +109,44 @@ class ArenaRingComponent extends PositionComponent
   @override
   void render(Canvas canvas) {
     super.render(canvas);
+    paintRing(canvas, visible: _visible, time: _time);
+  }
+
+  /// Draws the ring around [center]. No blur: a blurred circle this big
+  /// costs a lot every frame on phones, so the soft glow is a few faint
+  /// strokes instead.
+  static void paintRing(
+    Canvas canvas, {
+    required double visible,
+    required double time,
+    Offset center = Offset.zero,
+  }) {
     final r = ArenaRing.radius;
-    // A soft inner glow and a thin line
-    final breathe = 0.85 + 0.15 * sin(_time * 1.3);
-    canvas
-      ..drawCircle(
-        Offset.zero,
-        r - 3,
-        Paint()
-          ..blendMode = BlendMode.plus
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 6
-          ..color = Color.fromRGBO(140, 170, 255, 0.07 * _visible * breathe)
-          ..maskFilter = _wideBlur,
-      )
-      ..drawCircle(
-        Offset.zero,
-        r,
-        Paint()
-          ..blendMode = BlendMode.plus
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.2
-          ..color = Color.fromRGBO(200, 215, 255, 0.22 * _visible * breathe),
+    final breathe = 0.85 + 0.15 * sin(time * 1.3);
+    final paint = Paint()
+      ..blendMode = BlendMode.plus
+      ..style = PaintingStyle.stroke;
+    for (var i = 1; i <= 3; i++) {
+      canvas.drawCircle(
+        center,
+        r - i * 2.2,
+        paint
+          ..strokeWidth = 2.2
+          ..color = Color.fromRGBO(
+            140,
+            170,
+            255,
+            0.035 * (4 - i) / 3 * visible * breathe,
+          ),
       );
+    }
+    canvas.drawCircle(
+      center,
+      r,
+      paint
+        ..strokeWidth = 1.2
+        ..color = Color.fromRGBO(200, 215, 255, 0.22 * visible * breathe),
+    );
   }
 }
 
@@ -280,15 +271,7 @@ class RingRift extends PositionComponent
     );
     _lightStroke(canvas, outer, c, 1.6, 0.8 * life);
     _lightStroke(canvas, inner, c, 2.2, life);
-    // The orb pushing through near the end
-    final grow = Curves.easeOutBack.transform(_clamp01((form - 0.65) / 0.35));
-    _orbHead(
-      canvas,
-      _polarOffset(spawnAngle, r - 4),
-      10 * grow * (1 - closing),
-      c,
-    );
-    // The snap when it lets go
+    // The snap when the orb is through
     if (closing > 0) {
       final fade = 1 - closing;
       _bloom(

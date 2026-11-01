@@ -47,6 +47,9 @@ class RhythmDirector extends Component
 
   // ---- planning ----
   final _planned = <_PlannedOrb>[];
+
+  /// Thrown, but not through their rift yet
+  final _passing = <_PlannedOrb>[];
   int _nextBeat = 0;
   double _lastLand = -10;
   double _lastShieldAngle = 0;
@@ -78,6 +81,7 @@ class RhythmDirector extends Component
       case PlayingStateGuide() || PlayingStateGameOver() || PlayingStateNone():
         _running = false;
         _planned.clear();
+        _passing.clear();
     }
   }
 
@@ -89,6 +93,7 @@ class RhythmDirector extends Component
     _audioTime = 0;
     _lastPosition = null;
     _planned.clear();
+    _passing.clear();
     _inFlight.clear();
     // Give the player a moment before the first orb lands
     _nextBeat = 4;
@@ -159,12 +164,27 @@ class RhythmDirector extends Component
       _nextBeat++;
     }
 
-    // Portals form ahead of their throw, so the player sees them coming
+    // Rifts open ahead of the orb reaching the ring, so the player sees
+    // where it comes in, and snap shut once it is through
     for (final orb in _planned) {
       if (orb.portalAt <= _songTime) {
         _openPortal(orb);
       }
     }
+    for (final orb in _passing) {
+      if (orb.portalAt <= _songTime) {
+        _openPortal(orb);
+      }
+    }
+    _passing.removeWhere((orb) {
+      // A moment after its middle reaches the ring, so its tail is through
+      if (orb.throughAt + 0.1 > _songTime) {
+        return false;
+      }
+      _openPortal(orb);
+      orb.portal!.close();
+      return true;
+    });
 
     while (_planned.isNotEmpty) {
       final next = _planned.first;
@@ -199,8 +219,12 @@ class RhythmDirector extends Component
 
   // ---- rifts (the tears in the arena ring the orbs come through) ----
 
-  /// Orbs leave from just inside the arena ring
-  static double get _spawnRadius => ArenaRing.radius - 4;
+  /// Orbs start this far out, hidden outside the arena ring, and fly in
+  /// through their rift
+  static const _spawnRadius = ArenaRing.radius + _hiddenRun;
+
+  /// How far they fly unseen before they reach the ring
+  static const _hiddenRun = 90.0;
 
   static const _maxFormTime = RingRift.maxFormDuration;
 
@@ -214,7 +238,7 @@ class RhythmDirector extends Component
     if (orb.portal != null) {
       return;
     }
-    final ahead = max(0.05, orb.launchAt - _songTime);
+    final ahead = max(0.05, orb.throughAt - _songTime);
     final rift = RingRift(
       type: orb.type,
       spawnAngle: orb.angle,
@@ -225,22 +249,20 @@ class RhythmDirector extends Component
   }
 
   void _launch(_PlannedOrb orb, {required double late}) {
-    _openPortal(orb);
-    final portal = orb.portal!;
-    portal.close();
     if (late > 0.25) {
       // Too late to fly in properly, skip it
+      orb.portal?.close();
       return;
     }
-    final from = portal.spawnPoint;
-    orb.thrownAngle = atan2(from.y, from.x);
+    _passing.add(orb);
+    orb.thrownAngle = orb.angle;
     if (autopilot) {
       _inFlight.add(orb);
     }
     final distance = max(_contactDistance + 4, orb.radius - orb.speed * late);
     spawner.spawnRhythmOrb(
       type: orb.type,
-      position: Vector2(cos(orb.thrownAngle), sin(orb.thrownAngle)) * distance,
+      position: Vector2(cos(orb.angle), sin(orb.angle)) * distance,
       speed: orb.speed,
       rhythmHit: orb.hit,
     );
@@ -321,7 +343,8 @@ class RhythmDirector extends Component
       _PlannedOrb(
         land: land,
         launchAt: launchAt,
-        portalAt: launchAt - formDuration,
+        throughAt: launchAt + _hiddenRun / speed,
+        portalAt: launchAt + _hiddenRun / speed - formDuration,
         type: type,
         angle: _pickAngle(type, land),
         radius: radius,
@@ -418,6 +441,7 @@ class _PlannedOrb {
     required this.land,
     required this.launchAt,
     required this.portalAt,
+    required this.throughAt,
     required this.type,
     required this.angle,
     required this.radius,
@@ -425,9 +449,10 @@ class _PlannedOrb {
     this.hit,
   }) : thrownAngle = angle;
 
-  /// Song times: when it hits the shield, leaves its portal, and the portal
-  /// starts to form
-  final double land, launchAt, portalAt;
+  /// Song times: when it hits the shield, when it starts flying (unseen,
+  /// outside the ring), when its rift starts to open, and when it is
+  /// through the ring
+  final double land, launchAt, portalAt, throughAt;
   final OrbType type;
 
   /// Where it should leave from, and how far out
