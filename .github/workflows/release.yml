@@ -1,0 +1,231 @@
+name: Release
+
+# Publishing a GitHub release (tag = version name, e.g. 2.0.0) builds both apps,
+# uploads Android to the Play internal track and iOS to TestFlight, and attaches
+# the .aab, .apk and .ipa to the release. Promoting to production stays manual.
+# The secrets are listed in docs/RELEASE_GUIDE.md.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build (e.g. 2.0.0)
+        required: true
+      platforms:
+        description: Which apps to build
+        type: choice
+        options: [both, android, ios]
+        default: both
+      upload_to_stores:
+        description: Upload to Play internal track / TestFlight
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: '3.47.9'
+  TAG: ${{ github.event.release.tag_name || inputs.tag }}
+  UPLOAD: ${{ github.event_name == 'release' || inputs.upload_to_stores }}
+
+jobs:
+  android:
+    name: Android
+    if: github.event_name == 'release' || inputs.platforms != 'ios'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Check the tag matches pubspec.yaml
+        id: version
+        run: ./.github/scripts/check_version.sh "$TAG"
+
+      - name: Check secrets are set
+        env:
+          FIREBASE_OPTIONS_DART_B64: ${{ secrets.FIREBASE_OPTIONS_DART_B64 }}
+          GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          required="FIREBASE_OPTIONS_DART_B64 GOOGLE_SERVICES_JSON_B64 ANDROID_KEYSTORE_B64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD"
+          if [ "$UPLOAD" = "true" ]; then required="$required PLAY_SERVICE_ACCOUNT_JSON"; fi
+          ./.github/scripts/require_env.sh $required
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Write Firebase config
+        env:
+          FIREBASE_OPTIONS_DART_B64: ${{ secrets.FIREBASE_OPTIONS_DART_B64 }}
+          GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
+        run: |
+          echo "$FIREBASE_OPTIONS_DART_B64" | base64 --decode > lib/firebase_options.dart
+          echo "$GOOGLE_SERVICES_JSON_B64" | base64 --decode > android/app/google-services.json
+
+      - name: Write signing config
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$ANDROID_KEYSTORE_B64" | base64 --decode > android/app/upload-keystore.jks
+          cat > android/key.properties <<PROPS
+          storeFile=upload-keystore.jks
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          PROPS
+
+      - run: flutter pub get
+
+      - name: Build app bundle and APK
+        run: |
+          flutter build appbundle --release
+          flutter build apk --release
+
+      - name: Write Play release notes
+        run: |
+          mkdir -p whatsnew
+          ./.github/scripts/release_notes.sh "${{ steps.version.outputs.name }}" android > whatsnew/whatsnew-en-US
+          cat whatsnew/whatsnew-en-US
+
+      - name: Find the R8 mapping file
+        id: mapping
+        run: |
+          f=build/app/outputs/mapping/release/mapping.txt
+          if [ -f "$f" ]; then echo "file=$f" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Upload to Play internal track
+        if: env.UPLOAD == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: dev.app2pack.savethepotato
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          releaseName: ${{ steps.version.outputs.full }}
+          track: internal
+          status: completed
+          whatsNewDirectory: whatsnew
+          mappingFile: ${{ steps.mapping.outputs.file }}
+
+      - name: Attach to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir artifacts
+          cp build/app/outputs/bundle/release/app-release.aab "artifacts/SaveThePotato-Android-$TAG.aab"
+          cp build/app/outputs/flutter-apk/app-release.apk "artifacts/SaveThePotato-Android-$TAG.apk"
+          gh release upload "$TAG" artifacts/* --clobber
+
+      - name: Remove signing files
+        if: always()
+        run: rm -f android/app/upload-keystore.jks android/key.properties
+
+  ios:
+    name: iOS
+    if: github.event_name == 'release' || inputs.platforms != 'android'
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+      CERTIFICATE_PRIVATE_KEY: ${{ secrets.IOS_CERTIFICATE_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Check the tag matches pubspec.yaml
+        id: version
+        run: ./.github/scripts/check_version.sh "$TAG"
+
+      - name: Check secrets are set
+        env:
+          FIREBASE_OPTIONS_DART_B64: ${{ secrets.FIREBASE_OPTIONS_DART_B64 }}
+          GOOGLE_SERVICE_INFO_PLIST_B64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_B64 }}
+          FIREBASE_APP_ID_FILE_JSON_B64: ${{ secrets.FIREBASE_APP_ID_FILE_JSON_B64 }}
+          FIREBASE_JSON_B64: ${{ secrets.FIREBASE_JSON_B64 }}
+        run: ./.github/scripts/require_env.sh FIREBASE_OPTIONS_DART_B64 GOOGLE_SERVICE_INFO_PLIST_B64 FIREBASE_APP_ID_FILE_JSON_B64 FIREBASE_JSON_B64 APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_KEY_IDENTIFIER APP_STORE_CONNECT_PRIVATE_KEY CERTIFICATE_PRIVATE_KEY
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Write Firebase config
+        env:
+          FIREBASE_OPTIONS_DART_B64: ${{ secrets.FIREBASE_OPTIONS_DART_B64 }}
+          GOOGLE_SERVICE_INFO_PLIST_B64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_B64 }}
+          FIREBASE_APP_ID_FILE_JSON_B64: ${{ secrets.FIREBASE_APP_ID_FILE_JSON_B64 }}
+          FIREBASE_JSON_B64: ${{ secrets.FIREBASE_JSON_B64 }}
+        run: |
+          echo "$FIREBASE_OPTIONS_DART_B64" | base64 --decode > lib/firebase_options.dart
+          echo "$GOOGLE_SERVICE_INFO_PLIST_B64" | base64 --decode > ios/Runner/GoogleService-Info.plist
+          echo "$FIREBASE_APP_ID_FILE_JSON_B64" | base64 --decode > ios/firebase_app_id_file.json
+          echo "$FIREBASE_JSON_B64" | base64 --decode > firebase.json
+
+      # The Xcode project runs "flutterfire upload-crashlytics-symbols" as a build phase.
+      - name: Install FlutterFire CLI and Codemagic CLI tools
+        run: |
+          dart pub global activate flutterfire_cli
+          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+          pip3 install --break-system-packages codemagic-cli-tools
+
+      - name: Set up code signing
+        run: |
+          keychain initialize
+          app-store-connect fetch-signing-files dev.app2pack.savethepotato \
+            --platform IOS \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
+
+      - run: flutter pub get
+
+      - name: Build ipa
+        run: flutter build ipa --release --export-options-plist="$HOME/export_options.plist"
+
+      - name: Upload to TestFlight
+        if: env.UPLOAD == 'true'
+        run: app-store-connect publish --path build/ios/ipa/*.ipa
+
+      - name: Attach to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir artifacts
+          cp build/ios/ipa/*.ipa "artifacts/SaveThePotato-iOS-$TAG.ipa"
+          gh release upload "$TAG" artifacts/* --clobber
+
+      - name: Restore the login keychain
+        if: always()
+        run: keychain use-login || true
