@@ -241,8 +241,11 @@ class RhythmDirector extends Component
     orb.portal = rift;
   }
 
+  /// How late an orb may still launch, from a bit closer in
+  static const _maxLate = 0.25;
+
   void _launch(_PlannedOrb orb, {required double late}) {
-    if (late > 0.25) {
+    if (late > _maxLate) {
       // Too late to fly in properly, skip it
       orb.portal?.close();
       return;
@@ -319,6 +322,12 @@ class RhythmDirector extends Component
   void _add(double land, OrbType type, double speed, {RhythmHit? hit}) {
     final radius = _spawnRadius;
     final launchAt = land - _flightTime(speed, radius) - _mountDelay;
+    if (launchAt < _songTime - _maxLate) {
+      // Too close to fly in from behind the ring (the first beats of a run
+      // at slow speeds). Skip it before its rift opens, or the rift would
+      // flash open and shut right away.
+      return;
+    }
     final formDuration = RingRift.formDurationFor(_difficulty);
     _planned.add(
       _PlannedOrb(
