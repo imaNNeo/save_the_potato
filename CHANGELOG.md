@@ -1,3 +1,13 @@
+## 2.0.0
+* New life bar replaces the hearts and fills back up as you defend
+* Shield blocks now play the melody, and the melody has stages so it stops repeating
+* Orbs fly in through rifts in a ring at the edge of the arena, in calm fire and ice groups on opposite sides
+* Gentler difficulty ramp, and every portal gives the same warning time
+* Juicier fire and ice orbs, simpler shield block effects, and a stars background that reacts to defending
+* Fix hold controls dropping when the finger drifts
+* New app logo
+* Upgrade dependencies, Gradle and the Android Gradle Plugin, and improve performance
+
 ## 1.5.3
 * Upgrade all the dependencies
 * Minor performance improvement
