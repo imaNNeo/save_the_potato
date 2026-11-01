@@ -187,23 +187,18 @@ class RhythmDirector extends Component
   // ---- portals (the white holes the orbs come out of) ----
 
   static double get _maxPortalRadius => GameConstants.portalMaxDistance;
-  static const _maxFormTime = PortalMove.maxFormDuration;
+  static const _maxFormTime = OrbPortal.maxFormDuration;
 
   void _openPortal(_PlannedOrb orb) {
     if (orb.portal != null) {
       return;
     }
-    // Starts back along its glide, so it ends up at the planned spot
     final ahead = max(0.05, orb.launchAt - _songTime);
-    final move = orb.move;
-    final angle = orb.angle - move.travel;
     parent.add(
       orb.portal = OrbPortal(
         type: orb.type,
-        position: Vector2(cos(angle), sin(angle)) * orb.radius,
+        position: Vector2(cos(orb.angle), sin(orb.angle)) * orb.radius,
         formDuration: ahead,
-        travel: move.travel,
-        travelTime: min(move.travelTime, ahead),
       ),
     );
   }
@@ -216,7 +211,6 @@ class RhythmDirector extends Component
       // Too late to fly in properly, skip it
       return;
     }
-    // Leaves from where the portal is now, it may have drifted a little
     orb.thrownAngle = atan2(portal.position.y, portal.position.x);
     if (autopilot) {
       _inFlight.add(orb);
@@ -271,16 +265,15 @@ class RhythmDirector extends Component
     final nearest = GameConstants.portalMinDistance;
     final radius = nearest + _rnd.nextDouble() * (_maxPortalRadius - nearest);
     final launchAt = land - _flightTime(speed, radius) - _mountDelay;
-    final move = PortalMove.random(_difficulty, random: _rnd);
+    final formDuration = OrbPortal.formDurationFor(_difficulty);
     _planned.add(
       _PlannedOrb(
         land: land,
         launchAt: launchAt,
-        portalAt: launchAt - move.formDuration,
+        portalAt: launchAt - formDuration,
         type: type,
         angle: _pickAngle(type, land),
         radius: radius,
-        move: move,
         speed: speed,
         hit: hit,
       ),
@@ -343,7 +336,6 @@ class _PlannedOrb {
     required this.type,
     required this.angle,
     required this.radius,
-    required this.move,
     required this.speed,
     this.hit,
   }) : thrownAngle = angle;
@@ -355,9 +347,6 @@ class _PlannedOrb {
 
   /// Where it should leave from, and how far out
   final double angle, radius;
-
-  /// How its own portal moves before the throw
-  final PortalMove move;
   final double speed;
   final RhythmHit? hit;
   OrbPortal? portal;
