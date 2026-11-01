@@ -23,8 +23,8 @@ class GameConstants {
   /// How many world units fit across the shorter side of the screen. The
   /// potato, shields and orbs keep their world size, so a bigger view makes
   /// them smaller on screen and leaves more room for the orbs to travel.
-  /// Was 600. On web, `?view=600` brings the old size back for comparing.
-  static final double viewSize = _viewSizeFromUrl() ?? 720;
+  /// On web, `?view=720` (500 to 1000) overrides it for comparing.
+  static final double viewSize = _viewSizeFromUrl() ?? 600;
 
   static double? _viewSizeFromUrl() {
     if (!kIsWeb) {
@@ -36,11 +36,6 @@ class GameConstants {
     }
     return value;
   }
-
-  /// Portals form this far from the potato. They scale with [viewSize] so
-  /// they keep the same margin from the edge of the square.
-  static double get portalMinDistance => 185 * viewSize / 600;
-  static double get portalMaxDistance => 225 * viewSize / 600;
 
   static const double topBarPlayingOpacity = 1.0;
   static const double topBarNonPlayingOpacity = 0.2;

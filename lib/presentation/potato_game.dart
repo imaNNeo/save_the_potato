@@ -19,7 +19,7 @@ import 'package:save_the_potato/presentation/effects/game_over_effects.dart';
 
 import 'components/motivation_component.dart';
 import 'components/moving/moving_component_spawner.dart';
-import 'components/moving/portal/orb_portal.dart';
+import 'components/shader_warm_up.dart';
 import 'components/potato.dart';
 import 'components/orb_effects.dart';
 import 'components/shield_impact_effects.dart';
@@ -132,7 +132,7 @@ class MyWorld extends World
     rhythm = RhythmDirector(spawner: spawner);
     await add(rhythm);
     await add(spawner);
-    add(PortalWarmUp());
+    add(GameShaderWarmUp());
     mounted.then((_) {
       _motivationWordSubscription = bloc.stream
           .map((state) => state.playMotivationWord)

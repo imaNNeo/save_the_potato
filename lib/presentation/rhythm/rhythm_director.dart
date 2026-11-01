@@ -3,13 +3,10 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/foundation.dart';
-import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_component_spawner.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
-import 'package:save_the_potato/presentation/components/moving/edge/edge_spawners.dart';
-import 'package:save_the_potato/presentation/components/moving/edge/orb_telegraph.dart';
-import 'package:save_the_potato/presentation/components/moving/portal/orb_portal.dart';
+import 'package:save_the_potato/presentation/components/moving/rift/ring_rift.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
@@ -142,7 +139,7 @@ class RhythmDirector extends Component
     _tickClock(dt);
 
     final speed = _orbSpeed;
-    final lookahead = _flightTime(speed, _maxPortalRadius) + _maxFormTime + 0.3;
+    final lookahead = _flightTime(speed, _spawnRadius) + _maxFormTime + 0.3;
     while (_beatTime(_nextBeat) < _songTime + lookahead) {
       _planBeat(_nextBeat, speed);
       _nextBeat++;
@@ -186,37 +183,17 @@ class RhythmDirector extends Component
   double _flightTime(double speed, double radius) =>
       (radius - _contactDistance) / speed;
 
-  // ---- portals (the white holes the orbs come out of) ----
+  // ---- rifts (the tears in the arena ring the orbs come through) ----
 
-  static final _style = SpawnStyle.current;
+  /// Orbs leave from just inside the arena ring
+  static double get _spawnRadius => ArenaRing.radius - 4;
 
-  static double get _maxPortalRadius =>
-      _style.usesRing ? ArenaRing.radius - 4 : GameConstants.portalMaxDistance;
-
-  static double get _maxFormTime => _style == SpawnStyle.rimCrawler
-      ? RimCrawler.moveWindow
-      : OrbPortal.maxFormDuration;
-
-  /// How long before its throw the player sees where an orb comes from
-  double _telegraphTime(double difficulty) => _style == SpawnStyle.rimCrawler
-      ? RimCrawler.moveWindow
-      : OrbPortal.formDurationFor(difficulty);
-
-  final _crawlers = <OrbType, RimCrawler>{};
+  static const _maxFormTime = RingRift.maxFormDuration;
 
   @override
   void onMount() {
     super.onMount();
-    if (_style.usesRing) {
-      parent.add(ArenaRingComponent());
-    }
-    if (_style == SpawnStyle.rimCrawler) {
-      for (final type in OrbType.values) {
-        parent.add(
-          _crawlers[type] = RimCrawler(type: type, clock: () => _songTime),
-        );
-      }
-    }
+    parent.add(ArenaRingComponent());
   }
 
   void _openPortal(_PlannedOrb orb) {
@@ -224,34 +201,13 @@ class RhythmDirector extends Component
       return;
     }
     final ahead = max(0.05, orb.launchAt - _songTime);
-    switch (_style) {
-      case SpawnStyle.portal:
-        final portal = OrbPortal(
-          type: orb.type,
-          position: Vector2(cos(orb.angle), sin(orb.angle)) * orb.radius,
-          formDuration: ahead,
-        );
-        parent.add(portal);
-        orb.portal = portal;
-      case SpawnStyle.ringRift:
-        final rift = RingRift(
-          type: orb.type,
-          spawnAngle: orb.angle,
-          formDuration: ahead,
-        );
-        parent.add(rift);
-        orb.portal = rift;
-      case SpawnStyle.ripple:
-        final ripple = RippleTelegraph(
-          type: orb.type,
-          spawnAngle: orb.angle,
-          formDuration: ahead,
-        );
-        parent.add(ripple);
-        orb.portal = ripple;
-      case SpawnStyle.rimCrawler:
-        orb.portal = _crawlers[orb.type]!.planThrow(orb.angle, orb.launchAt);
-    }
+    final rift = RingRift(
+      type: orb.type,
+      spawnAngle: orb.angle,
+      formDuration: ahead,
+    );
+    parent.add(rift);
+    orb.portal = rift;
   }
 
   void _launch(_PlannedOrb orb, {required double late}) {
@@ -314,12 +270,9 @@ class RhythmDirector extends Component
   }
 
   void _add(double land, OrbType type, double speed, {RhythmHit? hit}) {
-    final nearest = _style.usesRing
-        ? _maxPortalRadius
-        : GameConstants.portalMinDistance;
-    final radius = nearest + _rnd.nextDouble() * (_maxPortalRadius - nearest);
+    final radius = _spawnRadius;
     final launchAt = land - _flightTime(speed, radius) - _mountDelay;
-    final formDuration = _telegraphTime(_difficulty);
+    final formDuration = RingRift.formDurationFor(_difficulty);
     _planned.add(
       _PlannedOrb(
         land: land,
@@ -403,6 +356,6 @@ class _PlannedOrb {
   final double angle, radius;
   final double speed;
   final RhythmHit? hit;
-  OrbTelegraph? portal;
+  RingRift? portal;
   double thrownAngle;
 }
