@@ -56,3 +56,6 @@ google_play_credentials.json
 firebase.json
 # Gradle build output under android/
 /android/build/
+
+# Release workflow writes these while building
+android/app/upload-keystore.jks
