@@ -11,6 +11,7 @@ import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_noise/flame_noise.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/background_reactions.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/effects/camera_zoom_effect.dart';
@@ -34,7 +35,10 @@ class PotatoGame extends FlameGame<MyWorld>
   ]) : background = background ?? BackgroundReactions(),
        super(
          world: MyWorld(),
-         camera: CameraComponent.withFixedResolution(width: 600, height: 600),
+         camera: CameraComponent.withFixedResolution(
+           width: GameConstants.viewSize,
+           height: GameConstants.viewSize,
+         ),
        );
 
   /// The stars background is rendered behind the game, see `MainPage`.

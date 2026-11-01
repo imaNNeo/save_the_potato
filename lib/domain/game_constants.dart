@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../presentation/cubit/game/game_mode.dart';
@@ -7,11 +8,39 @@ class GameConstants {
   static const showRetryAfterGameOverDelay = Duration(seconds: 3);
   static const showShieldLineAnimDuration = 2.0;
 
-  static const difficultyInitialToPeakDuration = 300.0;
+  /// It takes 8 minutes to reach the peak difficulty
+  static const difficultyInitialToPeakDuration = 480.0;
 
-  /// https://cubic-bezier.com/#.23,1,.45,.87
-  /// Something like very vast in and very slow out
-  static const difficultyInitialToPeakCurve = Cubic(0.23, 1.0, 0.45, 0.87);
+  /// https://cubic-bezier.com/#.3,.5,.6,1
+  /// A gentle, almost steady climb that eases off near the top:
+  /// 1:00 -> 21%, 2:00 -> 40%, 3:00 -> 58%, 5:00 -> 85%, 8:00 -> 100%
+  static const difficultyInitialToPeakCurve = Cubic(0.3, 0.5, 0.6, 1.0);
+
+  /// Each time the potato gets hit, the difficulty steps back by this many
+  /// seconds, so a struggling player gets a breather
+  static const difficultyRewindOnHit = 20.0;
+
+  /// How many world units fit across the shorter side of the screen. The
+  /// potato, shields and orbs keep their world size, so a bigger view makes
+  /// them smaller on screen and leaves more room for the orbs to travel.
+  /// Was 600. On web, `?view=600` brings the old size back for comparing.
+  static final double viewSize = _viewSizeFromUrl() ?? 720;
+
+  static double? _viewSizeFromUrl() {
+    if (!kIsWeb) {
+      return null;
+    }
+    final value = double.tryParse(Uri.base.queryParameters['view'] ?? '');
+    if (value == null || value < 500 || value > 1000) {
+      return null;
+    }
+    return value;
+  }
+
+  /// Portals form this far from the potato. They scale with [viewSize] so
+  /// they keep the same margin from the edge of the square.
+  static double get portalMinDistance => 185 * viewSize / 600;
+  static double get portalMaxDistance => 225 * viewSize / 600;
 
   static const double topBarPlayingOpacity = 1.0;
   static const double topBarNonPlayingOpacity = 0.2;

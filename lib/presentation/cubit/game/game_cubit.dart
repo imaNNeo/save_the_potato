@@ -92,6 +92,11 @@ class GameCubit extends Cubit<GameState> {
       state.copyWith(
         life: LifeMeter.afterMiss(state.life),
         currentGameMode: updatedGameMode,
+        // A hit eases the game a little, so it stays playable
+        difficultyTimePassed: max(
+          0.0,
+          state.difficultyTimePassed - GameConstants.difficultyRewindOnHit,
+        ),
       ),
     );
     if (state.life <= 0) {
