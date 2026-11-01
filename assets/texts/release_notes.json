@@ -1,5 +1,18 @@
 [
   {
+    "version": "2.0.0",
+    "shared": [
+      "New life bar replaces the hearts",
+      "Your shield now plays the melody",
+      "Orbs fly in through rifts at the edge of the arena",
+      "Gentler difficulty and calmer orb groups",
+      "Juicier effects and a new app icon",
+      "Smoother controls and better performance"
+    ],
+    "ios_specific": [],
+    "android_specific": []
+  },
+  {
     "version": "0.1.0",
     "shared": [
       "This is the first version (beta) of game"
@@ -12,4 +25,3 @@
     ]
   }
 ]
-
