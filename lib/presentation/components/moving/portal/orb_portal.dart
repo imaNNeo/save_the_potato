@@ -7,13 +7,16 @@ import 'package:flutter/material.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
+import '../edge/orb_telegraph.dart';
+
 /// A hole in space that forms at a spot, turns into an orb, then collapses.
 ///
 /// It calls [onOpen] once it has formed, which is when the orb leaves. It
 /// stays open until [close] is called, so a wave can pour a whole series out
 /// of one portal. [angry] portals (the waves) are bigger and unstable.
 class OrbPortal extends PositionComponent
-    with FlameBlocListenable<GameCubit, GameState> {
+    with FlameBlocListenable<GameCubit, GameState>
+    implements OrbTelegraph {
   OrbPortal({
     required this.type,
     required Vector2 position,
@@ -55,7 +58,11 @@ class OrbPortal extends PositionComponent
 
   bool get isClosing => _closing != null;
 
+  @override
+  Vector2 get spawnPoint => position;
+
   /// Collapses and removes itself
+  @override
   void close() => _closing ??= 0;
 
   /// Pulses as an orb leaves

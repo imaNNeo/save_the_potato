@@ -7,6 +7,8 @@ import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_component_spawner.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
+import 'package:save_the_potato/presentation/components/moving/edge/edge_spawners.dart';
+import 'package:save_the_potato/presentation/components/moving/edge/orb_telegraph.dart';
 import 'package:save_the_potato/presentation/components/moving/portal/orb_portal.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
@@ -186,21 +188,70 @@ class RhythmDirector extends Component
 
   // ---- portals (the white holes the orbs come out of) ----
 
-  static double get _maxPortalRadius => GameConstants.portalMaxDistance;
-  static const _maxFormTime = OrbPortal.maxFormDuration;
+  static final _style = SpawnStyle.current;
+
+  static double get _maxPortalRadius =>
+      _style.usesRing ? ArenaRing.radius - 4 : GameConstants.portalMaxDistance;
+
+  static double get _maxFormTime => _style == SpawnStyle.rimCrawler
+      ? RimCrawler.moveWindow
+      : OrbPortal.maxFormDuration;
+
+  /// How long before its throw the player sees where an orb comes from
+  double _telegraphTime(double difficulty) => _style == SpawnStyle.rimCrawler
+      ? RimCrawler.moveWindow
+      : OrbPortal.formDurationFor(difficulty);
+
+  final _crawlers = <OrbType, RimCrawler>{};
+
+  @override
+  void onMount() {
+    super.onMount();
+    if (_style.usesRing) {
+      parent.add(ArenaRingComponent());
+    }
+    if (_style == SpawnStyle.rimCrawler) {
+      for (final type in OrbType.values) {
+        parent.add(
+          _crawlers[type] = RimCrawler(type: type, clock: () => _songTime),
+        );
+      }
+    }
+  }
 
   void _openPortal(_PlannedOrb orb) {
     if (orb.portal != null) {
       return;
     }
     final ahead = max(0.05, orb.launchAt - _songTime);
-    parent.add(
-      orb.portal = OrbPortal(
-        type: orb.type,
-        position: Vector2(cos(orb.angle), sin(orb.angle)) * orb.radius,
-        formDuration: ahead,
-      ),
-    );
+    switch (_style) {
+      case SpawnStyle.portal:
+        final portal = OrbPortal(
+          type: orb.type,
+          position: Vector2(cos(orb.angle), sin(orb.angle)) * orb.radius,
+          formDuration: ahead,
+        );
+        parent.add(portal);
+        orb.portal = portal;
+      case SpawnStyle.ringRift:
+        final rift = RingRift(
+          type: orb.type,
+          spawnAngle: orb.angle,
+          formDuration: ahead,
+        );
+        parent.add(rift);
+        orb.portal = rift;
+      case SpawnStyle.ripple:
+        final ripple = RippleTelegraph(
+          type: orb.type,
+          spawnAngle: orb.angle,
+          formDuration: ahead,
+        );
+        parent.add(ripple);
+        orb.portal = ripple;
+      case SpawnStyle.rimCrawler:
+        orb.portal = _crawlers[orb.type]!.planThrow(orb.angle, orb.launchAt);
+    }
   }
 
   void _launch(_PlannedOrb orb, {required double late}) {
@@ -211,7 +262,8 @@ class RhythmDirector extends Component
       // Too late to fly in properly, skip it
       return;
     }
-    orb.thrownAngle = atan2(portal.position.y, portal.position.x);
+    final from = portal.spawnPoint;
+    orb.thrownAngle = atan2(from.y, from.x);
     if (autopilot) {
       _inFlight.add(orb);
     }
@@ -262,10 +314,12 @@ class RhythmDirector extends Component
   }
 
   void _add(double land, OrbType type, double speed, {RhythmHit? hit}) {
-    final nearest = GameConstants.portalMinDistance;
+    final nearest = _style.usesRing
+        ? _maxPortalRadius
+        : GameConstants.portalMinDistance;
     final radius = nearest + _rnd.nextDouble() * (_maxPortalRadius - nearest);
     final launchAt = land - _flightTime(speed, radius) - _mountDelay;
-    final formDuration = OrbPortal.formDurationFor(_difficulty);
+    final formDuration = _telegraphTime(_difficulty);
     _planned.add(
       _PlannedOrb(
         land: land,
@@ -349,6 +403,6 @@ class _PlannedOrb {
   final double angle, radius;
   final double speed;
   final RhythmHit? hit;
-  OrbPortal? portal;
+  OrbTelegraph? portal;
   double thrownAngle;
 }
