@@ -13,6 +13,7 @@ import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/service_locator.dart';
 
+import 'orb_sides.dart';
 import 'rhythm_hit.dart';
 import 'rhythm_songs.dart';
 
@@ -29,7 +30,6 @@ class RhythmDirector extends Component
   final MovingComponentSpawner spawner;
 
   final _audio = getIt.get<AudioHelper>();
-  final _rnd = Random();
 
   /// Logs how far each block lands from its beat (`?rhythmlog=1` on web)
   static final logTiming =
@@ -51,8 +51,7 @@ class RhythmDirector extends Component
   /// Thrown, but not through their rift yet
   final _passing = <_PlannedOrb>[];
   int _nextBeat = 0;
-  double _lastLand = -10;
-  double _lastShieldAngle = 0;
+  final _sides = OrbSides();
   int _beatsUntilHeartCheck = 8;
 
   /// Orb hitbox radius (17 / 2) plus the outer radius of the shield
@@ -61,8 +60,6 @@ class RhythmDirector extends Component
   /// The orb starts moving a frame after it is added, and a block is only
   /// seen on the frame after the hitboxes touch
   static const _mountDelay = 0.03;
-
-  static const _shieldTurnSpeed = pi * 1.8;
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
@@ -97,8 +94,7 @@ class RhythmDirector extends Component
     _inFlight.clear();
     // Give the player a moment before the first orb lands
     _nextBeat = 4;
-    _lastLand = -10;
-    _lastShieldAngle = _rnd.nextDouble() * pi * 2;
+    _sides.reset();
     _beatsUntilHeartCheck = 8;
   }
 
@@ -315,18 +311,10 @@ class RhythmDirector extends Component
   bool _notePlays(MelodyNote note) =>
       note.tier == 0 || _difficulty >= (_noteJoinsAt[note] ?? 0);
 
-  /// Picks where an orb comes from so the shield can actually get there
-  /// from where the last orb needed it
-  double _pickAngle(OrbType type, double land) {
-    final gap = land - _lastLand;
-    final maxTurn = min(pi, max(0.35, 0.55 * _shieldTurnSpeed * gap));
-    _lastShieldAngle += (_rnd.nextDouble() * 2 - 1) * maxTurn;
-    _lastLand = land;
-    return switch (type) {
-      OrbType.fire => _lastShieldAngle,
-      OrbType.ice => _lastShieldAngle + pi,
-    };
-  }
+  /// Picks where an orb comes from: fire orbs in one group, ice orbs in
+  /// one group on the opposite side, see [OrbSides]
+  double _pickAngle(OrbType type, double land) =>
+      _sides.angleFor(type, land, _difficulty);
 
   void _add(double land, OrbType type, double speed, {RhythmHit? hit}) {
     final radius = _spawnRadius;
