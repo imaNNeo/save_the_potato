@@ -4,8 +4,8 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 
 /// What the stars background (`shaders/background.frag`) should be doing to
-/// follow the game: the game tells it what happened (an orb blocked, a chain
-/// released, the potato getting hit, ...) and updates it every frame, and the
+/// follow the game: the game tells it what happened (an orb blocked, a
+/// milestone, the potato getting hit, ...) and updates it every frame, and the
 /// background reads it when it paints.
 ///
 /// It's plain numbers, so it costs nothing when nothing happens. It notifies
@@ -71,28 +71,15 @@ class BackgroundReactions extends ChangeNotifier {
   /// An orb of [color] got blocked at [angle] around the potato
   void block({required Color color, required double angle, double heat = 0}) {
     _glowTarget = color;
-    flash = min(1.0, flash + 0.45 + heat * 0.3);
+    flash = min(1.0, flash + 0.25 + heat * 0.15);
     _addWave(
       color: Color.lerp(color, _white, 0.15)!,
       angle: angle,
       focus: 0.8,
       fromRadius: 80,
-      toRadius: 520 + heat * 260,
-      lifespan: 0.9 + heat * 0.35,
-      intensity: 0.55 + heat * 0.45,
-    );
-  }
-
-  /// A chain of quick blocks got released, [strength] from 0 to 1
-  void chain(double strength) {
-    _addWave(
-      color: Color.lerp(_glowTarget, _white, 0.35)!,
-      angle: 0,
-      focus: 0,
-      fromRadius: 80,
-      toRadius: 700 + strength * 300,
-      lifespan: 1.1 + strength * 0.4,
-      intensity: 0.6 + strength * 0.4,
+      toRadius: 380 + heat * 140,
+      lifespan: 0.7 + heat * 0.2,
+      intensity: 0.3 + heat * 0.25,
     );
   }
 

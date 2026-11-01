@@ -15,7 +15,11 @@ import 'moving/orb/orb_type.dart';
 import 'sprite_particle_batch.dart';
 
 /// Everything that flies off when an orb crashes into its shield: a white-hot
-/// flash, a shockwave, sparks and shards, and a small kick of the camera.
+/// flash, a soft bloom with one ring, a few sparks and shards, and a small
+/// kick of the camera.
+///
+/// Kept light on purpose: blocks happen all the time, so each one is a
+/// quick, clean pop that is gone before the next orb arrives.
 ///
 /// It also keeps the [streak] of orbs blocked in a row. The longer it gets,
 /// the bigger the impacts and the hotter the shields glow, and every
@@ -31,7 +35,7 @@ class ShieldImpactEffects extends Component
   ShieldImpactEffects() : super(priority: 2);
 
   /// How far the camera can be pushed by impacts, in world units
-  static const _maxKick = 6.0;
+  static const _maxKick = 4.0;
 
   static const _white = Color(0xFFFFFFFF);
 
@@ -47,7 +51,6 @@ class ShieldImpactEffects extends Component
   final _kicks = <_Kick>[];
 
   late final Map<OrbType, List<Sprite>> _shardSprites;
-  late final Sprite _dotSprite;
 
   final _kick = Vector2.zero();
   final _appliedKick = Vector2.zero();
@@ -67,7 +70,6 @@ class ShieldImpactEffects extends Component
         await Sprite.load('snow/snowflake2.png'),
       ],
     };
-    _dotSprite = await Sprite.load('orb/orb-2-main-circle.png');
   }
 
   @override
@@ -112,7 +114,7 @@ class ShieldImpactEffects extends Component
     game.background.block(color: type.intenseColor, angle: angle, heat: heat);
 
     // Jolt the world the way the orb was flying
-    final kick = 2.2 + heat * 1.8;
+    final kick = 1.6 + heat * 0.9;
     _kicks.add(
       _Kick()
         ..x = cos(angle) * kick
@@ -133,59 +135,42 @@ class ShieldImpactEffects extends Component
     List<Color> colors,
     double heat,
   ) {
-    final power = 1 + heat * 0.5;
+    final power = 1 + heat * 0.25;
     _addWave()
       ..x = x
       ..y = y
-      ..lifespan = 0.14
-      ..fromRadius = 12
-      ..toRadius = 22 * power
+      ..lifespan = 0.12
+      ..fromRadius = 10
+      ..toRadius = 18 * power
       ..color = Color.lerp(_white, colors.first, 0.2)!
-      ..opacity = 1.0
+      ..opacity = 0.9
       ..angle = angle + pi / 2
-      ..stretch = 2.1
+      ..stretch = 2.0
       ..squash = 0.75
       ..fadePower = 1.6;
     _addWave()
       ..x = x
       ..y = y
-      ..lifespan = 0.6
-      ..fromRadius = 22
-      ..toRadius = 54 * power
+      ..lifespan = 0.4
+      ..fromRadius = 18
+      ..toRadius = 40 * power
       ..color = colors[1]
-      ..opacity = 0.65 + heat * 0.2
+      ..opacity = 0.45 + heat * 0.15
       ..fadePower = 2.4;
     _addWave()
       ..isRing = true
       ..x = x
       ..y = y
-      ..lifespan = 0.55
+      ..lifespan = 0.4
       ..fromRadius = 10
-      ..toRadius = 80 * power
-      ..fromWidth = 16
-      ..toWidth = 4
+      ..toRadius = 60 * power
+      ..fromWidth = 10
+      ..toWidth = 3
       ..color = Color.lerp(colors.first, _white, 0.3)!
-      ..opacity = 1.0
+      ..opacity = 0.8
       ..fadePower = 2.6
       ..facing = angle
-      ..halfSpread = 1.3;
-    if (heat > 0.3) {
-      _addWave()
-        ..isRing = true
-        ..x = x
-        ..y = y
-        ..delay = 0.05
-        ..lifespan = 0.65
-        ..fromRadius = 6
-        ..toRadius = 110 * power
-        ..fromWidth = 10
-        ..toWidth = 3
-        ..color = Color.lerp(colors[1], _white, 0.2)!
-        ..opacity = 0.9 * heat
-        ..fadePower = 2.6
-        ..facing = angle
-        ..halfSpread = 1.4;
-    }
+      ..halfSpread = 1.2;
   }
 
   /// Fast and short lived sparks
@@ -198,12 +183,12 @@ class ShieldImpactEffects extends Component
   ) {
     final rnd = _rnd;
     final difficulty = bloc.state.difficulty;
-    final count = 10 + (heat * 8).round() + rnd.nextInt(3);
+    final count = 5 + (heat * 3).round() + rnd.nextInt(2);
     for (var i = 0; i < count; i++) {
-      final direction = angle + (rnd.nextDouble() + rnd.nextDouble() - 1) * 1.7;
+      final direction = angle + (rnd.nextDouble() + rnd.nextDouble() - 1) * 1.4;
       final speed =
-          (300 + 500 * pow(rnd.nextDouble(), 0.8)) *
-          (1 + heat * 0.25) *
+          (260 + 400 * pow(rnd.nextDouble(), 0.8)) *
+          (1 + heat * 0.15) *
           (1 + difficulty * 0.15);
       final jitter = (rnd.nextDouble() - 0.5) * 10;
       _addSpark()
@@ -211,32 +196,31 @@ class ShieldImpactEffects extends Component
         ..y = y + cos(angle) * jitter
         ..vx = cos(direction) * speed
         ..vy = sin(direction) * speed
-        ..lifespan = 0.4 + rnd.nextDouble() * 0.35
+        ..lifespan = 0.3 + rnd.nextDouble() * 0.2
         ..drag = 4.2 + rnd.nextDouble() * 1.6
-        ..width = 2.6 + rnd.nextDouble() * 1.6
+        ..width = 2.2 + rnd.nextDouble() * 1.2
         ..headColor = colors.first
         ..tailColor = colors[1 + rnd.nextInt(2)];
     }
   }
 
-  /// Shards of the orb: its sparkles or snowflakes, and some dots
+  /// A few shards of the orb: its sparkles or snowflakes
   void _addShards(double x, double y, double angle, OrbType type, double heat) {
     final rnd = _rnd;
     final difficulty = bloc.state.difficulty;
     final sprites = _shardSprites[type]!;
-    final count = 7 + (heat * 5).round();
+    final count = 3 + (heat * 2).round();
     for (var i = 0; i < count; i++) {
-      final isDot = i % 3 == 2;
-      final sprite = isDot ? _dotSprite : sprites.random(rnd);
-      final size = isDot ? 5 + rnd.nextDouble() * 4 : 12 + rnd.nextDouble() * 8;
-      final direction = angle + (rnd.nextDouble() + rnd.nextDouble() - 1) * 1.4;
-      final speed = (90 + rnd.nextDouble() * 220) * (1 + heat * 0.2);
+      final sprite = sprites.random(rnd);
+      final size = 10 + rnd.nextDouble() * 6;
+      final direction = angle + (rnd.nextDouble() + rnd.nextDouble() - 1) * 1.2;
+      final speed = (90 + rnd.nextDouble() * 160) * (1 + heat * 0.15);
       final jitter = (rnd.nextDouble() - 0.5) * 10;
       final shard =
           _shards.spawn(
               sprite: sprite,
               lifespan:
-                  (0.85 + rnd.nextDouble() * 0.5) * (1 - difficulty * 0.25),
+                  (0.55 + rnd.nextDouble() * 0.3) * (1 - difficulty * 0.25),
             )
             ..color = type.colors.random(rnd)
             ..drag = 2.6
@@ -282,7 +266,7 @@ class ShieldImpactEffects extends Component
         ..halfSpread = pi / 2;
 
       final sprites = _shardSprites[type]!;
-      for (var i = 0; i < 10; i++) {
+      for (var i = 0; i < 5; i++) {
         final direction = facing + (rnd.nextDouble() - 0.5) * pi;
         final speed = 200 + rnd.nextDouble() * 160;
         final sprite = sprites.random(rnd);
@@ -305,29 +289,12 @@ class ShieldImpactEffects extends Component
     }
   }
 
-  /// A chain of [length] quick blocks is over: the shields let it all go
+  /// A chain of [length] quick blocks is over: the shields bump out
   void _releaseChain(int length) {
     final power = min(1.0, (length - 2) / (DefendStreak.fullChain - 2));
-    game.background.chain(power);
     final player = game.world.player;
-    for (final shield in [player.fireShield, player.iceShield]) {
-      shield.releaseCharge(power);
-      final center = shield.absolutePosition;
-      _addWave()
-        ..isRing = true
-        ..x = center.x
-        ..y = center.y
-        ..lifespan = 0.5 + power * 0.25
-        ..fromRadius = shield.size.x / 2
-        ..toRadius = shield.size.x / 2 + 60 + power * 90
-        ..fromWidth = 14
-        ..toWidth = 3
-        ..color = Color.lerp(shield.type.colors[1], _white, 0.25)!
-        ..opacity = 0.6 + power * 0.35
-        ..fadePower = 2.2
-        ..facing = shield.angle
-        ..halfSpread = shield.shieldSweep / 2 + 0.35;
-    }
+    player.fireShield.releaseCharge(power);
+    player.iceShield.releaseCharge(power);
   }
 
   @override

@@ -53,7 +53,6 @@ class Shield extends PositionComponent
   final _particles = SpriteParticleBatch();
   static const _particleKindFlame = 0;
   static const _particleKindSparkle = 1;
-  static const _particleKindFlare = 2;
 
   final _audioHelper = getIt.get<AudioHelper>();
 
@@ -373,7 +372,7 @@ class Shield extends PositionComponent
     }
     shieldLinePaint
       ..color = lineColor
-      ..strokeWidth = shieldWidth + _flash * 3 + _power * 4.5 + _heat;
+      ..strokeWidth = shieldWidth + _flash * 2 + _power * 2.5 + _heat;
     canvas.drawPath(_linePath, shieldLinePaint);
 
     final core = min(1.0, _smoothStep(0.35, 0.8, _heat) * 0.8 + _power * 0.8);
@@ -480,12 +479,7 @@ class Shield extends PositionComponent
   /// The shields let a chain's charge go, [power] from 0 to 1
   void releaseCharge(double power) {
     _releaseAge = 0;
-    _releasePower = power;
-    final rnd = game.rnd;
-    for (var i = 0; i < 6; i++) {
-      final a = (rnd.nextDouble() - 0.5) * shieldSweep;
-      _addFlare(a, rnd);
-    }
+    _releasePower = power * 0.6;
   }
 
   /// Radius of the shield line at [angle] (in the shield's own angles)
@@ -522,7 +516,7 @@ class Shield extends PositionComponent
   /// Pulses of energy racing along a powered up shield
   double _currentAt(double angle) {
     final pulse = 0.5 + 0.5 * sin(_time * 16 - angle * 9 * _spinDirection);
-    return _power * 0.75 * (0.25 + 0.75 * pulse * pulse) * _endsFade(angle);
+    return _power * 0.45 * (0.25 + 0.75 * pulse * pulse) * _endsFade(angle);
   }
 
   /// How bright the streak makes the shield glow at [angle]
@@ -542,11 +536,6 @@ class Shield extends PositionComponent
       final fade = 1 - t / _ShieldHit.glowDuration;
       final width = 0.12 + t * 0.75;
       intensity += fade * fade * hit.strength * exp(-(d * d) / (width * width));
-      // And two waves running to the ends of the shield
-      final travel = pi / 2 * (1 - pow(1 - min(1.0, t / 0.3), 2));
-      final wave = 0.9 * pow(fade, 1.5) * hit.strength;
-      final d1 = d - travel, d2 = d + travel;
-      intensity += wave * (exp(-(d1 * d1) / 0.01) + exp(-(d2 * d2) / 0.01));
     }
     return min(1.0, intensity * _endsFade(angle));
   }
@@ -577,29 +566,7 @@ class Shield extends PositionComponent
       _hits.removeAt(0);
     }
     final power = _impacts.streak.power;
-    _hits.add(_ShieldHit(localAngle, strength: 1 + heat * 0.4 + power * 0.3));
-
-    // The shield flares up where it was hit
-    final rnd = game.rnd;
-    for (var i = 0; i < 4; i++) {
-      _addFlare(localAngle + (rnd.nextDouble() - 0.5) * 0.5, rnd);
-    }
-  }
-
-  /// A flame bursting out of the shield at [a] (in the shield's own angles)
-  void _addFlare(double a, Random rnd) {
-    final sprite = _flameSprites[3 + rnd.nextInt(_flameSprites.length - 3)];
-    final flare = _particles.spawn(sprite: sprite, lifespan: 0.65)
-      ..kind = _particleKindFlare
-      ..color = type.colors.random(rnd)
-      ..drawScale = (1.0 + rnd.nextDouble() * 0.4) / 8
-      ..drawRotation = a + (rnd.nextDouble() - 0.5) * 0.4;
-    flare.position.setValues(
-      size.x / 2 + cos(a) * _lineRadius,
-      size.y / 2 + sin(a) * _lineRadius,
-    );
-    final push = 50 + rnd.nextDouble() * 50;
-    flare.acceleration.setValues(cos(a) * push, sin(a) * push);
+    _hits.add(_ShieldHit(localAngle, strength: 1 + heat * 0.25 + power * 0.2));
   }
 
   static double _smoothStep(double from, double to, double value) {
@@ -608,14 +575,6 @@ class Shield extends PositionComponent
   }
 
   bool _prepareParticle(SpriteParticle particle) {
-    if (particle.kind == _particleKindFlare) {
-      final opacity = pow(1 - particle.progress, 1.5).toDouble();
-      if (opacity <= 0.01) {
-        return false;
-      }
-      particle.drawOpacity = opacity;
-      return true;
-    }
     final opacity = _increaseDecreaseTween.transform(particle.progress);
     if (opacity <= 0.01) {
       return false;
