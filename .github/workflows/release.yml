@@ -46,9 +46,18 @@ jobs:
         with:
           ref: ${{ env.TAG }}
 
+      # Tags made before this workflow existed don't have its scripts, so take them
+      # from the commit the workflow itself runs from.
+      - name: Get the release scripts
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: .release-tools
+          sparse-checkout: .github/scripts
+
       - name: Check the tag matches pubspec.yaml
         id: version
-        run: ./.github/scripts/check_version.sh "$TAG"
+        run: ./.release-tools/.github/scripts/check_version.sh "$TAG"
 
       - name: Check secrets are set
         env:
@@ -62,7 +71,7 @@ jobs:
         run: |
           required="FIREBASE_OPTIONS_DART_B64 GOOGLE_SERVICES_JSON_B64 ANDROID_KEYSTORE_B64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD"
           if [ "$UPLOAD" = "true" ]; then required="$required PLAY_SERVICE_ACCOUNT_JSON"; fi
-          ./.github/scripts/require_env.sh $required
+          ./.release-tools/.github/scripts/require_env.sh $required
 
       - uses: actions/setup-java@v4
         with:
@@ -108,7 +117,7 @@ jobs:
       - name: Write Play release notes
         run: |
           mkdir -p whatsnew
-          ./.github/scripts/release_notes.sh "${{ steps.version.outputs.name }}" android > whatsnew/whatsnew-en-US
+          ./.release-tools/.github/scripts/release_notes.sh "${{ steps.version.outputs.name }}" android > whatsnew/whatsnew-en-US
           cat whatsnew/whatsnew-en-US
 
       - name: Find the R8 mapping file
@@ -158,9 +167,18 @@ jobs:
         with:
           ref: ${{ env.TAG }}
 
+      # Tags made before this workflow existed don't have its scripts, so take them
+      # from the commit the workflow itself runs from.
+      - name: Get the release scripts
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: .release-tools
+          sparse-checkout: .github/scripts
+
       - name: Check the tag matches pubspec.yaml
         id: version
-        run: ./.github/scripts/check_version.sh "$TAG"
+        run: ./.release-tools/.github/scripts/check_version.sh "$TAG"
 
       - name: Check secrets are set
         env:
@@ -168,7 +186,7 @@ jobs:
           GOOGLE_SERVICE_INFO_PLIST_B64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_B64 }}
           FIREBASE_APP_ID_FILE_JSON_B64: ${{ secrets.FIREBASE_APP_ID_FILE_JSON_B64 }}
           FIREBASE_JSON_B64: ${{ secrets.FIREBASE_JSON_B64 }}
-        run: ./.github/scripts/require_env.sh FIREBASE_OPTIONS_DART_B64 GOOGLE_SERVICE_INFO_PLIST_B64 FIREBASE_APP_ID_FILE_JSON_B64 FIREBASE_JSON_B64 APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_KEY_IDENTIFIER APP_STORE_CONNECT_PRIVATE_KEY CERTIFICATE_PRIVATE_KEY
+        run: ./.release-tools/.github/scripts/require_env.sh FIREBASE_OPTIONS_DART_B64 GOOGLE_SERVICE_INFO_PLIST_B64 FIREBASE_APP_ID_FILE_JSON_B64 FIREBASE_JSON_B64 APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_KEY_IDENTIFIER APP_STORE_CONNECT_PRIVATE_KEY CERTIFICATE_PRIVATE_KEY
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
