@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/foundation.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_component_spawner.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
@@ -185,7 +186,7 @@ class RhythmDirector extends Component
 
   // ---- portals (the white holes the orbs come out of) ----
 
-  static const _maxPortalRadius = 225.0;
+  static double get _maxPortalRadius => GameConstants.portalMaxDistance;
   static const _maxFormTime = PortalMove.maxFormDuration;
 
   void _openPortal(_PlannedOrb orb) {
@@ -267,7 +268,8 @@ class RhythmDirector extends Component
   }
 
   void _add(double land, OrbType type, double speed, {RhythmHit? hit}) {
-    final radius = 185 + _rnd.nextDouble() * 40;
+    final nearest = GameConstants.portalMinDistance;
+    final radius = nearest + _rnd.nextDouble() * (_maxPortalRadius - nearest);
     final launchAt = land - _flightTime(speed, radius) - _mountDelay;
     final move = PortalMove.random(_difficulty, random: _rnd);
     _planned.add(
