@@ -233,6 +233,12 @@ jobs:
           keychain add-certificates
           xcode-project use-profiles
 
+      # Flutter turns on Swift Package Manager by default, but the Crashlytics
+      # symbol upload build phase can't find the Firebase SDK in that layout.
+      # Build with CocoaPods, like local and Codemagic builds do.
+      - name: Use CocoaPods for iOS plugins
+        run: flutter config --no-enable-swift-package-manager
+
       - run: flutter pub get
 
       - name: Build ipa
