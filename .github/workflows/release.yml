@@ -215,6 +215,11 @@ jobs:
           echo "$GOOGLE_SERVICE_INFO_PLIST_B64" | base64 --decode > ios/Runner/GoogleService-Info.plist
           echo "$FIREBASE_APP_ID_FILE_JSON_B64" | base64 --decode > ios/firebase_app_id_file.json
           echo "$FIREBASE_JSON_B64" | base64 --decode > firebase.json
+          # The Xcode "flutterfire upload-crashlytics-symbols" phase can't find the
+          # Crashlytics script in Swift Package Manager builds and fails the archive.
+          # Turn it off here; the dSYMs are uploaded after the build instead.
+          jq '(.. | objects | select(has("uploadDebugSymbols")) | .uploadDebugSymbols) = false' firebase.json > firebase.json.tmp
+          mv firebase.json.tmp firebase.json
 
       # The Xcode project runs "flutterfire upload-crashlytics-symbols" as a build phase.
       - name: Install FlutterFire CLI and Codemagic CLI tools
@@ -237,6 +242,14 @@ jobs:
 
       - name: Build ipa
         run: flutter build ipa --release --export-options-plist="$HOME/export_options.plist"
+
+      - name: Upload dSYMs to Crashlytics
+        continue-on-error: true
+        run: |
+          script=$(find "$HOME/Library/Developer/Xcode/DerivedData" ios/Pods -path '*Crashlytics/upload-symbols' -type f 2>/dev/null | head -1)
+          if [ -z "$script" ]; then echo "::warning::Crashlytics upload-symbols not found, skipping dSYM upload"; exit 0; fi
+          echo "Using $script"
+          "$script" -gsp ios/Runner/GoogleService-Info.plist -p ios build/ios/archive/Runner.xcarchive/dSYMs
 
       - name: Attach to the GitHub release
         env:
