@@ -13,7 +13,7 @@ Steps to release a version:
    - uploads the iOS build to **TestFlight**,
    - attaches the `.aab`, `.apk` and `.ipa` to the release.
 
-   To retry one platform (for example after fixing a secret), run the workflow by hand from the Actions tab with the tag and the platform. Each upload needs a new build number, so a retry after a successful store upload needs a version bump.
+   To retry one platform (for example after fixing a secret), run the workflow by hand from the Actions tab with the tag and the platform. If the fix is in the code, set `ref` to the branch that has it (its `pubspec.yaml` version must still match the tag). Each upload needs a new build number, so a retry after a successful store upload needs a version bump.
 9. For Android, go to the [Google Play Console](https://play.google.com/console/u/0/developers/5997297823226279773/app/4974667565177679063/app-dashboard?timespan=thirtyDays) and promote the internal release to production.
 10. For iOS, go to the [AppStoreConnect test flight section](https://appstoreconnect.apple.com/apps/6474765181/testflight/ios), accept the agreement if asked, then create the new App Store version with the uploaded build and submit it for review.
 11. Now you can get your coffee and chill until they review the apps. It takes about 2 or 3 working days to review both of them.

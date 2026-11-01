@@ -2,7 +2,8 @@ name: Release
 
 # Publishing a GitHub release (tag = version name, e.g. 2.0.0) builds both apps,
 # uploads Android to the Play internal track and iOS to TestFlight, and attaches
-# the .aab, .apk and .ipa to the release. Promoting to production stays manual.
+# the .aab, .apk and .ipa to the release (before the store upload, so a
+# rejected upload still leaves the files on the release). Promoting to production stays manual.
 # The secrets are listed in docs/RELEASE_GUIDE.md.
 
 on:
@@ -13,6 +14,10 @@ on:
       tag:
         description: Release tag to build (e.g. 2.0.0)
         required: true
+      ref:
+        description: Build this branch or commit instead of the tag (its pubspec version must still match the tag)
+        required: false
+        default: ''
       platforms:
         description: Which apps to build
         type: choice
@@ -33,6 +38,7 @@ concurrency:
 env:
   FLUTTER_VERSION: '3.47.9'
   TAG: ${{ github.event.release.tag_name || inputs.tag }}
+  SOURCE_REF: ${{ inputs.ref || github.event.release.tag_name || inputs.tag }}
   UPLOAD: ${{ github.event_name == 'release' || inputs.upload_to_stores }}
 
 jobs:
@@ -44,7 +50,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.TAG }}
+          ref: ${{ env.SOURCE_REF }}
 
       # Tags made before this workflow existed don't have its scripts, so take them
       # from the commit the workflow itself runs from.
@@ -126,6 +132,15 @@ jobs:
           f=build/app/outputs/mapping/release/mapping.txt
           if [ -f "$f" ]; then echo "file=$f" >> "$GITHUB_OUTPUT"; fi
 
+      - name: Attach to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir artifacts
+          cp build/app/outputs/bundle/release/app-release.aab "artifacts/SaveThePotato-Android-$TAG.aab"
+          cp build/app/outputs/flutter-apk/app-release.apk "artifacts/SaveThePotato-Android-$TAG.apk"
+          gh release upload "$TAG" artifacts/* --clobber
+
       - name: Upload to Play internal track
         if: env.UPLOAD == 'true'
         uses: r0adkll/upload-google-play@v1
@@ -138,15 +153,6 @@ jobs:
           status: completed
           whatsNewDirectory: whatsnew
           mappingFile: ${{ steps.mapping.outputs.file }}
-
-      - name: Attach to the GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          mkdir artifacts
-          cp build/app/outputs/bundle/release/app-release.aab "artifacts/SaveThePotato-Android-$TAG.aab"
-          cp build/app/outputs/flutter-apk/app-release.apk "artifacts/SaveThePotato-Android-$TAG.apk"
-          gh release upload "$TAG" artifacts/* --clobber
 
       - name: Remove signing files
         if: always()
@@ -165,7 +171,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.TAG }}
+          ref: ${{ env.SOURCE_REF }}
 
       # Tags made before this workflow existed don't have its scripts, so take them
       # from the commit the workflow itself runs from.
@@ -232,10 +238,6 @@ jobs:
       - name: Build ipa
         run: flutter build ipa --release --export-options-plist="$HOME/export_options.plist"
 
-      - name: Upload to TestFlight
-        if: env.UPLOAD == 'true'
-        run: app-store-connect publish --path build/ios/ipa/*.ipa
-
       - name: Attach to the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -243,6 +245,10 @@ jobs:
           mkdir artifacts
           cp build/ios/ipa/*.ipa "artifacts/SaveThePotato-iOS-$TAG.ipa"
           gh release upload "$TAG" artifacts/* --clobber
+
+      - name: Upload to TestFlight
+        if: env.UPLOAD == 'true'
+        run: app-store-connect publish --path build/ios/ipa/*.ipa
 
       - name: Restore the login keychain
         if: always()
