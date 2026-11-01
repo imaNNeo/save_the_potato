@@ -113,6 +113,23 @@ class AudioHelper {
     return _soLoud.getPosition(handle).inMicroseconds / 1e6;
   }
 
+  /// Jumps the music to [seconds] into the loop, keeping the stems together.
+  /// Used when the music starts after the run has (unmuting mid-run).
+  void seekMusic(double seconds) {
+    final group = _stemGroup;
+    if (group == null || _stemHandles.isEmpty) {
+      return;
+    }
+    final time = Duration(microseconds: (seconds * 1e6).round());
+    _soLoud.setPause(group, true);
+    for (final handle in _stemHandles.values) {
+      if (_soLoud.getIsValidVoiceHandle(handle)) {
+        _soLoud.seek(handle, time);
+      }
+    }
+    _soLoud.setPause(group, false);
+  }
+
   void _playStems() {
     final group = _soLoud.createVoiceGroup();
     for (final name in _rhythmStems) {
