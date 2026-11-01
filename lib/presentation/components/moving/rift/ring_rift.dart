@@ -12,7 +12,13 @@ import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 /// come in from it, so it sits as far out as fits on every screen.
 class ArenaRing {
   /// Just inside the square, with room for the ring's glow
-  static double get radius => GameConstants.viewSize * 0.485;
+  static const double radius = GameConstants.viewSize * 0.485;
+
+  /// The inside of the ring, for clipping what comes from outside
+  static final Path clip = Path()
+    ..addOval(Rect.fromCircle(center: Offset.zero, radius: radius));
+
+  static bool isOutside(Vector2 p) => p.length2 > radius * radius;
 }
 
 Vector2 _polar(double angle, double radius) =>
@@ -82,31 +88,6 @@ void _bloom(Canvas canvas, Offset p, double radius, Color color, double a) {
           color.withValues(alpha: 0),
         ],
         [0, 0.35, 1],
-      ),
-  );
-}
-
-/// The orb taking shape, like a flying orb's head
-void _orbHead(Canvas canvas, Offset p, double radius, List<Color> c) {
-  if (radius <= 0.2) {
-    return;
-  }
-  _bloom(canvas, p, radius * 2.6, c[1], 0.5);
-  canvas.drawCircle(
-    p,
-    radius,
-    Paint()
-      ..shader = ui.Gradient.radial(
-        p,
-        radius,
-        [
-          Color.lerp(c[0], _white, 0.5)!,
-          c[0],
-          c[1],
-          c[2],
-          c[2].withValues(alpha: 0),
-        ],
-        [0, 0.28, 0.58, 0.82, 1],
       ),
   );
 }
@@ -280,15 +261,7 @@ class RingRift extends PositionComponent
     );
     _lightStroke(canvas, outer, c, 1.6, 0.8 * life);
     _lightStroke(canvas, inner, c, 2.2, life);
-    // The orb pushing through near the end
-    final grow = Curves.easeOutBack.transform(_clamp01((form - 0.65) / 0.35));
-    _orbHead(
-      canvas,
-      _polarOffset(spawnAngle, r - 4),
-      10 * grow * (1 - closing),
-      c,
-    );
-    // The snap when it lets go
+    // The snap when the orb is through
     if (closing > 0) {
       final fade = 1 - closing;
       _bloom(

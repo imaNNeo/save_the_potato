@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
+import 'package:save_the_potato/presentation/components/moving/rift/ring_rift.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 
@@ -120,6 +121,10 @@ class OrbEffects extends Component
     super.update(dt);
     for (final orb in _orbs) {
       if (!orb.isFlying) {
+        continue;
+      }
+      if (ArenaRing.isOutside(orb.position)) {
+        // Still on its way to the rift, nobody sees it yet
         continue;
       }
       orb.effectsTime += dt;
@@ -257,6 +262,16 @@ class OrbEffects extends Component
   @override
   void render(Canvas canvas) {
     super.render(canvas);
+    // Orbs come from outside the arena ring and only show once they are
+    // through their rift
+    canvas
+      ..save()
+      ..clipPath(ArenaRing.clip);
+    _render(canvas);
+    canvas.restore();
+  }
+
+  void _render(Canvas canvas) {
     _glow.clear();
     _addPuffsGlow();
     for (final ghost in _ghosts) {

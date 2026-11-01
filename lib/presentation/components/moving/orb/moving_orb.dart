@@ -73,7 +73,29 @@ sealed class MovingOrb extends MovingComponent {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
+    // Orbs come from outside the arena ring, hidden until they pass through
+    // their rift. Only clip the ones near or past the ring.
+    final r = ArenaRing.radius;
+    final far = position.length + size.x;
+    if (far < r) {
+      _drawHead(canvas);
+      return;
+    }
+    if (position.length - size.x > r) {
+      return;
+    }
+    canvas
+      ..save()
+      ..clipPath(
+        Path()..addOval(
+          Rect.fromCircle(
+            center: Offset(size.x / 2 - position.x, size.y / 2 - position.y),
+            radius: r,
+          ),
+        ),
+      );
     _drawHead(canvas);
+    canvas.restore();
   }
 
   @override
