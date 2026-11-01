@@ -2,7 +2,7 @@ part of 'game_cubit.dart';
 
 class GameState extends Equatable {
   const GameState({
-    this.healthPoints = GameConstants.maxHealthPoints,
+    this.life = LifeMeter.start,
     this.levelTimePassed = 0,
     this.difficultyTimePassed = 0,
     this.playingState = const PlayingStateNone(),
@@ -19,7 +19,10 @@ class GameState extends Equatable {
     this.motivationWordsPoolToPlay = MotivationWordType.values,
   });
 
-  final int healthPoints;
+  /// From 0 to 1, see [LifeMeter]
+  final double life;
+
+  int get lifeStage => LifeMeter.stageOf(life);
 
   final double levelTimePassed;
 
@@ -94,7 +97,7 @@ class GameState extends Equatable {
   }
 
   GameState copyWith({
-    int? healthPoints,
+    double? life,
     double? levelTimePassed,
     double? difficultyTimePassed,
     PlayingState? playingState,
@@ -110,7 +113,7 @@ class GameState extends Equatable {
     ValueWrapper<MotivationWordType>? playMotivationWord,
     List<MotivationWordType>? motivationWordsPoolToPlay,
   }) => GameState(
-    healthPoints: healthPoints ?? this.healthPoints,
+    life: life ?? this.life,
     levelTimePassed: levelTimePassed ?? this.levelTimePassed,
     difficultyTimePassed: difficultyTimePassed ?? this.difficultyTimePassed,
     playingState: playingState ?? this.playingState,
@@ -137,7 +140,7 @@ class GameState extends Equatable {
 
   @override
   List<Object?> get props => [
-    healthPoints,
+    life,
     levelTimePassed,
     difficultyTimePassed,
     playingState,

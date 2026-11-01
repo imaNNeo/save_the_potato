@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
+import 'package:save_the_potato/domain/life_meter.dart';
 import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/domain/models/score_entity.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
@@ -89,7 +90,7 @@ class GameCubit extends Cubit<GameState> {
     updatedGameMode = updatedGameMode.resetDefendOrbStreakCount();
     emit(
       state.copyWith(
-        healthPoints: max(0, state.healthPoints - 1),
+        life: LifeMeter.afterMiss(state.life),
         currentGameMode: updatedGameMode,
         // A hit eases the game a little, so it stays playable
         difficultyTimePassed: max(
@@ -98,7 +99,7 @@ class GameCubit extends Cubit<GameState> {
         ),
       ),
     );
-    if (state.healthPoints <= 0) {
+    if (state.life <= 0) {
       _gameOver();
       return;
     }
@@ -107,10 +108,7 @@ class GameCubit extends Cubit<GameState> {
   void onPotatoHealthPointReceived() {
     emit(
       state.copyWith(
-        healthPoints: min(
-          GameConstants.maxHealthPoints,
-          state.healthPoints + 1,
-        ),
+        life: min(1.0, state.life + 0.25),
         firstHealthReceived: true,
       ),
     );
@@ -335,12 +333,19 @@ class GameCubit extends Cubit<GameState> {
         updatedGameMode = updatedGameMode.increaseDefendOrbStreakCount(
           count: 1,
         );
+        final previousStage = state.lifeStage;
         emit(
           state.copyWith(
             shieldHitCounter: state.shieldHitCounter + 1,
             currentGameMode: updatedGameMode,
+            life: state.playingState.isPlaying
+                ? LifeMeter.afterBlock(state.life)
+                : null,
           ),
         );
+        if (state.lifeStage > previousStage) {
+          _audioHelper.playLifeStageUpSound(state.lifeStage);
+        }
         break;
     }
   }

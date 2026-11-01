@@ -96,7 +96,7 @@ class GameModeSingleSpawn extends GameMode {
     super.collidedOrbsCount = 0,
     super.defendOrbStreakCount = 0,
     super.initialDelay = 0,
-  }) : super(increasesDifficulty: true, canSpawnMovingHealth: true);
+  }) : super(increasesDifficulty: true, canSpawnMovingHealth: false);
 
   /// It takes [difficultyInitialToPeakDuration] seconds to
   /// go from [orbsSpawnEveryInitial] to [orbsSpawnEveryPeak]

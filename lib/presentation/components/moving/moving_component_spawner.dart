@@ -103,8 +103,7 @@ class MovingComponentSpawner extends Component
     if (!bloc.state.currentGameMode.canSpawnMovingHealth) {
       return false;
     }
-    final missingHP = GameConstants.maxHealthPoints - bloc.state.healthPoints;
-    if (missingHP == 0) {
+    if (bloc.state.life >= 1.0) {
       return false;
     }
     late double generateHealthChance;

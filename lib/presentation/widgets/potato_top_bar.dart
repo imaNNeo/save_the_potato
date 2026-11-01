@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
-import 'package:save_the_potato/presentation/game_colors.dart';
 
 import 'game_timer.dart';
+import 'life_bar.dart';
 
 class PotatoTopBar extends StatefulWidget {
   const PotatoTopBar({super.key});
@@ -22,8 +22,7 @@ class _PotatoTopBarState extends State<PotatoTopBar> {
   Widget build(BuildContext context) {
     return BlocBuilder<GameCubit, GameState>(
       buildWhen: (previous, current) =>
-          previous.playingState != current.playingState ||
-          previous.healthPoints != current.healthPoints,
+          previous.playingState != current.playingState,
       builder: (context, state) {
         return SafeArea(
           child: Column(
@@ -34,46 +33,7 @@ class _PotatoTopBarState extends State<PotatoTopBar> {
                 child: const GameTimer(),
               ),
               const SizedBox(height: 4.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  GameConstants.maxHealthPoints,
-                  (index) => Padding(
-                    padding: const EdgeInsets.only(right: 4.0),
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          if (index + 1 <= state.healthPoints)
-                            Image.asset(
-                              'assets/images/heart/heart1.png',
-                              width: 20,
-                              color: GameColors.healthPointColor.withValues(
-                                alpha:
-                                    state.playingState.isPlaying ||
-                                        state.playingState.isPaused
-                                    ? 1.0
-                                    : 0.2,
-                              ),
-                            ),
-                          Image.asset(
-                            'assets/images/heart/heart2.png',
-                            color: Colors.white.withValues(
-                              alpha:
-                                  state.playingState.isPlaying ||
-                                      state.playingState.isPaused
-                                  ? 1.0
-                                  : 0.2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              const LifeBar(),
             ],
           ),
         );
