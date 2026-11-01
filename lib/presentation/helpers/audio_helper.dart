@@ -4,6 +4,7 @@ import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/lazy_value.dart';
 import 'package:save_the_potato/presentation/components/motivation_component.dart';
+import 'package:save_the_potato/presentation/rhythm/rhythm_songs.dart';
 
 class AudioHelper {
   bool isPaused = false;
@@ -18,8 +19,17 @@ class AudioHelper {
   late final AudioSource _victory, _gameOver;
 
   /// One-shot notes pitched with the play speed, and the looping 120 BPM
-  /// stems of the song the shield plays the melody over
-  static const _rhythmStems = ['kick', 'pad', 'hats', 'bass', 'claps'];
+  /// stems of the song the shield plays the melody over. The extra layers
+  /// start silent and fade in for the later stages of the song.
+  static const _rhythmStems = [
+    'kick',
+    'pad',
+    'hats',
+    'bass',
+    'claps',
+    ...RhythmSongs.extraLayers,
+  ];
+  static const _layerFade = Duration(milliseconds: 1500);
   static const _noteBaseMidi = {'fire': 60, 'ice': 72};
   final _notes = <String, AudioSource>{};
   final _stems = <String, AudioSource>{};
@@ -29,7 +39,7 @@ class AudioHelper {
   Future<void> initialize() async {
     _soLoud = SoLoud.instance;
     await _soLoud.init();
-    // The stems alone take 5 voices
+    // The stems alone take 7 voices
     _soLoud.setMaxActiveVoiceCount(40);
     const baseAssets = 'assets/audio';
     _heartHit = await _soLoud.loadAsset('$baseAssets/heart.wav');
@@ -135,7 +145,9 @@ class AudioHelper {
     for (final name in _rhythmStems) {
       final handle = _soLoud.play(
         _stems[name]!,
-        volume: GameConstants.bgmVolume,
+        volume: RhythmSongs.extraLayers.contains(name)
+            ? 0
+            : GameConstants.bgmVolume,
         looping: true,
         paused: true,
       );
@@ -146,6 +158,18 @@ class AudioHelper {
     _stemGroup = group;
     // Start them all on the same sample
     _soLoud.setPause(group, false);
+  }
+
+  /// Fades the extra backing layers so only [layers] play
+  void setMusicLayers(List<String> layers) {
+    for (final name in RhythmSongs.extraLayers) {
+      final handle = _stemHandles[name];
+      if (handle == null || !_soLoud.getIsValidVoiceHandle(handle)) {
+        continue;
+      }
+      final volume = layers.contains(name) ? GameConstants.bgmVolume : 0.0;
+      _soLoud.fadeVolume(handle, volume, _layerFade);
+    }
   }
 
   void _stopStems({List<SoundHandle>? only}) {
