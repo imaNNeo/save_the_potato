@@ -96,6 +96,8 @@ class RhythmDirector extends Component
     _nextBeat = 4;
     _sides.reset();
     _beatsUntilHeartCheck = 8;
+    _stageOfLoop.clear();
+    _layersLoop = -1;
   }
 
   // ------------------------------------------------------------------
@@ -149,6 +151,7 @@ class RhythmDirector extends Component
       return;
     }
     _tickClock(dt);
+    _updateLayers();
 
     final speed = _orbSpeed;
     final lookahead = _flightTime(speed, _spawnRadius) + _maxFormTime + 0.3;
@@ -285,18 +288,22 @@ class RhythmDirector extends Component
 
   double get _difficulty => bloc.state.difficulty;
 
-  /// The difficulty each melody note joins in at. The first note of each
-  /// bar is always there. The other notes on a beat join one by one between
-  /// [_beatNotesFrom] and [_beatNotesTo], then the notes between beats
-  /// between [_offbeatNotesFrom] and [_offbeatNotesTo]. So the song fills in
-  /// gradually instead of doubling all at once.
-  static final Map<MelodyNote, double> _noteJoinsAt = () {
+  /// The difficulty each melody note of each phrase joins in at. The first
+  /// note of each bar is always there. The other notes on a beat join one
+  /// by one between [_beatNotesFrom] and [_beatNotesTo], then the notes
+  /// between beats between [_offbeatNotesFrom] and [_offbeatNotesTo]. So the
+  /// song fills in gradually instead of doubling all at once.
+  static final Map<MelodyPhrase, Map<MelodyNote, double>> _noteJoinsAt = {
+    for (final phrase in RhythmSongs.phrases) phrase: _joinsFor(phrase),
+  };
+
+  static Map<MelodyNote, double> _joinsFor(MelodyPhrase phrase) {
     final joins = <MelodyNote, double>{};
     for (final (tier, from, to) in [
       (1, _beatNotesFrom, _beatNotesTo),
       (2, _offbeatNotesFrom, _offbeatNotesTo),
     ]) {
-      final notes = RhythmSongs.melody.where((n) => n.tier == tier).toList()
+      final notes = phrase.notes.where((n) => n.tier == tier).toList()
         // A fixed shuffle, so they join spread over the song, not bar by bar
         ..shuffle(Random(tier));
       for (var i = 0; i < notes.length; i++) {
@@ -304,15 +311,15 @@ class RhythmDirector extends Component
       }
     }
     return joins;
-  }();
+  }
 
   static const _beatNotesFrom = 0.12;
   static const _beatNotesTo = 0.45;
   static const _offbeatNotesFrom = 0.5;
   static const _offbeatNotesTo = 0.85;
 
-  bool _notePlays(MelodyNote note) =>
-      note.tier == 0 || _difficulty >= (_noteJoinsAt[note] ?? 0);
+  bool _notePlays(MelodyPhrase phrase, MelodyNote note) =>
+      note.tier == 0 || _difficulty >= (_noteJoinsAt[phrase]?[note] ?? 0);
 
   /// Picks where an orb comes from: fire orbs in one group, ice orbs in
   /// one group on the opposite side, see [OrbSides]
@@ -349,21 +356,35 @@ class RhythmDirector extends Component
 
   int _barOf(int beat) => beat ~/ 4;
 
+  /// The song stage of each pass of the backing loop. It is picked when the
+  /// first beat of that pass is planned, so a pass never changes phrase or
+  /// layers halfway, even if the difficulty crosses into the next stage.
+  final _stageOfLoop = <int, SongStage>{};
+
+  SongStage _stageFor(int loop) =>
+      _stageOfLoop.putIfAbsent(loop, () => RhythmSongs.stageFor(_difficulty));
+
+  MelodyPhrase _phraseFor(int loop) {
+    final phrases = _stageFor(loop).phrases;
+    return phrases[loop % phrases.length];
+  }
+
   void _planMelodyBeat(int beat, double speed) {
     final bar = _barOf(beat);
     final beatInBar = beat % 4;
-    for (final note in RhythmSongs.melody) {
+    final phrase = _phraseFor(bar ~/ RhythmSongs.bars);
+    for (final note in phrase.notes) {
       if (note.bar != bar % RhythmSongs.bars) {
         continue;
       }
       if (note.beat.floor() != beatInBar) {
         continue;
       }
-      if (!_notePlays(note)) {
+      if (!_notePlays(phrase, note)) {
         continue;
       }
       final land = _beatTime(beat) + (note.beat - beatInBar) * 0.5;
-      final ice = note.midi >= 74;
+      final ice = phrase.isIce(note);
       final type = ice ? OrbType.ice : OrbType.fire;
       _add(
         land,
@@ -376,6 +397,26 @@ class RhythmDirector extends Component
         ),
       );
     }
+  }
+
+  // ---- backing layers ----
+
+  int _layersLoop = -1;
+
+  /// At the start of each pass of the loop, fades the extra backing layers
+  /// in or out to match the stage of the phrase that pass plays
+  void _updateLayers() {
+    final loop = (_songTime / RhythmSongs.loopSeconds).floor();
+    if (loop == _layersLoop) {
+      return;
+    }
+    final stage = _stageOfLoop[loop];
+    if (stage == null) {
+      return;
+    }
+    _layersLoop = loop;
+    _stageOfLoop.removeWhere((l, _) => l < loop);
+    _audio.setMusicLayers(stage.layers);
   }
 
   // ------------------------------------------------------------------
