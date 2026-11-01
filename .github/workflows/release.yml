@@ -237,7 +237,11 @@ jobs:
       # symbol upload build phase can't find the Firebase SDK in that layout.
       # Build with CocoaPods, like local and Codemagic builds do.
       - name: Use CocoaPods for iOS plugins
-        run: flutter config --no-enable-swift-package-manager
+        run: |
+          flutter config --no-enable-swift-package-manager
+          # ios/Podfile.lock pins Firebase 12.9.0 but the current plugins need a
+          # newer one, so let pod install resolve fresh versions.
+          rm -f ios/Podfile.lock
 
       - run: flutter pub get
 
