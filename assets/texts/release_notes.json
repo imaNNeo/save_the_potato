@@ -1,5 +1,13 @@
 [
   {
+    "version": "2.0.1",
+    "shared": [
+      "Fix the potato not showing on iOS"
+    ],
+    "ios_specific": [],
+    "android_specific": []
+  },
+  {
     "version": "2.0.0",
     "shared": [
       "New life bar replaces the hearts",
