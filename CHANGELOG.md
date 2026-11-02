@@ -1,3 +1,6 @@
+## 2.0.1
+* Fix the potato not showing on iOS
+
 ## 2.0.0
 * New life bar replaces the hearts and fills back up as you defend
 * Shield blocks now play the melody, and the melody has stages so it stops repeating
