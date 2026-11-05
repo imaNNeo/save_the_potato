@@ -227,6 +227,107 @@ class RhythmSongs {
   );
 
   static const phrases = [home, valley, lift, tense, peak];
+
+  /// The form of the song, one [SongSection] per pass of the loop, like a
+  /// real track: a verse, a busy chorus, the verse again, the chorus again,
+  /// then a breather where the drums drop out, and around again.
+  static const form = [
+    SongSection.verse,
+    SongSection.chorus,
+    SongSection.verse,
+    SongSection.chorus,
+    SongSection.breather,
+  ];
+
+  static SongSection sectionFor(int loop) => form[loop % form.length];
+
+  /// The chord of each bar of the 8 bar loop, as pitch classes (Dm, Bb, F,
+  /// C, twice). The root comes first.
+  static const chords = [
+    [2, 5, 9],
+    [10, 2, 5],
+    [5, 9, 0],
+    [0, 4, 7],
+  ];
+
+  static List<int> chordOfBar(int bar) => chords[bar % chords.length];
+
+  /// A tone of the bar's chord a third or more below [melody], to stack
+  /// under it
+  static int harmonyBelow(int melody, int bar) {
+    final chord = chordOfBar(bar);
+    for (var midi = melody - 3; midi > melody - 15; midi--) {
+      if (chord.contains(midi % 12)) {
+        return midi;
+      }
+    }
+    return melody - 12;
+  }
+
+  /// The root of the bar's chord, between [low] and [low] + 11
+  static int rootFrom(int low, int bar) {
+    final root = chordOfBar(bar).first;
+    return low + (root - low) % 12;
+  }
+}
+
+/// One part of the song's form. Each pass of the loop is one section. The
+/// section changes how many melody notes come as orbs, how many orbs come
+/// together for a note, and what the backing plays.
+enum SongSection {
+  /// The groove: the notes the difficulty allows, plus a few more on the
+  /// beat. The first note of every bar comes as a fire and ice pair.
+  verse(notesAhead: 0.2, pairsUpToTier: 0, triads: false),
+
+  /// Busy and loud: more of the melody plays, each note brings company
+  /// (a pair from both sides, plus a harmony orb on the first beats), and
+  /// the 16th hats join in. It looks wild, but the extra orbs land with
+  /// their note and need no extra move.
+  chorus(notesAhead: 0.33, pairsUpToTier: 2, triads: true),
+
+  /// A breather: the drums drop out and only the first note of each bar
+  /// comes, one orb at a time
+  breather(notesAhead: -1, pairsUpToTier: -1, triads: false);
+
+  const SongSection({
+    required this.notesAhead,
+    required this.pairsUpToTier,
+    required this.triads,
+  });
+
+  /// How far ahead of the difficulty the melody notes join in. A note
+  /// joins at a difficulty (see the rhythm director), and in this section
+  /// it joins this much sooner. Below zero only the first note of each bar
+  /// plays.
+  final double notesAhead;
+
+  /// Notes of this [MelodyNote.tier] or lower bring a pair orb of the other
+  /// kind from the opposite side, which the other end of the shield blocks
+  /// on its own
+  final int pairsUpToTier;
+
+  /// Whether the first note of each bar also brings a harmony orb next to
+  /// it
+  final bool triads;
+
+  /// Backing stems that drop out in this section
+  List<String> get mutedStems =>
+      this == breather ? const ['kick', 'claps', 'hats'] : const [];
+
+  /// The extra backing layers this section plays over the stage's own
+  List<String> layersOver(List<String> stageLayers) => switch (this) {
+    verse => stageLayers,
+    breather => const [],
+    chorus => [
+      ...RhythmSongs.extraLayers.where(
+        (l) =>
+            stageLayers.contains(l) ||
+            l == 'hats16' ||
+            // The arp joins the chorus once the stage has the 16th hats
+            stageLayers.contains('hats16'),
+      ),
+    ],
+  };
 }
 
 /// A stretch of the song from [from] difficulty on: the phrases it cycles

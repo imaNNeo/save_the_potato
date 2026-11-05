@@ -255,7 +255,7 @@ class RhythmDirector extends Component
     }
     _passing.add(orb);
     orb.thrownAngle = orb.angle;
-    if (autopilot) {
+    if (autopilot && !(orb.hit?.companion ?? false)) {
       _inFlight.add(orb);
     }
     final distance = max(_contactDistance + 4, orb.radius - orb.speed * late);
@@ -318,23 +318,60 @@ class RhythmDirector extends Component
   static const _offbeatNotesFrom = 0.5;
   static const _offbeatNotesTo = 0.85;
 
-  bool _notePlays(MelodyPhrase phrase, MelodyNote note) =>
-      note.tier == 0 || _difficulty >= (_noteJoinsAt[phrase]?[note] ?? 0);
+  bool _notePlays(MelodyPhrase phrase, MelodyNote note, SongSection section) {
+    if (note.tier == 0) {
+      return true;
+    }
+    if (section.notesAhead < 0) {
+      return false;
+    }
+    final joinsAt = _noteJoinsAt[phrase]?[note] ?? 0;
+    return _difficulty + section.notesAhead >= joinsAt;
+  }
+
+  /// Past this difficulty the notes between beats come too, so only the
+  /// first beat of each bar keeps its pair orb, and the harmony orbs stop
+  static const _companionsFadeFrom = 0.55;
+
+  /// The orbs that land together with [note]: a pair of the other kind
+  /// from the opposite side, and on the first beats of the chorus a
+  /// harmony orb next to it. They make a chord when blocked.
+  ({bool pair, bool harmony}) _companionsOf(
+    MelodyNote note,
+    SongSection section,
+  ) {
+    final calm = _difficulty < _companionsFadeFrom;
+    final maxTier = calm
+        ? section.pairsUpToTier
+        : min(0, section.pairsUpToTier);
+    return (
+      pair: note.tier <= maxTier,
+      harmony: calm && section.triads && note.tier == 0,
+    );
+  }
 
   /// Picks where an orb comes from: fire orbs in one group, ice orbs in
   /// one group on the opposite side, see [OrbSides]
   double _pickAngle(OrbType type, double land) =>
       _sides.angleFor(type, land, _difficulty);
 
-  void _add(double land, OrbType type, double speed, {RhythmHit? hit}) {
+  /// Plans an orb, returns where it comes from (null if it was skipped)
+  double? _add(
+    double land,
+    OrbType type,
+    double speed, {
+    RhythmHit? hit,
+    double? angle,
+  }) {
     final radius = _spawnRadius;
     final launchAt = land - _flightTime(speed, radius) - _mountDelay;
     if (launchAt < _songTime - _maxLate) {
       // Too close to fly in from behind the ring (the first beats of a run
       // at slow speeds). Skip it before its rift opens, or the rift would
       // flash open and shut right away.
-      return;
+      return null;
     }
+    angle ??= _pickAngle(type, land);
     final formDuration = RingRift.formDurationFor(_difficulty);
     _planned.add(
       _PlannedOrb(
@@ -343,13 +380,14 @@ class RhythmDirector extends Component
         throughAt: launchAt + _hiddenRun / speed,
         portalAt: launchAt + _hiddenRun / speed - formDuration,
         type: type,
-        angle: _pickAngle(type, land),
+        angle: angle,
         radius: radius,
         speed: speed,
         hit: hit,
       ),
     );
     _planned.sort((a, b) => a.launchAt.compareTo(b.launchAt));
+    return angle;
   }
 
   // ---- the song ----
@@ -360,6 +398,8 @@ class RhythmDirector extends Component
   /// first beat of that pass is planned, so a pass never changes phrase or
   /// layers halfway, even if the difficulty crosses into the next stage.
   final _stageOfLoop = <int, SongStage>{};
+
+  SongSection _sectionFor(int loop) => RhythmSongs.sectionFor(loop);
 
   SongStage _stageFor(int loop) =>
       _stageOfLoop.putIfAbsent(loop, () => RhythmSongs.stageFor(_difficulty));
@@ -372,7 +412,9 @@ class RhythmDirector extends Component
   void _planMelodyBeat(int beat, double speed) {
     final bar = _barOf(beat);
     final beatInBar = beat % 4;
-    final phrase = _phraseFor(bar ~/ RhythmSongs.bars);
+    final loop = bar ~/ RhythmSongs.bars;
+    final phrase = _phraseFor(loop);
+    final section = _sectionFor(loop);
     for (final note in phrase.notes) {
       if (note.bar != bar % RhythmSongs.bars) {
         continue;
@@ -380,24 +422,65 @@ class RhythmDirector extends Component
       if (note.beat.floor() != beatInBar) {
         continue;
       }
-      if (!_notePlays(phrase, note)) {
+      if (!_notePlays(phrase, note, section)) {
         continue;
       }
       final land = _beatTime(beat) + (note.beat - beatInBar) * 0.5;
       final ice = phrase.isIce(note);
       final type = ice ? OrbType.ice : OrbType.fire;
-      _add(
+      final timbre = ice ? 'ice' : 'fire';
+      // Fire notes sound an octave down
+      final octave = ice ? 0 : -12;
+      final angle = _add(
         land,
         type,
         speed,
-        hit: RhythmHit(
-          timbre: ice ? 'ice' : 'fire',
-          midi: ice ? note.midi : note.midi - 12,
-          land: land,
-        ),
+        hit: RhythmHit(timbre: timbre, midi: note.midi + octave, land: land),
       );
+      if (angle == null) {
+        continue;
+      }
+      final companions = _companionsOf(note, section);
+      if (companions.harmony) {
+        _add(
+          land,
+          type,
+          speed,
+          angle: _sides.harmonyAngleFor(type, angle, land, _difficulty),
+          hit: RhythmHit(
+            timbre: timbre,
+            midi: RhythmSongs.harmonyBelow(note.midi, bar) + octave,
+            land: land,
+            volume: 0.55,
+            companion: true,
+          ),
+        );
+      }
+      if (companions.pair) {
+        // The other end of the shield points right at it
+        final jitter = (_pairRandom.nextDouble() * 2 - 1) * _pairJitter;
+        _add(
+          land,
+          ice ? OrbType.fire : OrbType.ice,
+          speed,
+          angle: angle + pi + jitter,
+          hit: RhythmHit(
+            timbre: ice ? 'fire' : 'ice',
+            // The chord's root: up high on a bell, or low on a fire pair
+            midi: ice
+                ? RhythmSongs.rootFrom(46, bar)
+                : RhythmSongs.rootFrom(74, bar),
+            land: land,
+            volume: 0.6,
+            companion: true,
+          ),
+        );
+      }
     }
   }
+
+  final _pairRandom = Random();
+  static const _pairJitter = 6 * pi / 180;
 
   // ---- backing layers ----
 
@@ -416,7 +499,11 @@ class RhythmDirector extends Component
     }
     _layersLoop = loop;
     _stageOfLoop.removeWhere((l, _) => l < loop);
-    _audio.setMusicLayers(stage.layers);
+    final section = _sectionFor(loop);
+    _audio.setMusicLayers(
+      section.layersOver(stage.layers),
+      muted: section.mutedStems,
+    );
   }
 
   // ------------------------------------------------------------------
@@ -429,7 +516,7 @@ class RhythmDirector extends Component
       debugPrint('rhythm block ${hit.timbre} off by ${ms}ms');
     }
     final pan = cos(atan2(orb.position.y, orb.position.x)) * 0.5;
-    _audio.playNote(hit.timbre, hit.midi, pan: pan);
+    _audio.playNote(hit.timbre, hit.midi, pan: pan, volume: hit.volume);
   }
 }
 

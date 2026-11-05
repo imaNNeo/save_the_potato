@@ -11,6 +11,7 @@ Map<int, int> tierCounts(MelodyPhrase phrase) {
 }
 
 void main() {
+  songFormTests();
   test('every phrase is as busy as the original one', () {
     final home = tierCounts(RhythmSongs.home);
     for (final phrase in RhythmSongs.phrases) {
@@ -56,5 +57,39 @@ void main() {
       RhythmSongs.stageFor(difficultyAt(480)).phrases,
       contains(RhythmSongs.peak),
     );
+  });
+}
+
+void songFormTests() {
+  test(
+    'the song has a busy chorus and a breather, and starts with a verse',
+    () {
+      expect(RhythmSongs.sectionFor(0), SongSection.verse);
+      expect(RhythmSongs.form, contains(SongSection.chorus));
+      expect(RhythmSongs.form, contains(SongSection.breather));
+      expect(SongSection.breather.mutedStems, contains('kick'));
+      expect(SongSection.chorus.layersOver(const []), ['hats16']);
+      expect(SongSection.chorus.layersOver(const ['hats16']), [
+        'hats16',
+        'arp',
+      ]);
+      expect(SongSection.breather.layersOver(const ['hats16']), isEmpty);
+    },
+  );
+
+  test('harmony and pair notes are tones of the bar chord', () {
+    for (final phrase in RhythmSongs.phrases) {
+      for (final note in phrase.notes) {
+        final chord = RhythmSongs.chordOfBar(note.bar);
+        final harmony = RhythmSongs.harmonyBelow(note.midi, note.bar);
+        expect(note.midi - harmony, inInclusiveRange(3, 14));
+        expect(chord, contains(harmony % 12));
+      }
+    }
+    for (var bar = 0; bar < RhythmSongs.bars; bar++) {
+      final root = RhythmSongs.rootFrom(46, bar);
+      expect(root, inInclusiveRange(46, 57));
+      expect(root % 12, RhythmSongs.chordOfBar(bar).first);
+    }
   });
 }

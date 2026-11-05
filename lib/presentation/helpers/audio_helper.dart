@@ -160,14 +160,18 @@ class AudioHelper {
     _soLoud.setPause(group, false);
   }
 
-  /// Fades the extra backing layers so only [layers] play
-  void setMusicLayers(List<String> layers) {
-    for (final name in RhythmSongs.extraLayers) {
+  /// Fades the extra backing layers so only [layers] play, and fades the
+  /// [muted] main stems out (the others back in)
+  void setMusicLayers(List<String> layers, {List<String> muted = const []}) {
+    for (final name in _rhythmStems) {
       final handle = _stemHandles[name];
       if (handle == null || !_soLoud.getIsValidVoiceHandle(handle)) {
         continue;
       }
-      final volume = layers.contains(name) ? GameConstants.bgmVolume : 0.0;
+      final on = RhythmSongs.extraLayers.contains(name)
+          ? layers.contains(name)
+          : !muted.contains(name);
+      final volume = on ? GameConstants.bgmVolume : 0.0;
       _soLoud.fadeVolume(handle, volume, _layerFade);
     }
   }

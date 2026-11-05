@@ -96,5 +96,23 @@ class OrbSides {
     return side + offset;
   }
 
+  /// How far a harmony orb sits from the melody orb it lands with
+  static const harmonyGap = 18 * pi / 180;
+
+  /// Where a harmony orb that lands with an orb of [type] from [angle] at
+  /// [land] comes from: next to it, on the side towards the middle of the
+  /// group, so the shield still blocks both from one spot
+  double harmonyAngleFor(
+    OrbType type,
+    double angle,
+    double land,
+    double difficulty,
+  ) {
+    final fireSide = fireSideAt(land, difficulty);
+    final side = type == OrbType.fire ? fireSide : fireSide + pi;
+    final offset = atan2(sin(angle - side), cos(angle - side));
+    return angle - (offset >= 0 ? harmonyGap : -harmonyGap);
+  }
+
   static double _lerp(double a, double b, double t) => a + (b - a) * t;
 }
