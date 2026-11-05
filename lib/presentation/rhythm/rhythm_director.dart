@@ -329,13 +329,13 @@ class RhythmDirector extends Component
     return _difficulty + section.notesAhead >= joinsAt;
   }
 
-  /// Past this difficulty the notes between beats come too, so only the
-  /// first beat of each bar keeps its pair orb, and the harmony orbs stop
-  static const _companionsFadeFrom = 0.55;
+  /// Past this difficulty more notes come on their own, so only the first
+  /// beat of each bar keeps its pair orb, and the harmony orbs stop
+  static const _companionsFadeFrom = 0.45;
 
   /// The orbs that land together with [note]: a pair of the other kind
-  /// from the opposite side, and on the first beats of the chorus a
-  /// harmony orb next to it. They make a chord when blocked.
+  /// from the opposite side, and on the first beat of every other bar of
+  /// the chorus a harmony orb next to it. They make a chord when blocked.
   ({bool pair, bool harmony}) _companionsOf(
     MelodyNote note,
     SongSection section,
@@ -346,7 +346,7 @@ class RhythmDirector extends Component
         : min(0, section.pairsUpToTier);
     return (
       pair: note.tier <= maxTier,
-      harmony: calm && section.triads && note.tier == 0,
+      harmony: calm && section.triads && note.tier == 0 && note.bar.isEven,
     );
   }
 

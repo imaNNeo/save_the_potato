@@ -277,13 +277,13 @@ class RhythmSongs {
 enum SongSection {
   /// The groove: the notes the difficulty allows, plus a few more on the
   /// beat. The first note of every bar comes as a fire and ice pair.
-  verse(notesAhead: 0.2, pairsUpToTier: 0, triads: false),
+  verse(notesAhead: 0.08, pairsUpToTier: 0, triads: false),
 
-  /// Busy and loud: more of the melody plays, each note brings company
-  /// (a pair from both sides, plus a harmony orb on the first beats), and
-  /// the 16th hats join in. It looks wild, but the extra orbs land with
-  /// their note and need no extra move.
-  chorus(notesAhead: 0.33, pairsUpToTier: 2, triads: true),
+  /// Busier and louder: a little more of the melody plays, every note on a
+  /// beat brings a pair from the opposite side, every other bar opens with
+  /// a harmony orb too, and the 16th hats join in. It looks busy, but the
+  /// extra orbs land with their note and need no extra move.
+  chorus(notesAhead: 0.15, pairsUpToTier: 1, triads: true),
 
   /// A breather: the drums drop out and only the first note of each bar
   /// comes, one orb at a time
@@ -306,8 +306,8 @@ enum SongSection {
   /// on its own
   final int pairsUpToTier;
 
-  /// Whether the first note of each bar also brings a harmony orb next to
-  /// it
+  /// Whether the first note of every other bar also brings a harmony orb
+  /// next to it
   final bool triads;
 
   /// Backing stems that drop out in this section
