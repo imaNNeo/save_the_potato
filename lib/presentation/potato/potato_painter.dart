@@ -655,7 +655,51 @@ abstract final class PotatoPainter {
   // ------------------------------------------------- feelings and music --
 
   static const _headphonesDark = Color(0xFF2A1A18);
-  static const _headphonesBand = Color(0xFF6B4A43);
+
+  /// The color of the headphone band's inside
+  static HeadphonesBand headphonesBand = HeadphonesBand.fireIce;
+
+  /// Fire on the left fading into ice on the right
+  static final _fireIceBand = Gradient.linear(
+    const Offset(110, 0),
+    const Offset(374, 0),
+    const [_fireCup, Color(0xFFFFB27A), Color(0xFFB4E6FF), _iceCup],
+    const [0, 0.42, 0.58, 1],
+  );
+
+  /// The point at [t] (0..1) along the band and the band's angle there
+  static (Offset, double) _onBand(double t) {
+    const p0 = Offset(100, 226);
+    const p1 = Offset(98, 34);
+    const p2 = Offset(386, 34);
+    const p3 = Offset(384, 226);
+    final u = 1 - t;
+    final point =
+        p0 * (u * u * u) +
+        p1 * (3 * u * u * t) +
+        p2 * (3 * u * t * t) +
+        p3 * (t * t * t);
+    final tangent =
+        (p1 - p0) * (3 * u * u) +
+        (p2 - p1) * (6 * u * t) +
+        (p3 - p2) * (3 * t * t);
+    return (point, atan2(tangent.dy, tangent.dx));
+  }
+
+  /// A cat ear standing on the band: its base sits under the band
+  static final _earOuter = Path()
+    ..moveTo(-30, 6)
+    ..quadraticBezierTo(-20, -30, -4, -52)
+    ..quadraticBezierTo(0, -57, 4, -52)
+    ..quadraticBezierTo(20, -30, 30, 6)
+    ..close();
+
+  static final _earInner = Path()
+    ..moveTo(-15, -6)
+    ..quadraticBezierTo(-9, -24, -2, -36)
+    ..quadraticBezierTo(0, -39, 2, -36)
+    ..quadraticBezierTo(9, -24, 15, -6)
+    ..close();
   static const _fireCup = Color(0xFFFF5900);
   static const _iceCup = Color(0xFF00AFFF);
 
@@ -675,16 +719,63 @@ abstract final class PotatoPainter {
       canvas.translate(-_headCenter.dx, -(_headCenter.dy - 120));
     }
 
+    final pulse = pose[PotatoProp.headphonesPulse];
+
+    // Cat ears first, so the band covers where they join it
+    for (final (t, color, light) in const [
+      (0.27, _fireCup, Color(0xFFFF9362)),
+      (0.73, _iceCup, Color(0xFFB4E6FF)),
+    ]) {
+      final (at, angle) = _onBand(t);
+      _inShape(
+        canvas,
+        at,
+        () {
+          _fill
+            ..shader = null
+            ..color = _headphonesDark.withValues(alpha: opacity);
+          canvas.drawPath(_earOuter, _fill);
+          _fill.color = Color.lerp(
+            color,
+            const Color(0xFFFFFFFF),
+            0.3 * pulse,
+          )!.withValues(alpha: opacity);
+          canvas.drawPath(_earInner, _fill);
+          _stroke
+            ..color = light.withValues(alpha: opacity)
+            ..strokeWidth = 3;
+          canvas.drawPath(_earInner, _stroke);
+        },
+        angle: angle,
+        scaleX: 1.3,
+        // The ears perk up a little on the beat
+        scaleY: 1.4 + 0.1 * pulse,
+      );
+    }
+
     _stroke
+      ..shader = null
       ..color = _headphonesDark.withValues(alpha: opacity)
       ..strokeWidth = 17;
     canvas.drawPath(_band, _stroke);
-    _stroke
-      ..color = _headphonesBand.withValues(alpha: opacity)
-      ..strokeWidth = 6;
+    _stroke.strokeWidth = 7;
+    switch (headphonesBand) {
+      case HeadphonesBand.fireIce:
+        _stroke
+          ..color = Color.fromRGBO(255, 255, 255, opacity)
+          ..shader = _fireIceBand;
+      case HeadphonesBand.brown:
+        _stroke.color = const Color(0xFF6B4A43).withValues(alpha: opacity);
+      case HeadphonesBand.cream:
+        _stroke.color = const Color(0xFFF6E2BC).withValues(alpha: opacity);
+      case HeadphonesBand.purple:
+        _stroke.color = const Color(0xFF8B6CFF).withValues(alpha: opacity);
+      case HeadphonesBand.gold:
+        _stroke.color = const Color(0xFFFFC93C).withValues(alpha: opacity);
+    }
     canvas.drawPath(_band, _stroke);
+    _stroke.shader = null;
 
-    final pulse = pose[PotatoProp.headphonesPulse];
     for (final (x, color, outer) in const [
       (92.0, _fireCup, -1.0),
       (392.0, _iceCup, 1.0),
@@ -774,3 +865,6 @@ abstract final class PotatoPainter {
     canvas.drawPath(path, _stroke);
   }
 }
+
+/// Colors for the inside of the headphone band
+enum HeadphonesBand { fireIce, brown, cream, purple, gold }
