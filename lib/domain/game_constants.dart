@@ -25,6 +25,12 @@ class GameConstants {
   /// seconds, so a struggling player gets a breather
   static const difficultyRewindOnHit = 20.0;
 
+  /// After the peak, the game keeps getting harder through "overdrive": it
+  /// climbs steadily from 0 at the peak (8:00) to 1 this many seconds later
+  /// (20:00), then holds. It speeds the orbs up, shortens the rift warning
+  /// and turns the orb sides further, on top of the full difficulty.
+  static const overdriveDuration = 720.0;
+
   /// How many world units fit across the shorter side of the screen. The
   /// potato, shields and orbs keep their world size, so a bigger view makes
   /// them smaller on screen and leaves more room for the orbs to travel.

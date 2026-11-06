@@ -170,15 +170,23 @@ class RingRift extends PositionComponent
   /// rifts at a given moment, and shrinks evenly from [maxFormDuration] to
   /// [minFormDuration] as the difficulty rises, so the player is never
   /// tricked.
-  static double formDurationFor(double difficulty) =>
-      maxFormDuration -
-      (maxFormDuration - minFormDuration) * difficulty.clamp(0.0, 1.0);
+  /// Past the peak, [overdrive] shrinks it on to [overdriveFormDuration].
+  static double formDurationFor(double difficulty, {double overdrive = 0}) =>
+      overdrive > 0
+      ? minFormDuration -
+            (minFormDuration - overdriveFormDuration) *
+                overdrive.clamp(0.0, 1.0)
+      : maxFormDuration -
+            (maxFormDuration - minFormDuration) * difficulty.clamp(0.0, 1.0);
 
   /// At the start of a run
   static const maxFormDuration = 0.5;
 
   /// At full difficulty
   static const minFormDuration = 0.4;
+
+  /// At full overdrive, well past the peak
+  static const overdriveFormDuration = 0.32;
 
   double _form = 0;
   double? _closing;
