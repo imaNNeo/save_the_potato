@@ -53,7 +53,7 @@ abstract final class PotatoPainter {
   static void paint(Canvas canvas, PotatoPose pose) {
     _paintBody(canvas, pose);
     _paintFreckles(canvas);
-    _paintCheeks(canvas);
+    _paintCheeks(canvas, pose);
     _paintBrows(canvas, pose);
     _paintSmile(canvas, pose);
     _paintEyes(canvas, pose);
@@ -244,14 +244,27 @@ abstract final class PotatoPainter {
   /// shifted by this offset.
   static const _face = Offset(-169.5526, 90.4602);
 
-  static void _paintCheeks(Canvas canvas) {
+  static void _paintCheeks(Canvas canvas, PotatoPose pose) {
     _fill.color = _pink;
-    _inShape(canvas, _face + const Offset(504.7333, 190.7564), () {
-      canvas.drawRRect(_pill(33.8574, 17.4735), _fill);
-    }, scaleY: 0.9822);
-    _inShape(canvas, _face + const Offset(319.5062, 190.5455), () {
-      canvas.drawRRect(_pill(33.8574, 17.4735), _fill);
-    });
+    final s = pose[PotatoProp.cheekScale];
+    _inShape(
+      canvas,
+      _face + const Offset(504.7333, 190.7564),
+      () {
+        canvas.drawRRect(_pill(33.8574, 17.4735), _fill);
+      },
+      scaleX: s,
+      scaleY: 0.9822 * s,
+    );
+    _inShape(
+      canvas,
+      _face + const Offset(319.5062, 190.5455),
+      () {
+        canvas.drawRRect(_pill(33.8574, 17.4735), _fill);
+      },
+      scaleX: s,
+      scaleY: s,
+    );
   }
 
   static void _paintBrows(Canvas canvas, PotatoPose pose) {
@@ -380,19 +393,30 @@ abstract final class PotatoPainter {
   // ---------------------------------------------------------------- eyes --
 
   static void _paintEyes(Canvas canvas, PotatoPose pose) {
+    final open = pose[PotatoProp.eyeOpen];
+    final shift = Offset(
+      pose[PotatoProp.eyeShiftX],
+      pose[PotatoProp.eyeShiftY],
+    );
     _fill.color = _ink;
-    for (final (center, width) in const [
-      (Offset(477.9332, 149.1771), 63.9749),
-      (Offset(346.7722, 150.1771), 63.1761),
-    ]) {
-      canvas.drawOval(
-        Rect.fromCenter(center: _face + center, width: width, height: 65.3739),
-        _fill,
-      );
+    if (open > 0) {
+      for (final (center, width) in const [
+        (Offset(477.9332, 149.1771), 63.9749),
+        (Offset(346.7722, 150.1771), 63.1761),
+      ]) {
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: _face + center + shift,
+            width: width,
+            height: 65.3739 * open,
+          ),
+          _fill,
+        );
+      }
     }
 
     final scaleX = pose[PotatoProp.sparkleScaleX];
-    final scaleY = pose[PotatoProp.sparkleScaleY];
+    final scaleY = pose[PotatoProp.sparkleScaleY] * open;
     if (scaleX != 0 && scaleY != 0) {
       final size = pose[PotatoProp.sparkleSize];
       final star = _sparkleFor(size);
@@ -404,7 +428,7 @@ abstract final class PotatoPainter {
       for (final x in const [346.5571, 477.4041]) {
         _inShape(
           canvas,
-          _face + Offset(x + pose[PotatoProp.sparkleX], 146.5725),
+          _face + Offset(x + pose[PotatoProp.sparkleX], 146.5725) + shift,
           () {
             _fill.color = color;
             canvas.drawPath(star, _fill);

@@ -14,6 +14,7 @@ import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato/potato_animator.dart';
 import 'package:save_the_potato/presentation/potato/potato_face_component.dart';
+import 'package:save_the_potato/presentation/potato/recovery_face.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import '../potato_game.dart';
@@ -47,6 +48,9 @@ class Potato extends PositionComponent
   /// After a hit, the potato blinks and orbs can't hurt it for a moment
   final invincibility = HitInvincibility();
 
+  /// PROTOTYPE: the face the potato makes while it recovers (`?face=`)
+  final recovery = RecoveryFace();
+
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
       previousState.playingState != newState.playingState ||
@@ -59,6 +63,7 @@ class Potato extends PositionComponent
     if (_lastState?.playingState != state.playingState) {
       // A new run or the end of one, nothing to protect anymore
       invincibility.reset();
+      recovery.reset();
     }
     if (_lastState?.playingState != state.playingState &&
         state.playingState is PlayingStateGameOver) {
@@ -101,7 +106,13 @@ class Potato extends PositionComponent
 
     add(
       HitBlink(invincibility: invincibility, size: size, position: size / 2)
-        ..add(PotatoFaceComponent(animator: face, position: size / 2)),
+        ..add(
+          PotatoFaceComponent(
+            animator: face,
+            recovery: recovery,
+            position: size / 2,
+          ),
+        ),
     );
     add(fireShield = Shield(type: OrbType.fire));
     add(iceShield = Shield(type: OrbType.ice));
@@ -147,7 +158,7 @@ class Potato extends PositionComponent
           other.onPotatoHit();
           break;
         case FireOrb():
-          _onOrbHit(other);
+          _onOrbHit(other, RecoveryHit.fire);
           if (bloc.state.life > 0) {
             face.fireHit();
           }
@@ -162,7 +173,7 @@ class Potato extends PositionComponent
           other.onPotatoHit();
           break;
         case IceOrb():
-          _onOrbHit(other);
+          _onOrbHit(other, RecoveryHit.ice);
           if (bloc.state.life > 0) {
             face.iceHit();
           }
@@ -173,11 +184,12 @@ class Potato extends PositionComponent
     }
   }
 
-  void _onOrbHit(PositionComponent orb) {
+  void _onOrbHit(PositionComponent orb, RecoveryHit hit) {
     _audioHelper.playOrbHitSound();
     game.onOrbHit(_angleTo(orb));
     if (bloc.state.life > 0 && bloc.state.playingState.isPlaying) {
       invincibility.trigger();
+      recovery.trigger(hit, _angleTo(orb));
     }
   }
 

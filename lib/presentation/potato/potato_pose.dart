@@ -54,7 +54,17 @@ enum PotatoProp {
 
   /// Red and blue skin flashes when a fire or ice orb hits the potato.
   fireTint(0),
-  iceTint(0);
+  iceTint(0),
+
+  /// How open the dark eyes are: 1 = open, 0 = shut (hidden).
+  eyeOpen(1),
+
+  /// Moves both eyes (and their sparkles), e.g. to look at something.
+  eyeShiftX(0),
+  eyeShiftY(0),
+
+  /// Size of the pink cheeks (bigger = puffed or blushing).
+  cheekScale(1);
 
   const PotatoProp(this.rest);
 
@@ -77,6 +87,9 @@ class PotatoPose {
 
   void operator []=(PotatoProp prop, double value) =>
       _values[prop.index] = value;
+
+  /// Copies every value of [other] into this pose.
+  void copyFrom(PotatoPose other) => _values.setAll(0, other._values);
 
   /// Puts every value back to its [PotatoProp.rest] value.
   void reset() {
