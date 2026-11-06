@@ -1,6 +1,5 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/models/presentation_message.dart';
@@ -12,7 +11,8 @@ import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
 import 'package:save_the_potato/presentation/pages/main/main_page.dart';
-import 'package:save_the_potato/presentation/widgets/potato_initialize.dart';
+import 'package:save_the_potato/presentation/pages/splash/splash_stage.dart';
+import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:toastification/toastification.dart';
 
 class SplashPage extends StatefulWidget {
@@ -29,6 +29,9 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
+    // Load what the game needs while the splash plays, so the potato is
+    // there as soon as the home page opens
+    PotatoGame.preloadAssets();
     _initialize();
   }
 
@@ -66,9 +69,25 @@ class _SplashPageState extends State<SplashPage> {
     });
   }
 
-  void _openHomePage(BuildContext context) {
-    Navigator.of(context).pushReplacement(FadeRoute(page: const MainPage()));
+  final _stage = GlobalKey<SplashStageState>();
+
+  bool _leaving = false;
+
+  /// Shrinks the potato into its game spot first, so the home page takes
+  /// over from a splash that already looks like it.
+  Future<void> _openHomePage(BuildContext context) async {
+    if (_leaving) return;
+    _leaving = true;
+    await _stage.currentState?.exit();
+    if (!context.mounted) return;
+    Navigator.of(context).pushReplacement(
+      FadeRoute(page: const MainPage(), duration: _handoffDuration),
+    );
   }
+
+  /// The home page has the same stars and potato at the same spot, so this
+  /// only fades in its buttons.
+  static const _handoffDuration = Duration(milliseconds: 250);
 
   @override
   Widget build(BuildContext context) {
@@ -108,61 +127,37 @@ class _SplashPageState extends State<SplashPage> {
       },
       builder: (context, state) {
         return Scaffold(
-          body: Stack(
-            children: [
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children:
-                      [
-                        const Text(
-                          'Save the Potato',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 4,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        const SplashPotato(size: 180),
-                      ].animate().fadeIn(
-                        duration: const Duration(milliseconds: 600),
-                        delay: const Duration(milliseconds: 300),
-                      ),
+          backgroundColor: Colors.black,
+          body: SplashStage(
+            key: _stage,
+            footer: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'Powered by',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontFamily: 'Roboto',
+                  ),
                 ),
-              ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Powered by',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontFamily: 'Roboto',
-                      ),
-                    ),
-                    Image.asset(
-                      'assets/images/flutter_flame/flame-logo.png',
-                      width: 100,
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      state.showingVersion,
-                      style: const TextStyle(
-                        color: GameColors.versionColor,
-                        fontSize: 12,
-                        fontFamily: 'RobotoMono',
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                  ],
+                Image.asset(
+                  'assets/images/flutter_flame/flame-logo.png',
+                  width: 100,
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                Text(
+                  state.showingVersion,
+                  style: const TextStyle(
+                    color: GameColors.versionColor,
+                    fontSize: 12,
+                    fontFamily: 'RobotoMono',
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
+            ),
           ),
         );
       },
