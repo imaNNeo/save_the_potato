@@ -256,22 +256,26 @@ abstract final class PotatoPainter {
 
   static void _paintBrows(Canvas canvas, PotatoPose pose) {
     _fill.color = _ink;
-    final brow = _pill(20.5342, 10.9222).shift(const Offset(-0.0348, -0.2576));
     _inShape(
       canvas,
       _face + const Offset(342.7701, 97.2783),
-      () => canvas.drawRRect(brow, _fill),
+      () => canvas.drawRRect(_brow, _fill),
       angle: pose[PotatoProp.leftBrowAngle],
       scaleX: 1.1706,
     );
     _inShape(
       canvas,
       _face + const Offset(482.7701, 97.2783),
-      () => canvas.drawRRect(brow, _fill),
+      () => canvas.drawRRect(_brow, _fill),
       angle: pose[PotatoProp.rightBrowAngle],
       scaleX: 1.1706,
     );
   }
+
+  static final _brow = _pill(
+    20.5342,
+    10.9222,
+  ).shift(const Offset(-0.0348, -0.2576));
 
   static RRect _pill(double width, double height) => RRect.fromRectAndRadius(
     Rect.fromCenter(center: Offset.zero, width: width, height: height),
@@ -391,7 +395,7 @@ abstract final class PotatoPainter {
     final scaleY = pose[PotatoProp.sparkleScaleY];
     if (scaleX != 0 && scaleY != 0) {
       final size = pose[PotatoProp.sparkleSize];
-      final star = _sparkleStar(54.1 * size, 55.45 * size);
+      final star = _sparkleFor(size);
       final color = Color.lerp(
         _sparkle,
         _sparkleGreen,
@@ -440,6 +444,19 @@ abstract final class PotatoPainter {
       );
     }
   }
+
+  /// The sparkle path for [size], rebuilt only when the size changes (it
+  /// only changes while a hit animation shrinks the sparkles).
+  static Path _sparkleFor(double size) {
+    if (size != _sparkleSizeCached) {
+      _sparkleSizeCached = size;
+      _sparkleCached = _sparkleStar(54.1 * size, 55.45 * size);
+    }
+    return _sparkleCached;
+  }
+
+  static double _sparkleSizeCached = 1;
+  static Path _sparkleCached = _sparkleStar(54.1, 55.45);
 
   /// A four-pointed star with fully rounded corners: the sparkle in the eyes.
   static Path _sparkleStar(double width, double height) {
@@ -511,78 +528,66 @@ abstract final class PotatoPainter {
       center,
       () {
         // Red heart with a white rim on top.
-        _fillPath(
-          canvas,
-          _heartBack,
-          _heartRed,
-          opacity,
-          const Offset(0, -1.0),
-        );
-        _fillPath(
-          canvas,
-          _heartFront,
-          _heartRed,
-          opacity,
-          const Offset(0, 1.6),
-        );
-        _fillPath(
-          canvas,
-          _heartRim,
-          const Color(0xFFFFFFFF),
-          opacity,
-          const Offset(0, 1.4),
-        );
+        _fillPath(canvas, _heartBack, _heartRed, opacity);
+        _fillPath(canvas, _heartFront, _heartRed, opacity);
+        _fillPath(canvas, _heartRim, const Color(0xFFFFFFFF), opacity);
       },
       scaleX: scaleX,
       scaleY: scaleY,
     );
   }
 
-  static final _heartBack = Path()
-    ..moveTo(10.63, -3.35)
-    ..cubicTo(9.67, 0.43, 6.73, 4.11, 0.93, 7.22)
-    ..cubicTo(0.35, 7.53, -0.35, 7.53, -0.93, 7.22)
-    ..cubicTo(-6.73, 4.11, -9.67, 0.43, -10.63, -3.35)
-    ..cubicTo(-9.86, -5.48, -7.95, -6.99, -5.7, -7.26)
-    ..cubicTo(-3.45, -7.53, -1.24, -6.5, 0, -4.61)
-    ..cubicTo(1.25, -6.5, 3.46, -7.52, 5.71, -7.26)
-    ..cubicTo(7.95, -6.99, 9.86, -5.48, 10.63, -3.35)
-    ..close();
+  static final _heartBack =
+      (Path()
+            ..moveTo(10.63, -3.35)
+            ..cubicTo(9.67, 0.43, 6.73, 4.11, 0.93, 7.22)
+            ..cubicTo(0.35, 7.53, -0.35, 7.53, -0.93, 7.22)
+            ..cubicTo(-6.73, 4.11, -9.67, 0.43, -10.63, -3.35)
+            ..cubicTo(-9.86, -5.48, -7.95, -6.99, -5.7, -7.26)
+            ..cubicTo(-3.45, -7.53, -1.24, -6.5, 0, -4.61)
+            ..cubicTo(1.25, -6.5, 3.46, -7.52, 5.71, -7.26)
+            ..cubicTo(7.95, -6.99, 9.86, -5.48, 10.63, -3.35)
+            ..close())
+          .shift(const Offset(0, -1.0));
 
-  static final _heartFront = Path()
-    ..moveTo(11, -3.89)
-    ..cubicTo(11, 1.11, 8, 6.11, 0, 10.11)
-    ..cubicTo(-8, 6.11, -11, 1.11, -11, -3.89)
-    ..cubicTo(-11, -4.59, -10.88, -5.28, -10.63, -5.94)
-    ..cubicTo(-9.86, -8.07, -7.95, -9.58, -5.7, -9.85)
-    ..cubicTo(-3.45, -10.11, -1.25, -9.09, 0, -7.2)
-    ..cubicTo(1.25, -9.09, 3.45, -10.11, 5.7, -9.85)
-    ..cubicTo(7.95, -9.58, 9.86, -8.07, 10.63, -5.94)
-    ..cubicTo(10.88, -5.28, 11, -4.59, 11, -3.89)
-    ..close();
+  static final _heartFront =
+      (Path()
+            ..moveTo(11, -3.89)
+            ..cubicTo(11, 1.11, 8, 6.11, 0, 10.11)
+            ..cubicTo(-8, 6.11, -11, 1.11, -11, -3.89)
+            ..cubicTo(-11, -4.59, -10.88, -5.28, -10.63, -5.94)
+            ..cubicTo(-9.86, -8.07, -7.95, -9.58, -5.7, -9.85)
+            ..cubicTo(-3.45, -10.11, -1.25, -9.09, 0, -7.2)
+            ..cubicTo(1.25, -9.09, 3.45, -10.11, 5.7, -9.85)
+            ..cubicTo(7.95, -9.58, 9.86, -8.07, 10.63, -5.94)
+            ..cubicTo(10.88, -5.28, 11, -4.59, 11, -3.89)
+            ..close())
+          .shift(const Offset(0, 1.6));
 
   /// A heart outline: the outer heart minus a smaller inner heart.
-  static final _heartRim = Path()
-    ..fillType = PathFillType.evenOdd
-    ..moveTo(5, -10.74)
-    ..cubicTo(3.12, -10.74, 1.32, -9.99, 0, -8.64)
-    ..cubicTo(-1.99, -10.67, -5.01, -11.3, -7.65, -10.22)
-    ..cubicTo(-10.28, -9.15, -12, -6.59, -12, -3.74)
-    ..cubicTo(-12, 0.42, -10, 6.38, -0.45, 11.16)
-    ..cubicTo(-0.17, 11.3, 0.17, 11.3, 0.45, 11.16)
-    ..cubicTo(10, 6.38, 12, 0.42, 12, -3.74)
-    ..cubicTo(12, -7.61, 8.86, -10.74, 5, -10.74)
-    ..close()
-    ..moveTo(0, 9.14)
-    ..cubicTo(-6.64, 5.71, -10, 1.37, -10, -3.74)
-    ..cubicTo(-10, -5.95, -8.55, -7.89, -6.44, -8.53)
-    ..cubicTo(-4.33, -9.16, -2.05, -8.34, -0.83, -6.5)
-    ..cubicTo(-0.64, -6.24, -0.33, -6.08, 0, -6.08)
-    ..cubicTo(0.33, -6.08, 0.64, -6.24, 0.83, -6.5)
-    ..cubicTo(2.05, -8.34, 4.33, -9.16, 6.44, -8.53)
-    ..cubicTo(8.55, -7.89, 10, -5.95, 10, -3.74)
-    ..cubicTo(10, 1.37, 6.64, 5.71, 0, 9.14)
-    ..close();
+  static final _heartRim =
+      (Path()
+            ..moveTo(5, -10.74)
+            ..cubicTo(3.12, -10.74, 1.32, -9.99, 0, -8.64)
+            ..cubicTo(-1.99, -10.67, -5.01, -11.3, -7.65, -10.22)
+            ..cubicTo(-10.28, -9.15, -12, -6.59, -12, -3.74)
+            ..cubicTo(-12, 0.42, -10, 6.38, -0.45, 11.16)
+            ..cubicTo(-0.17, 11.3, 0.17, 11.3, 0.45, 11.16)
+            ..cubicTo(10, 6.38, 12, 0.42, 12, -3.74)
+            ..cubicTo(12, -7.61, 8.86, -10.74, 5, -10.74)
+            ..close()
+            ..moveTo(0, 9.14)
+            ..cubicTo(-6.64, 5.71, -10, 1.37, -10, -3.74)
+            ..cubicTo(-10, -5.95, -8.55, -7.89, -6.44, -8.53)
+            ..cubicTo(-4.33, -9.16, -2.05, -8.34, -0.83, -6.5)
+            ..cubicTo(-0.64, -6.24, -0.33, -6.08, 0, -6.08)
+            ..cubicTo(0.33, -6.08, 0.64, -6.24, 0.83, -6.5)
+            ..cubicTo(2.05, -8.34, 4.33, -9.16, 6.44, -8.53)
+            ..cubicTo(8.55, -7.89, 10, -5.95, 10, -3.74)
+            ..cubicTo(10, 1.37, 6.64, 5.71, 0, 9.14)
+            ..close())
+          .shift(const Offset(0, 1.4))
+        ..fillType = PathFillType.evenOdd;
 
   // ------------------------------------------------------------- helpers --
 
@@ -604,22 +609,12 @@ abstract final class PotatoPainter {
     canvas.restore();
   }
 
-  static void _fillPath(
-    Canvas canvas,
-    Path path,
-    Color color,
-    double opacity, [
-    Offset shift = Offset.zero,
-  ]) {
+  static void _fillPath(Canvas canvas, Path path, Color color, double opacity) {
     if (opacity <= 0) return;
     _fill
       ..shader = null
       ..color = color.withValues(alpha: color.a * opacity.clamp(0, 1));
-    if (shift == Offset.zero) {
-      canvas.drawPath(path, _fill);
-    } else {
-      canvas.drawPath(path.shift(shift), _fill);
-    }
+    canvas.drawPath(path, _fill);
   }
 
   static void _strokePath(
