@@ -13,6 +13,7 @@ import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato/potato_animator.dart';
 import 'package:save_the_potato/presentation/potato/potato_face_component.dart';
+import 'package:save_the_potato/presentation/potato/potato_health_prototypes.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import '../potato_game.dart';
@@ -100,7 +101,14 @@ class Potato extends PositionComponent
 
     add(
       HitBlink(invincibility: invincibility, size: size, position: size / 2)
-        ..add(PotatoFaceComponent(animator: face, position: size / 2)),
+        ..add(PotatoFaceComponent(animator: face, position: size / 2))
+        ..addAll([
+          if (PotatoHealthStyle.current != null)
+            PotatoHealthOverlay(
+              style: PotatoHealthStyle.current!,
+              position: size / 2,
+            ),
+        ]),
     );
     add(fireShield = Shield(type: OrbType.fire));
     add(iceShield = Shield(type: OrbType.ice));

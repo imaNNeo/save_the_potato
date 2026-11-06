@@ -119,6 +119,9 @@ abstract final class PotatoPainter {
 
   static const _bodyOrigin = Offset(101.8396, 254.2873);
 
+  /// The potato's outline in artboard coordinates
+  static final bodyOutline = _body.shift(_bodyOrigin);
+
   static final _body = Path()
     ..moveTo(0, 0)
     ..cubicTo(0, 0, 1.66, -158.22, 147.09, -153.99)
