@@ -31,8 +31,6 @@ class GameCubit extends Cubit<GameState> {
     this._analyticsHelper,
   ) : super(const GameState());
 
-  final _shieldAngleRotationAmount = pi * 1.8;
-
   bool isTapLeftDown = false;
   bool isTapRightDown = false;
 
@@ -195,32 +193,43 @@ class GameCubit extends Cubit<GameState> {
 
   void onLeftTapDown() {
     isTapLeftDown = true;
+    _lastPressedDirection = -1;
     _guideInteracted();
-    _updateShieldsRotationSpeed(-_shieldAngleRotationAmount);
+    _updateShieldsTurn();
   }
 
   void onLeftTapUp() {
     isTapLeftDown = false;
-    if (isTapRightDown) {
-      _updateShieldsRotationSpeed(_shieldAngleRotationAmount);
-    } else {
-      _updateShieldsRotationSpeed(0.0);
-    }
+    _updateShieldsTurn();
   }
 
   void onRightTapDown() {
     isTapRightDown = true;
+    _lastPressedDirection = 1;
     _guideInteracted();
-    _updateShieldsRotationSpeed(_shieldAngleRotationAmount);
+    _updateShieldsTurn();
   }
 
   void onRightTapUp() {
     isTapRightDown = false;
-    if (isTapLeftDown) {
-      _updateShieldsRotationSpeed(-_shieldAngleRotationAmount);
+    _updateShieldsTurn();
+  }
+
+  /// The side pressed last wins while both are held
+  int _lastPressedDirection = 0;
+
+  void _updateShieldsTurn() {
+    final int direction;
+    if (isTapLeftDown && isTapRightDown) {
+      direction = _lastPressedDirection;
+    } else if (isTapLeftDown) {
+      direction = -1;
+    } else if (isTapRightDown) {
+      direction = 1;
     } else {
-      _updateShieldsRotationSpeed(0.0);
+      direction = 0;
     }
+    emit(state.copyWith(shieldsTurnDirection: direction));
   }
 
   KeyEventResult handleKeyEvent(
@@ -236,32 +245,11 @@ class GameCubit extends Cubit<GameState> {
     if (containsLeftArrow || containsRightArrow) {
       _guideInteracted();
     }
-    var rotationSpeed = 0.0;
-
-    if (containsLeftArrow && containsRightArrow) {
-      _updateShieldsRotationSpeed(0.0);
-      return KeyEventResult.handled;
-    }
-
-    if (!containsLeftArrow && !containsRightArrow) {
-      _updateShieldsRotationSpeed(0.0);
-      return KeyEventResult.handled;
-    }
-
-    if (containsLeftArrow) {
-      rotationSpeed -= _shieldAngleRotationAmount;
-    }
-
-    if (containsRightArrow) {
-      rotationSpeed += _shieldAngleRotationAmount;
-    }
-
-    if (rotationSpeed != 0) {
-      _updateShieldsRotationSpeed(rotationSpeed);
-      return KeyEventResult.handled;
-    }
-
-    return KeyEventResult.ignored;
+    final direction = containsLeftArrow == containsRightArrow
+        ? 0
+        : (containsLeftArrow ? -1 : 1);
+    emit(state.copyWith(shieldsTurnDirection: direction));
+    return KeyEventResult.handled;
   }
 
   void _playMotivationWord() {
@@ -280,17 +268,6 @@ class GameCubit extends Cubit<GameState> {
       ),
     );
     emit(state.copyWith(playMotivationWord: ValueWrapper.nullValue()));
-  }
-
-  void _updateShieldsRotationSpeed(double speed) {
-    emit(
-      state.copyWith(
-        shieldsAngleRotationSpeed: speed.clamp(
-          -_shieldAngleRotationAmount,
-          _shieldAngleRotationAmount,
-        ),
-      ),
-    );
   }
 
   void pauseGame({required bool manually}) {

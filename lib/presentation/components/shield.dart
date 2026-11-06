@@ -29,9 +29,12 @@ class Shield extends PositionComponent
   Shield({
     required this.type,
     this.shieldWidth = 6.0,
-    this.shieldSweep = pi / 2,
+    this.shieldSweep = defaultSweep,
     this.offset = 12,
   }) : super(position: Vector2.all(0), anchor: Anchor.center);
+
+  /// How much of the circle one shield covers (108°, it used to be 90°)
+  static const defaultSweep = pi * 0.6;
 
   final OrbType type;
   final double shieldWidth;
