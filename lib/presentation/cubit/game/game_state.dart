@@ -62,6 +62,17 @@ class GameState extends Equatable {
   double get difficulty =>
       GameConstants.difficultyInitialToPeakCurve.transform(difficultyLinear);
 
+  /// Between 0.0 and 1.0: how far past the peak the game is, see
+  /// [GameConstants.overdriveDuration]. 0 until [difficulty] reaches 1.
+  double get overdrive => min(
+    1.0,
+    max(
+      0.0,
+      (difficultyTimePassed - GameConstants.difficultyInitialToPeakDuration) /
+          GameConstants.overdriveDuration,
+    ),
+  );
+
   /// 0 -> When the game starts
   /// 1 -> From the first game mode change (multi spawn)
   /// 2 -> When the difficulty is in maximum
