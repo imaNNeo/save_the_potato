@@ -16,6 +16,18 @@ class AppUtils {
   static bool get isIOS =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
+  /// Firebase is only set up for Android and iOS. On web and desktop the game
+  /// runs offline, so Firebase calls must be skipped there.
+  static bool get isFirebaseSupported => isAndroid || isIOS;
+
+  /// Sends [error] to Crashlytics where Firebase is available.
+  static void recordError(Object error, StackTrace? stackTrace) {
+    if (!isFirebaseSupported) {
+      return;
+    }
+    FirebaseCrashlytics.instance.recordError(error, stackTrace);
+  }
+
   static String getHighScoreRepresentation(int highScoreMilliseconds) {
     final minutes = highScoreMilliseconds ~/ 60000;
     final seconds = (highScoreMilliseconds % 60000) ~/ 1000;
@@ -65,7 +77,7 @@ class AppUtils {
       );
     } catch (e) {
       debugPrint(e.toString());
-      FirebaseCrashlytics.instance.recordError(e, StackTrace.current);
+      recordError(e, StackTrace.current);
       rethrow;
     }
   }

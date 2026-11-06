@@ -120,6 +120,9 @@ class PotatoPose {
   void operator []=(PotatoProp prop, double value) =>
       _values[prop.index] = value;
 
+  /// Copies every value of [other] into this pose.
+  void copyFrom(PotatoPose other) => _values.setAll(0, other._values);
+
   /// Puts every value back to its [PotatoProp.rest] value.
   void reset() {
     for (final prop in PotatoProp.values) {

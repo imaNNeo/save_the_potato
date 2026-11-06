@@ -4,6 +4,7 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/hit_invincibility.dart';
 import 'package:save_the_potato/domain/potato_vibe.dart';
 import 'package:save_the_potato/presentation/components/hit_blink.dart';
@@ -17,6 +18,7 @@ import 'package:save_the_potato/presentation/potato/potato_face_component.dart';
 import 'package:save_the_potato/presentation/potato/potato_vibe_motion.dart';
 import 'package:save_the_potato/presentation/potato/music_notes.dart';
 import 'package:save_the_potato/presentation/rhythm/rhythm_hit.dart';
+import 'package:save_the_potato/presentation/potato/dizzy_face.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import '../potato_game.dart';
@@ -59,6 +61,9 @@ class Potato extends PositionComponent
   /// Keeps the beat when there's no song clock (menu, muted before a run)
   double _ownBeatTime = 0;
 
+  /// The dizzy face it makes while it recovers from a hit
+  final dizzy = DizzyFace();
+
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
       previousState.playingState != newState.playingState ||
@@ -78,6 +83,7 @@ class Potato extends PositionComponent
         vibe.reset();
         _musicNotes.clear();
       }
+      dizzy.reset();
     }
     if (_lastState?.playingState != state.playingState &&
         state.playingState is PlayingStateGameOver) {
@@ -120,7 +126,9 @@ class Potato extends PositionComponent
 
     add(
       HitBlink(invincibility: invincibility, size: size, position: size / 2)
-        ..add(PotatoFaceComponent(animator: face, position: size / 2)),
+        ..add(
+          PotatoFaceComponent(animator: face, dizzy: dizzy, position: size / 2),
+        ),
     );
     add(_musicNotes = MusicNotes(size: size, priority: 1));
     add(fireShield = Shield(type: OrbType.fire));
@@ -141,10 +149,8 @@ class Potato extends PositionComponent
     invincibility.update(dt);
     _updateVibe(dt);
     if (bloc.state.playingState.isPlaying) {
-      final rotationSpeed = bloc.state.shieldsAngleRotationSpeed;
-      if (rotationSpeed != 0) {
-        fireShield.angle += rotationSpeed * dt;
-      }
+      fireShield.angle +=
+          bloc.state.shieldsTurnDirection * GameConstants.shieldsTurnSpeed * dt;
     }
     iceShield.angle = fireShield.angle - pi;
   }
@@ -202,6 +208,7 @@ class Potato extends PositionComponent
     game.onOrbHit(angle);
     if (bloc.state.life > 0 && bloc.state.playingState.isPlaying) {
       invincibility.trigger();
+      dizzy.trigger();
     }
     vibe.onHit();
     // Knocked away from the side the orb came from

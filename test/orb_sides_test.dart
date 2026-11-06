@@ -40,6 +40,23 @@ void main() {
     }
     expect(visitedLeft && visitedRight, isTrue);
   });
+
+  test('in full overdrive the groups still fit under the shield and the '
+      'sides still turn gently', () {
+    for (var seed = 0; seed < 20; seed++) {
+      final sides = OrbSides(random: Random(seed))..reset();
+      var previous = sides.fireSideAt(0, 1, overdrive: 1);
+      for (var land = 0.25; land < 300; land += 0.25) {
+        final type = (land * 4).round().isEven ? OrbType.fire : OrbType.ice;
+        final angle = sides.angleFor(type, land, 1, overdrive: 1);
+        final fireSide = sides.fireSideAt(land, 1, overdrive: 1);
+        final shieldNeeded = type == OrbType.fire ? angle : angle + pi;
+        expect(gap(shieldNeeded, fireSide).abs(), lessThan(pi / 4));
+        expect((fireSide - previous).abs() / 0.25, lessThan(pi / 3));
+        previous = fireSide;
+      }
+    }
+  });
 }
 
 void harmonyTests() {

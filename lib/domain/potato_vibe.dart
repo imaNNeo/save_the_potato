@@ -24,8 +24,10 @@ class PotatoVibe {
   /// Share of the groove a hit keeps
   static const grooveKeptOnHit = 0.2;
 
-  /// Nerves lost per second (a hit takes about 2.5 seconds to shake off)
-  static const nervesFade = 0.4;
+  /// Nerves lost per second (a hit takes about 4 seconds to shake off).
+  /// The dizzy face covers the first 1.6 seconds, then the nervous look
+  /// shows while it calms down.
+  static const nervesFade = 0.25;
 
   /// Nerves each blocked note takes away, on top of [nervesFade]
   static const nervesPerNote = 0.08;

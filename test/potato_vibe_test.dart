@@ -62,9 +62,10 @@ void main() {
 
   test('it calms down by itself in a few seconds', () {
     final vibe = PotatoVibe()..onHit();
-    run(vibe, 1);
-    expect(vibe.nerves, greaterThan(0.4));
-    run(vibe, 2);
+    // Still clearly shaken once the dizzy face (1.6s) is over
+    run(vibe, 1.6);
+    expect(vibe.nerves, greaterThan(0.5));
+    run(vibe, 2.6);
     expect(vibe.nerves, 0);
   });
 

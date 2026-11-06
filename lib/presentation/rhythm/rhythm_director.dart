@@ -214,8 +214,10 @@ class RhythmDirector extends Component
     parent.player.fireShield.angle = need;
   }
 
-  double get _orbSpeed =>
-      const GameModeSingleSpawn().getSpawnOrbsMoveSpeed(bloc.state.difficulty);
+  double get _orbSpeed => const GameModeSingleSpawn().getSpawnOrbsMoveSpeed(
+    bloc.state.difficulty,
+    overdrive: _overdrive,
+  );
 
   double _flightTime(double speed, double radius) =>
       (radius - _contactDistance) / speed;
@@ -295,6 +297,9 @@ class RhythmDirector extends Component
 
   double get _difficulty => bloc.state.difficulty;
 
+  /// How far past the peak difficulty the run is (0 to 1)
+  double get _overdrive => bloc.state.overdrive;
+
   /// The difficulty each melody note of each phrase joins in at. The first
   /// note of each bar is always there. The other notes on a beat join one
   /// by one between [_beatNotesFrom] and [_beatNotesTo], then the notes
@@ -366,7 +371,7 @@ class RhythmDirector extends Component
   /// Picks where an orb comes from: fire orbs in one group, ice orbs in
   /// one group on the opposite side, see [OrbSides]
   double _pickAngle(OrbType type, double land) =>
-      _sides.angleFor(type, land, _difficulty);
+      _sides.angleFor(type, land, _difficulty, overdrive: _overdrive);
 
   /// Plans an orb, returns where it comes from (null if it was skipped)
   double? _add(
@@ -385,7 +390,10 @@ class RhythmDirector extends Component
       return null;
     }
     angle ??= _pickAngle(type, land);
-    final formDuration = RingRift.formDurationFor(_difficulty);
+    final formDuration = RingRift.formDurationFor(
+      _difficulty,
+      overdrive: _overdrive,
+    );
     _planned.add(
       _PlannedOrb(
         land: land,
@@ -459,7 +467,13 @@ class RhythmDirector extends Component
           land,
           type,
           speed,
-          angle: _sides.harmonyAngleFor(type, angle, land, _difficulty),
+          angle: _sides.harmonyAngleFor(
+            type,
+            angle,
+            land,
+            _difficulty,
+            overdrive: _overdrive,
+          ),
           hit: RhythmHit(
             timbre: timbre,
             midi: RhythmSongs.harmonyBelow(note.midi, bar) + octave,
