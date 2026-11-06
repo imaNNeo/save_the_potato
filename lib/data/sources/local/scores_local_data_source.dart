@@ -16,7 +16,18 @@ class ScoresLocalDataSource {
   Stream<ScoreEntity> getHighScoreStream() => _highScoreStreamController.stream;
 
   Future<ScoreEntity?> getHighScore() async {
-    final scoreJsonStr = await _keyValueStorage.getString(_highScoreKey);
+    final String? scoreJsonStr;
+    try {
+      scoreJsonStr = await _keyValueStorage.getString(_highScoreKey);
+    } on TypeError {
+      // Very old versions saved the high score as a plain int, which
+      // SharedPreferences (web and desktop) refuses to read back as a String.
+      final oldScore = await _keyValueStorage.getInt(_highScoreKey);
+      if (oldScore == null) {
+        return null;
+      }
+      return setHighScore(OfflineScoreEntity(score: oldScore));
+    }
     if (scoreJsonStr == null || scoreJsonStr.isEmpty) {
       return null;
     }

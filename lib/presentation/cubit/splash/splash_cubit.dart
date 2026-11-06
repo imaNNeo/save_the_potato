@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
@@ -57,7 +56,7 @@ class SplashCubit extends Cubit<SplashState> {
     try {
       await getIt.get<AudioHelper>().initialize();
     } catch (e) {
-      FirebaseCrashlytics.instance.recordError(e, StackTrace.current);
+      AppUtils.recordError(e, StackTrace.current);
     }
     await Future.delayed(const Duration(milliseconds: 1000));
 
