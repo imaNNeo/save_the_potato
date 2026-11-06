@@ -255,7 +255,7 @@ class _PotatoCover extends StatelessWidget {
       child: AnimatedOpacity(
         opacity: visible ? 1 : 0,
         duration: const Duration(milliseconds: 150),
-        child: Center(child: SplashPotato(size: size)),
+        child: Center(child: SplashPotato(size: size, intro: false)),
       ),
     );
   }

@@ -10,19 +10,17 @@ import 'package:save_the_potato/presentation/widgets/potato_initialize.dart';
 /// Where the potato sits and how big it is when the game shows it, so the
 /// splash can hand it over without a jump.
 abstract final class GamePotatoFrame {
-  /// The game draws the potato in a box this big, in world units.
-  static const double worldSize = 152;
+  /// The game potato's size in world units, see `Potato`
+  static const double worldSize = 100;
 
-  /// [SplashPotato] draws its potato bigger than its box by this much.
-  static const double _splashPotatoOverdraw = 1.45;
-
-  /// The game potato's box on a screen of [screen] size (it is centered).
+  /// The game potato on a screen of [screen] size (it is centered). The
+  /// camera fits the square view into the screen.
   static double screenSize(Size screen) =>
       worldSize * min(screen.width, screen.height) / GameConstants.viewSize;
 
   /// The [SplashPotato.size] that looks exactly like the game potato.
   static double splashPotatoSize(Size screen) =>
-      screenSize(screen) / _splashPotatoOverdraw;
+      SplashPotato.sizeForGamePotato(screenSize(screen));
 }
 
 /// The stars, exactly like the home screen shows them before the game starts,
@@ -158,12 +156,9 @@ class SplashStageState extends State<SplashStage>
               left: 0,
               right: 0,
               bottom: center.dy + fullSize * 0.85 + 8,
-              child: Opacity(
-                opacity: fade,
-                child: Transform.translate(
-                  offset: Offset(0, -40 * exit),
-                  child: _titleRow(t, idle),
-                ),
+              child: Transform.translate(
+                offset: Offset(0, -40 * exit),
+                child: _titleRow(t, idle, fade),
               ),
             ),
             Align(
@@ -181,12 +176,17 @@ class SplashStageState extends State<SplashStage>
 
   /// Letters drop in one after another with a bounce, colored from hot to
   /// cold, then gently wave.
-  Widget _titleRow(double t, double idle) {
+  Widget _titleRow(double t, double idle, double fade) {
     final letters = _title.split('');
     return ShaderMask(
       blendMode: BlendMode.srcIn,
       shaderCallback: (rect) => LinearGradient(
-        colors: [_fire[0], Colors.white, _ice[0]],
+        // Fades through the colors, an extra layer would stutter the exit
+        colors: [
+          _fire[0].withValues(alpha: fade),
+          Colors.white.withValues(alpha: fade),
+          _ice[0].withValues(alpha: fade),
+        ],
         stops: const [0.1, 0.5, 0.9],
       ).createShader(rect),
       child: Row(
