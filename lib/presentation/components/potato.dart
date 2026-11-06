@@ -13,6 +13,7 @@ import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato/potato_animator.dart';
+import 'package:save_the_potato/presentation/potato/headphones_hp.dart';
 import 'package:save_the_potato/presentation/potato/potato_face_component.dart';
 import 'package:save_the_potato/presentation/potato/potato_vibe_motion.dart';
 import 'package:save_the_potato/presentation/potato/music_notes.dart';
@@ -123,6 +124,9 @@ class Potato extends PositionComponent
         ..add(PotatoFaceComponent(animator: face, position: size / 2)),
     );
     add(_musicNotes = MusicNotes(size: size, priority: 1));
+    if (HeadphonesHpStyle.current != null) {
+      add(HeadphonesHp(style: HeadphonesHpStyle.current!));
+    }
     add(fireShield = Shield(type: OrbType.fire));
     add(iceShield = Shield(type: OrbType.ice));
 

@@ -749,8 +749,12 @@ abstract final class PotatoPainter {
         scaleY: 1 + 0.06 * pulse,
       );
     }
+    headphonesOverlay?.call(canvas, pose);
     canvas.restore();
   }
+
+  /// Prototype only: draws extra things on the headphones, in their frame
+  static void Function(Canvas canvas, PotatoPose pose)? headphonesOverlay;
 
   static final _band = Path()
     ..moveTo(100, 226)
