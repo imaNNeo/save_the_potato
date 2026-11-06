@@ -4,7 +4,7 @@ import 'package:flame/components.dart';
 import 'package:save_the_potato/domain/hit_invincibility.dart';
 
 /// Draws its children with the opacity of [invincibility], so whatever draws
-/// the potato (the Rive file today, code later) blinks while it's safe.
+/// the potato (the code-drawn face) blinks while it's safe.
 ///
 /// The shields aren't inside it, so they never blink.
 class HitBlink extends PositionComponent {

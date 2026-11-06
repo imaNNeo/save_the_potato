@@ -17,8 +17,6 @@ dependencies:
   flutter_bloc: ^9.1.1
   flame_bloc: ^1.12.24
   equatable: ^3.0.0
-  flame_rive: ^1.11.2
-  rive: ^0.14.11
   shared_preferences: ^2.5.6
   get_it: ^9.3.0
   flutter_animate: ^4.5.2
@@ -72,7 +70,6 @@ flutter:
     - assets/audio/
     - assets/audio/rhythm/
     - assets/audio/motivation/
-    - assets/rive/
     - assets/logo/
 
 flutter_launcher_icons:
