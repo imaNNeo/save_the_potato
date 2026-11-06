@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../presentation/cubit/game/game_mode.dart';
@@ -6,6 +8,10 @@ class GameConstants {
   static const double gameOverTimeScale = 0.1;
   static const showRetryAfterGameOverDelay = Duration(seconds: 3);
   static const showShieldLineAnimDuration = 2.0;
+
+  /// How fast (radians per second) holding a side turns the shields.
+  /// It used to be pi * 1.8, which felt too sensitive
+  static const shieldsTurnSpeed = pi * 1.2;
 
   /// It takes 8 minutes to reach the peak difficulty
   static const difficultyInitialToPeakDuration = 480.0;

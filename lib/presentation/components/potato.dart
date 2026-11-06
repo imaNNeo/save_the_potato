@@ -8,9 +8,8 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_rive/flame_rive.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:save_the_potato/domain/analytics_helper.dart';
-import 'package:save_the_potato/domain/shield_steering.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/components/guide_title.dart';
 import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
@@ -36,16 +35,6 @@ class Potato extends PositionComponent
       );
 
   late final Shield fireShield;
-
-  /// How holding a side turns the shields, on web `?steer=classic|ramp|steady`
-  /// picks another style to compare
-  final steering = ShieldSteering(
-    style:
-        (kIsWeb
-            ? ShieldSteeringStyle.tryParse(Uri.base.queryParameters['steer'])
-            : null) ??
-        ShieldSteering.defaultStyle,
-  );
   late final Shield iceShield;
 
   double get radius => size.x / 2;
@@ -162,10 +151,8 @@ class Potato extends PositionComponent
   void update(double dt) {
     super.update(dt);
     if (bloc.state.playingState.isPlaying) {
-      steering.direction = bloc.state.shieldsTurnDirection;
-      fireShield.angle += steering.update(dt);
-    } else {
-      steering.reset();
+      fireShield.angle +=
+          bloc.state.shieldsTurnDirection * GameConstants.shieldsTurnSpeed * dt;
     }
     iceShield.angle = fireShield.angle - pi;
   }
