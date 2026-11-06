@@ -233,19 +233,19 @@ class RecoveryFace {
     // Spiral eyes
     for (final (eye, dir) in [(_leftEye, 1.0), (_rightEye, -1.0)]) {
       final path = Path();
-      const turns = 1.5;
+      const turns = 1.25;
       const steps = 60;
       final spin = _t * 2 * pi * 1.8 * dir;
       for (var i = 0; i <= steps; i++) {
         final f = i / steps;
         final a = spin + f * turns * 2 * pi * dir;
-        final r = 3 + f * 25;
+        final r = 2 + f * 19;
         final pt = eye + Offset(cos(a), sin(a)) * r;
         i == 0 ? path.moveTo(pt.dx, pt.dy) : path.lineTo(pt.dx, pt.dy);
       }
       _stroke
         ..color = Color.fromRGBO(255, 255, 255, e)
-        ..strokeWidth = 10;
+        ..strokeWidth = 9;
       canvas.drawPath(path, _stroke);
     }
     // Wobbly mouth
