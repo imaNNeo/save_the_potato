@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:save_the_potato/data/key_value_storage.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
@@ -108,7 +107,7 @@ class FirebaseFunctionsWrapper {
         try {
           parameters['token'] = await _getAuthToken();
         } catch (e, stackTrace) {
-          FirebaseCrashlytics.instance.recordError(e, stackTrace);
+          AppUtils.recordError(e, stackTrace);
           debugPrint('Error getting auth token: $e');
         }
       }

@@ -26,7 +26,7 @@ final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (AppUtils.isAndroid || AppUtils.isIOS) {
+  if (AppUtils.isFirebaseSupported) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
