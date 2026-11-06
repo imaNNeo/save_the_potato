@@ -105,7 +105,7 @@ class PotatoVibeMotion {
     // While shaken they stay a bit crooked
     final crooked = 0.12 * _smoothstep(0.3, 0.9, nerves) * _tilt.sign;
     pose[PotatoProp.headphonesTilt] = _tilt + crooked;
-    pose[PotatoProp.headphonesPulse] = nod * (0.3 + 0.7 * dance) + 0.5 * kick;
+    pose[PotatoProp.headphonesPulse] = nod * (0.3 + 0.7 * dance) + 0.9 * kick;
   }
 
   static double _approach(double from, double to, double step) =>
