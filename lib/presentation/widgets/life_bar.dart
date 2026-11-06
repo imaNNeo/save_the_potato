@@ -8,7 +8,8 @@ import 'package:save_the_potato/domain/life_meter.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
 /// The life bar under the timer (see [LifeMeter]), drawn by
-/// `shaders/life_bar.frag`.
+/// `shaders/life_bar.frag`, with a beating heart at its start so it reads as
+/// health at a glance (and can't be mixed up with a progress bar).
 ///
 /// It fills with every block and its color climbs through the stages, it
 /// shines and plays a note when a new stage is reached. On a miss the lost
@@ -185,7 +186,7 @@ class _LifeBarPainter extends CustomPainter {
     canvas.scale(scale);
     canvas.translate(-size.width / 2, -size.height / 2);
 
-    final bar = Rect.fromLTWH(24, 19, size.width - 48, 22);
+    final bar = Rect.fromLTWH(46, 19, size.width - 62, 22);
     final shader = this.shader;
     if (shader == null) {
       _paintFallback(canvas, bar);
@@ -214,8 +215,98 @@ class _LifeBarPainter extends CustomPainter {
       _paint.shader = shader;
       canvas.drawRect(Offset.zero & size, _paint);
     }
+    _paintHeart(canvas, Offset(bar.left - 13, bar.center.dy));
     canvas.restore();
   }
+
+  static const _heartRed = Color(0xFFFF2F4A);
+  static const _heartDark = Color(0xFFB0102A);
+
+  /// The heart at the start of the bar. It beats, faster and stronger in
+  /// danger, pops on a block and flashes white on a miss.
+  void _paintHeart(Canvas canvas, Offset center) {
+    final alpha = look.opacity;
+    final beatPeriod = 1.1 - 0.6 * look.danger;
+    final phase = (look.time / beatPeriod) % 1.0;
+    // A "lub-dub" double thump
+    final thump = max(
+      exp(-pow((phase - 0.05) / 0.06, 2).toDouble()),
+      0.6 * exp(-pow((phase - 0.25) / 0.06, 2).toDouble()),
+    );
+    final scale =
+        1 +
+        thump * (0.06 + 0.1 * look.danger) +
+        0.18 * look.flash +
+        0.25 * look.levelUp * look.levelUp;
+    const radius = 15.0;
+    final s = radius * scale;
+
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+
+    // A soft glow, stronger while beating in danger
+    final glow = (0.35 + 0.4 * thump * look.danger + 0.5 * look.hit) * alpha;
+    canvas.drawCircle(
+      Offset.zero,
+      s * 1.9,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            _heartRed.withValues(alpha: 0.55 * glow),
+            _heartRed.withValues(alpha: 0),
+          ],
+        ).createShader(Rect.fromCircle(center: Offset.zero, radius: s * 1.9)),
+    );
+
+    final heart = _heartPath(s);
+    // Dark outline so it sits on top of the bar's start
+    canvas.drawPath(
+      heart,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4
+        ..strokeJoin = StrokeJoin.round
+        ..color = const Color(0xFF0B0B10).withValues(alpha: 0.9 * alpha),
+    );
+    canvas.drawPath(
+      heart,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.lerp(_heartRed, Colors.white, 0.15)!.withValues(alpha: alpha),
+            _heartDark.withValues(alpha: alpha),
+          ],
+        ).createShader(Rect.fromCircle(center: Offset.zero, radius: s)),
+    );
+    // Shine on the upper left lobe
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(-s * 0.45, -s * 0.45),
+        width: s * 0.5,
+        height: s * 0.32,
+      ),
+      Paint()..color = Colors.white.withValues(alpha: 0.6 * alpha),
+    );
+    // White flash on a miss
+    if (look.hit > 0.01) {
+      canvas.drawPath(
+        heart,
+        Paint()
+          ..color = Colors.white.withValues(alpha: look.hit * 0.85 * alpha),
+      );
+    }
+    canvas.restore();
+  }
+
+  static Path _heartPath(double s) => Path()
+    ..moveTo(0, s * 0.85)
+    ..cubicTo(-s * 0.25, s * 0.6, -s * 1.0, s * 0.15, -s * 1.0, -s * 0.3)
+    ..cubicTo(-s * 1.0, -s * 0.8, -s * 0.35, -s * 1.0, 0, -s * 0.5)
+    ..cubicTo(s * 0.35, -s * 1.0, s * 1.0, -s * 0.8, s * 1.0, -s * 0.3)
+    ..cubicTo(s * 1.0, s * 0.15, s * 0.25, s * 0.6, 0, s * 0.85)
+    ..close();
 
   void _paintFallback(Canvas canvas, Rect bar) {
     final radius = Radius.circular(bar.height / 2);
