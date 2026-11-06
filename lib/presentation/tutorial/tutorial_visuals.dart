@@ -11,6 +11,7 @@ double _clamp01(double x) => x.clamp(0.0, 1.0);
 
 const _missColor = Color(0xFFFF3B4E);
 const _white = Color(0xFFFFFFFF);
+const _good = Color(0xFF6BFFA8);
 
 /// A ring of dots around the potato, one for each orb the player has to
 /// block. Each block fills one, a hit shakes them red, and when all are
@@ -20,7 +21,7 @@ class TutorialProgressDots extends PositionComponent {
 
   final int count;
 
-  static const _radius = 104.0;
+  static const _radius = 122.0;
   static const _dotRadius = 5.5;
 
   final _fills = <double>[];
@@ -166,6 +167,11 @@ class GhostShield extends PositionComponent {
   double _visible = 0;
   double _target = 0;
   double _lock = 0;
+  bool _wasLocked = false;
+  double _lockAge = 1;
+
+  /// Called when the shield reaches the ghost
+  VoidCallback? onLocked;
   double _miss = 0;
   double _success = -1;
   double _time = 0;
@@ -230,7 +236,15 @@ class GhostShield extends PositionComponent {
         _visible = 0;
       }
     }
-    _lock += ((locked ? 1.0 : 0.0) - _lock) * min(1, dt * 12);
+    if (locked != _wasLocked) {
+      _wasLocked = locked;
+      _lockAge = 0;
+      if (locked && _target > 0) {
+        onLocked?.call();
+      }
+    }
+    _lockAge += dt;
+    _lock += ((locked ? 1.0 : 0.0) - _lock) * min(1, dt * 14);
     _dim += (slowMo - _dim) * min(1, dt * 10);
   }
 
@@ -284,7 +298,7 @@ class GhostShield extends PositionComponent {
         ..strokeWidth = 16
         ..blendMode = BlendMode.plus
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6)
-        ..color = Color.lerp(color, _white, _lock * 0.5)!.withValues(
+        ..color = Color.lerp(color, _good, _lock * 0.7)!.withValues(
           alpha: _clamp01(_visible * (0.25 + 0.25 * pulse + 0.4 * _lock)),
         ),
     );
@@ -296,61 +310,123 @@ class GhostShield extends PositionComponent {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 6
-      ..color = Color.lerp(
-        color,
-        _white,
-        0.35 + _lock * 0.5,
-      )!.withValues(alpha: _clamp01(_visible * (0.65 + 0.35 * pulse)));
+      ..color = Color.lerp(Color.lerp(color, _white, 0.35)!, _good, _lock)!
+          .withValues(
+            alpha: _clamp01(
+              _visible * (0.65 + 0.35 * (_lock > 0.5 ? 1 : pulse)),
+            ),
+          );
     for (var i = 0; i < dashes; i++) {
       canvas.drawArc(arc, start + i * each + gap / 2, each - gap, false, line);
     }
     if (_lock < 0.5) {
       _renderArrows(canvas, color);
     }
+    _renderTick(canvas);
   }
 
-  /// Small chevrons running around the potato from the shield to the ghost
+  /// Chevrons running around the potato, on a track just outside the
+  /// shields, from the shield to the ghost. Always at least three, so the
+  /// way to turn is clear even when the shield is close.
   void _renderArrows(Canvas canvas, Color color) {
     var delta = (_angle - from + pi) % (2 * pi);
     if (delta < 0) {
       delta += 2 * pi;
     }
     delta -= pi;
-    final span = delta.abs() - _sweep / 2;
-    if (span < 0.15) {
+    final span = delta.abs();
+    if (span < 0.05) {
       return;
     }
     final dir = delta.sign;
-    const step = 0.32;
-    final shift = (_time * 1.6) % 1.0;
+    final count = max(3, (span / 0.3).round());
+    final step = span / count;
+    final shift = (_time * 1.4) % 1.0;
+    const r = _radius + 18;
+    final tint = Color.lerp(color, _white, 0.55)!;
+    final glow = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = 9
+      ..blendMode = BlendMode.plus
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = 3;
-    const r = _radius + 16;
-    for (var k = 0.0; k < span / step; k++) {
+      ..strokeWidth = 4.5;
+    for (var k = 0; k <= count; k++) {
       final along = (k + shift) * step;
       if (along > span) {
         break;
       }
       final a = from + dir * along;
-      final fade = sin(_clamp01(along / span) * pi);
-      paint.color = Color.lerp(
-        color,
-        _white,
-        0.5,
-      )!.withValues(alpha: _clamp01(_visible * fade * 0.9));
+      // Bright in the middle of the run, never fully gone at the ends
+      final fade = 0.45 + 0.55 * sin(_clamp01(along / span) * pi);
+      final alpha = _clamp01(_visible * fade);
       final tip = Offset(cos(a), sin(a)) * r;
       final tangent = Offset(-sin(a), cos(a)) * dir;
       final normal = Offset(cos(a), sin(a));
-      final back = tip - tangent * 7;
-      canvas.drawPath(
+      final back = tip - tangent * 10;
+      final path = Path()
+        ..moveTo(back.dx + normal.dx * 8, back.dy + normal.dy * 8)
+        ..lineTo(tip.dx, tip.dy)
+        ..lineTo(back.dx - normal.dx * 8, back.dy - normal.dy * 8);
+      glow.color = color.withValues(alpha: alpha * 0.6);
+      paint.color = tint.withValues(alpha: alpha);
+      canvas
+        ..drawPath(path, glow)
+        ..drawPath(path, paint);
+    }
+  }
+
+  /// A tick just outside the ghost, popping in when the shield is in place
+  void _renderTick(Canvas canvas) {
+    if (_lock < 0.02) {
+      return;
+    }
+    final pop = _lockAge < 0.35 ? 1 + sin(_lockAge / 0.35 * pi) * 0.45 : 1.0;
+    final size = 13.0 * _lock * pop;
+    final c = Offset(cos(_angle), sin(_angle)) * (_radius + 26);
+    final alpha = _clamp01(_visible * _lock);
+    canvas
+      ..drawCircle(
+        c,
+        size * 1.6,
+        Paint()
+          ..blendMode = BlendMode.plus
+          ..shader = ui.Gradient.radial(c, size * 1.6, [
+            _good.withValues(alpha: alpha * 0.55),
+            _good.withValues(alpha: 0),
+          ]),
+      )
+      ..drawCircle(c, size, Paint()..color = _good.withValues(alpha: alpha))
+      ..drawPath(
         Path()
-          ..moveTo(back.dx + normal.dx * 5, back.dy + normal.dy * 5)
-          ..lineTo(tip.dx, tip.dy)
-          ..lineTo(back.dx - normal.dx * 5, back.dy - normal.dy * 5),
-        paint,
+          ..moveTo(c.dx - size * 0.45, c.dy + size * 0.02)
+          ..lineTo(c.dx - size * 0.12, c.dy + size * 0.35)
+          ..lineTo(c.dx + size * 0.48, c.dy - size * 0.32),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..strokeWidth = max(1, size * 0.24)
+          ..color = const Color(0xFF0B2A18).withValues(alpha: alpha),
+      );
+    // A ring that runs out along the ghost the moment it locks
+    if (_lockAge < 0.4) {
+      final t = _lockAge / 0.4;
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset.zero, radius: _radius + 4 + t * 18),
+        _angle - _sweep / 2,
+        _sweep,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = 4 * (1 - t) + 0.5
+          ..color = _good.withValues(alpha: _clamp01((1 - t) * _visible)),
       );
     }
   }

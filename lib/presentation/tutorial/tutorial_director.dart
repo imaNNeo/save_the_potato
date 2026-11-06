@@ -79,6 +79,8 @@ class TutorialDirector extends Component
   Future<void> onLoad() async {
     await parent.add(dots = TutorialProgressDots(count: blocksToFinish));
     await parent.add(ghost = GhostShield());
+    // A soft high note when the shield reaches the right spot
+    ghost.onLocked = () => _audio.playNote('ice', 88, volume: 0.45);
   }
 
   @override
