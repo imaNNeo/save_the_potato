@@ -36,6 +36,15 @@ class MusicNotes extends PositionComponent {
     ..style = PaintingStyle.stroke;
   int _next = 0;
 
+  /// Prototype: when set, every note flies into this point (in this
+  /// component's coordinates) instead of floating away, and [onHome] is
+  /// called when it gets there.
+  Offset Function()? homing;
+  void Function()? onHome;
+
+  /// How long a homing note takes to reach its target
+  static const _homeTime = 0.55;
+
   /// Where the ear cups are, as a share of [size] from the center
   static const _cupX = 0.48;
 
@@ -80,6 +89,27 @@ class MusicNotes extends PositionComponent {
     for (final note in _notes) {
       if (!note.alive) continue;
       note.age += dt;
+      final target = homing;
+      if (target != null) {
+        if (note.age >= _homeTime) {
+          note.alive = false;
+          onHome?.call();
+          continue;
+        }
+        // Pop out of the cup, then curve into the target
+        final t = note.age / _homeTime;
+        final to = target();
+        final k = t * t * (3 - 2 * t);
+        final outX = note.cupX + (note.cupX - size.x / 2) * 0.5;
+        final outY = note.cupY - 14;
+        final ax = note.cupX + (outX - note.cupX) * k;
+        final ay = note.cupY + (outY - note.cupY) * k;
+        final bx = outX + (to.dx - outX) * k;
+        final by = outY + (to.dy - outY) * k;
+        note.x = ax + (bx - ax) * k;
+        note.y = ay + (by - ay) * k;
+        continue;
+      }
       if (note.age >= _life) {
         note.alive = false;
         continue;
@@ -95,9 +125,14 @@ class MusicNotes extends PositionComponent {
   void render(Canvas canvas) {
     for (final note in _notes) {
       if (!note.alive) continue;
-      final t = note.age / _life;
+      final homingNote = homing != null;
+      final t = homingNote ? 0.0 : note.age / _life;
       final opacity = (1 - t * t * t) * note.strength;
-      final scale = (1.5 + 0.7 * note.strength) * _pop(note.age / _popTime);
+      final shrink = homingNote
+          ? 1 - 0.55 * pow(note.age / _homeTime, 2).toDouble()
+          : 1.0;
+      final scale =
+          (1.5 + 0.7 * note.strength) * _pop(note.age / _popTime) * shrink;
       final colors = note.fire
           ? GameConstants.redColors
           : GameConstants.blueColors;

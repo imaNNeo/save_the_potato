@@ -125,7 +125,13 @@ class Potato extends PositionComponent
     );
     add(_musicNotes = MusicNotes(size: size, priority: 1));
     if (HeadphonesHpStyle.current != null) {
-      add(HeadphonesHp(style: HeadphonesHpStyle.current!));
+      final hp = HeadphonesHp(style: HeadphonesHpStyle.current!);
+      add(hp);
+      if (hp.style.feedsOnNotes) {
+        _musicNotes
+          ..homing = hp.feedTarget
+          ..onHome = hp.feed;
+      }
     }
     add(fireShield = Shield(type: OrbType.fire));
     add(iceShield = Shield(type: OrbType.ice));

@@ -20,7 +20,17 @@ enum HeadphonesHpStyle {
   waves,
 
   /// The headband itself lights up from both cups toward the top
-  band;
+  band,
+
+  /// Three smaller notes on the headband, and the notes that pop out when
+  /// you block fly into them and fill them up
+  collect,
+
+  /// One note on top of the headband that the block notes fill up
+  one;
+
+  /// The block notes fly into the life instead of floating away
+  bool get feedsOnNotes => this == collect || this == one;
 
   static final HeadphonesHpStyle? current = () {
     if (!kIsWeb) return null;
@@ -64,6 +74,13 @@ class HeadphonesHp extends Component
   double _hit = 0;
   double _flash = 0;
   double _danger = 0;
+
+  /// How much life the block notes have actually brought in so far: the
+  /// notes fill up when a block note lands, not when the orb is blocked
+  double _fed = LifeMeter.start;
+  double _feedTimeout = 0;
+  double _gulp = 0;
+  int _gulpIndex = 0;
   final _flying = <_Flying>[];
   final _rnd = Random(7);
 
@@ -92,7 +109,7 @@ class HeadphonesHp extends Component
     if (!state.playingState.isPlaying &&
         !state.playingState.isPaused &&
         !state.playingState.isGameOver) {
-      _life = _shown = value;
+      _life = _shown = _fed = value;
       _ghostAlpha = 0;
       return;
     }
@@ -101,8 +118,14 @@ class HeadphonesHp extends Component
       _ghost = _shown;
       _ghostAlpha = 1;
       _hit = 1;
+      _fed = value;
     } else if (value > _life) {
-      _flash = 1;
+      if (style.feedsOnNotes) {
+        _feedTimeout = 1.2;
+      } else {
+        _flash = 1;
+        _fed = value;
+      }
     }
     _life = value;
   }
@@ -111,11 +134,17 @@ class HeadphonesHp extends Component
   void update(double dt) {
     super.update(dt);
     _time += dt;
-    if (_life < _shown) {
-      _shown = _life;
-    } else {
-      _shown += (_life - _shown) * (1 - exp(-8 * dt));
+    if (_feedTimeout > 0) {
+      _feedTimeout -= dt;
+      if (_feedTimeout <= 0) _fed = _life;
     }
+    final target = min(_life, _fed);
+    if (target < _shown) {
+      _shown = target;
+    } else {
+      _shown += (target - _shown) * (1 - exp(-10 * dt));
+    }
+    _gulp *= exp(-6 * dt);
     _ghostAlpha = max(0, _ghostAlpha - dt * 1.4);
     _hit *= exp(-3 * dt);
     _flash *= exp(-5 * dt);
@@ -139,7 +168,17 @@ class HeadphonesHp extends Component
       (_shown * count - 1e-6).floor().clamp(0, count - 1);
 
   void _onLost(double from, double to) {
-    if (style != HeadphonesHpStyle.notes) return;
+    if (style == HeadphonesHpStyle.one) {
+      final (p, _) = _noteSpot(1);
+      for (final side in [-1.0, 1.0]) {
+        _flying.add(_Flying(p, Offset(side * 150, -220), side * 5, _gold));
+      }
+      return;
+    }
+    if (style != HeadphonesHpStyle.notes &&
+        style != HeadphonesHpStyle.collect) {
+      return;
+    }
     for (var i = 0; i < 3; i++) {
       if (_part(i, 3, from) - _part(i, 3, to) > 0.05) {
         final (p, _) = _noteSpot(i);
@@ -167,6 +206,10 @@ class HeadphonesHp extends Component
         _paintWaves(canvas, on, pulse);
       case HeadphonesHpStyle.band:
         _paintBand(canvas, on, pulse);
+      case HeadphonesHpStyle.collect:
+        _paintNotes(canvas, on, pulse, size: 1.3);
+      case HeadphonesHpStyle.one:
+        _paintOne(canvas, on, pulse);
     }
   }
 
@@ -276,7 +319,59 @@ class HeadphonesHp extends Component
     canvas.restore();
   }
 
-  void _paintNotes(Canvas canvas, double on, double pulse) {
+  /// Where the next block note should fly to, in the potato's coordinates
+  Offset feedTarget() {
+    final i = style == HeadphonesHpStyle.one
+        ? 1
+        : (min(_life, _fed) * 3 - 1e-6).floor().clamp(0, 2);
+    final (p, lean) = _noteSpot(i);
+    final mid = p + Offset(sin(lean) * 30 + 8, -cos(lean) * 30);
+    // The face is drawn in a 152 box centered on the 100 potato
+    const scale = 152 / PotatoPainter.artboardSize;
+    return Offset(-26 + mid.dx * scale, -26 + mid.dy * scale);
+  }
+
+  /// A block note has landed in the life notes
+  void feed() {
+    _gulpIndex = (min(_life, _fed) * 3 - 1e-6).floor().clamp(0, 2);
+    _fed = _life;
+    _flash = 1;
+    _gulp = 1;
+    _feedTimeout = 0;
+  }
+
+  void _paintOne(Canvas canvas, double on, double pulse) {
+    final (p, _) = _noteSpot(1);
+    final shake = sin(_time * 40) * 0.08 * _danger;
+    _drawNote(
+      canvas,
+      p + const Offset(0, -6),
+      shake + sin(_time * 3) * 0.05,
+      2.0 * (1 + 0.06 * pulse + 0.18 * _gulp),
+      _shown,
+      Color.lerp(const Color(0xFFFF3A3A), _gold, (_shown * 2).clamp(0, 1))!,
+      on,
+      last: true,
+    );
+    for (final fl in _flying) {
+      _drawNote(
+        canvas,
+        fl.pos,
+        fl.angle,
+        1.0,
+        1,
+        Color.lerp(fl.color, const Color(0xFF777777), 1 - fl.life)!,
+        on * fl.life.clamp(0, 1),
+      );
+    }
+  }
+
+  void _paintNotes(
+    Canvas canvas,
+    double on,
+    double pulse, {
+    double size = 1.7,
+  }) {
     final last = _lastIndex(3);
     for (var i = 0; i < 3; i++) {
       final (p, lean) = _noteSpot(i);
@@ -288,7 +383,13 @@ class HeadphonesHp extends Component
         canvas,
         p,
         lean + shake + sin(_time * 3 + i) * 0.06,
-        1.7 * (1 + bop + 0.12 * _flash * (f > 0 ? 1 : 0)) * (0.8 + 0.2 * f),
+        size *
+            (1 +
+                bop +
+                (style.feedsOnNotes
+                    ? 0.3 * _gulp * (i == _gulpIndex ? 1 : 0)
+                    : 0.12 * _flash * (f > 0 ? 1 : 0))) *
+            (0.8 + 0.2 * f),
         f,
         _noteColors[i],
         on,
@@ -300,7 +401,7 @@ class HeadphonesHp extends Component
         canvas,
         fl.pos,
         fl.angle,
-        1.7,
+        size,
         1,
         Color.lerp(fl.color, const Color(0xFF777777), 1 - fl.life)!,
         on * fl.life.clamp(0, 1),
