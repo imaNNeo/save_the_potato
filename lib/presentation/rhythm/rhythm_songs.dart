@@ -275,23 +275,24 @@ class RhythmSongs {
 /// section changes how many melody notes come as orbs, how many orbs come
 /// together for a note, and what the backing plays.
 enum SongSection {
-  /// The groove: the notes the difficulty allows, plus a few more on the
-  /// beat. The first note of every bar comes as a fire and ice pair.
-  verse(notesAhead: 0.08, pairsUpToTier: 0, triads: false),
+  /// The groove: the notes the difficulty allows. The first note of every
+  /// bar brings a pair orb of the other kind.
+  verse(notesAhead: 0, pairs: true, midBarPairs: false, triads: false),
 
-  /// Busier and louder: a little more of the melody plays, every note on a
-  /// beat brings a pair from the opposite side, every other bar opens with
-  /// a harmony orb too, and the 16th hats join in. It looks busy, but the
-  /// extra orbs land with their note and need no extra move.
-  chorus(notesAhead: 0.15, pairsUpToTier: 1, triads: true),
+  /// Busier and louder: a little more of the melody plays, the notes on the
+  /// first and third beat of a bar bring a pair orb, the chord changes
+  /// bring a harmony orb too, and the 16th hats join in. It looks busy,
+  /// but the extra orbs need no extra move.
+  chorus(notesAhead: 0.08, pairs: true, midBarPairs: true, triads: true),
 
   /// A breather: the drums drop out and only the first note of each bar
   /// comes, one orb at a time
-  breather(notesAhead: -1, pairsUpToTier: -1, triads: false);
+  breather(notesAhead: -1, pairs: false, midBarPairs: false, triads: false);
 
   const SongSection({
     required this.notesAhead,
-    required this.pairsUpToTier,
+    required this.pairs,
+    required this.midBarPairs,
     required this.triads,
   });
 
@@ -301,13 +302,16 @@ enum SongSection {
   /// plays.
   final double notesAhead;
 
-  /// Notes of this [MelodyNote.tier] or lower bring a pair orb of the other
-  /// kind from the opposite side, which the other end of the shield blocks
-  /// on its own
-  final int pairsUpToTier;
+  /// Whether the first note of each bar brings a pair orb of the other kind
+  /// from the opposite side, half a beat later, which the other end of the
+  /// shield blocks on its own
+  final bool pairs;
 
-  /// Whether the first note of every other bar also brings a harmony orb
-  /// next to it
+  /// Whether the note on the third beat of a bar brings a pair too
+  final bool midBarPairs;
+
+  /// Whether the first note of a chord change (bar 1 and 5 of the 8)
+  /// brings a harmony orb next to it
   final bool triads;
 
   /// Backing stems that drop out in this section

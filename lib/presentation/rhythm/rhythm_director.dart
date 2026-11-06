@@ -333,20 +333,26 @@ class RhythmDirector extends Component
   /// beat of each bar keeps its pair orb, and the harmony orbs stop
   static const _companionsFadeFrom = 0.45;
 
-  /// The orbs that land together with [note]: a pair of the other kind
-  /// from the opposite side, and on the first beat of every other bar of
-  /// the chorus a harmony orb next to it. They make a chord when blocked.
+  /// The orbs that come with [note]: a pair of the other kind from the
+  /// opposite side half a beat later, and at the chord changes of the
+  /// chorus a harmony orb next to it. Together they play a little riff.
   ({bool pair, bool harmony}) _companionsOf(
+    MelodyPhrase phrase,
     MelodyNote note,
     SongSection section,
   ) {
     final calm = _difficulty < _companionsFadeFrom;
-    final maxTier = calm
-        ? section.pairsUpToTier
-        : min(0, section.pairsUpToTier);
+    final onPairBeat =
+        note.beat == 0 || (calm && section.midBarPairs && note.beat == 2);
+    // The pair takes the half beat after its note, so it never sounds at
+    // the same time as a note of the other kind. If the melody has a note
+    // there, the pair stays out.
+    final slotTaken = phrase.notes.any(
+      (n) => n.bar == note.bar && n.beat == note.beat + 0.5,
+    );
     return (
-      pair: note.tier <= maxTier,
-      harmony: calm && section.triads && note.tier == 0 && note.bar.isEven,
+      pair: section.pairs && onPairBeat && !slotTaken,
+      harmony: calm && section.triads && note.beat == 0 && note.bar % 4 == 0,
     );
   }
 
@@ -440,7 +446,7 @@ class RhythmDirector extends Component
       if (angle == null) {
         continue;
       }
-      final companions = _companionsOf(note, section);
+      final companions = _companionsOf(phrase, note, section);
       if (companions.harmony) {
         _add(
           land,
@@ -457,10 +463,13 @@ class RhythmDirector extends Component
         );
       }
       if (companions.pair) {
-        // The other end of the shield points right at it
+        // From right behind the melody orb, so the shield doesn't have to
+        // move: its other end points at it. It lands half a beat later, so
+        // the two notes sound one after the other.
+        final pairLand = land + RhythmSongs.beatSeconds / 2;
         final jitter = (_pairRandom.nextDouble() * 2 - 1) * _pairJitter;
         _add(
-          land,
+          pairLand,
           ice ? OrbType.fire : OrbType.ice,
           speed,
           angle: angle + pi + jitter,
@@ -470,7 +479,7 @@ class RhythmDirector extends Component
             midi: ice
                 ? RhythmSongs.rootFrom(46, bar)
                 : RhythmSongs.rootFrom(74, bar),
-            land: land,
+            land: pairLand,
             volume: 0.6,
             companion: true,
           ),
