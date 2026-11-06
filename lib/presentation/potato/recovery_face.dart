@@ -233,19 +233,19 @@ class RecoveryFace {
     // Spiral eyes
     for (final (eye, dir) in [(_leftEye, 1.0), (_rightEye, -1.0)]) {
       final path = Path();
-      const turns = 2.6;
+      const turns = 1.5;
       const steps = 60;
       final spin = _t * 2 * pi * 1.8 * dir;
       for (var i = 0; i <= steps; i++) {
         final f = i / steps;
         final a = spin + f * turns * 2 * pi * dir;
-        final r = 2 + f * 24;
+        final r = 3 + f * 25;
         final pt = eye + Offset(cos(a), sin(a)) * r;
         i == 0 ? path.moveTo(pt.dx, pt.dy) : path.lineTo(pt.dx, pt.dy);
       }
       _stroke
-        ..color = Color.fromRGBO(255, 248, 230, e)
-        ..strokeWidth = 4.5;
+        ..color = Color.fromRGBO(255, 255, 255, e)
+        ..strokeWidth = 10;
       canvas.drawPath(path, _stroke);
     }
     // Wobbly mouth
@@ -278,7 +278,7 @@ class RecoveryFace {
     final happy = _smooth(1.1, 1.2, t) * (1 - _smooth(1.42, 1.52, t));
     _stroke
       ..color = _ink.withValues(alpha: e)
-      ..strokeWidth = 9;
+      ..strokeWidth = 10;
     // > <  squeezed eyes
     if (leftOpen < 1) {
       _chevron(canvas, _leftEye, 1, 1 - leftOpen);
@@ -380,7 +380,7 @@ class RecoveryFace {
     if (squeeze > 0) {
       _stroke
         ..color = _ink.withValues(alpha: e * squeeze)
-        ..strokeWidth = 9;
+        ..strokeWidth = 10;
       _chevron(canvas, _leftEye, 1, 1);
       _chevron(canvas, _rightEye, -1, 1);
     }
