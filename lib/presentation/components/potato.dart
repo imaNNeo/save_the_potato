@@ -5,6 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/hit_invincibility.dart';
+import 'package:save_the_potato/domain/potato_vibe.dart';
 import 'package:save_the_potato/presentation/components/hit_blink.dart';
 import 'package:save_the_potato/presentation/components/guide_title.dart';
 import 'package:save_the_potato/presentation/components/shield.dart';
@@ -13,6 +14,9 @@ import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato/potato_animator.dart';
 import 'package:save_the_potato/presentation/potato/potato_face_component.dart';
+import 'package:save_the_potato/presentation/potato/potato_vibe_motion.dart';
+import 'package:save_the_potato/presentation/potato/music_notes.dart';
+import 'package:save_the_potato/presentation/rhythm/rhythm_hit.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import '../potato_game.dart';
@@ -46,6 +50,15 @@ class Potato extends PositionComponent
   /// After a hit, the potato blinks and orbs can't hurt it for a moment
   final invincibility = HitInvincibility();
 
+  /// How much the potato enjoys the music the shields play, and how shaken
+  /// it is by orbs that get through
+  final vibe = PotatoVibe();
+  late final _vibeMotion = PotatoVibeMotion(vibe);
+  late final MusicNotes _musicNotes;
+
+  /// Keeps the beat when there's no song clock (menu, muted before a run)
+  double _ownBeatTime = 0;
+
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
       previousState.playingState != newState.playingState ||
@@ -58,6 +71,13 @@ class Potato extends PositionComponent
     if (_lastState?.playingState != state.playingState) {
       // A new run or the end of one, nothing to protect anymore
       invincibility.reset();
+      final wasInRun =
+          _lastState?.playingState.isPlaying == true ||
+          _lastState?.playingState.isPaused == true;
+      if (state.playingState.isPlaying && !wasInRun) {
+        vibe.reset();
+        _musicNotes.clear();
+      }
     }
     if (_lastState?.playingState != state.playingState &&
         state.playingState is PlayingStateGameOver) {
@@ -102,6 +122,7 @@ class Potato extends PositionComponent
       HitBlink(invincibility: invincibility, size: size, position: size / 2)
         ..add(PotatoFaceComponent(animator: face, position: size / 2)),
     );
+    add(_musicNotes = MusicNotes(size: size, priority: 1));
     add(fireShield = Shield(type: OrbType.fire));
     add(iceShield = Shield(type: OrbType.ice));
 
@@ -118,6 +139,7 @@ class Potato extends PositionComponent
   void update(double dt) {
     super.update(dt);
     invincibility.update(dt);
+    _updateVibe(dt);
     if (bloc.state.playingState.isPlaying) {
       final rotationSpeed = bloc.state.shieldsAngleRotationSpeed;
       if (rotationSpeed != 0) {
@@ -176,10 +198,47 @@ class Potato extends PositionComponent
 
   void _onOrbHit(PositionComponent orb) {
     _audioHelper.playOrbHitSound();
-    game.onOrbHit(_angleTo(orb));
+    final angle = _angleTo(orb);
+    game.onOrbHit(angle);
     if (bloc.state.life > 0 && bloc.state.playingState.isPlaying) {
       invincibility.trigger();
     }
+    vibe.onHit();
+    // Knocked away from the side the orb came from
+    _vibeMotion.knock(cos(angle) < 0 ? 1 : -1);
+  }
+
+  /// A blocked orb played a melody note: the potato enjoys it
+  void onNotePlayed(RhythmHit hit) {
+    if (!bloc.state.playingState.isPlaying) {
+      return;
+    }
+    vibe.onNote();
+    _musicNotes.spawn(
+      fire: hit.timbre == 'fire',
+      strength: vibe.calm * hit.volume.clamp(0.5, 1.0),
+    );
+  }
+
+  void _updateVibe(double dt) {
+    final state = bloc.state;
+    final playing = state.playingState.isPlaying;
+    if (state.playingState.isPaused) {
+      return;
+    }
+    vibe.update(dt, life: state.life, playing: playing);
+    _ownBeatTime += dt;
+    final rhythm = parent.isLoaded ? parent.rhythm : null;
+    final songTime = rhythm != null && rhythm.isRunning
+        ? rhythm.songTime
+        : _ownBeatTime;
+    _vibeMotion.update(
+      dt,
+      face.pose,
+      songTime: songTime,
+      headphonesOn: playing,
+      faceFree: face.mood == PotatoMood.idle,
+    );
   }
 
   double _angleTo(PositionComponent other) {
