@@ -7,7 +7,7 @@ class GameState extends Equatable {
     this.difficultyTimePassed = 0,
     this.playingState = const PlayingStateNone(),
     this.showGameOverUI = false,
-    this.shieldsAngleRotationSpeed = 0,
+    this.shieldsTurnDirection = 0,
     this.restartGame = false,
     this.onNewHighScore,
     this.firstHealthReceived = false,
@@ -32,7 +32,7 @@ class GameState extends Equatable {
 
   final bool showGameOverUI;
 
-  final double shieldsAngleRotationSpeed;
+  final int shieldsTurnDirection;
 
   final bool restartGame;
 
@@ -102,7 +102,7 @@ class GameState extends Equatable {
     double? difficultyTimePassed,
     PlayingState? playingState,
     bool? showGameOverUI,
-    double? shieldsAngleRotationSpeed,
+    int? shieldsTurnDirection,
     bool? restartGame,
     ValueWrapper<OnlineScoreEntity>? onNewHighScore,
     bool? firstHealthReceived,
@@ -118,8 +118,7 @@ class GameState extends Equatable {
     difficultyTimePassed: difficultyTimePassed ?? this.difficultyTimePassed,
     playingState: playingState ?? this.playingState,
     showGameOverUI: showGameOverUI ?? this.showGameOverUI,
-    shieldsAngleRotationSpeed:
-        shieldsAngleRotationSpeed ?? this.shieldsAngleRotationSpeed,
+    shieldsTurnDirection: shieldsTurnDirection ?? this.shieldsTurnDirection,
     restartGame: restartGame ?? this.restartGame,
     onNewHighScore: onNewHighScore != null
         ? onNewHighScore.value
@@ -145,7 +144,7 @@ class GameState extends Equatable {
     difficultyTimePassed,
     playingState,
     showGameOverUI,
-    shieldsAngleRotationSpeed,
+    shieldsTurnDirection,
     restartGame,
     onNewHighScore,
     firstHealthReceived,

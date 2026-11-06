@@ -4,6 +4,7 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/hit_invincibility.dart';
 import 'package:save_the_potato/presentation/components/hit_blink.dart';
 import 'package:save_the_potato/presentation/components/guide_title.dart';
@@ -119,10 +120,8 @@ class Potato extends PositionComponent
     super.update(dt);
     invincibility.update(dt);
     if (bloc.state.playingState.isPlaying) {
-      final rotationSpeed = bloc.state.shieldsAngleRotationSpeed;
-      if (rotationSpeed != 0) {
-        fireShield.angle += rotationSpeed * dt;
-      }
+      fireShield.angle +=
+          bloc.state.shieldsTurnDirection * GameConstants.shieldsTurnSpeed * dt;
     }
     iceShield.angle = fireShield.angle - pi;
   }
