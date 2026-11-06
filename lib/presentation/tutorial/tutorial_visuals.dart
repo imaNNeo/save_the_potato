@@ -56,7 +56,14 @@ class TutorialProgressDots extends PositionComponent {
 
   void miss() => _miss = 1;
 
+  /// The dots glow for [collapseAt] seconds, then swirl into the potato
   void celebrate() => _burst = 0;
+
+  static const collapseAt = 0.3;
+  static const collapseDuration = 0.32;
+
+  /// When the dots reach the potato
+  static const collapseEnd = collapseAt + collapseDuration;
 
   @override
   void update(double dt) {
@@ -79,18 +86,28 @@ class TutorialProgressDots extends PositionComponent {
     if (_visible < 0.01 || _fills.isEmpty) {
       return;
     }
-    final burst = _burst < 0
+    // When all are full: a short glow, then they swirl into the potato
+    final glow = _burst < 0 ? 0.0 : _clamp01(_burst / collapseAt);
+    final collapse = _burst < collapseAt
         ? 0.0
-        : Curves.easeOutCubic.transform(_clamp01(_burst / 0.9));
-    final radius = ui.lerpDouble(_radius, ArenaRing.radius, burst)!;
-    final alpha = _visible * (1 - burst);
+        : Curves.easeInCubic.transform(
+            _clamp01((_burst - collapseAt) / collapseDuration),
+          );
+    final radius = _radius * (1 - collapse);
+    final swirl = collapse * 1.2;
+    final alpha = _visible * (collapse >= 1 ? 0.0 : 1.0);
+    final burst = glow * (1 - collapse);
     final shake = _miss > 0 ? sin(_time * 70) * 6 * _miss : 0.0;
     for (var i = 0; i < count; i++) {
-      final a = -pi / 2 + i * 2 * pi / count;
+      final a = -pi / 2 + i * 2 * pi / count + swirl;
       final p = Offset(cos(a), sin(a)) * radius + Offset(shake, 0);
       final f = _fills[i];
       final pop = 1 + sin(_clamp01(f) * pi) * 0.9;
-      final r = _dotRadius * pop * (0.6 + 0.4 * _visible) * (1 + burst * 2);
+      final r =
+          _dotRadius *
+          pop *
+          (0.6 + 0.4 * _visible) *
+          (1 + burst * 0.8 - collapse * 0.4);
       final ring = Color.lerp(_white, _missColor, _miss)!;
       // Empty dot: a thin ring
       canvas.drawCircle(
@@ -127,17 +144,6 @@ class TutorialProgressDots extends PositionComponent {
               )!.withValues(alpha: _clamp01(alpha)),
           );
       }
-    }
-    if (burst > 0) {
-      // The ring of light the dots leave as they fly out
-      canvas.drawCircle(
-        Offset.zero,
-        radius,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3 * (1 - burst) + 0.5
-          ..color = _white.withValues(alpha: _clamp01((1 - burst) * 0.6)),
-      );
     }
   }
 }
@@ -183,12 +189,15 @@ class GhostShield extends PositionComponent {
     double needFireAngle, {
     required double angleOfOrb,
   }) {
+    final same = isShowing && type == _type && angleOfOrb == _angle;
     _type = type;
     _angle = angleOfOrb;
     _target = 1;
     _miss = 0;
     _success = -1;
-    locked = false;
+    if (!same) {
+      locked = false;
+    }
   }
 
   /// After a hit: red, where the shield should have been
@@ -488,4 +497,214 @@ class GhostShield extends PositionComponent {
         )!.withValues(alpha: _clamp01(1 - t)),
     );
   }
+}
+
+/// The "you did it" moment at the end of the tutorial: a shock wave out to
+/// the arena edge, confetti in fire and ice colors, and a big tick that
+/// pops in over the potato, floats a moment and drifts away.
+class TutorialCelebration extends PositionComponent {
+  TutorialCelebration() : super(priority: 3);
+
+  static const _confettiCount = 48;
+  static const _duration = 2.4;
+  static const _palette = [
+    Color(0xFFFF8A3D),
+    Color(0xFFFFC14D),
+    Color(0xFF6FD3FF),
+    Color(0xFFBDF2FF),
+    _good,
+    _white,
+  ];
+
+  final _rnd = Random();
+  final _bits = <_Confetti>[];
+  double _age = 0;
+
+  @override
+  void onMount() {
+    super.onMount();
+    for (var i = 0; i < _confettiCount; i++) {
+      final a = _rnd.nextDouble() * 2 * pi;
+      final speed = 240 + _rnd.nextDouble() * 320;
+      _bits.add(
+        _Confetti(
+          position: Offset(cos(a), sin(a)) * (40 + _rnd.nextDouble() * 15),
+          velocity: Offset(cos(a), sin(a)) * speed,
+          color: _palette[i % _palette.length],
+          spin: (_rnd.nextDouble() - 0.5) * 14,
+          angle: _rnd.nextDouble() * pi,
+          size: 4 + _rnd.nextDouble() * 4,
+          life: 0.9 + _rnd.nextDouble() * 0.6,
+        ),
+      );
+    }
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    for (final b in _bits) {
+      b.age += dt;
+      b.velocity *= pow(0.06, dt).toDouble();
+      b.position += b.velocity * dt;
+      b.angle += b.spin * dt;
+    }
+    if (_age > _duration) {
+      removeFromParent();
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+    _renderWave(canvas);
+    _renderConfetti(canvas);
+    _renderTick(canvas);
+  }
+
+  void _renderWave(Canvas canvas) {
+    final t = _clamp01(_age / 0.75);
+    if (t >= 1) {
+      return;
+    }
+    final e = Curves.easeOutCubic.transform(t);
+    final r = ui.lerpDouble(60, ArenaRing.radius, e)!;
+    canvas
+      ..drawCircle(
+        Offset.zero,
+        r,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 22 * (1 - t) + 2
+          ..blendMode = BlendMode.plus
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8)
+          ..color = _good.withValues(alpha: _clamp01((1 - t) * 0.55)),
+      )
+      ..drawCircle(
+        Offset.zero,
+        r,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4 * (1 - t) + 1
+          ..color = _white.withValues(alpha: _clamp01((1 - t) * 0.9)),
+      );
+  }
+
+  void _renderConfetti(Canvas canvas) {
+    final paint = Paint();
+    for (final b in _bits) {
+      final k = b.age / b.life;
+      if (k >= 1) {
+        continue;
+      }
+      paint.color = b.color.withValues(alpha: _clamp01((1 - k) * 1.4));
+      canvas
+        ..save()
+        ..translate(b.position.dx, b.position.dy)
+        ..rotate(b.angle)
+        ..drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(
+              center: Offset.zero,
+              width: b.size * 1.8,
+              height: b.size * (0.5 + 0.5 * cos(b.angle * 2).abs()),
+            ),
+            const Radius.circular(1.5),
+          ),
+          paint,
+        )
+        ..restore();
+    }
+  }
+
+  void _renderTick(Canvas canvas) {
+    const popIn = 0.5;
+    const leaveAt = 1.6;
+    if (_age > _duration) {
+      return;
+    }
+    final grow = Curves.elasticOut.transform(_clamp01(_age / popIn));
+    final leave = Curves.easeInCubic.transform(
+      _clamp01((_age - leaveAt) / (_duration - leaveAt)),
+    );
+    final bob = sin(_age * 5) * 3 * (1 - leave);
+    final c = Offset(0, -124 - leave * 60 + bob);
+    final r = 32 * grow * (1 - leave * 0.4);
+    final alpha = _clamp01(1 - leave);
+    if (r <= 0.5 || alpha <= 0) {
+      return;
+    }
+    // Rays behind the badge, turning slowly
+    final rays = Paint()
+      ..blendMode = BlendMode.plus
+      ..color = _good.withValues(alpha: alpha * 0.35);
+    for (var i = 0; i < 10; i++) {
+      final a = i * 2 * pi / 10 + _age * 0.8;
+      final p1 = c + Offset(cos(a - 0.09), sin(a - 0.09)) * r * 1.15;
+      final p2 = c + Offset(cos(a), sin(a)) * r * 2.3;
+      final p3 = c + Offset(cos(a + 0.09), sin(a + 0.09)) * r * 1.15;
+      canvas.drawPath(
+        Path()
+          ..moveTo(p1.dx, p1.dy)
+          ..lineTo(p2.dx, p2.dy)
+          ..lineTo(p3.dx, p3.dy)
+          ..close(),
+        rays,
+      );
+    }
+    canvas
+      ..drawCircle(
+        c,
+        r * 2,
+        Paint()
+          ..blendMode = BlendMode.plus
+          ..shader = ui.Gradient.radial(c, r * 2, [
+            _good.withValues(alpha: alpha * 0.6),
+            _good.withValues(alpha: 0),
+          ]),
+      )
+      ..drawCircle(c, r, Paint()..color = _good.withValues(alpha: alpha))
+      ..drawCircle(
+        c,
+        r,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3
+          ..color = _white.withValues(alpha: alpha * 0.9),
+      )
+      ..drawPath(
+        Path()
+          ..moveTo(c.dx - r * 0.45, c.dy + r * 0.02)
+          ..lineTo(c.dx - r * 0.12, c.dy + r * 0.36)
+          ..lineTo(c.dx + r * 0.48, c.dy - r * 0.32),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..strokeWidth = r * 0.22
+          ..color = const Color(0xFF0B2A18).withValues(alpha: alpha),
+      );
+  }
+}
+
+class _Confetti {
+  _Confetti({
+    required this.position,
+    required this.velocity,
+    required this.color,
+    required this.spin,
+    required this.angle,
+    required this.size,
+    required this.life,
+  });
+
+  Offset position;
+  Offset velocity;
+  final Color color;
+  final double spin;
+  double angle;
+  final double size;
+  final double life;
+  double age = 0;
 }

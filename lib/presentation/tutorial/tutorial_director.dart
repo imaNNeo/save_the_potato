@@ -1,7 +1,9 @@
 import 'dart:math';
 
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame_bloc/flame_bloc.dart';
+import 'package:flutter/animation.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_component_spawner.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
@@ -68,6 +70,9 @@ class TutorialDirector extends Component
   bool _lastWasHit = false;
 
   _Throw? _current;
+
+  /// The orb that just hit, until it is thrown again
+  _Throw? _missed;
   double _wait = 0;
 
   /// The slow-motion style's time scale for the orb
@@ -107,6 +112,7 @@ class TutorialDirector extends Component
     _throws = 0;
     _lastWasHit = false;
     _current = null;
+    _missed = null;
     _wait = 0.6;
     dots.show();
   }
@@ -142,6 +148,7 @@ class TutorialDirector extends Component
     if (!_active || !bloc.state.playingState.isPlaying) {
       return;
     }
+    _playArpeggio(dt);
     if (_wait > 0) {
       _wait -= dt;
       if (_wait <= 0) {
@@ -151,6 +158,10 @@ class TutorialDirector extends Component
     final t = _current;
     if (t != null) {
       _tick(t, dt);
+    } else if (_missed != null) {
+      // Between a hit and the same orb again, the help stays up and keeps
+      // following the shield
+      _guide(_missed!, active: true);
     }
     if (TutorialStyle.bot) {
       _bot.update(this, dt);
@@ -183,6 +194,7 @@ class TutorialDirector extends Component
     final t = _Throw(type: type, angle: _wrap(angle), index: _throws++);
     t.guided = _guidedFromStart() || (repeat?.guided ?? false);
     _current = t;
+    _missed = null;
     t.rift = RingRift(type: type, spawnAngle: t.angle, formDuration: _riftTime);
     parent.add(t.rift!);
     if (t.guided) {
@@ -237,8 +249,13 @@ class TutorialDirector extends Component
       _slowMo(t, dt);
     }
 
+    _guide(t, active: !t.done);
+  }
+
+  /// Keeps the ghost, its arrows and the button hint following the shield
+  void _guide(_Throw t, {required bool active}) {
     ghost.from = t.type == OrbType.fire ? _fireAngle : _fireAngle - pi;
-    final showHelp = ghost.isShowing && !t.done;
+    final showHelp = ghost.isShowing && active;
     final covered = _covered(t);
     ghost.locked = covered;
     if (showHelp && !covered) {
@@ -305,8 +322,12 @@ class TutorialDirector extends Component
     bloc.setTutorialHint(0);
     _lastWasHit = true;
     dots.miss();
-    // Show where the shield should have been
-    ghost.showMiss(t.type, _needFor(t), angleOfOrb: t.angle);
+    // Keep the help where it is (or bring it in) without flashing anything
+    // else, so the player can calmly turn the shield there
+    if (!ghost.isShowing) {
+      ghost.showFor(t.type, _needFor(t), angleOfOrb: t.angle);
+    }
+    _missed = t;
     switch (_style) {
       case TutorialStyle.ghost || TutorialStyle.slowMo:
         // The same orb again, with help this time
@@ -332,15 +353,63 @@ class TutorialDirector extends Component
     _finishing = true;
     bloc.setTutorialHint(0);
     ghost.hide();
+    // The ring of dots glows, then swirls into the potato
     dots.celebrate();
-    _audio.playNote('ice', 81 + 12, volume: 0.9);
-    _audio.playNote('fire', 76 + 12, volume: 0.7);
-    _wait = 1.0;
+    _audio.playNote('ice', 81 + 12, volume: 0.6);
+    _wait = TutorialProgressDots.collapseEnd;
+    _then = _celebrate;
+  }
+
+  /// The dots reached the potato: it pops, a wave and confetti fly out, a
+  /// big tick shows over it and a rising arpeggio plays, then the real run
+  /// starts with its music
+  void _celebrate() {
+    dots.hide();
+    parent.add(TutorialCelebration());
+    parent.player.add(
+      SequenceEffect([
+        ScaleEffect.to(
+          Vector2.all(1.22),
+          EffectController(duration: 0.12, curve: Curves.easeOut),
+        ),
+        ScaleEffect.to(
+          Vector2.all(1),
+          EffectController(duration: 0.5, curve: Curves.elasticOut),
+        ),
+      ]),
+    );
+    parent.player.face.amazed();
+    game.background.milestone();
+    _arpeggio = 0;
+    _arpeggioClock = 0;
+    _wait = 1.5;
     _then = () {
       _active = false;
-      dots.hide();
       bloc.finishTutorial();
     };
+  }
+
+  /// A minor, rising, ending on a two-note chord
+  static const _arpeggioNotes = [69, 72, 76, 81, 84];
+  int _arpeggio = -1;
+  double _arpeggioClock = 0;
+
+  void _playArpeggio(double dt) {
+    if (_arpeggio < 0) {
+      return;
+    }
+    _arpeggioClock -= dt;
+    if (_arpeggioClock > 0) {
+      return;
+    }
+    final note = _arpeggioNotes[_arpeggio];
+    _audio.playNote(_arpeggio.isEven ? 'ice' : 'fire', note + 12, volume: 0.8);
+    _arpeggio++;
+    _arpeggioClock = 0.075;
+    if (_arpeggio >= _arpeggioNotes.length) {
+      _audio.playNote('ice', 88 + 12, volume: 0.6);
+      _arpeggio = -1;
+    }
   }
 
   // ------------------------------------------------------------------
