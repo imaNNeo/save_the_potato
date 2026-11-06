@@ -11,7 +11,7 @@ import 'potato_pose.dart';
 ///   hops and sings along with each blocked note, and closes its eyes in
 ///   bliss when it's fully into it. The headphones thump with the beat.
 /// - Shaken by a hit: stops dancing, trembles, glances around, worried
-///   brows, wobbly mouth, sweats, and its headphones get knocked askew.
+///   brows, wobbly mouth, and its headphones get knocked askew.
 ///
 /// It only writes the props that no clip uses, so hit, scared and amazed
 /// animations keep playing on top as before.
@@ -27,7 +27,6 @@ class PotatoVibeMotion {
   double _headphones = 0;
   double _tilt = 0;
   double _tiltVelocity = 0;
-  double _sweatSlide = 0;
   double _faceCalm = 1;
 
   /// Gets the headphones knocked: called on a hit, [side] is -1 or 1
@@ -79,18 +78,6 @@ class PotatoVibeMotion {
     pose[PotatoProp.sing] = kick * min(1, dance * 1.5) * _faceCalm;
     pose[PotatoProp.browWorry] = _smoothstep(0.1, 0.6, nerves);
     pose[PotatoProp.nervousMouth] = _smoothstep(0.35, 0.75, nerves) * _faceCalm;
-
-    // Sweat drops slide down one after another while nervous
-    final sweat = _smoothstep(0.2, 0.55, nerves);
-    if (sweat > 0 || _sweatSlide > 0) {
-      _sweatSlide += dt / 1.1;
-      if (_sweatSlide >= 1) {
-        // The next drop, or none once it has calmed down
-        _sweatSlide = 0;
-      }
-    }
-    pose[PotatoProp.sweat] = sweat;
-    pose[PotatoProp.sweatSlide] = _sweatSlide;
 
     // Headphones: drop in at the start of a run, lift away at the end
     _headphones = _approach(_headphones, headphonesOn ? 1 : 0, dt * 2.2);

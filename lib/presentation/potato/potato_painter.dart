@@ -61,7 +61,6 @@ abstract final class PotatoPainter {
     _paintEyes(canvas, pose);
     _paintFrown(canvas, pose);
     _paintZigzag(canvas, pose);
-    _paintSweat(canvas, pose);
     _paintHeadphones(canvas, pose);
     canvas.restore();
   }
@@ -654,42 +653,6 @@ abstract final class PotatoPainter {
     ..cubicTo(-18, -14, 18, -14, 25, 8);
 
   // ------------------------------------------------- feelings and music --
-
-  static const _sweatColor = Color(0xFFB4E6FF);
-
-  static void _paintSweat(Canvas canvas, PotatoPose pose) {
-    final slide = pose[PotatoProp.sweatSlide];
-    // Fades as it slides off the head
-    final opacity = pose[PotatoProp.sweat] * (1 - slide * slide * slide);
-    if (opacity <= 0.01) return;
-    _inShape(
-      canvas,
-      Offset(354 + 4 * slide, 112 + 62 * slide),
-      () {
-        _fillPath(canvas, _sweatDrop, _sweatColor, opacity);
-        _stroke
-          ..color = const Color(0xFF008BFF).withValues(alpha: 0.7 * opacity)
-          ..strokeWidth = 3;
-        canvas.drawPath(_sweatDrop, _stroke);
-        _fill.color = const Color(0xFFFFFFFF).withValues(alpha: 0.9 * opacity);
-        canvas.drawOval(
-          Rect.fromCenter(center: const Offset(-4, 6), width: 6, height: 9),
-          _fill,
-        );
-      },
-      scaleX: 1.1 + 0.3 * opacity,
-      scaleY: 1.1 + 0.3 * opacity,
-    );
-  }
-
-  /// A drop with its point up
-  static final _sweatDrop = Path()
-    ..moveTo(0, -20)
-    ..cubicTo(4, -10, 13, -2, 13, 8)
-    ..cubicTo(13, 16, 7, 21, 0, 21)
-    ..cubicTo(-7, 21, -13, 16, -13, 8)
-    ..cubicTo(-13, -2, -4, -10, 0, -20)
-    ..close();
 
   static const _headphonesDark = Color(0xFF2A1A18);
   static const _headphonesBand = Color(0xFF6B4A43);

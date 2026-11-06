@@ -85,10 +85,6 @@ enum PotatoProp {
   /// Shows the wobbly zigzag mouth instead of the smile (nervous)
   nervousMouth(0),
 
-  /// A sweat drop on the side of the head, and how far it has slid (0..1)
-  sweat(0),
-  sweatSlide(0),
-
   /// The headphones: 0 = off (lifted away), 1 = on the head
   headphones(0),
 

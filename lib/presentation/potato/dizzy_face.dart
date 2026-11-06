@@ -46,11 +46,10 @@ class DizzyFace {
     set(PotatoProp.zigzagOpacity, 0);
     set(PotatoProp.leftBrowAngle, -0.55);
     set(PotatoProp.rightBrowAngle, 0.15);
-    // The dizzy face owns the face while it lasts: no nervous mouth, sweat,
+    // The dizzy face owns the face while it lasts: no nervous mouth,
     // glances or trembling from the music mood (see PotatoVibeMotion). They
     // come back as it fades out, while the potato is still calming down.
     set(PotatoProp.nervousMouth, 0);
-    set(PotatoProp.sweat, 0);
     set(PotatoProp.glanceX, 0);
     set(PotatoProp.eyeBliss, 0);
     set(PotatoProp.sing, 0);
