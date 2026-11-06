@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/animation.dart' show Curves;
 import 'package:save_the_potato/domain/life_meter.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
@@ -19,7 +20,19 @@ enum PotatoHealthStyle {
   skin,
 
   /// The potato fills with warm light like a battery
-  fill;
+  fill,
+
+  /// A sprout on its head with three heart-shaped leaves
+  sprout,
+
+  /// Three hearts sitting on its head like a little crown
+  crown,
+
+  /// Its cheeks are two hearts, half the life each
+  cheeks,
+
+  /// Its freckles turn into tiny hearts, one per tenth of life
+  freckles;
 
   static final PotatoHealthStyle? current = () {
     if (!kIsWeb) return null;
@@ -53,6 +66,28 @@ class _Puff {
   double life = 1;
 }
 
+class _Piece {
+  _Piece(
+    this.pos,
+    this.vel,
+    this.angle,
+    this.spin,
+    this.size,
+    this.leaf, {
+    this.half = 0,
+  });
+  Offset pos;
+  Offset vel;
+  double angle;
+  final double spin;
+  final double size;
+  final bool leaf;
+
+  /// -1 or 1 for the left or right half of a broken heart, 0 for whole
+  final double half;
+  double life = 1;
+}
+
 /// Drawn over the code-drawn potato, in the same 152 box, in artboard units
 class PotatoHealthOverlay extends PositionComponent
     with FlameBlocListenable<GameCubit, GameState> {
@@ -69,6 +104,7 @@ class PotatoHealthOverlay extends PositionComponent
   double _danger = 0;
   double _slosh = 0;
   final _puffs = <_Puff>[];
+  final _pieces = <_Piece>[];
   final _rnd = Random(5);
 
   @override
@@ -115,6 +151,13 @@ class PotatoHealthOverlay extends PositionComponent
       p.pos += p.vel * dt;
       p.life -= dt / 1.2;
     }
+    for (final p in _pieces) {
+      p.pos += p.vel * dt;
+      p.vel = p.vel + const Offset(0, 420) * dt;
+      p.angle += p.spin * dt;
+      p.life -= dt / 1.1;
+    }
+    _pieces.removeWhere((p) => p.life <= 0);
     _puffs.removeWhere((p) => p.life <= 0);
   }
 
@@ -163,7 +206,60 @@ class PotatoHealthOverlay extends PositionComponent
         }
       case PotatoHealthStyle.skin:
       case PotatoHealthStyle.fill:
+      case PotatoHealthStyle.cheeks:
         break;
+      case PotatoHealthStyle.sprout:
+        for (var i = 0; i < 3; i++) {
+          if (_part(i, 3, from) - _part(i, 3, to) > 0.05) {
+            final (c, a) = _leaves[i];
+            _pieces.add(
+              _Piece(
+                c,
+                Offset((c.dx - 250) * 1.5, -40),
+                a,
+                (c.dx < 250 ? -1 : 1) * 3.0,
+                _leafSize,
+                true,
+              ),
+            );
+          }
+        }
+      case PotatoHealthStyle.crown:
+        for (var i = 0; i < 3; i++) {
+          if (_part(i, 3, from) - _part(i, 3, to) > 0.05) {
+            final (c, a) = _crown[i];
+            for (final side in [-1.0, 1.0]) {
+              _pieces.add(
+                _Piece(
+                  c,
+                  Offset(side * 90, -120),
+                  a,
+                  side * 4,
+                  _crownSize,
+                  false,
+                  half: side,
+                ),
+              );
+            }
+          }
+        }
+      case PotatoHealthStyle.freckles:
+        for (var i = 0; i < _heartFreckles.length; i++) {
+          if (_part(i, _heartFreckles.length, from) > 0.5 &&
+              _part(i, _heartFreckles.length, to) <= 0.5) {
+            final c = _heartFreckles[i];
+            _pieces.add(
+              _Piece(
+                c,
+                Offset((c.dx - 250) * 0.8, -160),
+                0,
+                (_rnd.nextDouble() - 0.5) * 6,
+                _freckleSize,
+                false,
+              ),
+            );
+          }
+        }
     }
   }
 
@@ -179,7 +275,16 @@ class PotatoHealthOverlay extends PositionComponent
         _paintSkin(canvas);
       case PotatoHealthStyle.fill:
         _paintFill(canvas);
+      case PotatoHealthStyle.sprout:
+        _paintSprout(canvas);
+      case PotatoHealthStyle.crown:
+        _paintCrown(canvas);
+      case PotatoHealthStyle.cheeks:
+        _paintCheeks(canvas);
+      case PotatoHealthStyle.freckles:
+        _paintFreckles(canvas);
     }
+    _paintPieces(canvas);
     canvas.restore();
   }
 
@@ -473,5 +578,246 @@ class PotatoHealthOverlay extends PositionComponent
       canvas.drawCircle(Offset(x, y), 5 + (k % 3) * 2, paint);
     }
     canvas.restore();
+  }
+  // ---- shared: a nice heart, filled from the bottom ----
+
+  /// How full part [i] of [count] is
+  static double _part(int i, int count, double life) =>
+      (life * count - i).clamp(0.0, 1.0);
+
+  static const _ink = Color(0xFF462724);
+
+  void _niceHeart(
+    Canvas canvas,
+    Offset at,
+    double s,
+    double fill, {
+    double angle = 0,
+    bool last = false,
+    List<Color> colors = const [Color(0xFFFF7A90), Color(0xFFE0103A)],
+    Color empty = const Color(0x55301810),
+  }) {
+    final paint = Paint()..isAntiAlias = true;
+    canvas.save();
+    canvas.translate(at.dx, at.dy);
+    canvas.rotate(angle);
+    final heart = _heartPath(s);
+    paint.color = empty;
+    canvas.drawPath(heart, paint);
+    if (fill > 0) {
+      canvas.save();
+      canvas.clipPath(heart);
+      final top = s * 0.85 - fill * s * 1.85;
+      // The paint's alpha would fade the gradient too
+      paint.color = const Color(0xFFFFFFFF);
+      paint.shader = Gradient.linear(Offset(0, -s), Offset(0, s), [
+        Color.lerp(colors[0], const Color(0xFFFFFFFF), 0.5 * _flash)!,
+        colors[1],
+      ]);
+      canvas.drawRect(Rect.fromLTRB(-s * 1.2, top, s * 1.2, s), paint);
+      paint.shader = null;
+      canvas.restore();
+      if (last && _danger > 0) {
+        paint.color = const Color(0xFFFFFFFF).withValues(alpha: 0.45 * _blink);
+        canvas.drawPath(heart, paint);
+      }
+      paint.color = const Color(0xFFFFFFFF).withValues(alpha: 0.75 * fill);
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(-s * 0.42, -s * 0.42),
+          width: s * 0.42,
+          height: s * 0.26,
+        ),
+        paint,
+      );
+    }
+    paint
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = max(4, s * 0.16)
+      ..strokeJoin = StrokeJoin.round
+      ..color = fill > 0 ? _ink : _ink.withValues(alpha: 0.45);
+    canvas.drawPath(heart, paint);
+    if (last && _hit > 0.02) {
+      paint
+        ..style = PaintingStyle.fill
+        ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.8 * _hit);
+      canvas.drawPath(heart, paint);
+    }
+    canvas.restore();
+  }
+
+  int _lastIndex(int count) =>
+      (_shown * count - 1e-6).floor().clamp(0, count - 1);
+
+  void _paintPieces(Canvas canvas) {
+    for (final p in _pieces) {
+      final a = p.life.clamp(0.0, 1.0);
+      canvas.save();
+      canvas.translate(p.pos.dx, p.pos.dy);
+      canvas.rotate(p.angle);
+      if (p.half != 0) {
+        canvas.clipRect(
+          Rect.fromLTWH(
+            p.half < 0 ? -p.size * 1.2 : 0,
+            -p.size * 1.2,
+            p.size * 1.2,
+            p.size * 2.4,
+          ),
+        );
+      }
+      final paint = Paint()..isAntiAlias = true;
+      paint.color = (p.leaf ? const Color(0xFFB8A040) : const Color(0xFFFF3050))
+          .withValues(alpha: a);
+      canvas.drawPath(_heartPath(p.size), paint);
+      paint
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = max(3, p.size * 0.16)
+        ..color = _ink.withValues(alpha: a);
+      canvas.drawPath(_heartPath(p.size), paint);
+      canvas.restore();
+    }
+  }
+
+  // ---- a sprout with heart leaves ----
+
+  static const _leafSize = 34.0;
+
+  /// Leaf centers and angles (the heart's tip points at the stem)
+  static const _leaves = [
+    (Offset(206, 52), -1.35),
+    (Offset(296, 48), 1.35),
+    (Offset(252, 8), 0.0),
+  ];
+
+  void _paintSprout(Canvas canvas) {
+    final sway = sin(_time * 1.8) * 0.06;
+    canvas.save();
+    // Sway around the stem's root on top of the head
+    canvas.translate(250, 104);
+    canvas.rotate(sway);
+    canvas.translate(-250, -104);
+    final stem = Path()
+      ..moveTo(250, 108)
+      ..quadraticBezierTo(240, 80, 252, 44);
+    final paint = Paint()
+      ..isAntiAlias = true
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 16
+      ..color = _ink;
+    canvas.drawPath(stem, paint);
+    paint
+      ..strokeWidth = 8
+      ..color = const Color(0xFF5DBB46);
+    canvas.drawPath(stem, paint);
+    final last = _lastIndex(3);
+    for (var i = 0; i < 3; i++) {
+      final f = _part(i, 3, _shown);
+      final (c, a) = _leaves[i];
+      if (f <= 0) continue;
+      final droop = i == last ? _danger * (0.5 + 0.2 * sin(_time * 6)) : 0.0;
+      final beat = i == last ? _beat * 0.08 : 0.0;
+      // A leaf grows from a bud as it fills
+      final grow = 0.35 + 0.65 * f;
+      final dir = c - const Offset(250, 50);
+      final at = const Offset(250, 50) + dir * grow;
+      _niceHeart(
+        canvas,
+        at,
+        _leafSize * grow * (1 + beat + 0.1 * _flash),
+        1,
+        angle: a + (a > 0 ? droop : -droop),
+        last: i == last,
+        colors: [
+          Color.lerp(const Color(0xFFA6F07A), const Color(0xFFE8D060), droop)!,
+          Color.lerp(const Color(0xFF3E9E3A), const Color(0xFFA08020), droop)!,
+        ],
+      );
+    }
+    canvas.restore();
+  }
+
+  // ---- three hearts on its head ----
+
+  static const _crownSize = 30.0;
+  static const _crown = [
+    (Offset(190, 104), -0.35),
+    (Offset(250, 82), 0.0),
+    (Offset(310, 104), 0.35),
+  ];
+
+  void _paintCrown(Canvas canvas) {
+    final last = _lastIndex(3);
+    for (var i = 0; i < 3; i++) {
+      final (c, a) = _crown[i];
+      final f = _part(i, 3, _shown);
+      final bob = sin(_time * 3 + i * 1.3) * 4;
+      final beat = i == last && f > 0 ? _beat * (0.08 + 0.1 * _danger) : 0.0;
+      _niceHeart(
+        canvas,
+        c + Offset(0, bob),
+        _crownSize * (1 + beat + 0.12 * _flash * (f > 0 ? 1 : 0)),
+        f,
+        angle: a,
+        last: i == last,
+        empty: const Color(0x66000000),
+      );
+    }
+  }
+
+  // ---- heart cheeks ----
+
+  static const _cheeks = [Offset(150, 283), Offset(335, 283)];
+
+  void _paintCheeks(Canvas canvas) {
+    final last = _lastIndex(2);
+    for (var i = 0; i < 2; i++) {
+      final f = _part(i, 2, _shown);
+      final beat = i == last ? _beat * (0.06 + 0.1 * _danger) : 0.0;
+      _niceHeart(
+        canvas,
+        _cheeks[i],
+        30 * (1 + beat + 0.12 * _flash),
+        f,
+        last: i == last,
+        colors: const [Color(0xFFFF9AA8), Color(0xFFFF3A5C)],
+        empty: const Color(0x40FF786F),
+      );
+    }
+  }
+
+  // ---- heart freckles ----
+
+  static const _freckleSize = 15.0;
+  static const _heartFreckles = [
+    Offset(148, 306),
+    Offset(202, 158),
+    Offset(277, 188),
+    Offset(325, 327),
+    Offset(205, 318),
+    Offset(291, 312),
+    Offset(201, 359),
+    Offset(266, 330),
+    Offset(226, 184),
+    Offset(252, 221),
+  ];
+
+  void _paintFreckles(Canvas canvas) {
+    final n = _heartFreckles.length;
+    final last = _lastIndex(n);
+    for (var i = 0; i < n; i++) {
+      final f = _part(i, n, _shown);
+      if (f <= 0) continue;
+      final beat = i == last ? _beat * (0.1 + 0.15 * _danger) : 0.0;
+      final pop = Curves.easeOutBack.transform(f);
+      _niceHeart(
+        canvas,
+        _heartFreckles[i],
+        _freckleSize * pop * (1 + beat + 0.15 * _flash),
+        1,
+        last: i == last,
+        empty: const Color(0x00000000),
+      );
+    }
   }
 }
