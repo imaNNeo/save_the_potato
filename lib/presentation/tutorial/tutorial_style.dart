@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'page_setting.dart';
+
 /// The ways the first-time tutorial can teach, so we can compare them.
 enum TutorialStyle {
   /// A see-through shield shows where to turn for the first orbs, then the
@@ -16,13 +18,15 @@ enum TutorialStyle {
 
   static const defaultStyle = TutorialStyle.ghost;
 
-  /// `?tutorial=ghost|slowMo|ouch` on web always runs that tutorial, even
-  /// for players who finished it before
+  /// `?tutorial=ghost|slowMo|ouch` on web (or `window.tutorialStyle` set
+  /// by the preview page) always runs that tutorial, even for players who
+  /// finished it before
   static TutorialStyle? get forced {
     if (!kIsWeb) {
       return null;
     }
-    final name = Uri.base.queryParameters['tutorial'];
+    final name =
+        Uri.base.queryParameters['tutorial'] ?? pageSetting('tutorialStyle');
     for (final style in values) {
       if (style.name.toLowerCase() == name?.toLowerCase()) {
         return style;
