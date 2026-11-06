@@ -252,6 +252,21 @@ class RhythmSongs {
 
   static List<int> chordOfBar(int bar) => chords[bar % chords.length];
 
+  /// The song of the infinite mode, as a [Song]
+  static const song = Song(
+    id: 'infinite',
+    name: 'Infinite',
+    bpm: bpm,
+    assetDir: 'rhythm',
+    stems: ['kick', 'pad', 'hats', 'bass', 'claps'],
+    drumStems: ['kick', 'claps', 'hats'],
+    endless: true,
+    chords: chords,
+    colors: [0xFFBCD4FF, 0xFF1B2A6B, 0xFF02031A],
+    stages: stages,
+    form: form,
+  );
+
   /// A tone of the bar's chord a third or more below [melody], to stack
   /// under it
   static int harmonyBelow(int melody, int bar) {
@@ -314,9 +329,9 @@ enum SongSection {
   /// brings a harmony orb next to it
   final bool triads;
 
-  /// Backing stems that drop out in this section
-  List<String> get mutedStems =>
-      this == breather ? const ['kick', 'claps', 'hats'] : const [];
+  /// Backing stems of [song] that drop out in this section
+  List<String> mutedStemsOf(Song song) =>
+      this == breather ? song.drumStems : const [];
 
   /// The extra backing layers this section plays over the stage's own
   List<String> layersOver(List<String> stageLayers) => switch (this) {
@@ -334,7 +349,103 @@ enum SongSection {
   };
 }
 
-/// A stretch of the song from [from] difficulty on: the phrases it cycles
+/// A song the shield plays the melody of: an 8 bar backing loop as stems in
+/// `assets/audio/[assetDir]/stem_<name>.ogg`, plus the [SongStage]s of
+/// melody phrases over it and the [form] of sections.
+///
+/// The infinite mode plays [RhythmSongs.song] forever, and its stage follows
+/// the difficulty. A level plays its song's form once, and its stage
+/// follows how far into the song it is.
+class Song {
+  const Song({
+    required this.id,
+    required this.name,
+    required this.bpm,
+    required this.assetDir,
+    required this.stems,
+    required this.drumStems,
+    required this.endless,
+    required this.chords,
+    required this.colors,
+    required this.stages,
+    required this.form,
+  });
+
+  final String id;
+  final String name;
+  final double bpm;
+
+  /// The folder of its stems, under `assets/audio/`
+  final String assetDir;
+
+  /// The backing stems that always play (unless a section mutes them)
+  final List<String> stems;
+
+  /// The [stems] that drop out in a breather
+  final List<String> drumStems;
+
+  /// Whether the form repeats forever (infinite mode) or plays once (a level)
+  final bool endless;
+
+  /// The chord of each bar, as pitch classes with the root first
+  final List<List<int>> chords;
+
+  /// Accent, middle and background colors (ARGB) of the song's sky
+  final List<int> colors;
+  final List<SongStage> stages;
+  final List<SongSection> form;
+
+  static const bars = RhythmSongs.bars;
+
+  double get beatSeconds => 60 / bpm;
+
+  double get loopSeconds => bars * 4 * beatSeconds;
+
+  /// How many beats the song has, null when it never ends
+  int? get totalBeats => endless ? null : form.length * bars * 4;
+
+  /// How long the song lasts, null when it never ends
+  double? get durationSeconds => endless ? null : form.length * loopSeconds;
+
+  /// Every stem, the extra layers included
+  List<String> get allStems => [...stems, ...RhythmSongs.extraLayers];
+
+  /// Every phrase the song can play
+  List<MelodyPhrase> get phrases =>
+      {for (final stage in stages) ...stage.phrases}.toList();
+
+  SongSection sectionFor(int loop) =>
+      endless ? form[loop % form.length] : form[loop.clamp(0, form.length - 1)];
+
+  /// The stage of the pass [loop] of the backing loop: by [difficulty] in
+  /// an endless song, by how far into the song it is in a level
+  SongStage stageFor({required int loop, required double difficulty}) {
+    final at = endless ? difficulty : loop / form.length;
+    return stages.lastWhere((s) => at >= s.from, orElse: () => stages.first);
+  }
+
+  List<int> chordOfBar(int bar) => chords[bar % chords.length];
+
+  /// A tone of the bar's chord a third or more below [melody]
+  int harmonyBelow(int melody, int bar) {
+    final chord = chordOfBar(bar);
+    for (var midi = melody - 3; midi > melody - 15; midi--) {
+      if (chord.contains(midi % 12)) {
+        return midi;
+      }
+    }
+    return melody - 12;
+  }
+
+  /// The root of the bar's chord, between [low] and [low] + 11
+  int rootFrom(int low, int bar) {
+    final root = chordOfBar(bar).first;
+    return low + (root - low) % 12;
+  }
+}
+
+/// A stretch of the song from [from] on (difficulty in the infinite mode,
+/// how far into the song for a level): the phrases it cycles
 /// through, and which [RhythmSongs.extraLayers] play under them
 class SongStage {
   const SongStage({

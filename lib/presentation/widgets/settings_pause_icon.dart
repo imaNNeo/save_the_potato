@@ -26,6 +26,7 @@ class SettingsPauseIcon extends StatelessWidget {
               ),
               PlayingStatePaused() ||
               PlayingStateGameOver() ||
+              PlayingStateLevelCleared() ||
               PlayingStateGuide() => GameIconButton(
                 svgAssetName: 'settings.svg',
                 onPressed: () => BaseDialog.showSettingsDialog(context),

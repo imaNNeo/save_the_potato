@@ -17,7 +17,20 @@ class GameState extends Equatable {
     this.upcomingGameMode,
     this.playMotivationWord,
     this.motivationWordsPoolToPlay = MotivationWordType.values,
+    this.level,
+    this.levelsCleared = 0,
   });
+
+  /// The level picked on the home screen, null for the infinite mode
+  final int? level;
+
+  /// How many levels are cleared, so the next one is open
+  final int levelsCleared;
+
+  bool get isLevelsMode => level != null;
+
+  /// The song of this run
+  Song get song => level == null ? RhythmSongs.song : Levels.songOf(level!);
 
   /// From 0 to 1, see [LifeMeter]
   final double life;
@@ -59,8 +72,17 @@ class GameState extends Equatable {
   );
 
   /// Between 0.0 and 1.0
-  double get difficulty =>
-      GameConstants.difficultyInitialToPeakCurve.transform(difficultyLinear);
+  double get difficulty {
+    final level = this.level;
+    if (level != null) {
+      // A level ramps up over its song, see [Levels.difficultyAt]
+      final progress = difficultyTimePassed / song.durationSeconds!;
+      return Levels.difficultyAt(level, progress);
+    }
+    return GameConstants.difficultyInitialToPeakCurve.transform(
+      difficultyLinear,
+    );
+  }
 
   /// 0 -> When the game starts
   /// 1 -> From the first game mode change (multi spawn)
@@ -112,6 +134,8 @@ class GameState extends Equatable {
     ValueWrapper<GameMode>? upcomingGameMode,
     ValueWrapper<MotivationWordType>? playMotivationWord,
     List<MotivationWordType>? motivationWordsPoolToPlay,
+    ValueWrapper<int>? level,
+    int? levelsCleared,
   }) => GameState(
     life: life ?? this.life,
     levelTimePassed: levelTimePassed ?? this.levelTimePassed,
@@ -136,6 +160,8 @@ class GameState extends Equatable {
         : this.playMotivationWord,
     motivationWordsPoolToPlay:
         motivationWordsPoolToPlay ?? this.motivationWordsPoolToPlay,
+    level: level != null ? level.value : this.level,
+    levelsCleared: levelsCleared ?? this.levelsCleared,
   );
 
   @override
@@ -155,5 +181,7 @@ class GameState extends Equatable {
     upcomingGameMode,
     playMotivationWord,
     motivationWordsPoolToPlay,
+    level,
+    levelsCleared,
   ];
 }

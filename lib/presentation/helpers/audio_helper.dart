@@ -18,21 +18,19 @@ class AudioHelper {
   late final AudioSource _heartHit, _orbHit1, _orbHit2;
   late final AudioSource _victory, _gameOver;
 
-  /// One-shot notes pitched with the play speed, and the looping 120 BPM
-  /// stems of the song the shield plays the melody over. The extra layers
-  /// start silent and fade in for the later stages of the song.
-  static const _rhythmStems = [
-    'kick',
-    'pad',
-    'hats',
-    'bass',
-    'claps',
-    ...RhythmSongs.extraLayers,
-  ];
+  /// One-shot notes pitched with the play speed, and the looping stems of
+  /// the song the shield plays the melody over (the infinite song, or the
+  /// level's). The extra layers start silent and fade in for the later
+  /// stages of the song.
+  Song _song = RhythmSongs.song;
   static const _layerFade = Duration(milliseconds: 1500);
   static const _noteBaseMidi = {'fire': 60, 'ice': 72};
   final _notes = <String, AudioSource>{};
   final _stems = <String, AudioSource>{};
+
+  /// The stems of the infinite song stay loaded, a level's are loaded when
+  /// it is picked
+  final _infiniteStems = <String, AudioSource>{};
   final _stemHandles = <String, SoundHandle>{};
   SoundHandle? _stemGroup;
 
@@ -54,15 +52,44 @@ class AudioHelper {
         '$baseAssets/rhythm/note_$name.ogg',
       );
     }
-    for (final name in _rhythmStems) {
-      _stems[name] = await _soLoud.loadAsset(
-        '$baseAssets/rhythm/stem_$name.ogg',
+    for (final name in RhythmSongs.song.allStems) {
+      _infiniteStems[name] = await _soLoud.loadAsset(
+        '$baseAssets/${RhythmSongs.song.assetDir}/stem_$name.ogg',
       );
     }
+    _stems.addAll(_infiniteStems);
 
     // Motivation words
     for (var word in MotivationWordType.values) {
       await _soLoud.loadAsset('$baseAssets/motivation/${word.assetName}');
+    }
+  }
+
+  /// Loads the stems of [song] (once), so the next
+  /// [playBackgroundMusic] plays it
+  Future<void> useSong(Song song) async {
+    if (song.id == _song.id) {
+      return;
+    }
+    _stopStems();
+    final previous = Map.of(_stems);
+    _stems.clear();
+    _song = song;
+    if (song.id == RhythmSongs.song.id) {
+      _stems.addAll(_infiniteStems);
+    } else {
+      for (final name in song.allStems) {
+        _stems[name] = await _soLoud.loadAsset(
+          'assets/audio/${song.assetDir}/stem_$name.ogg',
+        );
+      }
+    }
+    // Free the stems of the level played before
+    for (final source in previous.values) {
+      if (!_infiniteStems.containsValue(source) &&
+          !_stems.containsValue(source)) {
+        await _soLoud.disposeSource(source);
+      }
     }
   }
 
@@ -116,7 +143,7 @@ class AudioHelper {
   /// Where the music is now, in seconds of the file (it wraps when it loops).
   /// Null when nothing plays.
   double? get musicPosition {
-    final handle = _stemHandles['kick'];
+    final handle = _stemHandles[_song.stems.first];
     if (handle == null || !_soLoud.getIsValidVoiceHandle(handle)) {
       return null;
     }
@@ -142,9 +169,13 @@ class AudioHelper {
 
   void _playStems() {
     final group = _soLoud.createVoiceGroup();
-    for (final name in _rhythmStems) {
+    for (final name in _song.allStems) {
+      final source = _stems[name];
+      if (source == null) {
+        continue;
+      }
       final handle = _soLoud.play(
-        _stems[name]!,
+        source,
         volume: RhythmSongs.extraLayers.contains(name)
             ? 0
             : GameConstants.bgmVolume,
@@ -163,7 +194,7 @@ class AudioHelper {
   /// Fades the extra backing layers so only [layers] play, and fades the
   /// [muted] main stems out (the others back in)
   void setMusicLayers(List<String> layers, {List<String> muted = const []}) {
-    for (final name in _rhythmStems) {
+    for (final name in _song.allStems) {
       final handle = _stemHandles[name];
       if (handle == null || !_soLoud.getIsValidVoiceHandle(handle)) {
         continue;

@@ -67,7 +67,10 @@ void songFormTests() {
       expect(RhythmSongs.sectionFor(0), SongSection.verse);
       expect(RhythmSongs.form, contains(SongSection.chorus));
       expect(RhythmSongs.form, contains(SongSection.breather));
-      expect(SongSection.breather.mutedStems, contains('kick'));
+      expect(
+        SongSection.breather.mutedStemsOf(RhythmSongs.song),
+        contains('kick'),
+      );
       expect(SongSection.chorus.layersOver(const []), ['hats16']);
       expect(SongSection.chorus.layersOver(const ['hats16']), [
         'hats16',

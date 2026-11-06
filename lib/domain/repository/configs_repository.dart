@@ -61,4 +61,10 @@ class ConfigsRepository {
 
   Future<bool> isFirstHealthReceived() =>
       _configsLocalDataSource.isFirstHealthReceived();
+
+  /// How many levels of the levels mode the user has cleared
+  Future<int> getLevelsCleared() => _configsLocalDataSource.getLevelsCleared();
+
+  Future<void> setLevelsCleared(int count) =>
+      _configsLocalDataSource.setLevelsCleared(count);
 }

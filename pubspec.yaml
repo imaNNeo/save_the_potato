@@ -71,6 +71,16 @@ flutter:
     - assets/fonts/
     - assets/audio/
     - assets/audio/rhythm/
+    - assets/audio/levels/01/
+    - assets/audio/levels/02/
+    - assets/audio/levels/03/
+    - assets/audio/levels/04/
+    - assets/audio/levels/05/
+    - assets/audio/levels/06/
+    - assets/audio/levels/07/
+    - assets/audio/levels/08/
+    - assets/audio/levels/09/
+    - assets/audio/levels/10/
     - assets/audio/motivation/
     - assets/rive/
     - assets/logo/

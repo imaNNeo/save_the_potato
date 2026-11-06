@@ -75,7 +75,10 @@ class RhythmDirector extends Component
         }
       case PlayingStatePaused():
         break;
-      case PlayingStateGuide() || PlayingStateGameOver() || PlayingStateNone():
+      case PlayingStateGuide() ||
+          PlayingStateGameOver() ||
+          PlayingStateLevelCleared() ||
+          PlayingStateNone():
         _running = false;
         _planned.clear();
         _passing.clear();
@@ -84,8 +87,16 @@ class RhythmDirector extends Component
 
   bool _running = false;
 
+  /// The song of this run: the infinite song, or the level's
+  Song _song = RhythmSongs.song;
+
+  /// Whether the level's song has ended and the level is cleared
+  bool _ended = false;
+
   void _startRun() {
     _running = true;
+    _song = bloc.state.song;
+    _ended = false;
     _songTime = 0;
     _audioTime = 0;
     _lastPosition = null;
@@ -103,7 +114,7 @@ class RhythmDirector extends Component
   // ------------------------------------------------------------------
   // Clock
 
-  static const _loopEnd = RhythmSongs.loopSeconds;
+  double get _loopEnd => _song.loopSeconds;
 
   void _tickClock(double dt) {
     final position = _audio.musicPosition;
@@ -139,7 +150,7 @@ class RhythmDirector extends Component
     _songTime = error.abs() > 0.08 ? _audioTime : predicted + error * 0.15;
   }
 
-  double _beatTime(int beat) => beat * RhythmSongs.beatSeconds;
+  double _beatTime(int beat) => beat * _song.beatSeconds;
 
   // ------------------------------------------------------------------
   // Frame
@@ -155,9 +166,18 @@ class RhythmDirector extends Component
 
     final speed = _orbSpeed;
     final lookahead = _flightTime(speed, _spawnRadius) + _maxFormTime + 0.3;
-    while (_beatTime(_nextBeat) < _songTime + lookahead) {
+    final totalBeats = _song.totalBeats;
+    while (_beatTime(_nextBeat) < _songTime + lookahead &&
+        (totalBeats == null || _nextBeat < totalBeats)) {
       _planBeat(_nextBeat, speed);
       _nextBeat++;
+    }
+    if (totalBeats != null &&
+        !_ended &&
+        _songTime > _beatTime(totalBeats) + _clearDelay) {
+      // The level's song is over, and its last orbs are blocked
+      _ended = true;
+      bloc.levelCleared();
     }
 
     // Rifts open ahead of the orb reaching the ring, so the player sees
@@ -244,6 +264,10 @@ class RhythmDirector extends Component
     orb.portal = rift;
   }
 
+  /// How long after the last beat of a level's song it is cleared, so its
+  /// last orbs land first
+  static const _clearDelay = 1.0;
+
   /// How late an orb may still launch, from a bit closer in
   static const _maxLate = 0.25;
 
@@ -293,9 +317,7 @@ class RhythmDirector extends Component
   /// by one between [_beatNotesFrom] and [_beatNotesTo], then the notes
   /// between beats between [_offbeatNotesFrom] and [_offbeatNotesTo]. So the
   /// song fills in gradually instead of doubling all at once.
-  static final Map<MelodyPhrase, Map<MelodyNote, double>> _noteJoinsAt = {
-    for (final phrase in RhythmSongs.phrases) phrase: _joinsFor(phrase),
-  };
+  static final _noteJoinsAt = <MelodyPhrase, Map<MelodyNote, double>>{};
 
   static Map<MelodyNote, double> _joinsFor(MelodyPhrase phrase) {
     final joins = <MelodyNote, double>{};
@@ -325,7 +347,8 @@ class RhythmDirector extends Component
     if (section.notesAhead < 0) {
       return false;
     }
-    final joinsAt = _noteJoinsAt[phrase]?[note] ?? 0;
+    final joinsAt =
+        _noteJoinsAt.putIfAbsent(phrase, () => _joinsFor(phrase))[note] ?? 0;
     return _difficulty + section.notesAhead >= joinsAt;
   }
 
@@ -405,10 +428,12 @@ class RhythmDirector extends Component
   /// layers halfway, even if the difficulty crosses into the next stage.
   final _stageOfLoop = <int, SongStage>{};
 
-  SongSection _sectionFor(int loop) => RhythmSongs.sectionFor(loop);
+  SongSection _sectionFor(int loop) => _song.sectionFor(loop);
 
-  SongStage _stageFor(int loop) =>
-      _stageOfLoop.putIfAbsent(loop, () => RhythmSongs.stageFor(_difficulty));
+  SongStage _stageFor(int loop) => _stageOfLoop.putIfAbsent(
+    loop,
+    () => _song.stageFor(loop: loop, difficulty: _difficulty),
+  );
 
   MelodyPhrase _phraseFor(int loop) {
     final phrases = _stageFor(loop).phrases;
@@ -418,11 +443,11 @@ class RhythmDirector extends Component
   void _planMelodyBeat(int beat, double speed) {
     final bar = _barOf(beat);
     final beatInBar = beat % 4;
-    final loop = bar ~/ RhythmSongs.bars;
+    final loop = bar ~/ Song.bars;
     final phrase = _phraseFor(loop);
     final section = _sectionFor(loop);
     for (final note in phrase.notes) {
-      if (note.bar != bar % RhythmSongs.bars) {
+      if (note.bar != bar % Song.bars) {
         continue;
       }
       if (note.beat.floor() != beatInBar) {
@@ -431,7 +456,8 @@ class RhythmDirector extends Component
       if (!_notePlays(phrase, note, section)) {
         continue;
       }
-      final land = _beatTime(beat) + (note.beat - beatInBar) * 0.5;
+      final land =
+          _beatTime(beat) + (note.beat - beatInBar) * _song.beatSeconds;
       final ice = phrase.isIce(note);
       final type = ice ? OrbType.ice : OrbType.fire;
       final timbre = ice ? 'ice' : 'fire';
@@ -455,7 +481,7 @@ class RhythmDirector extends Component
           angle: _sides.harmonyAngleFor(type, angle, land, _difficulty),
           hit: RhythmHit(
             timbre: timbre,
-            midi: RhythmSongs.harmonyBelow(note.midi, bar) + octave,
+            midi: _song.harmonyBelow(note.midi, bar) + octave,
             land: land,
             volume: 0.55,
             companion: true,
@@ -466,7 +492,7 @@ class RhythmDirector extends Component
         // From right behind the melody orb, so the shield doesn't have to
         // move: its other end points at it. It lands half a beat later, so
         // the two notes sound one after the other.
-        final pairLand = land + RhythmSongs.beatSeconds / 2;
+        final pairLand = land + _song.beatSeconds / 2;
         final jitter = (_pairRandom.nextDouble() * 2 - 1) * _pairJitter;
         _add(
           pairLand,
@@ -476,9 +502,7 @@ class RhythmDirector extends Component
           hit: RhythmHit(
             timbre: ice ? 'fire' : 'ice',
             // The chord's root: up high on a bell, or low on a fire pair
-            midi: ice
-                ? RhythmSongs.rootFrom(46, bar)
-                : RhythmSongs.rootFrom(74, bar),
+            midi: ice ? _song.rootFrom(46, bar) : _song.rootFrom(74, bar),
             land: pairLand,
             volume: 0.6,
             companion: true,
@@ -498,7 +522,7 @@ class RhythmDirector extends Component
   /// At the start of each pass of the loop, fades the extra backing layers
   /// in or out to match the stage of the phrase that pass plays
   void _updateLayers() {
-    final loop = (_songTime / RhythmSongs.loopSeconds).floor();
+    final loop = (_songTime / _song.loopSeconds).floor();
     if (loop == _layersLoop) {
       return;
     }
@@ -511,7 +535,7 @@ class RhythmDirector extends Component
     final section = _sectionFor(loop);
     _audio.setMusicLayers(
       section.layersOver(stage.layers),
-      muted: section.mutedStems,
+      muted: section.mutedStemsOf(_song),
     );
   }
 

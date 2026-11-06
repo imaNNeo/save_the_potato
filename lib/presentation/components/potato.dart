@@ -14,6 +14,8 @@ import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/presentation/rhythm/levels.dart';
+import 'package:save_the_potato/presentation/widgets/mode_switcher.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import '../potato_game.dart';
@@ -69,7 +71,8 @@ class Potato extends PositionComponent
       previousState.playingState != newState.playingState ||
       previousState.currentGameMode.runtimeType !=
           newState.currentGameMode.runtimeType ||
-      previousState.playMotivationWord != newState.playMotivationWord;
+      previousState.playMotivationWord != newState.playMotivationWord ||
+      previousState.level != newState.level;
 
   @override
   void onNewState(GameState state) {
@@ -96,6 +99,22 @@ class Potato extends PositionComponent
     }
     if (state.playMotivationWord != null) {
       amazedTrigger.fire();
+    }
+    if (_lastState != null &&
+        _lastState!.level != state.level &&
+        state.playingState.isGuide) {
+      // A mode or level was picked on the home screen
+      final level = state.level;
+      if (level != null && !Levels.isOpen(level, state.levelsCleared)) {
+        scaredTrigger.fire();
+        Future.delayed(const Duration(milliseconds: 900), () {
+          if (isMounted) {
+            toIdleTrigger.fire();
+          }
+        });
+      } else {
+        amazedTrigger.fire();
+      }
     }
     _lastState = state;
   }
@@ -154,6 +173,15 @@ class Potato extends PositionComponent
       if (rotationSpeed != 0) {
         fireShield.angle += rotationSpeed * dt;
       }
+    } else if (bloc.state.playingState.isGuide) {
+      // On the home screen the fire shield faces the picked level's bead
+      final level = bloc.state.level;
+      final target = level == null ? 0.0 : ModeSwitcher.beadAngle(level);
+      final delta = atan2(
+        sin(target - fireShield.angle),
+        cos(target - fireShield.angle),
+      );
+      fireShield.angle += delta * min(1.0, dt * 8);
     }
     iceShield.angle = fireShield.angle - pi;
   }
