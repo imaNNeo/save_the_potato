@@ -5,6 +5,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
+import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/models/errors/domain_error.dart';
 import 'package:save_the_potato/domain/models/presentation_message.dart';
 import 'package:save_the_potato/domain/models/user_entity.dart';
@@ -27,15 +28,19 @@ class AuthCubit extends Cubit<AuthState> {
   final ConfigsRepository _configsRepository;
   final AnalyticsHelper _analyticsHelper;
 
-  late StreamSubscription _userStreamSubscription;
+  StreamSubscription? _userStreamSubscription;
 
   void initialize() async {
+    if (!AppUtils.isFirebaseSupported) {
+      // Sign-in needs Firebase, which only runs on Android and iOS.
+      return;
+    }
     try {
       final user = await _authRepository.getCurrentUser();
       FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
       emit(state.copyWith(user: ValueWrapper(user)));
     } catch (e, stackTrace) {
-      FirebaseCrashlytics.instance.recordError(e, stackTrace);
+      AppUtils.recordError(e, stackTrace);
       debugPrint('auth error: ${e.toString()}');
     }
 
@@ -146,7 +151,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   @override
   Future<void> close() {
-    _userStreamSubscription.cancel();
+    _userStreamSubscription?.cancel();
     return super.close();
   }
 }

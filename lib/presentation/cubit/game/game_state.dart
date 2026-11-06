@@ -7,7 +7,7 @@ class GameState extends Equatable {
     this.difficultyTimePassed = 0,
     this.playingState = const PlayingStateNone(),
     this.showGameOverUI = false,
-    this.shieldsAngleRotationSpeed = 0,
+    this.shieldsTurnDirection = 0,
     this.restartGame = false,
     this.onNewHighScore,
     this.firstHealthReceived = false,
@@ -45,7 +45,7 @@ class GameState extends Equatable {
 
   final bool showGameOverUI;
 
-  final double shieldsAngleRotationSpeed;
+  final int shieldsTurnDirection;
 
   final bool restartGame;
 
@@ -83,6 +83,17 @@ class GameState extends Equatable {
       difficultyLinear,
     );
   }
+
+  /// Between 0.0 and 1.0: how far past the peak the game is, see
+  /// [GameConstants.overdriveDuration]. 0 until [difficulty] reaches 1.
+  double get overdrive => min(
+    1.0,
+    max(
+      0.0,
+      (difficultyTimePassed - GameConstants.difficultyInitialToPeakDuration) /
+          GameConstants.overdriveDuration,
+    ),
+  );
 
   /// 0 -> When the game starts
   /// 1 -> From the first game mode change (multi spawn)
@@ -124,7 +135,7 @@ class GameState extends Equatable {
     double? difficultyTimePassed,
     PlayingState? playingState,
     bool? showGameOverUI,
-    double? shieldsAngleRotationSpeed,
+    int? shieldsTurnDirection,
     bool? restartGame,
     ValueWrapper<OnlineScoreEntity>? onNewHighScore,
     bool? firstHealthReceived,
@@ -142,8 +153,7 @@ class GameState extends Equatable {
     difficultyTimePassed: difficultyTimePassed ?? this.difficultyTimePassed,
     playingState: playingState ?? this.playingState,
     showGameOverUI: showGameOverUI ?? this.showGameOverUI,
-    shieldsAngleRotationSpeed:
-        shieldsAngleRotationSpeed ?? this.shieldsAngleRotationSpeed,
+    shieldsTurnDirection: shieldsTurnDirection ?? this.shieldsTurnDirection,
     restartGame: restartGame ?? this.restartGame,
     onNewHighScore: onNewHighScore != null
         ? onNewHighScore.value
@@ -171,7 +181,7 @@ class GameState extends Equatable {
     difficultyTimePassed,
     playingState,
     showGameOverUI,
-    shieldsAngleRotationSpeed,
+    shieldsTurnDirection,
     restartGame,
     onNewHighScore,
     firstHealthReceived,

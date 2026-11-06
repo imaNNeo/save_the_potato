@@ -1,19 +1,19 @@
-// The potato.riv state machine is driven by inputs, which Rive 0.14
-// deprecates in favour of data binding. They still work as before.
-// ignore_for_file: deprecated_member_use
-
 import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
-import 'package:flame_rive/flame_rive.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
+import 'package:save_the_potato/domain/hit_invincibility.dart';
+import 'package:save_the_potato/presentation/components/hit_blink.dart';
 import 'package:save_the_potato/presentation/components/guide_title.dart';
 import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/presentation/potato/potato_animator.dart';
+import 'package:save_the_potato/presentation/potato/potato_face_component.dart';
 import 'package:save_the_potato/presentation/rhythm/levels.dart';
 import 'package:save_the_potato/presentation/widgets/mode_switcher.dart';
 import 'package:save_the_potato/service_locator.dart';
@@ -40,31 +40,14 @@ class Potato extends PositionComponent
 
   double get radius => size.x / 2;
 
-  /*
-  * StateMachine guide:
-  * Entry -> Idle
-  * Idle -> fire-hit
-  * Idle -> ice-hit
-  * idle -> heart-hit
-  * Idle -> Die -> Respawn
-  * Idle -> Scared
-  * Idle -> Amazed
-  * Scared -> ToIdle
-  * Scared -> Die
-  * */
-  late File _riveFile;
-  late Artboard _artboard;
-  late StateMachine _stateMachine;
-  late TriggerInput fireHitTrigger;
-  late TriggerInput iceHitTrigger;
-  late TriggerInput heartHitTrigger;
-  late TriggerInput dieTrigger;
-  late TriggerInput scaredTrigger;
-  late TriggerInput toIdleTrigger;
-  late TriggerInput amazedTrigger;
+  /// Plays the potato's face animations (hit, scared, amazed, die, ...).
+  final face = PotatoAnimator();
 
   final _audioHelper = getIt.get<AudioHelper>();
   GameState? _lastState;
+
+  /// After a hit, the potato blinks and orbs can't hurt it for a moment
+  final invincibility = HitInvincibility();
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
@@ -76,9 +59,13 @@ class Potato extends PositionComponent
 
   @override
   void onNewState(GameState state) {
+    if (_lastState?.playingState != state.playingState) {
+      // A new run or the end of one, nothing to protect anymore
+      invincibility.reset();
+    }
     if (_lastState?.playingState != state.playingState &&
         state.playingState is PlayingStateGameOver) {
-      dieTrigger.fire();
+      face.die();
     }
     if (_lastState?.currentGameMode.runtimeType !=
         state.currentGameMode.runtimeType) {
@@ -86,19 +73,19 @@ class Potato extends PositionComponent
       switch (state.currentGameMode) {
         case GameModeSingleSpawn():
           if (state.gameModeHistory.isEmpty) {
-            toIdleTrigger.fire();
+            face.calmDown();
             return;
           }
           final previousMode = state.gameModeHistory.last as GameModeMultiSpawn;
           if (!previousMode.shouldPlayMotivationWord()) {
-            toIdleTrigger.fire();
+            face.calmDown();
           }
         case GameModeMultiSpawn():
-          scaredTrigger.fire();
+          face.scared();
       }
     }
     if (state.playMotivationWord != null) {
-      amazedTrigger.fire();
+      face.amazed();
     }
     if (_lastState != null &&
         _lastState!.level != state.level &&
@@ -106,14 +93,14 @@ class Potato extends PositionComponent
       // A mode or level was picked on the home screen
       final level = state.level;
       if (level != null && !Levels.isOpen(level, state.levelsCleared)) {
-        scaredTrigger.fire();
+        face.scared();
         Future.delayed(const Duration(milliseconds: 900), () {
           if (isMounted) {
-            toIdleTrigger.fire();
+            face.calmDown();
           }
         });
       } else {
-        amazedTrigger.fire();
+        face.amazed();
       }
     }
     _lastState = state;
@@ -131,27 +118,9 @@ class Potato extends PositionComponent
       ),
     );
 
-    _riveFile = (await File.asset(
-      'assets/rive/potato.riv',
-      riveFactory: Factory.flutter,
-    ))!;
-    _artboard = await loadArtboard(_riveFile);
-    _stateMachine = _artboard.stateMachine('State Machine 1')!;
-    fireHitTrigger = _stateMachine.trigger('fire-hit')!;
-    iceHitTrigger = _stateMachine.trigger('ice-hit')!;
-    heartHitTrigger = _stateMachine.trigger('heart-hit')!;
-    dieTrigger = _stateMachine.trigger('Die')!;
-    scaredTrigger = _stateMachine.trigger('Scared')!;
-    toIdleTrigger = _stateMachine.trigger('ToIdle')!;
-    amazedTrigger = _stateMachine.trigger('Amazed')!;
     add(
-      RiveComponent(
-        artboard: _artboard,
-        stateMachine: _stateMachine,
-        size: Vector2.all(152),
-        anchor: Anchor.center,
-        position: size / 2,
-      ),
+      HitBlink(invincibility: invincibility, size: size, position: size / 2)
+        ..add(PotatoFaceComponent(animator: face, position: size / 2)),
     );
     add(fireShield = Shield(type: OrbType.fire));
     add(iceShield = Shield(type: OrbType.ice));
@@ -168,11 +137,10 @@ class Potato extends PositionComponent
   @override
   void update(double dt) {
     super.update(dt);
+    invincibility.update(dt);
     if (bloc.state.playingState.isPlaying) {
-      final rotationSpeed = bloc.state.shieldsAngleRotationSpeed;
-      if (rotationSpeed != 0) {
-        fireShield.angle += rotationSpeed * dt;
-      }
+      fireShield.angle +=
+          bloc.state.shieldsTurnDirection * GameConstants.shieldsTurnSpeed * dt;
     } else if (bloc.state.playingState.isGuide) {
       // On the home screen the fire shield faces the picked level's bead
       final level = bloc.state.level;
@@ -195,18 +163,21 @@ class Potato extends PositionComponent
           getIt.get<AnalyticsHelper>().heartReceived();
           _audioHelper.playHeartHitSound();
           game.onHealthPointReceived();
-          heartHitTrigger.fire();
+          face.heartHit();
           other.onConsumed();
           break;
         case FireOrb() when other.rhythmHit?.companion ?? false:
           // Only there to fill the chord, its melody orb already counts
           other.onPotatoHit();
           break;
+        case FireOrb() when invincibility.isActive:
+          // Still recovering from the last hit, it does no damage
+          other.onPotatoHit();
+          break;
         case FireOrb():
-          _audioHelper.playOrbHitSound();
-          game.onOrbHit(_angleTo(other));
+          _onOrbHit(other);
           if (bloc.state.life > 0) {
-            fireHitTrigger.fire();
+            face.fireHit();
           }
           other.onPotatoHit();
           break;
@@ -214,11 +185,14 @@ class Potato extends PositionComponent
           // Only there to fill the chord, its melody orb already counts
           other.onPotatoHit();
           break;
+        case IceOrb() when invincibility.isActive:
+          // Still recovering from the last hit, it does no damage
+          other.onPotatoHit();
+          break;
         case IceOrb():
-          _audioHelper.playOrbHitSound();
-          game.onOrbHit(_angleTo(other));
+          _onOrbHit(other);
           if (bloc.state.life > 0) {
-            iceHitTrigger.fire();
+            face.iceHit();
           }
           other.onPotatoHit();
           break;
@@ -227,16 +201,16 @@ class Potato extends PositionComponent
     }
   }
 
+  void _onOrbHit(PositionComponent orb) {
+    _audioHelper.playOrbHitSound();
+    game.onOrbHit(_angleTo(orb));
+    if (bloc.state.life > 0 && bloc.state.playingState.isPlaying) {
+      invincibility.trigger();
+    }
+  }
+
   double _angleTo(PositionComponent other) {
     final diff = other.absoluteCenter - absoluteCenter;
     return atan2(diff.y, diff.x);
-  }
-
-  @override
-  void onRemove() {
-    _stateMachine.dispose();
-    _artboard.dispose();
-    _riveFile.dispose();
-    super.onRemove();
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../presentation/cubit/game/game_mode.dart';
@@ -6,6 +8,10 @@ class GameConstants {
   static const double gameOverTimeScale = 0.1;
   static const showRetryAfterGameOverDelay = Duration(seconds: 3);
   static const showShieldLineAnimDuration = 2.0;
+
+  /// How fast (radians per second) holding a side turns the shields.
+  /// It used to be pi * 1.8, which felt too sensitive
+  static const shieldsTurnSpeed = pi * 1.4;
 
   /// It takes 8 minutes to reach the peak difficulty
   static const difficultyInitialToPeakDuration = 480.0;
@@ -18,6 +24,12 @@ class GameConstants {
   /// Each time the potato gets hit, the difficulty steps back by this many
   /// seconds, so a struggling player gets a breather
   static const difficultyRewindOnHit = 20.0;
+
+  /// After the peak, the game keeps getting harder through "overdrive": it
+  /// climbs steadily from 0 at the peak (8:00) to 1 this many seconds later
+  /// (20:00), then holds. It speeds the orbs up, shortens the rift warning
+  /// and turns the orb sides further, on top of the full difficulty.
+  static const overdriveDuration = 720.0;
 
   /// How many world units fit across the shorter side of the screen. The
   /// potato, shields and orbs keep their world size, so a bigger view makes

@@ -27,9 +27,13 @@ class OrbSides {
   static const _spreadEasy = 20 * pi / 180;
   static const _spreadHard = 30 * pi / 180;
 
+  /// At full overdrive (well past the peak), still inside the shield
+  static const _spreadOverdrive = 36 * pi / 180;
+
   /// How far the sides turn over one phrase
   static const _turnEasy = (25 * pi / 180, 55 * pi / 180);
   static const _turnHard = (45 * pi / 180, 95 * pi / 180);
+  static const _turnOverdrive = (65 * pi / 180, 125 * pi / 180);
 
   /// Rifts of the same group never open closer than this to the last one
   static const _minStep = 9 * pi / 180;
@@ -48,14 +52,15 @@ class OrbSides {
   }
 
   /// Where the fire side points at song time [time]: it eases from one
-  /// phrase start to the next, so it never jerks.
-  double fireSideAt(double time, double difficulty) {
+  /// phrase start to the next, so it never jerks. [overdrive] (0 to 1,
+  /// past the peak difficulty) makes the sides turn further.
+  double fireSideAt(double time, double difficulty, {double overdrive = 0}) {
     if (_phraseStarts.isEmpty) {
       reset();
     }
     final phrase = max(0, time ~/ phraseSeconds);
     while (_phraseStarts.length <= phrase + 1) {
-      _phraseStarts.add(_phraseStarts.last + _nextTurn(difficulty));
+      _phraseStarts.add(_phraseStarts.last + _nextTurn(difficulty, overdrive));
     }
     final t = (time / phraseSeconds - phrase).clamp(0.0, 1.0);
     final eased = t * t * (3 - 2 * t);
@@ -63,26 +68,38 @@ class OrbSides {
     return from + (_phraseStarts[phrase + 1] - from) * eased;
   }
 
-  double _nextTurn(double difficulty) {
+  double _nextTurn(double difficulty, double overdrive) {
     final d = difficulty.clamp(0.0, 1.0);
+    final o = overdrive.clamp(0.0, 1.0);
     // Mostly keep turning the same way, so over a minute the sides travel
     // all the way around. Now and then turn back, to keep it lively.
     if (_rnd.nextDouble() < 0.25) {
       _turnDirection = -_turnDirection;
     }
-    final low = _lerp(_turnEasy.$1, _turnHard.$1, d);
-    final high = _lerp(_turnEasy.$2, _turnHard.$2, d);
+    final low = o > 0
+        ? _lerp(_turnHard.$1, _turnOverdrive.$1, o)
+        : _lerp(_turnEasy.$1, _turnHard.$1, d);
+    final high = o > 0
+        ? _lerp(_turnHard.$2, _turnOverdrive.$2, o)
+        : _lerp(_turnEasy.$2, _turnHard.$2, d);
     return _turnDirection * _lerp(low, high, _rnd.nextDouble());
   }
 
   /// The angle an orb of [type] that reaches the shield at [land] comes from
-  double angleFor(OrbType type, double land, double difficulty) {
-    final fireSide = fireSideAt(land, difficulty);
+  double angleFor(
+    OrbType type,
+    double land,
+    double difficulty, {
+    double overdrive = 0,
+  }) {
+    final fireSide = fireSideAt(land, difficulty, overdrive: overdrive);
     final side = switch (type) {
       OrbType.fire => fireSide,
       OrbType.ice => fireSide + pi,
     };
-    final spread = _lerp(_spreadEasy, _spreadHard, difficulty.clamp(0.0, 1.0));
+    final spread = overdrive > 0
+        ? _lerp(_spreadHard, _spreadOverdrive, overdrive.clamp(0.0, 1.0))
+        : _lerp(_spreadEasy, _spreadHard, difficulty.clamp(0.0, 1.0));
     var offset = (_rnd.nextDouble() * 2 - 1) * spread;
     final last = _lastOffset[type];
     if (last != null && (offset - last).abs() < _minStep) {
@@ -106,9 +123,10 @@ class OrbSides {
     OrbType type,
     double angle,
     double land,
-    double difficulty,
-  ) {
-    final fireSide = fireSideAt(land, difficulty);
+    double difficulty, {
+    double overdrive = 0,
+  }) {
+    final fireSide = fireSideAt(land, difficulty, overdrive: overdrive);
     final side = type == OrbType.fire ? fireSide : fireSide + pi;
     final offset = atan2(sin(angle - side), cos(angle - side));
     return angle - (offset >= 0 ? harmonyGap : -harmonyGap);

@@ -246,10 +246,20 @@ jobs:
       - name: Upload dSYMs to Crashlytics
         continue-on-error: true
         run: |
-          script=$(find "$HOME/Library/Developer/Xcode/DerivedData" ios/Pods -path '*Crashlytics/upload-symbols' -type f 2>/dev/null | head -1)
-          if [ -z "$script" ]; then echo "::warning::Crashlytics upload-symbols not found, skipping dSYM upload"; exit 0; fi
-          echo "Using $script"
-          "$script" -gsp ios/Runner/GoogleService-Info.plist -p ios build/ios/archive/Runner.xcarchive/dSYMs
+          # With Swift Package Manager the Firebase checkout isn't in a fixed place,
+          # so download Crashlytics' upload-symbols tool for the resolved Firebase version.
+          resolved=$(find ios "$HOME/Library/Developer/Xcode/DerivedData" -name Package.resolved 2>/dev/null \
+            | xargs -I{} jq -r '.pins[]? | select(.identity == "firebase-ios-sdk") | .state.version // empty' {} 2>/dev/null | head -1)
+          version=${resolved:-main}
+          echo "Firebase iOS SDK: $version"
+          curl -fsSL -o "$RUNNER_TEMP/upload-symbols" "https://raw.githubusercontent.com/firebase/firebase-ios-sdk/$version/Crashlytics/upload-symbols"
+          chmod +x "$RUNNER_TEMP/upload-symbols"
+          dsyms=build/ios/archive/Runner.xcarchive/dSYMs
+          ls "$dsyms"
+          if ! "$RUNNER_TEMP/upload-symbols" -gsp ios/Runner/GoogleService-Info.plist -p ios "$dsyms"; then
+            echo "::warning::Uploading dSYMs to Crashlytics failed; crash reports for this build won't be symbolicated."
+            exit 1
+          fi
 
       - name: Attach to the GitHub release
         env:
