@@ -10,6 +10,7 @@ import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flame_rive/flame_rive.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/presentation/components/guide_title.dart';
+import 'package:save_the_potato/presentation/components/hp_prototypes.dart';
 import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
@@ -134,6 +135,11 @@ class Potato extends PositionComponent
         position: size / 2,
       ),
     );
+    final hpStyle = HpStyle.current;
+    if (hpStyle != null) {
+      add(HpPrototype(style: hpStyle, front: false, at: size / 2));
+      add(HpPrototype(style: hpStyle, front: true, at: size / 2));
+    }
     add(fireShield = Shield(type: OrbType.fire));
     add(iceShield = Shield(type: OrbType.ice));
 
