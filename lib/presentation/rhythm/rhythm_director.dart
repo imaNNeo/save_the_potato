@@ -56,6 +56,9 @@ class RhythmDirector extends Component
   double _audioTime = 0;
   double? _lastPosition;
 
+  /// How long the music position hasn't moved
+  double _musicStuck = 0;
+
   // ---- planning ----
   final _planned = <_PlannedOrb>[];
 
@@ -107,6 +110,7 @@ class RhythmDirector extends Component
     _songTime = 0;
     _audioTime = 0;
     _lastPosition = null;
+    _musicStuck = 0;
     _planned.clear();
     _passing.clear();
     _inFlight.clear();
@@ -140,6 +144,27 @@ class RhythmDirector extends Component
       _audioTime = _songTime;
       _lastPosition = at;
       return;
+    }
+    if (_lastPosition != null && (position - _lastPosition!).abs() < 1e-6) {
+      // The music isn't moving (the browser hasn't let the audio start):
+      // keep the game going on game time
+      _musicStuck += dt;
+      if (_musicStuck > 0.25) {
+        _songTime += dt;
+        _audioTime = _songTime;
+        return;
+      }
+    } else if (_musicStuck > 0.25) {
+      // It started moving again: bring the music to where the game is
+      _musicStuck = 0;
+      final at = (_songTime + dt) % _loopEnd;
+      _audio.seekMusic(at);
+      _songTime += dt;
+      _audioTime = _songTime;
+      _lastPosition = at;
+      return;
+    } else {
+      _musicStuck = 0;
     }
     if (_lastPosition == null) {
       _audioTime = position;
