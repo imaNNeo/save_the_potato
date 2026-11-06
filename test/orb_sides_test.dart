@@ -8,6 +8,7 @@ import 'package:save_the_potato/presentation/rhythm/orb_sides.dart';
 double gap(double a, double b) => atan2(sin(a - b), cos(a - b));
 
 void main() {
+  harmonyTests();
   test('one shield spot blocks every fire and ice orb near the same time', () {
     for (var seed = 0; seed < 20; seed++) {
       final sides = OrbSides(random: Random(seed))..reset();
@@ -38,5 +39,23 @@ void main() {
       visitedRight |= x > 0.9;
     }
     expect(visitedLeft && visitedRight, isTrue);
+  });
+}
+
+void harmonyTests() {
+  test('a harmony orb is blocked from the same shield spot', () {
+    for (var seed = 0; seed < 20; seed++) {
+      final sides = OrbSides(random: Random(seed))..reset();
+      for (var land = 2.0; land < 300; land += 0.5) {
+        final difficulty = min(1.0, land / 300);
+        final type = (land * 2).round().isEven ? OrbType.fire : OrbType.ice;
+        final angle = sides.angleFor(type, land, difficulty);
+        final harmony = sides.harmonyAngleFor(type, angle, land, difficulty);
+        final fireSide = sides.fireSideAt(land, difficulty);
+        final side = type == OrbType.fire ? fireSide : fireSide + pi;
+        expect(gap(harmony, side).abs(), lessThan(pi / 4));
+        expect(gap(harmony, angle).abs(), closeTo(OrbSides.harmonyGap, 1e-9));
+      }
+    }
   });
 }

@@ -170,12 +170,20 @@ class Potato extends PositionComponent
           heartHitTrigger.fire();
           other.onConsumed();
           break;
+        case FireOrb() when other.rhythmHit?.companion ?? false:
+          // Only there to fill the chord, its melody orb already counts
+          other.onPotatoHit();
+          break;
         case FireOrb():
           _audioHelper.playOrbHitSound();
           game.onOrbHit(_angleTo(other));
           if (bloc.state.life > 0) {
             fireHitTrigger.fire();
           }
+          other.onPotatoHit();
+          break;
+        case IceOrb() when other.rhythmHit?.companion ?? false:
+          // Only there to fill the chord, its melody orb already counts
           other.onPotatoHit();
           break;
         case IceOrb():
