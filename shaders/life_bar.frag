@@ -99,14 +99,11 @@ void main() {
     float sweepX = (1.0 - uLevelUp) * 1.4 - 0.2;
     fill += vec3(1.0) * exp(-pow((x - sweepX) * aspect * 0.6, 2.0)) * uLevelUp * 1.2;
 
-    // The empty part, with marks where the stages start
+    // The empty part. No marks across it, they made the bar look cut into
+    // pieces. The danger zone fades in softly from the left instead.
     vec3 track = vec3(0.07, 0.07, 0.1);
-    track = mix(track, vec3(0.35, 0.03, 0.06), (1.0 - step(0.2, x)) * (0.5 + 0.5 * uDanger * pulse));
-    float ticks = 0.0;
-    ticks += 1.0 - smoothstep(0.6, 1.4, abs(x - 0.2) * uBar.z);
-    ticks += 1.0 - smoothstep(0.6, 1.4, abs(x - 0.5) * uBar.z);
-    ticks += 1.0 - smoothstep(0.6, 1.4, abs(x - 0.8) * uBar.z);
-    track += vec3(0.35) * ticks;
+    float dangerZone = 1.0 - smoothstep(0.0, 0.3, x);
+    track = mix(track, vec3(0.35, 0.03, 0.06), dangerZone * (0.35 + 0.65 * uDanger * pulse));
     track = mix(track, vec3(0.9, 0.15, 0.2), uHit * 0.6);
 
     // The chunk that was just lost, crumbling away
