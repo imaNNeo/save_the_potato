@@ -11,6 +11,7 @@ class RotationControls extends StatefulWidget {
   const RotationControls({
     super.key,
     required this.showGuide,
+    this.hint = 0,
     required this.onLeftDown,
     required this.onLeftUp,
     required this.onRightDown,
@@ -18,6 +19,9 @@ class RotationControls extends StatefulWidget {
   });
 
   final bool showGuide;
+
+  /// The tutorial points at one button: -1 left, 1 right, 0 none
+  final int hint;
   final VoidCallback onLeftDown;
   final VoidCallback onLeftUp;
   final VoidCallback onRightDown;
@@ -67,15 +71,20 @@ class _RotationControlsState extends State<RotationControls> {
         Expanded(
           child: _holdArea(
             isLeft: true,
-            child: widget.showGuide
-                ? const Align(
+            child: widget.showGuide || widget.hint == -1
+                ? Align(
                     alignment: Alignment.bottomLeft,
                     child: Padding(
-                      padding: EdgeInsets.only(
+                      padding: const EdgeInsets.only(
                         bottom: bottomPadding,
                         left: edgePadding,
                       ),
-                      child: SafeArea(child: _GuideWidget(isLeft: true)),
+                      child: SafeArea(
+                        child: _GuideWidget(
+                          isLeft: true,
+                          urgent: widget.hint == -1,
+                        ),
+                      ),
                     ),
                   )
                 : const SizedBox(),
@@ -84,15 +93,20 @@ class _RotationControlsState extends State<RotationControls> {
         Expanded(
           child: _holdArea(
             isLeft: false,
-            child: widget.showGuide
-                ? const Align(
+            child: widget.showGuide || widget.hint == 1
+                ? Align(
                     alignment: Alignment.bottomRight,
                     child: Padding(
-                      padding: EdgeInsets.only(
+                      padding: const EdgeInsets.only(
                         bottom: bottomPadding,
                         right: edgePadding,
                       ),
-                      child: SafeArea(child: _GuideWidget(isLeft: false)),
+                      child: SafeArea(
+                        child: _GuideWidget(
+                          isLeft: false,
+                          urgent: widget.hint == 1,
+                        ),
+                      ),
                     ),
                   )
                 : const SizedBox(),
@@ -114,9 +128,12 @@ class _RotationControlsState extends State<RotationControls> {
 }
 
 class _GuideWidget extends StatelessWidget {
-  const _GuideWidget({required this.isLeft});
+  const _GuideWidget({required this.isLeft, this.urgent = false});
 
   final bool isLeft;
+
+  /// The tutorial wants this one pressed now: pulse right away, faster
+  final bool urgent;
 
   @override
   Widget build(BuildContext context) {
@@ -124,6 +141,8 @@ class _GuideWidget extends StatelessWidget {
     const iconSize = 88.0;
     const startOpacity = 0.3;
     const endOpacity = 1.0;
+    final step = Duration(milliseconds: urgent ? 0 : 1400);
+    final duration = Duration(milliseconds: urgent ? 380 : 700);
     return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -143,30 +162,31 @@ class _GuideWidget extends StatelessWidget {
           ],
         )
         .animate(
+          key: ValueKey(urgent),
           autoPlay: true,
-          delay: Duration(milliseconds: isLeft ? 0 : 2100),
+          delay: Duration(milliseconds: urgent || isLeft ? 0 : 2100),
           onPlay: (controller) => controller.repeat(reverse: true),
         )
         .scaleXY(
           begin: 1.0,
           end: 1.25,
           curve: Curves.fastOutSlowIn,
-          delay: const Duration(milliseconds: 1400),
-          duration: const Duration(milliseconds: 700),
+          delay: step,
+          duration: duration,
         )
         .rotate(
           begin: 0.0,
           end: isLeft ? -0.013 : 0.013,
           curve: Curves.easeOut,
-          delay: const Duration(milliseconds: 1400),
-          duration: const Duration(milliseconds: 700),
+          delay: step,
+          duration: duration,
         )
         .fade(
           begin: startOpacity,
           end: endOpacity,
-          delay: const Duration(milliseconds: 1400),
+          delay: step,
           curve: Curves.easeOutExpo,
-          duration: const Duration(milliseconds: 700),
+          duration: duration,
         );
   }
 }

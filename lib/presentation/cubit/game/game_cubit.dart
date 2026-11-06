@@ -18,6 +18,7 @@ import 'package:save_the_potato/presentation/components/motivation_component.dar
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/presentation/tutorial/tutorial_style.dart';
 
 part 'game_state.dart';
 
@@ -42,6 +43,10 @@ class GameCubit extends Cubit<GameState> {
   late int gameShowGuideTimestamp;
   late int gameStartedTimestamp;
 
+  /// The tutorial to run on the next start, null when the player knows
+  /// the game already
+  TutorialStyle? tutorialStyle;
+
   void startToShowGuide() async {
     gameShowGuideTimestamp = DateTime.now().millisecondsSinceEpoch;
     emit(const GameState().copyWith(playingState: const PlayingStateGuide()));
@@ -50,22 +55,65 @@ class GameCubit extends Cubit<GameState> {
         firstHealthReceived: await _configsRepository.isFirstHealthReceived(),
       ),
     );
+    tutorialStyle =
+        TutorialStyle.forced ??
+        (await _configsRepository.isTutorialDone()
+            ? null
+            : TutorialStyle.defaultStyle);
   }
 
   void _guideInteracted() async {
     if (!state.playingState.isGuide) {
       return;
     }
+    if (tutorialStyle != null) {
+      // Straight into the playground, the real run starts when it's done
+      emit(
+        state.copyWith(
+          playingState: const PlayingStatePlaying(),
+          tutorial: true,
+        ),
+      );
+      return;
+    }
+    _startRun();
+  }
+
+  void _startRun() {
     gameStartedTimestamp = DateTime.now().millisecondsSinceEpoch;
     final afterGuideDurationMills =
         gameStartedTimestamp - gameShowGuideTimestamp;
     _analyticsHelper.logLevelStart(afterGuideDurationMills);
-    emit(state.copyWith(playingState: const PlayingStatePlaying()));
+    emit(
+      state.copyWith(
+        playingState: const PlayingStatePlaying(),
+        tutorial: false,
+        tutorialHint: 0,
+      ),
+    );
     _audioHelper.playBackgroundMusic();
   }
 
+  /// The player blocked enough orbs in the tutorial: the real run starts
+  /// right where they are, with the music
+  void finishTutorial() {
+    if (!state.tutorial) {
+      return;
+    }
+    tutorialStyle = null;
+    _configsRepository.setTutorialDone(true);
+    _startRun();
+  }
+
+  /// Points at a turn button during the tutorial (-1 left, 1 right, 0 none)
+  void setTutorialHint(int direction) {
+    if (state.tutorialHint != direction) {
+      emit(state.copyWith(tutorialHint: direction));
+    }
+  }
+
   void update(double dt) {
-    if (!state.playingState.isPlaying) {
+    if (!state.playingState.isPlaying || state.tutorial) {
       return;
     }
     // We calculate the [state.difficulty] based on the time passed.
@@ -82,6 +130,10 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void potatoOrbHit() {
+    if (state.tutorial) {
+      // Practice, a hit costs nothing
+      return;
+    }
     var updatedGameMode = state.currentGameMode.increaseCollidedOrbsCount(
       count: 1,
     );
@@ -278,13 +330,17 @@ class GameCubit extends Cubit<GameState> {
     }
     _analyticsHelper.logLevelPause(manually);
     emit(state.copyWith(playingState: const PlayingStatePaused()));
-    _audioHelper.pauseBackgroundMusic();
+    if (!state.tutorial) {
+      _audioHelper.pauseBackgroundMusic();
+    }
   }
 
   void resumeGame() {
     _analyticsHelper.logLevelResume();
     emit(state.copyWith(playingState: const PlayingStatePlaying()));
-    _audioHelper.resumeBackgroundMusic();
+    if (!state.tutorial) {
+      _audioHelper.resumeBackgroundMusic();
+    }
   }
 
   void restartGame() {
@@ -315,7 +371,7 @@ class GameCubit extends Cubit<GameState> {
           state.copyWith(
             shieldHitCounter: state.shieldHitCounter + 1,
             currentGameMode: updatedGameMode,
-            life: state.playingState.isPlaying
+            life: state.playingState.isPlaying && !state.tutorial
                 ? LifeMeter.afterBlock(state.life)
                 : null,
           ),

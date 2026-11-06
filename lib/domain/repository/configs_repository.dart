@@ -61,4 +61,10 @@ class ConfigsRepository {
 
   Future<bool> isFirstHealthReceived() =>
       _configsLocalDataSource.isFirstHealthReceived();
+
+  /// Whether the player finished the first-time tutorial
+  Future<void> setTutorialDone(bool done) =>
+      _configsLocalDataSource.setTutorialDone(done);
+
+  Future<bool> isTutorialDone() => _configsLocalDataSource.isTutorialDone();
 }

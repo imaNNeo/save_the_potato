@@ -22,14 +22,19 @@ class _PotatoTopBarState extends State<PotatoTopBar> {
   Widget build(BuildContext context) {
     return BlocBuilder<GameCubit, GameState>(
       buildWhen: (previous, current) =>
-          previous.playingState != current.playingState,
+          previous.playingState != current.playingState ||
+          previous.tutorial != current.tutorial,
       builder: (context, state) {
         return SafeArea(
           child: Column(
             children: [
               const SizedBox(height: 8.0),
-              Opacity(
-                opacity: state.playingState is PlayingStatePlaying ? 1.0 : 0.2,
+              AnimatedOpacity(
+                opacity:
+                    state.playingState is PlayingStatePlaying && !state.tutorial
+                    ? 1.0
+                    : 0.2,
+                duration: const Duration(milliseconds: 600),
                 child: const GameTimer(),
               ),
               const SizedBox(height: 4.0),

@@ -176,7 +176,9 @@ class Potato extends PositionComponent
   void _onOrbHit(PositionComponent orb) {
     _audioHelper.playOrbHitSound();
     game.onOrbHit(_angleTo(orb));
-    if (bloc.state.life > 0 && bloc.state.playingState.isPlaying) {
+    if (bloc.state.life > 0 &&
+        bloc.state.playingState.isPlaying &&
+        !bloc.state.tutorial) {
       invincibility.trigger();
     }
   }
