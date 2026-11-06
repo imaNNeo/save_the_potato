@@ -11,7 +11,7 @@ class GameConstants {
 
   /// How fast (radians per second) holding a side turns the shields.
   /// It used to be pi * 1.8, which felt too sensitive
-  static const shieldsTurnSpeed = pi * 1.2;
+  static const shieldsTurnSpeed = pi * 1.4;
 
   /// It takes 8 minutes to reach the peak difficulty
   static const difficultyInitialToPeakDuration = 480.0;
