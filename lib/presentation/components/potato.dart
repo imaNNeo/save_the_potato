@@ -1,13 +1,8 @@
-// The potato.riv state machine is driven by inputs, which Rive 0.14
-// deprecates in favour of data binding. They still work as before.
-// ignore_for_file: deprecated_member_use
-
 import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
-import 'package:flame_rive/flame_rive.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/hit_invincibility.dart';
 import 'package:save_the_potato/presentation/components/hit_blink.dart';
@@ -16,6 +11,8 @@ import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/presentation/potato/potato_animator.dart';
+import 'package:save_the_potato/presentation/potato/potato_face_component.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import '../potato_game.dart';
@@ -40,28 +37,8 @@ class Potato extends PositionComponent
 
   double get radius => size.x / 2;
 
-  /*
-  * StateMachine guide:
-  * Entry -> Idle
-  * Idle -> fire-hit
-  * Idle -> ice-hit
-  * idle -> heart-hit
-  * Idle -> Die -> Respawn
-  * Idle -> Scared
-  * Idle -> Amazed
-  * Scared -> ToIdle
-  * Scared -> Die
-  * */
-  late File _riveFile;
-  late Artboard _artboard;
-  late StateMachine _stateMachine;
-  late TriggerInput fireHitTrigger;
-  late TriggerInput iceHitTrigger;
-  late TriggerInput heartHitTrigger;
-  late TriggerInput dieTrigger;
-  late TriggerInput scaredTrigger;
-  late TriggerInput toIdleTrigger;
-  late TriggerInput amazedTrigger;
+  /// Plays the potato's face animations (hit, scared, amazed, die, ...).
+  final face = PotatoAnimator();
 
   final _audioHelper = getIt.get<AudioHelper>();
   GameState? _lastState;
@@ -84,7 +61,7 @@ class Potato extends PositionComponent
     }
     if (_lastState?.playingState != state.playingState &&
         state.playingState is PlayingStateGameOver) {
-      dieTrigger.fire();
+      face.die();
     }
     if (_lastState?.currentGameMode.runtimeType !=
         state.currentGameMode.runtimeType) {
@@ -92,19 +69,19 @@ class Potato extends PositionComponent
       switch (state.currentGameMode) {
         case GameModeSingleSpawn():
           if (state.gameModeHistory.isEmpty) {
-            toIdleTrigger.fire();
+            face.calmDown();
             return;
           }
           final previousMode = state.gameModeHistory.last as GameModeMultiSpawn;
           if (!previousMode.shouldPlayMotivationWord()) {
-            toIdleTrigger.fire();
+            face.calmDown();
           }
         case GameModeMultiSpawn():
-          scaredTrigger.fire();
+          face.scared();
       }
     }
     if (state.playMotivationWord != null) {
-      amazedTrigger.fire();
+      face.amazed();
     }
     _lastState = state;
   }
@@ -121,30 +98,9 @@ class Potato extends PositionComponent
       ),
     );
 
-    _riveFile = (await File.asset(
-      'assets/rive/potato.riv',
-      riveFactory: Factory.flutter,
-    ))!;
-    _artboard = await loadArtboard(_riveFile);
-    _stateMachine = _artboard.stateMachine('State Machine 1')!;
-    fireHitTrigger = _stateMachine.trigger('fire-hit')!;
-    iceHitTrigger = _stateMachine.trigger('ice-hit')!;
-    heartHitTrigger = _stateMachine.trigger('heart-hit')!;
-    dieTrigger = _stateMachine.trigger('Die')!;
-    scaredTrigger = _stateMachine.trigger('Scared')!;
-    toIdleTrigger = _stateMachine.trigger('ToIdle')!;
-    amazedTrigger = _stateMachine.trigger('Amazed')!;
     add(
       HitBlink(invincibility: invincibility, size: size, position: size / 2)
-        ..add(
-          RiveComponent(
-            artboard: _artboard,
-            stateMachine: _stateMachine,
-            size: Vector2.all(152),
-            anchor: Anchor.center,
-            position: size / 2,
-          ),
-        ),
+        ..add(PotatoFaceComponent(animator: face, position: size / 2)),
     );
     add(fireShield = Shield(type: OrbType.fire));
     add(iceShield = Shield(type: OrbType.ice));
@@ -180,7 +136,7 @@ class Potato extends PositionComponent
           getIt.get<AnalyticsHelper>().heartReceived();
           _audioHelper.playHeartHitSound();
           game.onHealthPointReceived();
-          heartHitTrigger.fire();
+          face.heartHit();
           other.onConsumed();
           break;
         case FireOrb() when other.rhythmHit?.companion ?? false:
@@ -194,7 +150,7 @@ class Potato extends PositionComponent
         case FireOrb():
           _onOrbHit(other);
           if (bloc.state.life > 0) {
-            fireHitTrigger.fire();
+            face.fireHit();
           }
           other.onPotatoHit();
           break;
@@ -209,7 +165,7 @@ class Potato extends PositionComponent
         case IceOrb():
           _onOrbHit(other);
           if (bloc.state.life > 0) {
-            iceHitTrigger.fire();
+            face.iceHit();
           }
           other.onPotatoHit();
           break;
@@ -229,13 +185,5 @@ class Potato extends PositionComponent
   double _angleTo(PositionComponent other) {
     final diff = other.absoluteCenter - absoluteCenter;
     return atan2(diff.y, diff.x);
-  }
-
-  @override
-  void onRemove() {
-    _stateMachine.dispose();
-    _artboard.dispose();
-    _riveFile.dispose();
-    super.onRemove();
   }
 }

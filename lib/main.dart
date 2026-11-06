@@ -3,7 +3,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:rive/rive.dart';
 import 'package:save_the_potato/domain/analytics_helper.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
@@ -41,7 +40,6 @@ Future<void> main() async {
       };
     }
   }
-  await RiveNative.init();
   setupServiceLocator();
   runApp(const MyApp());
 }
