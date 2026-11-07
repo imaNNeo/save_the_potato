@@ -1,9 +1,11 @@
 import 'dart:math';
 
-import 'package:flutter_soloud/flutter_soloud.dart';
+import 'package:flutter/foundation.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/models/lazy_value.dart';
 import 'package:save_the_potato/presentation/components/motivation_component.dart';
+import 'package:save_the_potato/presentation/helpers/audio/sound_backend.dart';
+import 'package:save_the_potato/presentation/helpers/audio/sound_backend_soloud.dart';
 import 'package:save_the_potato/presentation/rhythm/rhythm_songs.dart';
 
 class AudioHelper {
@@ -13,10 +15,13 @@ class AudioHelper {
 
   Future<bool> get audioEnabled => _audioEnabled.value;
 
-  late final SoLoud _soLoud;
+  /// flutter_soloud, or the browser's Web Audio on the web (see
+  /// [SoundBackend])
+  SoundBackend _backend = SoundBackend.create();
 
-  late final AudioSource _heartHit, _orbHit1, _orbHit2;
-  late final AudioSource _victory, _gameOver;
+  late Object _heartHit, _orbHit1, _orbHit2;
+  late Object _victory, _gameOver;
+  final _words = <MotivationWordType, Object>{};
 
   /// One-shot notes pitched with the play speed, and the looping stems of
   /// the song the shield plays the melody over (the infinite song, or the
@@ -25,14 +30,13 @@ class AudioHelper {
   Song _song = RhythmSongs.song;
   static const _layerFade = Duration(milliseconds: 1500);
   static const _noteBaseMidi = {'fire': 60, 'ice': 72};
-  final _notes = <String, AudioSource>{};
-  final _stems = <String, AudioSource>{};
+  final _notes = <String, Object>{};
+  final _stems = <String, Object>{};
 
   /// The stems of the infinite song stay loaded, a level's are loaded when
   /// it is picked
-  final _infiniteStems = <String, AudioSource>{};
-  final _stemHandles = <String, SoundHandle>{};
-  SoundHandle? _stemGroup;
+  final _infiniteStems = <String, Object>{};
+  BackendMusic? _music;
 
   /// How many steps [initialize] reports, starting the engine counts as one
   static int get loadSteps =>
@@ -45,18 +49,34 @@ class AudioHelper {
   /// Starts the audio engine and loads every sound. [onProgress] is called
   /// with how many of the [loadSteps] are done.
   Future<void> initialize({void Function(int done)? onProgress}) async {
+    try {
+      await _initialize(onProgress);
+    } catch (e) {
+      if (_backend is SoLoudBackend) {
+        rethrow;
+      }
+      // The browser couldn't play or decode something: flutter_soloud
+      // plays everything then
+      debugPrint('Web Audio failed ($e), using flutter_soloud');
+      _backend = SoLoudBackend();
+      _notes.clear();
+      _infiniteStems.clear();
+      _stems.clear();
+      _words.clear();
+      await _initialize(onProgress);
+    }
+  }
+
+  Future<void> _initialize(void Function(int done)? onProgress) async {
     var done = 0;
     void step() => onProgress?.call(++done);
 
-    _soLoud = SoLoud.instance;
-    await _soLoud.init();
-    // The stems alone take 7 voices
-    _soLoud.setMaxActiveVoiceCount(40);
+    await _backend.init();
     step();
 
     const baseAssets = 'assets/audio';
-    Future<AudioSource> load(String path) async {
-      final source = await _soLoud.loadAsset('$baseAssets/$path');
+    Future<Object> load(String path) async {
+      final source = await _backend.load('$baseAssets/$path');
       step();
       return source;
     }
@@ -75,10 +95,10 @@ class AudioHelper {
       for (final name in RhythmSongs.song.allStems)
         name: load('${RhythmSongs.song.assetDir}/stem_$name.ogg'),
     };
-    final words = [
+    final words = {
       for (var word in MotivationWordType.values)
-        load('motivation/${word.assetName}'),
-    ];
+        word: load('motivation/${word.assetName}'),
+    };
 
     // Waits for all of them first, so one failing doesn't leave the
     // others' errors unhandled
@@ -90,7 +110,7 @@ class AudioHelper {
       gameOver,
       ...notes.values,
       ...stems.values,
-      ...words,
+      ...words.values,
     ]);
     _heartHit = await heartHit;
     _orbHit1 = await orbHit1;
@@ -104,6 +124,9 @@ class AudioHelper {
       _infiniteStems[e.key] = await e.value;
     }
     _stems.addAll(_infiniteStems);
+    for (final e in words.entries) {
+      _words[e.key] = await e.value;
+    }
   }
 
   /// Loads the stems of [song] (once), so the next
@@ -137,7 +160,7 @@ class AudioHelper {
       _stems.addAll(_infiniteStems);
     } else {
       for (final name in song.allStems) {
-        _stems[name] = await _soLoud.loadAsset(
+        _stems[name] = await _backend.load(
           'assets/audio/${song.assetDir}/stem_$name.ogg',
         );
       }
@@ -146,7 +169,7 @@ class AudioHelper {
     for (final source in previous.values) {
       if (!_infiniteStems.containsValue(source) &&
           !_stems.containsValue(source)) {
-        await _soLoud.disposeSource(source);
+        await _backend.dispose(source);
       }
     }
   }
@@ -164,15 +187,12 @@ class AudioHelper {
   }
 
   void pauseBackgroundMusic() {
-    if (_stemGroup == null) {
+    final music = _music;
+    if (music == null) {
       return;
     }
     isPaused = true;
-    for (var element in _soLoud.activeSounds) {
-      for (var element in element.handles) {
-        _soLoud.setPause(element, true);
-      }
-    }
+    music.setPaused(true);
   }
 
   void resumeBackgroundMusic() async {
@@ -180,9 +200,7 @@ class AudioHelper {
       return;
     }
     if (isPaused) {
-      if (_stemGroup != null) {
-        _soLoud.setPause(_stemGroup!, false);
-      }
+      _music?.setPaused(false);
     } else {
       playBackgroundMusic();
     }
@@ -190,93 +208,67 @@ class AudioHelper {
   }
 
   Future<void> fadeAndStopBackgroundMusic(Duration duration) async {
-    final stems = _stemHandles.values.toList();
-    for (final handle in stems) {
-      _soLoud.fadeVolume(handle, 0, duration);
+    final music = _music;
+    if (music == null) {
+      return;
+    }
+    for (final name in _song.allStems) {
+      music.fade(name, 0, duration);
     }
     await Future.delayed(duration);
-    _stopStems(only: stems);
+    music.stop();
+    if (_music == music) {
+      _music = null;
+    }
   }
 
   /// Where the music is now, in seconds of the file (it wraps when it loops).
   /// Null when nothing plays.
   double? get musicPosition {
-    final handle = _stemHandles[_song.stems.first];
-    if (handle == null || !_soLoud.getIsValidVoiceHandle(handle)) {
-      return null;
-    }
-    return _soLoud.getPosition(handle).inMicroseconds / 1e6;
+    final music = _music;
+    return music != null && music.isPlaying ? music.position : null;
   }
 
   /// Jumps the music to [seconds] into the loop, keeping the stems together.
   /// Used when the music starts after the run has (unmuting mid-run).
-  void seekMusic(double seconds) {
-    final group = _stemGroup;
-    if (group == null || _stemHandles.isEmpty) {
-      return;
-    }
-    final time = Duration(microseconds: (seconds * 1e6).round());
-    _soLoud.setPause(group, true);
-    for (final handle in _stemHandles.values) {
-      if (_soLoud.getIsValidVoiceHandle(handle)) {
-        _soLoud.seek(handle, time);
-      }
-    }
-    _soLoud.setPause(group, false);
-  }
+  void seekMusic(double seconds) => _music?.seek(seconds);
 
   void _playStems() {
-    final group = _soLoud.createVoiceGroup();
-    for (final name in _song.allStems) {
-      final source = _stems[name];
-      if (source == null) {
-        continue;
-      }
-      final handle = _soLoud.play(
-        source,
-        volume: RhythmSongs.extraLayers.contains(name)
-            ? 0
-            : GameConstants.bgmVolume,
-        looping: true,
-        paused: true,
-      );
-      _soLoud.setProtectVoice(handle, true);
-      _stemHandles[name] = handle;
-    }
-    _soLoud.addVoicesToGroup(group, _stemHandles.values.toList());
-    _stemGroup = group;
-    // Start them all on the same sample
-    _soLoud.setPause(group, false);
+    _music = _backend.playMusic({
+      // The first one is the clock (see [musicPosition])
+      for (final name in [
+        _song.stems.first,
+        ..._song.allStems.where((n) => n != _song.stems.first),
+      ])
+        if (_stems[name] case final source?)
+          name: (
+            source,
+            RhythmSongs.extraLayers.contains(name)
+                ? 0
+                : GameConstants.bgmVolume,
+          ),
+    });
   }
 
   /// Fades the extra backing layers so only [layers] play, and fades the
   /// [muted] main stems out (the others back in)
   void setMusicLayers(List<String> layers, {List<String> muted = const []}) {
+    final music = _music;
+    if (music == null) {
+      return;
+    }
     for (final name in _song.allStems) {
-      final handle = _stemHandles[name];
-      if (handle == null || !_soLoud.getIsValidVoiceHandle(handle)) {
-        continue;
-      }
       final on = RhythmSongs.extraLayers.contains(name)
           ? layers.contains(name)
           : !muted.contains(name);
       final volume = on ? GameConstants.bgmVolume : 0.0;
-      _soLoud.fadeVolume(handle, volume, _layerFade);
+      music.fade(name, volume, _layerFade);
     }
   }
 
-  void _stopStems({List<SoundHandle>? only}) {
-    final handles = only ?? _stemHandles.values.toList();
-    for (final handle in handles) {
-      _soLoud.stop(handle);
-    }
-    if (only == null || _stemHandles.values.every(handles.contains)) {
-      _stemHandles.clear();
-      if (_stemGroup != null) {
-        _soLoud.destroyVoiceGroup(_stemGroup!);
-        _stemGroup = null;
-      }
-    }
+  void _stopStems() {
+    _music?.stop();
+    _music = null;
   }
 
   /// Plays a rhythm note sample ([timbre] is fire or ice)
@@ -294,29 +286,27 @@ class AudioHelper {
     if (source == null) {
       return;
     }
-    final handle = _soLoud.play(
+    final semitones = midi - _noteBaseMidi[timbre]!;
+    _backend.play(
       source,
       volume: GameConstants.soundEffectsVolume * volume,
       pan: pan.clamp(-1.0, 1.0),
-      paused: true,
+      speed: pow(2, semitones / 12).toDouble(),
     );
-    final semitones = midi - _noteBaseMidi[timbre]!;
-    _soLoud.setRelativePlaySpeed(handle, pow(2, semitones / 12).toDouble());
-    _soLoud.setPause(handle, false);
   }
 
   void playHeartHitSound() async {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    _soLoud.play(_heartHit, volume: GameConstants.soundEffectsVolume);
+    _backend.play(_heartHit, volume: GameConstants.soundEffectsVolume);
   }
 
   void playOrbHitSound() async {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    _soLoud.play(
+    _backend.play(
       Random().nextBool() ? _orbHit1 : _orbHit2,
       volume: GameConstants.soundEffectsVolume,
     );
@@ -333,23 +323,24 @@ class AudioHelper {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    _soLoud.play(_victory, volume: GameConstants.soundEffectsVolume);
+    _backend.play(_victory, volume: GameConstants.soundEffectsVolume);
   }
 
   void playGameOverSound() async {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    _soLoud.play(_gameOver, volume: GameConstants.soundEffectsVolume);
+    _backend.play(_gameOver, volume: GameConstants.soundEffectsVolume);
   }
 
   void playMotivationWord(MotivationWordType word) async {
     if (!(await _audioEnabled.value)) {
       return;
     }
-    final audio = await _soLoud.loadAsset(
-      'assets/audio/motivation/${word.assetName}',
-    );
-    _soLoud.play(audio, volume: GameConstants.soundEffectsVolume * 1.5);
+    final audio = _words[word];
+    if (audio == null) {
+      return;
+    }
+    _backend.play(audio, volume: GameConstants.soundEffectsVolume * 1.5);
   }
 }
