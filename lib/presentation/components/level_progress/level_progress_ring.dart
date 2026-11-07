@@ -157,6 +157,134 @@ class _SpikeMesh {
   }
 }
 
+/// Colored triangles, drawn together in one call
+class _ColorMesh {
+  final _xy = <double>[];
+  final _colors = <int>[];
+
+  /// A quad from four corners in order, each with its color
+  void quad(
+    double x1,
+    double y1,
+    double x2,
+    double y2,
+    double x3,
+    double y3,
+    double x4,
+    double y4,
+    int c1,
+    int c2,
+    int c3,
+    int c4,
+  ) {
+    _xy.addAll([x1, y1, x2, y2, x3, y3, x1, y1, x3, y3, x4, y4]);
+    _colors.addAll([c1, c2, c3, c1, c3, c4]);
+  }
+
+  void flush(Canvas canvas, Paint paint) {
+    if (_xy.isEmpty) {
+      return;
+    }
+    canvas.drawVertices(
+      ui.Vertices.raw(
+        ui.VertexMode.triangles,
+        Float32List.fromList(_xy),
+        colors: Int32List.fromList(_colors),
+      ),
+      BlendMode.dst,
+      paint..color = _white,
+    );
+    _xy.clear();
+    _colors.clear();
+  }
+}
+
+/// Glows and dots stamped from one small picture, all in one draw call.
+/// A radial gradient or a circle per dot is a draw call each, and the
+/// glows made phones lag.
+class _SpriteBatch {
+  static const _glowRadius = 32.0;
+  static const _dotRadius = 7.0;
+  static const _glowRect = [0.0, 0.0, 64.0, 64.0];
+  static const _dotRect = [64.0, 0.0, 80.0, 16.0];
+
+  static final ui.Image atlas = () {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    const c = Offset(_glowRadius, _glowRadius);
+    canvas
+      ..drawCircle(
+        c,
+        _glowRadius,
+        Paint()
+          ..shader = ui.Gradient.radial(
+            c,
+            _glowRadius,
+            const [Color(0xFFFFFFFF), Color(0x40FFFFFF), Color(0x00FFFFFF)],
+            const [0, 0.35, 1],
+          ),
+      )
+      ..drawCircle(
+        const Offset(72, 8),
+        _dotRadius,
+        Paint()..color = const Color(0xFFFFFFFF),
+      );
+    return recorder.endRecording().toImageSync(80, 64);
+  }();
+
+  final _transforms = <double>[];
+  final _rects = <double>[];
+  final _colors = <int>[];
+
+  void _add(
+    Offset p,
+    double scale,
+    double anchor,
+    List<double> rect,
+    Color color,
+    double alpha,
+  ) {
+    if (scale <= 0 || alpha <= 0) {
+      return;
+    }
+    _transforms.addAll([
+      scale,
+      0,
+      p.dx - scale * anchor,
+      p.dy - scale * anchor,
+    ]);
+    _rects.addAll(rect);
+    _colors.add(color.withValues(alpha: _clamp01(alpha)).toARGB32());
+  }
+
+  void glow(Offset p, double r, Color color, double alpha) =>
+      _add(p, r / _glowRadius, _glowRadius, _glowRect, color, alpha);
+
+  void dot(Offset p, double r, Color color, double alpha) =>
+      _add(p, r / _dotRadius, 8, _dotRect, color, alpha);
+
+  void flush(Canvas canvas, Paint paint) {
+    if (_colors.isEmpty) {
+      return;
+    }
+    canvas.drawRawAtlas(
+      atlas,
+      Float32List.fromList(_transforms),
+      Float32List.fromList(_rects),
+      Int32List.fromList(_colors),
+      BlendMode.modulate,
+      null,
+      paint
+        ..shader = null
+        ..color = _white
+        ..filterQuality = FilterQuality.low,
+    );
+    _transforms.clear();
+    _rects.clear();
+    _colors.clear();
+  }
+}
+
 class _Note {
   _Note(this.at, this.timbre, this.midi, this.volume);
 
@@ -215,6 +343,14 @@ class LevelProgressRing extends PositionComponent
       canvas,
       Paint()..blendMode = BlendMode.plus,
     );
+    (_ColorMesh()..quad(-3, -1, 3, -1, 3, 1, -3, 1, -1, -1, -1, -1)).flush(
+      canvas,
+      Paint()..blendMode = BlendMode.plus,
+    );
+    (_SpriteBatch()
+          ..glow(Offset.zero, 3, _white, 1)
+          ..dot(Offset.zero, 2, _white, 1))
+        .flush(canvas, Paint()..blendMode = BlendMode.plus);
     for (final stops in const [
       [0.0, 0.7, 1.0],
       [0.0, 0.25, 0.5, 0.75, 1.0],
@@ -772,6 +908,8 @@ class LevelProgressRing extends PositionComponent
     _renderStartMark(canvas);
     _renderWaves(canvas);
     _renderSparks(canvas);
+    _bands.flush(canvas, _fillPaint);
+    _sprites.flush(canvas, _bloomPaint);
   }
 
   // One paint of each kind, reused for every draw, so a frame doesn't
@@ -783,14 +921,23 @@ class LevelProgressRing extends PositionComponent
   final _fillPaint = Paint()..blendMode = BlendMode.plus;
   final _bloomPaint = Paint()..blendMode = BlendMode.plus;
 
+  /// Every glow and dot of a frame, drawn together in one call at the end
+  final _sprites = _SpriteBatch();
+
+  /// Every band along the ring (trails, echoes, the finale ring) of a
+  /// frame, drawn together as one triangle mesh. Stroking long paths is
+  /// slow on phones, colored triangles are not.
+  final _bands = _ColorMesh();
+
   Paint _stroke(Color color, double width, double alpha) => _strokePaint
     ..strokeWidth = width
     ..color = color.withValues(alpha: _clamp01(alpha * _visible));
 
-  Paint _fill(Color color, double alpha) =>
-      _fillPaint..color = color.withValues(alpha: _clamp01(alpha * _visible));
+  /// A round dot, batched
+  void _dot(Offset p, double r, Color color, double alpha) =>
+      _sprites.dot(p, r, color, _clamp01(alpha * _visible));
 
-  /// Round dots of one size and color in a single draw call
+  /// Round dots from a flat x, y list, batched
   void _dots(
     Canvas canvas,
     List<double> xy,
@@ -798,35 +945,82 @@ class LevelProgressRing extends PositionComponent
     Color color,
     double alpha,
   ) {
-    if (xy.isEmpty) {
-      return;
+    for (var i = 0; i + 1 < xy.length; i += 2) {
+      _dot(Offset(xy[i], xy[i + 1]), size, color, alpha);
     }
-    canvas.drawRawPoints(
-      ui.PointMode.points,
-      Float32List.fromList(xy),
-      _stroke(color, size * 2, alpha),
-    );
   }
 
+  /// A soft glow, batched
   void _bloom(Canvas canvas, Offset p, double r, Color color, double a) {
     if (r <= 0 || a <= 0) {
       return;
     }
-    canvas.drawCircle(
-      p,
-      r,
-      _bloomPaint
-        ..shader = ui.Gradient.radial(
-          p,
-          r,
-          [
-            color.withValues(alpha: _clamp01(a * _visible)),
-            color.withValues(alpha: _clamp01(a * _visible) * 0.25),
-            color.withValues(alpha: 0),
-          ],
-          [0, 0.35, 1],
-        ),
-    );
+    _sprites.glow(p, r, color, _clamp01(a * _visible));
+  }
+
+  /// A band along the ring from [from] for [sweep] radians, [width] wide,
+  /// at the radius [radiusAt] gives for each angle along it, colored by
+  /// [colorAt] (0 at the start, 1 at the end)
+  void _band(
+    double from,
+    double sweep,
+    double width, {
+    double Function(double along)? radiusAt,
+    Color? color,
+    Color Function(double t)? colorAt,
+    double alpha = 1,
+    double step = 0.05,
+  }) {
+    if (sweep <= 0 || width <= 0 || alpha <= 0) {
+      return;
+    }
+    final n = max(1, (sweep / step).ceil());
+    // One color for the whole band: work it out once
+    final fixed = color
+        ?.withValues(alpha: _clamp01(color.a * alpha * _visible))
+        .toARGB32();
+    double? px, py, pnx, pny;
+    int? pc;
+    for (var i = 0; i <= n; i++) {
+      final along = sweep * i / n;
+      final a = from + along;
+      final r = radiusAt?.call(along) ?? radius;
+      final c = cos(a);
+      final s = sin(a);
+      final x = c * r;
+      final y = s * r;
+      // Normal of the ring, half the width
+      final nx = c * width / 2;
+      final ny = s * width / 2;
+      final int argb;
+      if (colorAt == null) {
+        argb = fixed!;
+      } else {
+        final c = colorAt(i / n);
+        argb = c.withValues(alpha: _clamp01(c.a * alpha * _visible)).toARGB32();
+      }
+      if (px != null) {
+        _bands.quad(
+          px - pnx!,
+          py! - pny!,
+          px + pnx,
+          py + pny,
+          x + nx,
+          y + ny,
+          x - nx,
+          y - ny,
+          pc!,
+          pc,
+          argb,
+          argb,
+        );
+      }
+      px = x;
+      py = y;
+      pnx = nx;
+      pny = ny;
+      pc = argb;
+    }
   }
 
   /// A small notch at the top: where the ring starts and has to come back
@@ -856,7 +1050,7 @@ class LevelProgressRing extends PositionComponent
   void _renderSparks(Canvas canvas) {
     for (final s in _sparks) {
       final k = _clamp01(s.life / s.maxLife);
-      canvas.drawCircle(s.p, s.size * (0.4 + 0.6 * k), _fill(s.color, k));
+      _dot(s.p, s.size * (0.4 + 0.6 * k), s.color, k);
     }
   }
 
@@ -869,7 +1063,6 @@ class LevelProgressRing extends PositionComponent
     final p = _progress;
     final f = _finale;
     final sweep = p * 2 * pi;
-    final rect = Rect.fromCircle(center: Offset.zero, radius: radius);
     final s1 = _ramp(p, 0.25);
     final s2 = _ramp(p, 0.5);
     final s3 = _ramp(p, 0.75);
@@ -883,59 +1076,61 @@ class LevelProgressRing extends PositionComponent
 
     // The trail: a plain line first, then brighter, wider and colorful
     final width = 2.0 + 1.5 * s1 + 1.5 * s2 + 2 * s3 + kick * (1 + 2 * s2);
-    final trail = Paint()
-      ..blendMode = BlendMode.plus
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = width;
-    if (s2 > 0) {
-      trail.shader = ui.Gradient.sweep(
-        Offset.zero,
-        [
-          _mid.withValues(alpha: 0.7 * _visible),
-          _accent.withValues(alpha: 0.9 * _visible),
-          Color.lerp(_accent, _white, 0.6)!.withValues(alpha: _visible),
-        ],
-        [0, 0.7, 1],
-        TileMode.clamp,
-        0,
-        max(0.001, sweep),
-        _rotZ(_start),
-      );
-    } else {
-      trail.color = _accent.withValues(alpha: (0.75 + 0.25 * flash) * _visible);
-    }
-    canvas.drawArc(rect, _start, sweep, false, trail);
-    // A soft glow under it
-    canvas.drawArc(
-      rect,
+    final hot = Color.lerp(_accent, _white, 0.6)!;
+    final plain = _accent.withValues(alpha: 0.75 + 0.25 * flash);
+    _band(
       _start,
       sweep,
-      false,
-      _stroke(_accent, width * 3.5, 0.08 + 0.1 * kick + 0.25 * flash),
+      width,
+      colorAt: s2 <= 0
+          ? (_) => plain
+          : (t) => t < 0.7
+                ? Color.lerp(
+                    _mid.withValues(alpha: 0.7),
+                    _accent.withValues(alpha: 0.9),
+                    t / 0.7,
+                  )!
+                : Color.lerp(
+                    _accent.withValues(alpha: 0.9),
+                    hot,
+                    (t - 0.7) / 0.3,
+                  )!,
+    );
+    // A soft glow under it
+    _band(
+      _start,
+      sweep,
+      width * 3.5,
+      color: _accent,
+      alpha: 0.08 + 0.1 * kick + 0.25 * flash,
     );
 
     // Half way: a wobbly echo just inside
     if (s2 > 0) {
-      final echo = Path();
-      for (var a = 0.0; a <= sweep; a += 0.025) {
-        final r = radius - 9 + sin(a * 14 - _time * 5) * (2 + 3 * kick);
-        final pt = _polar(_start + a, r);
-        a == 0 ? echo.moveTo(pt.dx, pt.dy) : echo.lineTo(pt.dx, pt.dy);
-      }
-      canvas.drawPath(echo, _stroke(_white, 1.2, 0.35 * s2));
+      _band(
+        _start,
+        sweep,
+        1.2,
+        radiusAt: (a) => radius - 9 + sin(a * 14 - _time * 5) * (2 + 3 * kick),
+        color: _white,
+        alpha: 0.35 * s2,
+        step: 0.035,
+      );
     }
 
     // Last quarter: fire and ice twist around the trail
     if (s3 > 0) {
       for (final side in const [1.0, -1.0]) {
-        final twist = Path();
-        for (var a = 0.0; a <= sweep; a += 0.02) {
-          final r = radius + side * sin(a * 22 - _time * 7) * (5 + 3 * kick);
-          final pt = _polar(_start + a, r);
-          a == 0 ? twist.moveTo(pt.dx, pt.dy) : twist.lineTo(pt.dx, pt.dy);
-        }
-        canvas.drawPath(twist, _stroke(side > 0 ? _fire : _ice, 1.6, 0.7 * s3));
+        _band(
+          _start,
+          sweep,
+          1.6,
+          radiusAt: (a) =>
+              radius + side * sin(a * 22 - _time * 7) * (5 + 3 * kick),
+          color: side > 0 ? _fire : _ice,
+          alpha: 0.7 * s3,
+          step: 0.03,
+        );
       }
       // And it sheds sparks all the time
       if (_rnd.nextDouble() < 0.5) {
@@ -949,12 +1144,12 @@ class LevelProgressRing extends PositionComponent
       if (a <= 0) {
         continue;
       }
-      canvas.drawArc(
-        Rect.fromCircle(center: Offset.zero, radius: radius),
+      _band(
         _start + max(0.0, a - 0.18),
         min(0.18, a),
-        false,
-        _stroke(_white, width + 2, 0.8 * (1 - age / 1.6)),
+        width + 2,
+        color: _white,
+        alpha: 0.8 * (1 - age / 1.6),
       );
     }
 
@@ -962,10 +1157,11 @@ class LevelProgressRing extends PositionComponent
     for (var q = 1; q < 4; q++) {
       final at = _polar(_start + q * pi / 2, radius);
       final lit = p >= q / 4;
-      canvas.drawCircle(
+      _dot(
         at,
         lit ? 4.5 + 1.5 * _kick : 3,
-        _fill(lit ? _gold : _white, lit ? 0.9 : 0.25),
+        lit ? _gold : _white,
+        lit ? 0.9 : 0.25,
       );
       if (lit) {
         _bloom(canvas, at, 16 + 6 * _kick, _gold, 0.35);
@@ -981,7 +1177,7 @@ class LevelProgressRing extends PositionComponent
       Color.lerp(_accent, _white, 0.3)!,
       0.8,
     );
-    canvas.drawCircle(head, 3.5 + 1.5 * s2 + kick * 1.5, _fill(_white, 1));
+    _dot(head, 3.5 + 1.5 * s2 + kick * 1.5, _white, 1);
   }
 
   void _renderCometFinale(Canvas canvas, double f) {
@@ -989,38 +1185,25 @@ class LevelProgressRing extends PositionComponent
     final white = exp(-f * 3);
     final spin = _time * 2.2;
     final width = 4 + 8 * white + 2 * _kick;
-    final ring = Paint()
-      ..blendMode = BlendMode.plus
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = width
-      ..shader = ui.Gradient.sweep(
-        Offset.zero,
-        [
-          _fire.withValues(alpha: _visible),
-          _gold.withValues(alpha: _visible),
-          _ice.withValues(alpha: _visible),
-          _accent.withValues(alpha: _visible),
-          _fire.withValues(alpha: _visible),
-        ],
-        [0, 0.25, 0.5, 0.75, 1],
-        TileMode.clamp,
-        0,
-        2 * pi,
-        _rotZ(spin),
-      );
-    canvas.drawCircle(Offset.zero, radius, ring);
-    canvas.drawCircle(Offset.zero, radius, _stroke(_white, width, white));
-    canvas.drawCircle(
-      Offset.zero,
-      radius,
-      _stroke(_gold, width * 4, 0.12 + 0.2 * white),
+    final palette = [_fire, _gold, _ice, _accent, _fire];
+    _band(
+      0,
+      2 * pi,
+      width,
+      colorAt: (t) {
+        final k = _fract(t - spin / (2 * pi)) * 4;
+        final i = k.floor().clamp(0, 3);
+        return Color.lerp(palette[i], palette[i + 1], k - i)!;
+      },
     );
+    _band(0, 2 * pi, width, color: _white, alpha: white);
+    _band(0, 2 * pi, width * 4, color: _gold, alpha: 0.12 + 0.2 * white);
     // Four comets chase each other around
     for (var i = 0; i < 4; i++) {
       final a = spin + i * pi / 2;
       final pt = _polar(a, radius);
       _bloom(canvas, pt, 26 + 8 * _kick, i.isEven ? _fire : _ice, 0.8);
-      canvas.drawCircle(pt, 4, _fill(_white, 1));
+      _dot(pt, 4, _white, 1);
     }
   }
 
@@ -1065,12 +1248,16 @@ class LevelProgressRing extends PositionComponent
 
     // Last quarter: lines join the lit beads, like a constellation
     if (s3 > 0 && lit > 1) {
-      final path = Path();
-      for (var i = 0; i < lit; i++) {
-        final pt = _polar(_beadAngle(i), radius + _beadLift(i, bar, s1));
-        i == 0 ? path.moveTo(pt.dx, pt.dy) : path.lineTo(pt.dx, pt.dy);
-      }
-      canvas.drawPath(path, _stroke(_white, 1, 0.25 * s3 + 0.3 * flash));
+      final step = 2 * pi / n;
+      _band(
+        _start,
+        (lit - 1) * step,
+        1,
+        radiusAt: (a) => radius + _beadLift((a / step).round(), bar, s1),
+        color: _white,
+        alpha: 0.25 * s3 + 0.3 * flash,
+        step: step,
+      );
     }
 
     // The beads still to come: two draw calls for all of them
@@ -1113,14 +1300,14 @@ class LevelProgressRing extends PositionComponent
       bright += flash * 0.8;
       final pt = _polar(a, radius + _beadLift(i, bar, s1));
       final color = f != null ? _gold : _beadColor(i, s2);
-      // Glows are the costly part: only the big beads, the newest one
-      // and the ones the light runs over get one
+      // Only the big beads, the newest one and the ones the light runs
+      // over glow, so the ring doesn't turn into one blur
       if (big || i == lit - 1 || bright > 1.2) {
         _bloom(canvas, pt, size * 4, color, 0.45 * bright);
       }
-      canvas.drawCircle(pt, size, _fill(color, bright));
+      _dot(pt, size, color, bright);
       if (i == lit - 1 && f == null) {
-        canvas.drawCircle(pt, size * 0.45, _fill(_white, 1));
+        _dot(pt, size * 0.45, _white, 1);
       }
     }
 
@@ -1254,17 +1441,12 @@ class LevelProgressRing extends PositionComponent
     mesh.draw(canvas, _fillPaint);
     _dots(canvas, tips, 1.6, _white, 0.8 * s3);
     // A thin line under the spikes
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset.zero, radius: r),
-      _start,
-      sweep,
-      false,
-      _stroke(f != null ? _gold : _accent, 1.4, 0.6),
-    );
+    final line = f != null ? _gold : _accent;
+    _band(_start, sweep, 1.4, radiusAt: (_) => r, color: line, alpha: 0.6);
     if (f == null) {
       final head = _polar(_headAngle, r);
       _bloom(canvas, head, 18 + 14 * _kick + 20 * s3, _white, 0.7);
-      canvas.drawCircle(head, 3 + _kick * 2, _fill(_white, 1));
+      _dot(head, 3 + _kick * 2, _white, 1);
     }
   }
 
