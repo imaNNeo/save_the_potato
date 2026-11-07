@@ -111,8 +111,14 @@ class GameModeSingleSpawn extends GameMode {
   static const orbsMoveSpeedInitial = 135.0;
   static const orbsMoveSpeedPeak = 200.0;
 
-  double getSpawnOrbsMoveSpeed(double difficulty) =>
-      lerpDouble(orbsMoveSpeedInitial, orbsMoveSpeedPeak, difficulty)!;
+  /// Past the peak, [GameState.overdrive] takes the speed from
+  /// [orbsMoveSpeedPeak] up to this
+  static const orbsMoveSpeedOverdrive = 250.0;
+
+  double getSpawnOrbsMoveSpeed(double difficulty, {double overdrive = 0}) =>
+      overdrive > 0
+      ? lerpDouble(orbsMoveSpeedPeak, orbsMoveSpeedOverdrive, overdrive)!
+      : lerpDouble(orbsMoveSpeedInitial, orbsMoveSpeedPeak, difficulty)!;
 
   GameModeSingleSpawn copyWith({
     double? passedTime,

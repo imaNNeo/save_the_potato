@@ -63,14 +63,16 @@ class RhythmDirector extends Component
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
-      previousState.playingState != newState.playingState;
+      previousState.playingState != newState.playingState ||
+      previousState.tutorial != newState.tutorial;
 
   @override
   void onNewState(GameState state) {
     super.onNewState(state);
     switch (state.playingState) {
       case PlayingStatePlaying():
-        if (!_running) {
+        // The tutorial throws its own orbs, the song starts after it
+        if (!_running && !state.tutorial) {
           _startRun();
         }
       case PlayingStatePaused():
@@ -83,6 +85,13 @@ class RhythmDirector extends Component
   }
 
   bool _running = false;
+
+  /// Whether a run is going and [songTime] follows the music
+  bool get isRunning => _running;
+
+  /// Where the song is, in seconds (beats land on multiples of
+  /// [RhythmSongs.beatSeconds])
+  double get songTime => _songTime;
 
   void _startRun() {
     _running = true;
@@ -207,8 +216,10 @@ class RhythmDirector extends Component
     parent.player.fireShield.angle = need;
   }
 
-  double get _orbSpeed =>
-      const GameModeSingleSpawn().getSpawnOrbsMoveSpeed(bloc.state.difficulty);
+  double get _orbSpeed => const GameModeSingleSpawn().getSpawnOrbsMoveSpeed(
+    bloc.state.difficulty,
+    overdrive: _overdrive,
+  );
 
   double _flightTime(double speed, double radius) =>
       (radius - _contactDistance) / speed;
@@ -288,6 +299,9 @@ class RhythmDirector extends Component
 
   double get _difficulty => bloc.state.difficulty;
 
+  /// How far past the peak difficulty the run is (0 to 1)
+  double get _overdrive => bloc.state.overdrive;
+
   /// The difficulty each melody note of each phrase joins in at. The first
   /// note of each bar is always there. The other notes on a beat join one
   /// by one between [_beatNotesFrom] and [_beatNotesTo], then the notes
@@ -359,7 +373,7 @@ class RhythmDirector extends Component
   /// Picks where an orb comes from: fire orbs in one group, ice orbs in
   /// one group on the opposite side, see [OrbSides]
   double _pickAngle(OrbType type, double land) =>
-      _sides.angleFor(type, land, _difficulty);
+      _sides.angleFor(type, land, _difficulty, overdrive: _overdrive);
 
   /// Plans an orb, returns where it comes from (null if it was skipped)
   double? _add(
@@ -378,7 +392,10 @@ class RhythmDirector extends Component
       return null;
     }
     angle ??= _pickAngle(type, land);
-    final formDuration = RingRift.formDurationFor(_difficulty);
+    final formDuration = RingRift.formDurationFor(
+      _difficulty,
+      overdrive: _overdrive,
+    );
     _planned.add(
       _PlannedOrb(
         land: land,
@@ -452,7 +469,13 @@ class RhythmDirector extends Component
           land,
           type,
           speed,
-          angle: _sides.harmonyAngleFor(type, angle, land, _difficulty),
+          angle: _sides.harmonyAngleFor(
+            type,
+            angle,
+            land,
+            _difficulty,
+            overdrive: _overdrive,
+          ),
           hit: RhythmHit(
             timbre: timbre,
             midi: RhythmSongs.harmonyBelow(note.midi, bar) + octave,
@@ -526,6 +549,7 @@ class RhythmDirector extends Component
     }
     final pan = cos(atan2(orb.position.y, orb.position.x)) * 0.5;
     _audio.playNote(hit.timbre, hit.midi, pan: pan, volume: hit.volume);
+    parent.player.onNotePlayed(hit);
   }
 }
 

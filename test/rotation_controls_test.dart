@@ -64,4 +64,33 @@ void main() {
     await left.cancel();
     expect(calls, ['leftDown', 'rightDown', 'rightUp', 'leftUp']);
   });
+
+  testWidgets('the tutorial hint shows HOLD on that side only', (tester) async {
+    Future<void> pumpHint(int hint) => tester.pumpWidget(
+      MaterialApp(
+        home: RotationControls(
+          showGuide: false,
+          hint: hint,
+          onLeftDown: () {},
+          onLeftUp: () {},
+          onRightDown: () {},
+          onRightUp: () {},
+        ),
+      ),
+    );
+
+    await pumpHint(0);
+    expect(find.text('HOLD'), findsNothing);
+
+    await pumpHint(1);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('HOLD'), findsOneWidget);
+    final rightHalf = tester.getSize(find.byType(RotationControls)).width / 2;
+    expect(tester.getCenter(find.text('HOLD')).dx, greaterThan(rightHalf));
+
+    await pumpHint(-1);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('HOLD'), findsOneWidget);
+    expect(tester.getCenter(find.text('HOLD')).dx, lessThan(rightHalf));
+  });
 }

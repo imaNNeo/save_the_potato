@@ -18,6 +18,7 @@ import 'package:save_the_potato/presentation/components/motivation_component.dar
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/presentation/tutorial/tutorial_flags.dart';
 
 part 'game_state.dart';
 
@@ -31,8 +32,6 @@ class GameCubit extends Cubit<GameState> {
     this._analyticsHelper,
   ) : super(const GameState());
 
-  final _shieldAngleRotationAmount = pi * 1.8;
-
   bool isTapLeftDown = false;
   bool isTapRightDown = false;
 
@@ -44,6 +43,9 @@ class GameCubit extends Cubit<GameState> {
   late int gameShowGuideTimestamp;
   late int gameStartedTimestamp;
 
+  /// Whether the next start runs the tutorial first
+  bool _showTutorial = false;
+
   void startToShowGuide() async {
     gameShowGuideTimestamp = DateTime.now().millisecondsSinceEpoch;
     emit(const GameState().copyWith(playingState: const PlayingStateGuide()));
@@ -52,22 +54,74 @@ class GameCubit extends Cubit<GameState> {
         firstHealthReceived: await _configsRepository.isFirstHealthReceived(),
       ),
     );
+    _showTutorial = TutorialFlags.force || await _needsTutorial();
+  }
+
+  /// New players only: anyone who finished it, or who already has a score
+  /// from before the tutorial existed, knows how to play
+  Future<bool> _needsTutorial() async {
+    if (await _configsRepository.isTutorialDone()) {
+      return false;
+    }
+    try {
+      return (await _scoresRepository.getHighScore()).score <= 0;
+    } catch (_) {
+      return true;
+    }
   }
 
   void _guideInteracted() async {
     if (!state.playingState.isGuide) {
       return;
     }
+    if (_showTutorial) {
+      // Straight into the playground, the real run starts when it's done
+      emit(
+        state.copyWith(
+          playingState: const PlayingStatePlaying(),
+          tutorial: true,
+        ),
+      );
+      return;
+    }
+    _startRun();
+  }
+
+  void _startRun() {
     gameStartedTimestamp = DateTime.now().millisecondsSinceEpoch;
     final afterGuideDurationMills =
         gameStartedTimestamp - gameShowGuideTimestamp;
     _analyticsHelper.logLevelStart(afterGuideDurationMills);
-    emit(state.copyWith(playingState: const PlayingStatePlaying()));
+    emit(
+      state.copyWith(
+        playingState: const PlayingStatePlaying(),
+        tutorial: false,
+        tutorialHint: 0,
+      ),
+    );
     _audioHelper.playBackgroundMusic();
   }
 
+  /// The player blocked enough orbs in the tutorial: the real run starts
+  /// right where they are, with the music
+  void finishTutorial() {
+    if (!state.tutorial) {
+      return;
+    }
+    _showTutorial = false;
+    _configsRepository.setTutorialDone(true);
+    _startRun();
+  }
+
+  /// Points at a turn button during the tutorial (-1 left, 1 right, 0 none)
+  void setTutorialHint(int direction) {
+    if (state.tutorialHint != direction) {
+      emit(state.copyWith(tutorialHint: direction));
+    }
+  }
+
   void update(double dt) {
-    if (!state.playingState.isPlaying) {
+    if (!state.playingState.isPlaying || state.tutorial) {
       return;
     }
     // We calculate the [state.difficulty] based on the time passed.
@@ -84,6 +138,10 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void potatoOrbHit() {
+    if (state.tutorial) {
+      // Practice, a hit costs nothing
+      return;
+    }
     var updatedGameMode = state.currentGameMode.increaseCollidedOrbsCount(
       count: 1,
     );
@@ -195,32 +253,43 @@ class GameCubit extends Cubit<GameState> {
 
   void onLeftTapDown() {
     isTapLeftDown = true;
+    _lastPressedDirection = -1;
     _guideInteracted();
-    _updateShieldsRotationSpeed(-_shieldAngleRotationAmount);
+    _updateShieldsTurn();
   }
 
   void onLeftTapUp() {
     isTapLeftDown = false;
-    if (isTapRightDown) {
-      _updateShieldsRotationSpeed(_shieldAngleRotationAmount);
-    } else {
-      _updateShieldsRotationSpeed(0.0);
-    }
+    _updateShieldsTurn();
   }
 
   void onRightTapDown() {
     isTapRightDown = true;
+    _lastPressedDirection = 1;
     _guideInteracted();
-    _updateShieldsRotationSpeed(_shieldAngleRotationAmount);
+    _updateShieldsTurn();
   }
 
   void onRightTapUp() {
     isTapRightDown = false;
-    if (isTapLeftDown) {
-      _updateShieldsRotationSpeed(-_shieldAngleRotationAmount);
+    _updateShieldsTurn();
+  }
+
+  /// The side pressed last wins while both are held
+  int _lastPressedDirection = 0;
+
+  void _updateShieldsTurn() {
+    final int direction;
+    if (isTapLeftDown && isTapRightDown) {
+      direction = _lastPressedDirection;
+    } else if (isTapLeftDown) {
+      direction = -1;
+    } else if (isTapRightDown) {
+      direction = 1;
     } else {
-      _updateShieldsRotationSpeed(0.0);
+      direction = 0;
     }
+    emit(state.copyWith(shieldsTurnDirection: direction));
   }
 
   KeyEventResult handleKeyEvent(
@@ -236,32 +305,11 @@ class GameCubit extends Cubit<GameState> {
     if (containsLeftArrow || containsRightArrow) {
       _guideInteracted();
     }
-    var rotationSpeed = 0.0;
-
-    if (containsLeftArrow && containsRightArrow) {
-      _updateShieldsRotationSpeed(0.0);
-      return KeyEventResult.handled;
-    }
-
-    if (!containsLeftArrow && !containsRightArrow) {
-      _updateShieldsRotationSpeed(0.0);
-      return KeyEventResult.handled;
-    }
-
-    if (containsLeftArrow) {
-      rotationSpeed -= _shieldAngleRotationAmount;
-    }
-
-    if (containsRightArrow) {
-      rotationSpeed += _shieldAngleRotationAmount;
-    }
-
-    if (rotationSpeed != 0) {
-      _updateShieldsRotationSpeed(rotationSpeed);
-      return KeyEventResult.handled;
-    }
-
-    return KeyEventResult.ignored;
+    final direction = containsLeftArrow == containsRightArrow
+        ? 0
+        : (containsLeftArrow ? -1 : 1);
+    emit(state.copyWith(shieldsTurnDirection: direction));
+    return KeyEventResult.handled;
   }
 
   void _playMotivationWord() {
@@ -282,17 +330,6 @@ class GameCubit extends Cubit<GameState> {
     emit(state.copyWith(playMotivationWord: ValueWrapper.nullValue()));
   }
 
-  void _updateShieldsRotationSpeed(double speed) {
-    emit(
-      state.copyWith(
-        shieldsAngleRotationSpeed: speed.clamp(
-          -_shieldAngleRotationAmount,
-          _shieldAngleRotationAmount,
-        ),
-      ),
-    );
-  }
-
   void pauseGame({required bool manually}) {
     if (!state.playingState.isPlaying) {
       throw StateError(
@@ -301,13 +338,17 @@ class GameCubit extends Cubit<GameState> {
     }
     _analyticsHelper.logLevelPause(manually);
     emit(state.copyWith(playingState: const PlayingStatePaused()));
-    _audioHelper.pauseBackgroundMusic();
+    if (!state.tutorial) {
+      _audioHelper.pauseBackgroundMusic();
+    }
   }
 
   void resumeGame() {
     _analyticsHelper.logLevelResume();
     emit(state.copyWith(playingState: const PlayingStatePlaying()));
-    _audioHelper.resumeBackgroundMusic();
+    if (!state.tutorial) {
+      _audioHelper.resumeBackgroundMusic();
+    }
   }
 
   void restartGame() {
@@ -338,7 +379,7 @@ class GameCubit extends Cubit<GameState> {
           state.copyWith(
             shieldHitCounter: state.shieldHitCounter + 1,
             currentGameMode: updatedGameMode,
-            life: state.playingState.isPlaying
+            life: state.playingState.isPlaying && !state.tutorial
                 ? LifeMeter.afterBlock(state.life)
                 : null,
           ),

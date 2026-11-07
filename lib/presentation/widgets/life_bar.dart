@@ -55,7 +55,10 @@ class _LifeBarState extends State<LifeBar> with SingleTickerProviderStateMixin {
   }
 
   double _targetOpacity(GameState state) =>
-      state.playingState.isPlaying || state.playingState.isPaused ? 1.0 : 0.35;
+      (state.playingState.isPlaying || state.playingState.isPaused) &&
+          !state.tutorial
+      ? 1.0
+      : 0.35;
 
   void _onTick(Duration elapsed) {
     final dt = min(0.05, (elapsed - _lastElapsed).inMicroseconds / 1000000);
@@ -76,7 +79,8 @@ class _LifeBarState extends State<LifeBar> with SingleTickerProviderStateMixin {
     return BlocListener<GameCubit, GameState>(
       listenWhen: (previous, current) =>
           previous.life != current.life ||
-          previous.playingState != current.playingState,
+          previous.playingState != current.playingState ||
+          previous.tutorial != current.tutorial,
       listener: (context, state) {
         _look.targetOpacity = _targetOpacity(state);
         if (state.playingState.isGuide || state.playingState.isNone) {

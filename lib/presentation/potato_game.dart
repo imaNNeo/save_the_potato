@@ -25,6 +25,7 @@ import 'components/orb_effects.dart';
 import 'components/shield_impact_effects.dart';
 import 'cubit/game/game_cubit.dart';
 import 'rhythm/rhythm_director.dart';
+import 'tutorial/tutorial_director.dart';
 
 class PotatoGame extends FlameGame<MyWorld>
     with HasCollisionDetection, KeyboardEvents {
@@ -135,6 +136,8 @@ class MyWorld extends World
 
   late RhythmDirector rhythm;
 
+  late TutorialDirector tutorial;
+
   late StreamSubscription _motivationWordSubscription;
 
   @override
@@ -149,6 +152,7 @@ class MyWorld extends World
     rhythm = RhythmDirector(spawner: spawner);
     await add(rhythm);
     await add(spawner);
+    await add(tutorial = TutorialDirector(spawner: spawner));
     add(GameShaderWarmUp());
     mounted.then((_) {
       _motivationWordSubscription = bloc.stream
