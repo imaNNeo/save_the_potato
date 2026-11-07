@@ -1,5 +1,6 @@
 ## 2.1.0
 * New levels mode: 10 classical tunes played note for note, each with an intro and a real ending, on a new home screen with a level dial and START
+* A bolder level progress ring that is easy to read at a glance, without the burst at each quarter
 * The potato shows its health with its face and body, looks dizzy while it recovers from a hit, and blinks safe for a moment after each hit
 * The potato wears headphones and enjoys the music, with small music notes on the beat while it is calm
 * A short first-time tutorial with a ghost shield and a spotlight on incoming orbs
