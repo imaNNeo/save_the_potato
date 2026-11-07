@@ -19,7 +19,7 @@ class AudioHelper {
   /// [SoundBackend])
   SoundBackend _backend = SoundBackend.create();
 
-  late Object _heartHit, _orbHit1, _orbHit2;
+  late Object _heartHit, _orbHit1, _orbHit2, _tick;
   late Object _victory, _gameOver;
   final _words = <MotivationWordType, Object>{};
 
@@ -41,7 +41,7 @@ class AudioHelper {
   /// How many steps [initialize] reports, starting the engine counts as one
   static int get loadSteps =>
       1 +
-      5 +
+      6 +
       _noteBaseMidi.length +
       RhythmSongs.song.allStems.length +
       MotivationWordType.values.length;
@@ -87,6 +87,7 @@ class AudioHelper {
     final orbHit2 = load('hit2.wav');
     final victory = load('victory.mp3');
     final gameOver = load('game_over.wav');
+    final tick = load('tick.ogg');
     final notes = {
       for (final name in _noteBaseMidi.keys)
         name: load('rhythm/note_$name.ogg'),
@@ -108,6 +109,7 @@ class AudioHelper {
       orbHit2,
       victory,
       gameOver,
+      tick,
       ...notes.values,
       ...stems.values,
       ...words.values,
@@ -117,6 +119,7 @@ class AudioHelper {
     _orbHit2 = await orbHit2;
     _victory = await victory;
     _gameOver = await gameOver;
+    _tick = await tick;
     for (final e in notes.entries) {
       _notes[e.key] = await e.value;
     }
@@ -323,6 +326,21 @@ class AudioHelper {
       volume: GameConstants.soundEffectsVolume * volume,
       pan: pan.clamp(-1.0, 1.0),
       speed: pow(2, semitones / 12).toDouble(),
+    );
+  }
+
+  /// The midi note the tick sample is tuned to (A5)
+  static const _tickBaseMidi = 81;
+
+  /// A short, soft wooden tick pitched to [midi], for turning the level dial
+  void playTick(int midi, {double volume = 1}) async {
+    if (!(await _audioEnabled.value)) {
+      return;
+    }
+    _backend.play(
+      _tick,
+      volume: GameConstants.soundEffectsVolume * volume,
+      speed: pow(2, (midi - _tickBaseMidi) / 12).toDouble(),
     );
   }
 

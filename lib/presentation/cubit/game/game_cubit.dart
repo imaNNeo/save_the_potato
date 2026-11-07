@@ -90,7 +90,10 @@ class GameCubit extends Cubit<GameState> {
 
   /// Picks the mode on the home screen: a [level], or null for the infinite
   /// mode. Locked levels can be picked to look at, not to play.
-  void selectLevel(int? level) {
+  ///
+  /// [playNote] plays a note in the key of the picked song; the home screen
+  /// turns it off while it settles on its default pick.
+  void selectLevel(int? level, {bool playNote = true}) {
     if (!state.playingState.isGuide || level == state.level) {
       return;
     }
@@ -100,9 +103,12 @@ class GameCubit extends Cubit<GameState> {
     _songPreload?.cancel();
     final song = state.song;
     _songPreload = Timer(_songPreloadDelay, () => _audioHelper.useSong(song));
-    // A note in the key of the picked song
+    if (!playNote) {
+      return;
+    }
+    // A soft wooden tick in the key of the picked song, like a dial's click
     final root = state.song.chords.first.first;
-    _audioHelper.playNote('ice', 72 + root, volume: 0.7);
+    _audioHelper.playTick(81 + root, volume: 0.5);
   }
 
   /// Whether the picked level is locked (the infinite mode never is)
