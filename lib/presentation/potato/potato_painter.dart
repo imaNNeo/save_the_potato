@@ -420,49 +420,49 @@ abstract final class PotatoPainter {
     // Closed in bliss, but never over the green amazed sparkle
     final bliss =
         pose[PotatoProp.eyeBliss] * (1 - pose[PotatoProp.sparkleGreen]);
-    final open = 1 - bliss;
-    if (open > 0.02) {
+    final closing = bliss > 0.001;
+
+    final scaleX = pose[PotatoProp.sparkleScaleX];
+    final scaleY = pose[PotatoProp.sparkleScaleY];
+    // The sparkle shrinks away as the eye closes, gone well before the end
+    final sparkleLeft = 1 - _easeInOut((bliss / 0.65).clamp(0.0, 1.0));
+    final showSparkle = scaleX != 0 && scaleY != 0 && sparkleLeft > 0.01;
+    final size = pose[PotatoProp.sparkleSize];
+    final star = _sparkleFor(size);
+    final color = Color.lerp(
+      _sparkle,
+      _sparkleGreen,
+      pose[PotatoProp.sparkleGreen],
+    )!;
+
+    for (final (eye, width, sparkleX) in const [
+      (Offset(346.7722, 150.1771), 63.1761, 346.5571),
+      (Offset(477.9332, 149.1771), 63.9749, 477.4041),
+    ]) {
+      final center = _face + eye;
       _fill.color = _ink;
-      for (final (center, width) in const [
-        (Offset(477.9332, 149.1771), 63.9749),
-        (Offset(346.7722, 150.1771), 63.1761),
-      ]) {
+      if (closing) {
+        // The lower lid rises in a curve and the eye becomes a happy arc,
+        // one smooth shape the whole way. The sparkle stays inside it.
+        final lid = _eyeLid(center, width, bliss);
+        canvas.drawPath(lid, _fill);
+        if (showSparkle) {
+          canvas.save();
+          canvas.clipPath(lid);
+        }
+      } else {
         canvas.drawOval(
-          Rect.fromCenter(
-            center: _face + center + Offset(0, 14 * bliss),
-            width: width,
-            height: 65.3739 * open,
-          ),
+          Rect.fromCenter(center: center, width: width, height: _eyeHeight),
           _fill,
         );
       }
-    }
-    if (bliss > 0.02) {
-      // Happy closed eyes: two upside-down U arcs
-      for (final x in const [346.7722, 477.9332]) {
-        _inShape(canvas, _face + Offset(x, 158), () {
-          _strokePath(canvas, _closedEye, 11, bliss);
-        });
-      }
-    }
-
-    final scaleX = pose[PotatoProp.sparkleScaleX];
-    final scaleY = pose[PotatoProp.sparkleScaleY] * open;
-    if (scaleX != 0 && scaleY != 0) {
-      final size = pose[PotatoProp.sparkleSize];
-      final star = _sparkleFor(size);
-      final color = Color.lerp(
-        _sparkle,
-        _sparkleGreen,
-        pose[PotatoProp.sparkleGreen],
-      )!;
-      for (final x in const [346.5571, 477.4041]) {
+      if (showSparkle) {
         _inShape(
           canvas,
           _face +
               Offset(
-                x + pose[PotatoProp.sparkleX] + pose[PotatoProp.glanceX],
-                146.5725 + 14 * bliss,
+                sparkleX + pose[PotatoProp.sparkleX] + pose[PotatoProp.glanceX],
+                146.5725 - 8 * bliss,
               ),
           () {
             _fill.color = color;
@@ -477,9 +477,10 @@ abstract final class PotatoPainter {
               ..strokeJoin = StrokeJoin.round
               ..strokeCap = StrokeCap.round;
           },
-          scaleX: scaleX,
-          scaleY: scaleY,
+          scaleX: scaleX * sparkleLeft,
+          scaleY: scaleY * sparkleLeft,
         );
+        if (closing) canvas.restore();
       }
     }
 
@@ -648,9 +649,42 @@ abstract final class PotatoPainter {
           .shift(const Offset(0, 1.4))
         ..fillType = PathFillType.evenOdd;
 
-  static final _closedEye = Path()
-    ..moveTo(-25, 8)
-    ..cubicTo(-18, -14, 18, -14, 25, 8);
+  static const _eyeHeight = 65.3739;
+
+  static final _lidPath = Path();
+
+  /// The eye at [bliss] (0 = open oval, 1 = closed happy arc).
+  ///
+  /// The top edge stays a curve like the top of the oval (it flattens and
+  /// drops a little), and the bottom edge rises and bends up under it, so
+  /// the eye turns into a thick upside-down U without ever changing shape
+  /// type. Both edges meet at rounded ends.
+  static Path _eyeLid(Offset center, double width, double bliss) {
+    final b = _easeInOut(bliss);
+    final half = width / 2 * (1 - 0.18 * b);
+    final drop = 9 * b;
+    final top = lerpDouble(_eyeHeight / 2, 19, b)!;
+    // Positive bulges down (open eye), negative follows the top (closed)
+    final bottom = lerpDouble(_eyeHeight / 2, -(19 - 13), b)!;
+    const steps = 28;
+    final path = _lidPath..reset();
+    for (var i = 0; i <= steps; i++) {
+      final t = -1 + 2 * i / steps;
+      final curve = sqrt(1 - t * t);
+      final point = center + Offset(t * half, drop - top * curve);
+      i == 0
+          ? path.moveTo(point.dx, point.dy)
+          : path.lineTo(point.dx, point.dy);
+    }
+    for (var i = steps; i >= 0; i--) {
+      final t = -1 + 2 * i / steps;
+      final curve = sqrt(1 - t * t);
+      path.lineTo(center.dx + t * half, center.dy + drop + bottom * curve);
+    }
+    return path..close();
+  }
+
+  static double _easeInOut(double t) => t * t * (3 - 2 * t);
 
   // ------------------------------------------------- feelings and music --
 
