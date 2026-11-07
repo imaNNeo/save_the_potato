@@ -111,6 +111,9 @@ class GameCubit extends Cubit<GameState> {
     return level != null && !Levels.isOpen(level, state.levelsCleared);
   }
 
+  /// The START button on the home screen
+  void startFromHome() => _guideInteracted();
+
   void _guideInteracted() async {
     if (!state.playingState.isGuide || isSelectedLevelLocked) {
       return;
@@ -350,7 +353,6 @@ class GameCubit extends Cubit<GameState> {
   void onLeftTapDown() {
     isTapLeftDown = true;
     _lastPressedDirection = -1;
-    _guideInteracted();
     _updateShieldsTurn();
   }
 
@@ -362,7 +364,6 @@ class GameCubit extends Cubit<GameState> {
   void onRightTapDown() {
     isTapRightDown = true;
     _lastPressedDirection = 1;
-    _guideInteracted();
     _updateShieldsTurn();
   }
 
@@ -398,7 +399,11 @@ class GameCubit extends Cubit<GameState> {
     final containsRightArrow = keysPressed.contains(
       LogicalKeyboardKey.arrowRight,
     );
-    if (containsLeftArrow || containsRightArrow) {
+    // On the home screen the arrows turn the level select, and enter or
+    // space starts
+    if (event is KeyDownEvent &&
+        (event.logicalKey == LogicalKeyboardKey.enter ||
+            event.logicalKey == LogicalKeyboardKey.space)) {
       _guideInteracted();
     }
     final direction = containsLeftArrow == containsRightArrow

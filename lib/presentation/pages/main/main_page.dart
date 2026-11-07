@@ -23,7 +23,8 @@ import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/game_paused_ui.dart';
 import 'package:save_the_potato/presentation/widgets/high_score_widget.dart';
 import 'package:save_the_potato/presentation/widgets/level_cleared_ui.dart';
-import 'package:save_the_potato/presentation/widgets/mode_switcher.dart';
+import 'package:save_the_potato/presentation/widgets/level_select.dart';
+import 'package:save_the_potato/presentation/widgets/levels_progress_badge.dart';
 import 'package:save_the_potato/presentation/widgets/loading_overlay.dart';
 import 'package:save_the_potato/presentation/widgets/new_rank_celebration_page.dart';
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
@@ -196,16 +197,15 @@ class _MainPageState extends State<MainPage>
                 ),
                 RotationControls(
                   // A locked level can't be started, so no HOLD hint
-                  showGuide:
-                      state.playingState.isGuide &&
-                      !_gameCubit.isSelectedLevelLocked,
+                  // The home screen has a START button instead
+                  showGuide: false,
                   hint: state.playingState.isPlaying ? state.tutorialHint : 0,
                   onLeftDown: _gameCubit.onLeftTapDown,
                   onLeftUp: _gameCubit.onLeftTapUp,
                   onRightDown: _gameCubit.onRightTapDown,
                   onRightUp: _gameCubit.onRightTapUp,
                 ),
-                if (state.playingState.isGuide) const ModeSwitcher(),
+                if (state.playingState.isGuide) const LevelSelect(),
                 if (state.playingState.isPaused) const GamePausedUI(),
                 if (state.showGameOverUI && state.playingState.isGameOver)
                   const GameOverUI(),
