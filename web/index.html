@@ -32,6 +32,25 @@
   <title>save_the_potato</title>
   <link rel="manifest" href="manifest.json">
 
+  <!--
+    Phones report a pixel ratio of 2.5 to 3.5. Rendering the game at that
+    many pixels makes every full-screen effect (the stars shader above all)
+    cost 2 to 3 times more than at 2x, and the difference is hard to see. So
+    the web build renders at most 2 pixels per CSS pixel.
+  -->
+  <script>
+    (function () {
+      var maxRatio = 2;
+      var real = window.devicePixelRatio || 1;
+      if (real > maxRatio) {
+        Object.defineProperty(window, 'devicePixelRatio', {
+          get: function () { return maxRatio; },
+          configurable: true,
+        });
+      }
+    })();
+  </script>
+
   <!-- Audio engine for flutter_soloud on web -->
   <script src="assets/packages/flutter_soloud/web/init_soloud.js" defer></script>
 </head>
