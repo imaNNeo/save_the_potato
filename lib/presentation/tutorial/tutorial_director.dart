@@ -275,6 +275,7 @@ class TutorialDirector extends Component
         t.holding = false;
         focus.held = false;
         orb.speed = t.speed;
+        orb.hoverDrift = 0;
         orb.position.setFrom(t.holdAt);
         return;
       }
@@ -295,6 +296,7 @@ class TutorialDirector extends Component
       focus.held = true;
       t.holdAt = Vector2(cos(t.angle), sin(t.angle))..scale(_holdDistance);
       orb.speed = 0;
+      orb.hoverDrift = t.speed;
       _audio.playNote('fire', 57, volume: 0.5);
     }
   }
