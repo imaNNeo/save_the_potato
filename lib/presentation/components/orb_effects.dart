@@ -118,7 +118,7 @@ class OrbEffects extends Component
   /// clipping it to the ring: a clip makes the GPU compile new versions of
   /// every effect's shader, which drops frames the first time
   static double _tailLength(MovingOrb orb) => min(
-    (orb.speed * 0.42).clamp(40.0, 110.0) * 0.85,
+    (max(orb.speed, orb.hoverDrift) * 0.42).clamp(40.0, 110.0) * 0.85,
     max(0.0, ArenaRing.radius - orb.position.length),
   );
 
@@ -223,7 +223,11 @@ class OrbEffects extends Component
         orb.position.x - direction.y * side * 0.12,
         orb.position.y + direction.x * side * 0.12,
       );
-      sparkle.speed.setValues(-direction.y * side, direction.x * side);
+      final back = orb.hoverDrift * (0.8 + rnd.nextDouble() * 0.5);
+      sparkle.speed.setValues(
+        -direction.y * side - direction.x * back,
+        direction.x * side - direction.y * back,
+      );
     }
   }
 
@@ -238,8 +242,12 @@ class OrbEffects extends Component
       ..lifespan = 0.55 + rnd.nextDouble() * 0.2
       ..x = orb.position.x
       ..y = orb.position.y
-      ..vx = -direction.x * orb.speed * 0.1 - direction.y * side
-      ..vy = -direction.y * orb.speed * 0.1 + direction.x * side
+      ..vx =
+          -direction.x * (orb.speed * 0.1 + orb.hoverDrift * 0.7) -
+          direction.y * side
+      ..vy =
+          -direction.y * (orb.speed * 0.1 + orb.hoverDrift * 0.7) +
+          direction.x * side
       ..fromRadius = orb.size.x * 0.6
       ..toRadius = orb.size.x * 1.9;
     _puffs.add(puff);
@@ -262,8 +270,8 @@ class OrbEffects extends Component
       ..y = orb.position.y - direction.y * along + direction.x * across
       ..phase = rnd.nextDouble() * pi * 2
       ..lifespan = 0.6 + rnd.nextDouble() * 0.4
-      ..vx = -direction.y * out * sideSign
-      ..vy = direction.x * out * sideSign
+      ..vx = -direction.y * out * sideSign - direction.x * orb.hoverDrift * 1.2
+      ..vy = direction.x * out * sideSign - direction.y * orb.hoverDrift * 1.2
       ..drag = 1.5
       ..size = 2.5 + rnd.nextDouble() * 3.5;
     _motes.add(mote);

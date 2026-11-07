@@ -33,6 +33,11 @@ sealed class MovingOrb extends MovingComponent {
   /// The head swells a little with it, the hitbox stays the same
   double pulse = 1;
 
+  /// How fast its trail streams back while it stands still (the tutorial
+  /// holds orbs in front of the shields), so it still looks like it pushes
+  /// forward instead of leaving its sparkles in a pile
+  double hoverDrift = 0;
+
   @override
   void initialize({
     required double speed,
@@ -59,6 +64,7 @@ sealed class MovingOrb extends MovingComponent {
     seed = rnd.nextDouble() * 100;
     warningPhase = seed;
     pulse = 1;
+    hoverDrift = 0;
     _initialized = true;
   }
 

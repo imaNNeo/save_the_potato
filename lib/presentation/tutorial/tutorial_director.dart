@@ -5,6 +5,7 @@ import 'package:flame/effects.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/animation.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_component_spawner.dart';
+import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
 import 'package:save_the_potato/presentation/components/moving/rift/ring_rift.dart';
 import 'package:save_the_potato/presentation/components/shield.dart';
@@ -13,6 +14,7 @@ import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/service_locator.dart';
 
+import 'orb_focus.dart';
 import 'tutorial_flags.dart';
 import 'tutorial_visuals.dart';
 
@@ -52,11 +54,21 @@ class TutorialDirector extends Component
   /// How long a rift forms before its orb comes through
   static const _riftTime = 0.7;
 
+  /// Where an orb stops and waits when the shield isn't in front of it,
+  /// just outside the progress dots
+  static const _holdDistance = 160.0;
+
+  /// After waiting this long, the ghost shield comes to help
+  static const _ghostAfter = 1.2;
+
   /// How far inside the shield's edge an orb must be to count as covered
   static const _coverMargin = 10 * pi / 180;
 
   late final TutorialProgressDots dots;
   late final GhostShield ghost;
+
+  /// Dims the arena around the coming orb, its lane and the potato
+  final focus = OrbFocus();
 
   bool _active = false;
   bool _finishing = false;
@@ -76,6 +88,8 @@ class TutorialDirector extends Component
   Future<void> onLoad() async {
     await parent.add(dots = TutorialProgressDots(count: blocksToFinish));
     await parent.add(ghost = GhostShield());
+    await parent.add(OrbSpotlight(focus));
+    await parent.add(OrbFocusMarks(focus));
     // A soft high note when the shield reaches the right spot
     ghost.onLocked = () => _audio.playNote('ice', 88, volume: 0.45);
   }
@@ -92,6 +106,7 @@ class TutorialDirector extends Component
     } else if (!state.tutorial && _active) {
       _active = false;
       ghost.hide();
+      focus.clear();
       bloc.setTutorialHint(0);
     }
   }
@@ -180,6 +195,7 @@ class TutorialDirector extends Component
       dot: dot,
     );
     dots.point(dot, type);
+    focus.aim(type, t.angle);
     t.guided = _guidedFromStart() || (repeat?.guided ?? false);
     _current = t;
     _missed = null;
@@ -213,13 +229,15 @@ class TutorialDirector extends Component
 
   void _launch(_Throw t) {
     final speed = t.guided ? _guidedSpeed : _soloSpeed;
-    spawner.spawnRhythmOrb(
+    t.speed = speed;
+    final orb = t.orb = spawner.spawnRhythmOrb(
       type: t.type,
       position: Vector2(cos(t.angle), sin(t.angle)) * (ArenaRing.radius + 10),
       speed: speed,
       onBlocked: () => _onBlocked(t),
       onHit: () => _onHit(t),
     );
+    focus.track(orb);
     t.closeRiftIn = 0.45;
   }
 
@@ -239,7 +257,48 @@ class TutorialDirector extends Component
       }
     }
 
+    _holdOrResume(t, dt);
     _guide(t, active: !t.done);
+  }
+
+  /// The orb never hits the potato in the tutorial: it stops in front of
+  /// the shields and trembles, with danger signs, until the right shield
+  /// covers it, then flies on into it
+  void _holdOrResume(_Throw t, double dt) {
+    final orb = t.orb;
+    if (orb == null || t.done || !orb.isFlying) {
+      return;
+    }
+    final covered = _covered(t);
+    if (t.holding) {
+      if (covered) {
+        t.holding = false;
+        focus.held = false;
+        orb.speed = t.speed;
+        orb.hoverDrift = 0;
+        orb.position.setFrom(t.holdAt);
+        return;
+      }
+      t.heldFor += dt;
+      // A small shiver across its lane
+      final shake = sin(t.heldFor * 45) * 1.6;
+      orb.position
+        ..setFrom(t.holdAt)
+        ..add(Vector2(-sin(t.angle), cos(t.angle))..scale(shake));
+      if (t.heldFor > _ghostAfter && !ghost.isShowing) {
+        t.guided = true;
+        ghost.showFor(t.type, angleOfOrb: t.angle);
+      }
+      return;
+    }
+    if (!covered && orb.position.length <= _holdDistance) {
+      t.holding = true;
+      focus.held = true;
+      t.holdAt = Vector2(cos(t.angle), sin(t.angle))..scale(_holdDistance);
+      orb.speed = 0;
+      orb.hoverDrift = t.speed;
+      _audio.playNote('fire', 57, volume: 0.5);
+    }
   }
 
   /// Keeps the ghost, its arrows and the button hint following the shield
@@ -248,6 +307,7 @@ class TutorialDirector extends Component
     final showHelp = ghost.isShowing && active;
     final covered = _covered(t);
     ghost.locked = covered;
+    focus.covered = covered;
     if (showHelp && !covered) {
       bloc.setTutorialHint(_offBy(t) > 0 ? 1 : -1);
     } else {
@@ -261,6 +321,7 @@ class TutorialDirector extends Component
     }
     t.done = true;
     _current = null;
+    focus.clear();
     bloc.setTutorialHint(0);
     final note = _notes[_blocks.clamp(0, _notes.length - 1)];
     _blocks++;
@@ -282,6 +343,7 @@ class TutorialDirector extends Component
     }
     t.done = true;
     _current = null;
+    focus.clear();
     bloc.setTutorialHint(0);
     _lastWasHit = true;
     dots.miss();
@@ -386,6 +448,11 @@ class _Throw {
 
   bool guided = false;
   bool done = false;
+  MovingOrb? orb;
+  double speed = 0;
+  bool holding = false;
+  double heldFor = 0;
+  Vector2 holdAt = Vector2.zero();
   double? launchIn;
   double? closeRiftIn;
   RingRift? rift;
@@ -398,8 +465,9 @@ class _TutorialBot {
   double _react = 0;
   int _held = 0;
 
-  /// Throws the bot lets through, to show what a miss looks like
-  static const _missThrows = {4};
+  /// Throws the bot reacts to late, to show the orb waiting with danger
+  /// signs
+  static const _lateThrows = {1, 4};
 
   void update(TutorialDirector d, double dt) {
     final t = d._current;
@@ -409,11 +477,7 @@ class _TutorialBot {
     }
     if (_seen != t) {
       _seen = t;
-      _react = 1.0;
-    }
-    if (_missThrows.contains(t.index)) {
-      _press(d, 0);
-      return;
+      _react = _lateThrows.contains(t.index) ? 4.5 : 1.0;
     }
     if (_react > 0) {
       _react -= dt;

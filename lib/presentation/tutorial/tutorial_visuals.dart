@@ -18,7 +18,8 @@ const _good = Color(0xFF6BFFA8);
 /// dot in the orb's color; a hit shakes them red. When all are full they
 /// swirl into the potato.
 class TutorialProgressDots extends PositionComponent {
-  TutorialProgressDots({required this.count}) : super(priority: 2);
+  /// Under the orbs (priority 1), so orbs fly over the dots and ticks
+  TutorialProgressDots({required this.count}) : super(priority: -1);
 
   final int count;
 
@@ -197,7 +198,8 @@ class TutorialProgressDots extends PositionComponent {
 /// that run from the shield toward it. It lights up when the shield is
 /// in place: the line turns green and a tick shows on the orb's dot.
 class GhostShield extends PositionComponent {
-  GhostShield() : super(priority: 2);
+  /// Under the orbs (priority 1), so orbs fly over the ghost and its tick
+  GhostShield() : super(priority: -1);
 
   static const _radius = 78.0;
   static const _sweep = Shield.defaultSweep;
