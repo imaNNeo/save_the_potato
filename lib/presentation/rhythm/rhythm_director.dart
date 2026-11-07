@@ -63,14 +63,16 @@ class RhythmDirector extends Component
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
-      previousState.playingState != newState.playingState;
+      previousState.playingState != newState.playingState ||
+      previousState.tutorial != newState.tutorial;
 
   @override
   void onNewState(GameState state) {
     super.onNewState(state);
     switch (state.playingState) {
       case PlayingStatePlaying():
-        if (!_running) {
+        // The tutorial throws its own orbs, the song starts after it
+        if (!_running && !state.tutorial) {
           _startRun();
         }
       case PlayingStatePaused():
@@ -92,6 +94,13 @@ class RhythmDirector extends Component
 
   /// Whether the level's song has ended and the level is cleared
   bool _ended = false;
+
+  /// Whether a run is going and [songTime] follows the music
+  bool get isRunning => _running;
+
+  /// Where the song is, in seconds (beats land on multiples of
+  /// the song's beatSeconds)
+  double get songTime => _songTime;
 
   void _startRun() {
     _running = true;
@@ -564,6 +573,7 @@ class RhythmDirector extends Component
     }
     final pan = cos(atan2(orb.position.y, orb.position.x)) * 0.5;
     _audio.playNote(hit.timbre, hit.midi, pan: pan, volume: hit.volume);
+    parent.player.onNotePlayed(hit);
   }
 }
 

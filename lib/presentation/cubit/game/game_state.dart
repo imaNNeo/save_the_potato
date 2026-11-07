@@ -19,6 +19,8 @@ class GameState extends Equatable {
     this.motivationWordsPoolToPlay = MotivationWordType.values,
     this.level,
     this.levelsCleared = 0,
+    this.tutorial = false,
+    this.tutorialHint = 0,
   });
 
   /// The level picked on the home screen, null for the infinite mode
@@ -31,6 +33,14 @@ class GameState extends Equatable {
 
   /// The song of this run
   Song get song => level == null ? RhythmSongs.song : Levels.songOf(level!);
+
+  /// True while a first-time player is in the tutorial playground: the
+  /// run is "playing" (shields turn, orbs fly) but time, score and life
+  /// stand still, see [GameCubit.finishTutorial]
+  final bool tutorial;
+
+  /// Which turn button the tutorial points at: -1 left, 1 right, 0 none
+  final int tutorialHint;
 
   /// From 0 to 1, see [LifeMeter]
   final double life;
@@ -147,6 +157,8 @@ class GameState extends Equatable {
     List<MotivationWordType>? motivationWordsPoolToPlay,
     ValueWrapper<int>? level,
     int? levelsCleared,
+    bool? tutorial,
+    int? tutorialHint,
   }) => GameState(
     life: life ?? this.life,
     levelTimePassed: levelTimePassed ?? this.levelTimePassed,
@@ -172,6 +184,8 @@ class GameState extends Equatable {
         motivationWordsPoolToPlay ?? this.motivationWordsPoolToPlay,
     level: level != null ? level.value : this.level,
     levelsCleared: levelsCleared ?? this.levelsCleared,
+    tutorial: tutorial ?? this.tutorial,
+    tutorialHint: tutorialHint ?? this.tutorialHint,
   );
 
   @override
@@ -193,5 +207,7 @@ class GameState extends Equatable {
     motivationWordsPoolToPlay,
     level,
     levelsCleared,
+    tutorial,
+    tutorialHint,
   ];
 }

@@ -137,6 +137,7 @@ class _MainPageState extends State<MainPage>
       buildWhen: (previous, current) =>
           previous.playingState != current.playingState ||
           previous.showGameOverUI != current.showGameOverUI ||
+          previous.tutorialHint != current.tutorialHint ||
           previous.level != current.level ||
           previous.levelsCleared != current.levelsCleared,
       listener: (context, state) {
@@ -180,6 +181,7 @@ class _MainPageState extends State<MainPage>
                   showGuide:
                       state.playingState.isGuide &&
                       !_gameCubit.isSelectedLevelLocked,
+                  hint: state.playingState.isPlaying ? state.tutorialHint : 0,
                   onLeftDown: _gameCubit.onLeftTapDown,
                   onLeftUp: _gameCubit.onLeftTapUp,
                   onRightDown: _gameCubit.onRightTapDown,

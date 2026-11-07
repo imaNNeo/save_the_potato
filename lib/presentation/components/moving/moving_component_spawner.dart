@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:flame/components.dart' hide ComponentPool;
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
@@ -57,12 +59,15 @@ class MovingComponentSpawner extends Component
   /// Used by the rhythm director, which picks its own moments for hearts
   bool tryToSpawnHealthPoint() => _tryToSpawnHealthPoint();
 
-  /// Spawns one orb for the rhythm director
-  void spawnRhythmOrb({
+  /// Spawns one orb for the rhythm director (and the tutorial, which wants
+  /// to hear when it gets blocked or hits)
+  MovingOrb spawnRhythmOrb({
     required OrbType type,
     required Vector2 position,
     required double speed,
     RhythmHit? rhythmHit,
+    VoidCallback? onBlocked,
+    VoidCallback? onHit,
   }) {
     late MovingOrb orb;
     switch (type) {
@@ -76,12 +81,19 @@ class MovingComponentSpawner extends Component
         speed: speed,
         target: player,
         position: position,
-        onDisjointCallback: () => _release(orb),
-        onPotatoHitCallback: () => _release(orb),
+        onDisjointCallback: () {
+          onBlocked?.call();
+          _release(orb);
+        },
+        onPotatoHitCallback: () {
+          onHit?.call();
+          _release(orb);
+        },
       );
       orb.rhythmHit = rhythmHit;
     });
     parent.add(orb);
+    return orb;
   }
 
   void _release(MovingOrb orb) {
