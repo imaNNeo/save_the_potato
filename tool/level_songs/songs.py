@@ -11,6 +11,7 @@ import json, os, subprocess, sys
 import numpy as np
 import soundfile as sf
 import synth
+import classical
 from synth import *
 
 MAJOR = [0, 2, 4, 5, 7, 9, 11]
@@ -19,7 +20,7 @@ DORIAN = [0, 2, 3, 5, 7, 9, 10]
 PHRYGIAN = [0, 1, 3, 5, 7, 8, 10]
 
 # chords: (semitones above the tonic, 'M' or 'm'), one per bar, 4 bars twice
-SONGS = [
+ORIGINAL_SONGS = [
     dict(level=1, name='Sprout', tonic='C', mode=MAJOR, bpm=100,
          chords=[(0, 'M'), (7, 'M'), (9, 'm'), (5, 'M')],
          groove='soft', mood='Gentle start. Half-time drums, round bass, the melody walks in small steps.',
@@ -61,6 +62,9 @@ SONGS = [
          groove='epic', mood='The finale. Hot and cold together, everything plays, and the last choruses jump up a whole step.',
          colors=['#ffd36b', '#6aa8ff', '#05070f'], seed=101, modulate=2),
 ]
+
+# Levels 1-6 play arranged public-domain classics (see classical.py)
+SONGS = [classical.BY_LEVEL.get(s['level'], s) for s in ORIGINAL_SONGS]
 
 BARS = 8
 TONIC_MIDI = {k: v for k, v in synth.NOTE.items()}
@@ -140,7 +144,7 @@ def write_phrase(song, kind, rhythm, rng, centre):
     for i, (bar, beat) in enumerate(flat):
         x = (bar + beat / 4) / BARS
         target = centre + contour(kind, x) + (0 if beat == 0 else (2.5 if i % 2 else -2.5))
-        chord = chord_pcs(tonic_pc, song['chords'][bar % 4])
+        chord = chord_pcs(tonic_pc, song['chords'][bar % len(song['chords'])])
         sc = local_scale(tonic_pc, song['mode'], chord)
         if kind == 'tense' and beat == 0:
             # lean on the chord's 7th or 9th on the downbeat, the tension
@@ -176,6 +180,8 @@ def write_phrase(song, kind, rhythm, rng, centre):
 
 
 def design(song):
+    if 'A' in song:
+        return classical.build(song)
     rng = np.random.default_rng(song['seed'])
     tonic_pc = synth.NOTE[song['tonic']]
     # the centre: the tonic around G4-F#5, kept in the shield's range
@@ -225,7 +231,7 @@ def stems(song, shift=0):
         kicks = []
         for bar in range(BARS):
             b0 = bar * bar_s
-            root, voicing = chord_voicing(tonic_pc, song['chords'][bar % 4], shift)
+            root, voicing = chord_voicing(tonic_pc, song['chords'][bar % len(song['chords'])], shift)
             if name == 'pad':
                 m.add(pad(voicing, bar_s - 0.05, 0.9, cut=1400 if g in ('soft', 'halftime') else 1900), b0, 0, 0.55)
             for s16 in range(16):
@@ -396,7 +402,7 @@ if __name__ == '__main__':
     defs = []
     for song in SONGS:
         phrases = design(song)
-        entry = {k: v for k, v in song.items() if k not in ('seed',)}
+        entry = {k: v for k, v in song.items() if k not in ('seed', 'A', 'B')}
         entry['mode'] = {tuple(MAJOR): 'major', tuple(MINOR): 'minor', tuple(DORIAN): 'dorian', tuple(PHRYGIAN): 'phrygian'}[tuple(song['mode'])]
         entry['loopSeconds'] = round(loop_seconds(song), 3)
         entry['form'] = song_form(song)
