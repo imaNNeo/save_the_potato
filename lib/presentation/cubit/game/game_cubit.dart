@@ -151,7 +151,13 @@ class GameCubit extends Cubit<GameState> {
       ),
     );
     final song = state.song;
-    await _audioHelper.useSong(song);
+    try {
+      await _audioHelper.useSong(song);
+    } catch (e, stack) {
+      // The song's stems didn't load: the run goes on, on game time, with
+      // whatever stems are loaded
+      debugPrint('Loading ${song.id} failed: $e\n$stack');
+    }
     // A level starts with its intro: the end of the backing loop fading in
     _audioHelper.playBackgroundMusic(
       startAt: song.musicStartsAt,
@@ -310,8 +316,14 @@ class GameCubit extends Cubit<GameState> {
       ),
     );
     _submitScore(previousScore);
-    // The music already stopped on the tune's last note
-    await Future.delayed(GameConstants.showRetryAfterGameOverDelay);
+    // The endless song never ends by itself: fade it out
+    if (await _audioHelper.audioEnabled) {
+      await _audioHelper.fadeAndStopBackgroundMusic(
+        GameConstants.showRetryAfterGameOverDelay,
+      );
+    } else {
+      await Future.delayed(GameConstants.showRetryAfterGameOverDelay);
+    }
     emit(state.copyWith(showGameOverUI: true));
   }
 

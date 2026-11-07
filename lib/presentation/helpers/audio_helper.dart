@@ -140,12 +140,17 @@ class AudioHelper {
   /// last.
   Future<void> useSong(Song song) {
     _wantedSong = song;
-    return _songLoad = _songLoad.then((_) {
-      if (song.id != _wantedSong.id) {
-        return null;
-      }
-      return _loadSong(song);
-    });
+    final load = _songLoad
+        // A load that failed must not stop every later one
+        .catchError((_) {})
+        .then((_) {
+          if (song.id != _wantedSong.id) {
+            return null;
+          }
+          return _loadSong(song);
+        });
+    _songLoad = load;
+    return load;
   }
 
   Song _wantedSong = RhythmSongs.song;
@@ -183,10 +188,12 @@ class AudioHelper {
     double startAt = 0,
     Duration fadeIn = Duration.zero,
   }) async {
+    // The music of an earlier run never carries over into this one
+    _stopStems();
+    isPaused = false;
     if (!(await _audioEnabled.value)) {
       return;
     }
-    _stopStems();
     _playStems(startAt: startAt, fadeIn: fadeIn);
   }
 

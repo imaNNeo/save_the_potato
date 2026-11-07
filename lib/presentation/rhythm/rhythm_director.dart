@@ -46,6 +46,12 @@ class RhythmDirector extends Component
   double _audioTime = 0;
   double? _lastPosition;
 
+  /// How long the music position hasn't moved while the game is playing
+  double _musicStuck = 0;
+
+  /// After this long without the music moving, the clock runs on game time
+  static const _stuckAfter = 0.25;
+
   // ---- planning ----
   final _planned = <_PlannedOrb>[];
 
@@ -115,6 +121,7 @@ class RhythmDirector extends Component
     _songTime = -_song.introSeconds;
     _audioTime = _songTime;
     _lastPosition = null;
+    _musicStuck = 0;
     _planned.clear();
     _passing.clear();
     _inFlight.clear();
@@ -165,6 +172,29 @@ class RhythmDirector extends Component
       _audioTime = _songTime;
       _lastPosition = at;
       return;
+    }
+    if (_lastPosition != null && (position - _lastPosition!).abs() < 1e-6) {
+      // The music says it plays but its position doesn't move (the audio
+      // output stalled, for example after an iOS audio interruption, or the
+      // browser hasn't let the audio start). The orbs must not wait for it:
+      // the clock runs on game time.
+      _musicStuck += dt;
+      if (_musicStuck > _stuckAfter) {
+        _songTime += dt;
+        _audioTime = _songTime;
+        return;
+      }
+    } else if (_musicStuck > _stuckAfter) {
+      // It moves again: bring the music to where the game is
+      _musicStuck = 0;
+      final at = (_songTime + dt) % _loopEnd;
+      _audio.seekMusic(at);
+      _songTime += dt;
+      _audioTime = _songTime;
+      _lastPosition = at;
+      return;
+    } else {
+      _musicStuck = 0;
     }
     if (_lastPosition == null) {
       // In the intro the music plays the end of the loop, before 0
