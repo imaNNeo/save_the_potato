@@ -263,7 +263,7 @@ class LevelProgressRing extends PositionComponent
 
   Color get _accent => Color(_song.colors.first);
 
-  int get _bars => (_song.totalBeats ?? 0) ~/ 4;
+  int get _bars => (_song.totalBeats ?? 0) ~/ _song.beatsPerBar;
 
   double get _kick => pow(1 - _fract(_beat), 3).toDouble();
 
@@ -362,10 +362,10 @@ class LevelProgressRing extends PositionComponent
 
   void _onBeat(int beat) {
     // A bead lights up at the start of each bar, for the bar that ended
-    if (beat % 4 != 0) {
+    if (beat % _song.beatsPerBar != 0) {
       return;
     }
-    final bar = beat ~/ 4 - 1;
+    final bar = beat ~/ _song.beatsPerBar - 1;
     if (bar < 0) {
       return;
     }
@@ -480,7 +480,7 @@ class LevelProgressRing extends PositionComponent
     _shake(8);
     for (var bar = 0; bar < _bars; bar++) {
       final a = _beadAngle(bar);
-      final big = bar % Song.bars == 0;
+      final big = bar % _song.bars == 0;
       for (var i = 0; i < (big ? 5 : 2); i++) {
         final spread = (_rnd.nextDouble() - 0.5) * 0.5;
         final speed = 160 + _rnd.nextDouble() * 260;
@@ -721,7 +721,7 @@ class LevelProgressRing extends PositionComponent
     final s1 = _ramp(p, 0.25);
     final s2 = _ramp(p, 0.5);
     final s3 = _ramp(p, 0.75);
-    final bar = _beat / 4;
+    final bar = _beat / _song.beatsPerBar;
     final lit = f != null ? n : bar.floor().clamp(0, n);
     final flash = _milestoneFlash;
 
@@ -757,13 +757,13 @@ class LevelProgressRing extends PositionComponent
     final large = <double>[];
     for (var i = lit; i < n; i++) {
       final pt = _polar(_beadAngle(i), radius);
-      (i % Song.bars == 0 ? large : small).addAll([pt.dx, pt.dy]);
+      (i % _song.bars == 0 ? large : small).addAll([pt.dx, pt.dy]);
     }
     _dots(canvas, small, 1.4, _white, 0.2);
     _dots(canvas, large, 2.4, _white, 0.35);
 
     for (var i = 0; i < lit; i++) {
-      final big = i % Song.bars == 0;
+      final big = i % _song.bars == 0;
       final a = _beadAngle(i);
       final age = _time - (_litAt[i] ?? -9);
       final pop = age < 0.4

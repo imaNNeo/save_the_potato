@@ -369,6 +369,13 @@ class Song {
     required this.colors,
     required this.stages,
     required this.form,
+    this.bars = RhythmSongs.bars,
+    this.beatsPerBar = 4,
+    this.fullMelody = false,
+    this.introBars = 0,
+    this.pickupFrom,
+    this.endsAt,
+    this.finale = const [],
   });
 
   final String id;
@@ -395,17 +402,80 @@ class Song {
   final List<SongStage> stages;
   final List<SongSection> form;
 
-  static const bars = RhythmSongs.bars;
+  /// How many bars the backing loop and each melody phrase last
+  final int bars;
+
+  /// How many beats a bar has: 4, or 3 for a waltz
+  final int beatsPerBar;
+
+  /// Whether every note of the melody comes as an orb, as written, at any
+  /// difficulty, and no pair or harmony orbs come with them. A level built
+  /// on a real tune plays it like this, so it can be played by heart.
+  final bool fullMelody;
+
+  /// How many bars a level plays before its tune starts: the last bars of
+  /// the backing loop, fading in, so the tune starts from its beginning
+  final int introBars;
+
+  /// The beat of the last bar where the tune's pickup into its next round
+  /// starts (null if it has none). The pickup also plays at the end of the
+  /// intro, and not at the very end of the level.
+  final double? pickupFrom;
+
+  /// The beat of the last bar of the last round where a level ends: the
+  /// music stops there and [finale] rings. Null: the bar after it.
+  final double? endsAt;
+
+  /// The chord (midi, ice notes) that rings when a level ends
+  final List<int> finale;
 
   double get beatSeconds => 60 / bpm;
 
-  double get loopSeconds => bars * 4 * beatSeconds;
+  int get beatsPerLoop => bars * beatsPerBar;
+
+  double get loopSeconds => beatsPerLoop * beatSeconds;
+
+  /// How long the intro lasts. The song's clock starts this far below 0.
+  double get introSeconds => introBars * beatsPerBar * beatSeconds;
+
+  /// Where in the backing loop the music starts, so its intro ends at the
+  /// end of the loop and the tune starts at 0
+  double get musicStartsAt =>
+      introBars == 0 ? 0 : loopSeconds - introSeconds % loopSeconds;
 
   /// How many beats the song has, null when it never ends
-  int? get totalBeats => endless ? null : form.length * bars * 4;
+  int? get totalBeats => endless ? null : form.length * beatsPerLoop;
 
-  /// How long the song lasts, null when it never ends
-  double? get durationSeconds => endless ? null : form.length * loopSeconds;
+  /// Where a level ends, in beats from the start of its tune
+  double? get endBeat {
+    final total = totalBeats;
+    if (total == null) {
+      return null;
+    }
+    return total - beatsPerBar + (endsAt ?? beatsPerBar.toDouble());
+  }
+
+  /// How long the song lasts (from the start of the tune, the intro left
+  /// out), null when it never ends
+  double? get durationSeconds {
+    final end = endBeat;
+    return end == null ? null : end * beatSeconds;
+  }
+
+  /// Whether [note] of the pass [loop] of the loop plays. Before the tune
+  /// (the intro, loop -1) only its pickup plays, and the last pass leaves
+  /// the pickup and anything after the end out.
+  bool notePlaysIn(int loop, MelodyNote note) {
+    final inLastBar = note.bar == bars - 1;
+    final pickup = inLastBar && pickupFrom != null && note.beat >= pickupFrom!;
+    if (loop < 0) {
+      return pickup;
+    }
+    if (!endless && loop >= form.length - 1 && inLastBar) {
+      return !pickup && note.beat <= (endsAt ?? beatsPerBar);
+    }
+    return true;
+  }
 
   /// Every stem, the extra layers included
   List<String> get allStems => [...stems, ...RhythmSongs.extraLayers];
@@ -472,15 +542,20 @@ class MelodyPhrase {
   final int iceFrom;
   final List<MelodyNote> notes;
 
-  bool isIce(MelodyNote note) => note.midi >= iceFrom;
+  bool isIce(MelodyNote note) => note.ice ?? note.midi >= iceFrom;
 }
 
 class MelodyNote {
-  const MelodyNote(this.bar, this.beat, this.midi);
+  const MelodyNote(this.bar, this.beat, this.midi, [this.ice]);
 
   final int bar;
   final double beat;
   final int midi;
+
+  /// Whether it comes as ice (true) or fire (false), set for a whole
+  /// motif of a real tune so the note that ends a motif stays on the same
+  /// side as the rest of it. Null: by its pitch, see [MelodyPhrase.iceFrom].
+  final bool? ice;
 
   /// 0: first beat of the bar, 1: on a beat, 2: between beats
   int get tier => beat == 0 ? 0 : (beat == beat.floorToDouble() ? 1 : 2);

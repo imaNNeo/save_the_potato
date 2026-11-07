@@ -174,12 +174,33 @@ class AudioHelper {
     }
   }
 
-  void playBackgroundMusic() async {
+  /// Starts the song's stems [startAt] seconds into the loop, fading in
+  /// over [fadeIn] (a level's intro)
+  void playBackgroundMusic({
+    double startAt = 0,
+    Duration fadeIn = Duration.zero,
+  }) async {
     if (!(await _audioEnabled.value)) {
       return;
     }
     _stopStems();
-    _playStems();
+    _playStems(startAt: startAt, fadeIn: fadeIn);
+  }
+
+  /// A level's music played its last note: the stems stop right away (no
+  /// fade out) and [chord] rings, the tonic the tune ends on
+  void endMusic(List<int> chord) async {
+    _stopStems();
+    if (!(await _audioEnabled.value)) {
+      return;
+    }
+    for (final midi in chord) {
+      playNote('ice', midi, volume: 0.7);
+    }
+    if (chord.isNotEmpty) {
+      // and its root low, as fire (an octave further down)
+      playNote('fire', chord.first - 24, volume: 0.8);
+    }
   }
 
   void setAudioEnabled(bool enabled) {
@@ -233,8 +254,9 @@ class AudioHelper {
   /// Used when the music starts after the run has (unmuting mid-run).
   void seekMusic(double seconds) => _music?.seek(seconds);
 
-  void _playStems() {
-    _music = _backend.playMusic({
+  void _playStems({double startAt = 0, Duration fadeIn = Duration.zero}) {
+    final fading = fadeIn > Duration.zero;
+    final music = _music = _backend.playMusic({
       // The first one is the clock (see [musicPosition])
       for (final name in [
         _song.stems.first,
@@ -243,11 +265,20 @@ class AudioHelper {
         if (_stems[name] case final source?)
           name: (
             source,
-            RhythmSongs.extraLayers.contains(name)
+            RhythmSongs.extraLayers.contains(name) || fading
                 ? 0
                 : GameConstants.bgmVolume,
           ),
     });
+    if (startAt > 0) {
+      music.seek(startAt);
+    }
+    if (fading) {
+      // A level's intro: the main stems fade in
+      for (final name in _song.stems) {
+        music.fade(name, GameConstants.bgmVolume, fadeIn);
+      }
+    }
   }
 
   /// Fades the extra backing layers so only [layers] play, and fades the

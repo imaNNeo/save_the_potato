@@ -1,9 +1,14 @@
 """The 10 level songs: their definitions, the melody writer, and the renderer.
 
-Every song works like the game's current song (RhythmSongs): one 8 bar
+Levels 1-6 play real public-domain tunes note for note (see classical.py):
+the backing loop lasts the whole tune, and every note comes as an orb.
+
+Levels 7-10 work like the game's infinite song (RhythmSongs): one 8 bar
 backing loop as stems, and 8 bar melody phrases the shield plays. Every
 phrase keeps the game's note counts (8 downbeats, 17 on-beat, 6 off-beat),
 so the rhythm director and its density rules work unchanged.
+
+No level has a breather: the music keeps going from start to end.
 
   python3 songs.py OUT_DIR [--full] [--only 1,2]
 """
@@ -11,6 +16,7 @@ import json, os, subprocess, sys
 import numpy as np
 import soundfile as sf
 import synth
+import classical
 from synth import *
 
 MAJOR = [0, 2, 4, 5, 7, 9, 11]
@@ -19,7 +25,7 @@ DORIAN = [0, 2, 3, 5, 7, 9, 10]
 PHRYGIAN = [0, 1, 3, 5, 7, 8, 10]
 
 # chords: (semitones above the tonic, 'M' or 'm'), one per bar, 4 bars twice
-SONGS = [
+ORIGINAL_SONGS = [
     dict(level=1, name='Sprout', tonic='C', mode=MAJOR, bpm=100,
          chords=[(0, 'M'), (7, 'M'), (9, 'm'), (5, 'M')],
          groove='soft', mood='Gentle start. Half-time drums, round bass, the melody walks in small steps.',
@@ -61,6 +67,9 @@ SONGS = [
          groove='epic', mood='The finale. Hot and cold together, everything plays, and the last choruses jump up a whole step.',
          colors=['#ffd36b', '#6aa8ff', '#05070f'], seed=101, modulate=2),
 ]
+
+# Levels 1-6 play arranged public-domain classics (see classical.py)
+SONGS = [classical.BY_LEVEL.get(s['level'], s) for s in ORIGINAL_SONGS]
 
 BARS = 8
 TONIC_MIDI = {k: v for k, v in synth.NOTE.items()}
@@ -140,7 +149,7 @@ def write_phrase(song, kind, rhythm, rng, centre):
     for i, (bar, beat) in enumerate(flat):
         x = (bar + beat / 4) / BARS
         target = centre + contour(kind, x) + (0 if beat == 0 else (2.5 if i % 2 else -2.5))
-        chord = chord_pcs(tonic_pc, song['chords'][bar % 4])
+        chord = chord_pcs(tonic_pc, song['chords'][bar % len(song['chords'])])
         sc = local_scale(tonic_pc, song['mode'], chord)
         if kind == 'tense' and beat == 0:
             # lean on the chord's 7th or 9th on the downbeat, the tension
@@ -176,6 +185,8 @@ def write_phrase(song, kind, rhythm, rng, centre):
 
 
 def design(song):
+    if is_full(song):
+        return classical.build(song)
     rng = np.random.default_rng(song['seed'])
     tonic_pc = synth.NOTE[song['tonic']]
     # the centre: the tonic around G4-F#5, kept in the shield's range
@@ -196,8 +207,28 @@ def design(song):
 
 # ---------------------------------------------------------------- audio
 
+def is_full(song):
+    """A real tune, played note for note (classical.py)"""
+    return 'bars' in song
+
+
+def n_bars(song):
+    return len(song['bars']) if is_full(song) else BARS
+
+
+def beats_of(song):
+    return song.get('beats', 4)
+
+
+def chords_of_bar(song, bar):
+    """[(start beat, chord), ...] for a bar"""
+    if is_full(song):
+        return classical.bar_chords(song, bar)
+    return [(0, song['chords'][bar % len(song['chords'])])]
+
+
 def loop_seconds(song):
-    return BARS * 4 * 60 / song['bpm']
+    return n_bars(song) * beats_of(song) * 60 / song['bpm']
 
 
 def chord_voicing(tonic_pc, ch, shift=0):
@@ -215,21 +246,46 @@ def chord_voicing(tonic_pc, ch, shift=0):
 def stems(song, shift=0):
     bpm = song['bpm']
     beat = 60 / bpm
-    bar_s = 4 * beat
-    L = BARS * bar_s
+    beats = beats_of(song)
+    bar_s = beats * beat
+    L = n_bars(song) * bar_s
     g = song['groove']
+    waltz = beats == 3
     tonic_pc = synth.NOTE[song['tonic']]
     out = {}
     for name in ('kick', 'claps', 'hats', 'hats16', 'bass', 'pad', 'arp'):
         m = Mix(L + 4)
         kicks = []
-        for bar in range(BARS):
+        for bar in range(n_bars(song)):
             b0 = bar * bar_s
-            root, voicing = chord_voicing(tonic_pc, song['chords'][bar % 4], shift)
+            segs = chords_of_bar(song, bar)
             if name == 'pad':
-                m.add(pad(voicing, bar_s - 0.05, 0.9, cut=1400 if g in ('soft', 'halftime') else 1900), b0, 0, 0.55)
-            for s16 in range(16):
+                for k, (at, ch) in enumerate(segs):
+                    end = segs[k + 1][0] if k + 1 < len(segs) else beats
+                    _, v = chord_voicing(tonic_pc, ch, shift)
+                    m.add(pad(v, (end - at) * beat - 0.05, 0.9, cut=1400 if g in ('soft', 'halftime', 'waltz') else 1900), b0 + at * beat, 0, 0.55)
+            for s16 in range(beats * 4):
                 tt = b0 + s16 * beat / 4
+                ch = [c for at, c in segs if at * 4 <= s16][-1]
+                root, voicing = chord_voicing(tonic_pc, ch, shift)
+                if waltz:
+                    # oom-pah-pah: the kick and the bass on 1, soft claps on 2 and 3
+                    if s16 == 0:
+                        kicks.append(tt)
+                        if name == 'kick':
+                            m.add(kick(), tt, 0, 0.6)
+                    if name == 'claps' and s16 in (4, 8):
+                        m.add(clap(), tt, 0.1, 0.28)
+                    if name == 'hats' and s16 % 2 == 0 and s16:
+                        m.add(hat(), tt, -0.25, 0.2 if s16 % 4 == 0 else 0.12)
+                    if name == 'hats16' and s16 % 2 == 1:
+                        m.add(hat(), tt, 0.3, 0.12)
+                    if name == 'bass' and s16 in (0, 8):
+                        m.add(bass(root + (0 if s16 == 0 else 7), beat * (1.6 if s16 == 0 else 0.8), 1.0 if s16 == 0 else 0.6), tt, 0, 0.6)
+                    if name == 'arp' and s16 % 2 == 0:
+                        tones = voicing + [voicing[0] + 12]
+                        m.add(pluck(tones[[0, 1, 2, 3, 2, 1][s16 // 2]] + 12, 0.5, 0.6, 0.18), tt, 0.35 if s16 % 4 else -0.35, 0.5)
+                    continue
                 k_on = {
                     'soft': s16 in (0, 8, 10),
                     'halftime': s16 in (0, 6, 10),
@@ -305,16 +361,11 @@ def note_sound(midi, ice):
 
 
 def song_form(song):
+    """Verses and choruses for about 3 minutes, with no breather: the
+    music keeps going, and the last two passes are choruses"""
     L = loop_seconds(song)
-    n = max(8, round(180 / L))
-    form = ['breather']
-    while len(form) < n:
-        i = len(form)
-        f = i / n
-        if abs(f - 0.6) < 0.5 / n * 1.2 and 'breather' not in form[2:]:
-            form.append('breather')
-        else:
-            form.append('verse' if len(form) % 2 == 1 else 'chorus')
+    n = max(2, round(180 / L))
+    form = ['verse' if i % 2 == 0 else 'chorus' for i in range(n)]
     form[-2:] = ['chorus', 'chorus']
     return form
 
@@ -327,58 +378,119 @@ STAGES = [
 ]
 
 
+def stages_of(song):
+    """STAGES, with the one tune in every stage for a real tune"""
+    if is_full(song):
+        return [(f, ['tune'], layers) for f, _, layers in STAGES]
+    return STAGES
+
+
+INTRO_BARS = 2
+
+
+def level_ending(song):
+    """(pickup_from, ends_at) of a level, see classical.ending. A generated
+    song ends on the downbeat after its last bar."""
+    if is_full(song):
+        return classical.ending(song)
+    return None, beats_of(song)
+
+
+def intro_seconds(song):
+    return INTRO_BARS * beats_of(song) * 60 / song['bpm']
+
+
+def end_beat(song):
+    """Where a level ends, in beats from the start of the tune"""
+    _, ends_at = level_ending(song)
+    return (len(song_form(song)) * n_bars(song) - 1) * beats_of(song) + ends_at
+
+
+def finale(song, shift=0):
+    """The tonic chord a level ends on, as ice notes (midi)"""
+    tonic = 72 + (synth.NOTE[song['tonic']] + shift) % 12
+    if tonic > 79:
+        tonic -= 12
+    third = 4 if song['mode'] == MAJOR else 3
+    return [tonic, tonic + third, tonic + 7, tonic + 12]
+
+
 def render(song, phrases, out_path, full=True):
+    """full: the level as the game plays it (an intro of the backing's last
+    bars fading in, the form, and a clean ending on the tonic chord).
+    Otherwise one chorus pass of the loop."""
     L = loop_seconds(song)
+    stages = stages_of(song)
     beat = 60 / song['bpm']
+    bpb = beats_of(song)
     form = song_form(song) if full else ['chorus']
     base = stems(song)
     mod = song.get('modulate')
     up = stems(song, mod) if mod else None
-    total = len(form) * L + 3.5
+    intro = intro_seconds(song) if full else 0
+    pickup_from, ends_at = level_ending(song)
+    end = intro + end_beat(song) * beat if full else L
+    total = end + (3.5 if full else 0.4)
     mix = Mix(total)
-    stage_i = 0
     plays = []
+
+    def cut(x, start, stop):
+        a, b = int(round(start * SR)), int(round(stop * SR))
+        return x[:, a:b]
+
+    if full:
+        # the intro: the last bars of the backing loop, fading in, and the
+        # tune's pickup if it has one
+        ramp = np.linspace(0, 1, int(round(intro * SR)))
+        for name, x in base.items():
+            if name in ('hats16', 'arp'):
+                continue
+            y = cut(x, L - intro, L).copy()
+            y *= ramp[:y.shape[1]]
+            mix.add(y, 0)
     for i, sec in enumerate(form):
         f = i / len(form)
-        stage = [s for s in STAGES if f >= s[0]][-1] if full else STAGES[2]
+        stage = [s for s in stages if f >= s[0]][-1] if full else stages[2]
         names, layers = stage[1], list(stage[2])
         if sec == 'chorus':
             layers = list(set(layers + ['hats16'] + (['arp'] if 'hats16' in stage[2] else [])))
-        if song['groove'] in ('four', 'epic') and 'arp' not in layers and sec != 'breather':
+        if song['groove'] in ('four', 'epic') and 'arp' not in layers:
             layers.append('arp')
         shift = mod if (mod and full and i >= len(form) - 2) else 0
         st = up if shift else base
-        t0 = i * L
+        t0 = intro + i * L
+        last = full and i == len(form) - 1
         for name, x in st.items():
             if name in ('hats16', 'arp') and name not in layers:
                 continue
-            if sec == 'breather' and name in ('kick', 'claps', 'hats', 'hats16', 'arp'):
-                continue
-            mix.add(x, t0, gain=1.0)
+            # the last pass stops dead where the level ends
+            mix.add(cut(x, 0, end - t0) if last else x, t0, gain=1.0)
         ph = phrases[names[i % len(names)]]
-        for bar, b, m in ph['notes']:
+        for note in ph['notes']:
+            bar, b, m = note[:3]
             tier = 0 if b == 0 else (1 if b == int(b) else 2)
-            if sec == 'breather' and tier > 0:
+            if not is_full(song):
+                # like the game, a verse and the start hold some notes back
+                if sec == 'verse' and tier == 2:
+                    continue
+                if full and f < 0.15 and tier == 2:
+                    continue
+            pickup = bar == n_bars(song) - 1 and pickup_from is not None and b >= pickup_from
+            if last and bar == n_bars(song) - 1 and (pickup or b > ends_at):
                 continue
-            if sec == 'verse' and tier == 2:
-                continue
-            if full and f < 0.15 and tier == 2:
-                continue
-            ice = m >= ph['iceFrom']
-            mix.add(note_sound(m + shift, ice), t0 + (bar * 4 + b) * beat, 0.25 if ice else -0.25, 0.55)
+            ice = note[3] if len(note) > 3 else m >= ph['iceFrom']
+            mix.add(note_sound(m + shift, ice), t0 + (bar * bpb + b) * beat, 0.25 if ice else -0.25, 0.55)
+            if full and i == 0 and pickup:
+                # the pickup also leads in from the intro
+                mix.add(note_sound(m, ice), intro - (bpb - b) * beat, 0.25 if ice else -0.25, 0.55)
         plays.append(dict(section=sec, phrase=ph['name'], start=round(t0, 3)))
     if full:
-        # the level-clear sting: the tonic chord rung out on top
-        tonic = 72 + (synth.NOTE[song['tonic']] - 0) % 12 + (mod or 0)
-        if tonic > 79:
-            tonic -= 12
-        third = 4 if song['mode'] == MAJOR else 3
-        end = len(form) * L
-        for k, m in enumerate([tonic, tonic + third, tonic + 7, tonic + 12]):
-            mix.add(ice_hit(m), end + k * 0.06, 0, 0.5)
+        # the end: the tonic chord rung out where the music stops
+        for m in finale(song, mod or 0):
+            mix.add(ice_hit(m), end, 0, 0.5)
+        mix.add(fire_hit(finale(song, mod or 0)[0] - 12), end, 0, 0.5)
         mix.add(kick(), end, 0, 0.8)
-        mix.add(riser(L / 4), len(form) * L - L / 4 - 0.0, 0, 0.6)
-    st = master(mix.stereo(), total, fade_out=2.5 if full else 0.4, target=-15)
+    st = master(mix.stereo(), total, fade_out=0.3, target=-15)
     w = out_path + '.wav'
     sf.write(w, st.T, SR)
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', w, '-c:a', 'libmp3lame', '-b:a', '128k' if full else '96k', out_path], check=True)
@@ -396,7 +508,7 @@ if __name__ == '__main__':
     defs = []
     for song in SONGS:
         phrases = design(song)
-        entry = {k: v for k, v in song.items() if k not in ('seed',)}
+        entry = {k: v for k, v in song.items() if k not in ('seed', 'bars', 'chords')}
         entry['mode'] = {tuple(MAJOR): 'major', tuple(MINOR): 'minor', tuple(DORIAN): 'dorian', tuple(PHRYGIAN): 'phrygian'}[tuple(song['mode'])]
         entry['loopSeconds'] = round(loop_seconds(song), 3)
         entry['form'] = song_form(song)
