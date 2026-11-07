@@ -57,7 +57,7 @@ def main(only=None):
            '// ignore_for_file: lines_longer_than_80_chars', '',
            "import 'rhythm_songs.dart';", '',
            '/// The 10 songs of the levels mode, one per level. Each one is a',
-           '/// [Song] that plays its form once, about 3 minutes, and the level',
+           '/// [Song] that plays its form once, about 2 minutes, and the level',
            '/// is cleared when it ends.',
            'class LevelSongs {', '  LevelSongs._();', '']
     songs_list = []
