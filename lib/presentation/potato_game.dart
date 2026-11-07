@@ -57,8 +57,30 @@ class PotatoGame extends FlameGame<MyWorld>
 
   /// Starts loading the images the game draws, so a game created later
   /// doesn't wait for them. Safe to call many times.
-  static Future<void> preloadAssets() =>
-      _preloading ??= Flame.images.loadAll(_images).then((_) {});
+  static Future<void> preloadAssets({void Function(int done)? onProgress}) {
+    if (_preloading == null) {
+      var done = 0;
+      _preloading = Future.wait(
+        _images.map(
+          (image) => Flame.images.load(image).then((_) {
+            _preloaded = ++done;
+            _preloadListener?.call(done);
+          }),
+        ),
+      );
+    }
+    if (onProgress != null) {
+      _preloadListener = onProgress;
+      onProgress(_preloaded);
+    }
+    return _preloading!;
+  }
+
+  static int _preloaded = 0;
+  static void Function(int done)? _preloadListener;
+
+  /// How many images [preloadAssets] loads
+  static int get preloadCount => _images.length;
 
   /// Completes once the potato is in the world and will be drawn on the
   /// next frame.

@@ -130,6 +130,7 @@ class _SplashPageState extends State<SplashPage> {
           backgroundColor: Colors.black,
           body: SplashStage(
             key: _stage,
+            loadingProgress: state.loadingProgress,
             footer: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,

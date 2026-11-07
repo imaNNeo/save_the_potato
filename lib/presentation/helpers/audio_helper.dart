@@ -34,35 +34,76 @@ class AudioHelper {
   final _stemHandles = <String, SoundHandle>{};
   SoundHandle? _stemGroup;
 
-  Future<void> initialize() async {
+  /// How many steps [initialize] reports, starting the engine counts as one
+  static int get loadSteps =>
+      1 +
+      5 +
+      _noteBaseMidi.length +
+      RhythmSongs.song.allStems.length +
+      MotivationWordType.values.length;
+
+  /// Starts the audio engine and loads every sound. [onProgress] is called
+  /// with how many of the [loadSteps] are done.
+  Future<void> initialize({void Function(int done)? onProgress}) async {
+    var done = 0;
+    void step() => onProgress?.call(++done);
+
     _soLoud = SoLoud.instance;
     await _soLoud.init();
     // The stems alone take 7 voices
     _soLoud.setMaxActiveVoiceCount(40);
+    step();
+
     const baseAssets = 'assets/audio';
-    _heartHit = await _soLoud.loadAsset('$baseAssets/heart.wav');
-    _orbHit1 = await _soLoud.loadAsset('$baseAssets/hit1.wav');
-    _orbHit2 = await _soLoud.loadAsset('$baseAssets/hit2.wav');
-
-    _victory = await _soLoud.loadAsset('$baseAssets/victory.mp3');
-    _gameOver = await _soLoud.loadAsset('$baseAssets/game_over.wav');
-
-    for (final name in _noteBaseMidi.keys) {
-      _notes[name] = await _soLoud.loadAsset(
-        '$baseAssets/rhythm/note_$name.ogg',
-      );
+    Future<AudioSource> load(String path) async {
+      final source = await _soLoud.loadAsset('$baseAssets/$path');
+      step();
+      return source;
     }
-    for (final name in RhythmSongs.song.allStems) {
-      _infiniteStems[name] = await _soLoud.loadAsset(
-        '$baseAssets/${RhythmSongs.song.assetDir}/stem_$name.ogg',
-      );
+
+    // Loaded all at once, on the web every file is a separate download
+    final heartHit = load('heart.wav');
+    final orbHit1 = load('hit1.wav');
+    final orbHit2 = load('hit2.wav');
+    final victory = load('victory.mp3');
+    final gameOver = load('game_over.wav');
+    final notes = {
+      for (final name in _noteBaseMidi.keys)
+        name: load('rhythm/note_$name.ogg'),
+    };
+    final stems = {
+      for (final name in RhythmSongs.song.allStems)
+        name: load('${RhythmSongs.song.assetDir}/stem_$name.ogg'),
+    };
+    final words = [
+      for (var word in MotivationWordType.values)
+        load('motivation/${word.assetName}'),
+    ];
+
+    // Waits for all of them first, so one failing doesn't leave the
+    // others' errors unhandled
+    await Future.wait<Object?>([
+      heartHit,
+      orbHit1,
+      orbHit2,
+      victory,
+      gameOver,
+      ...notes.values,
+      ...stems.values,
+      ...words,
+    ]);
+    _heartHit = await heartHit;
+    _orbHit1 = await orbHit1;
+    _orbHit2 = await orbHit2;
+    _victory = await victory;
+    _gameOver = await gameOver;
+    for (final e in notes.entries) {
+      _notes[e.key] = await e.value;
+    }
+    for (final e in stems.entries) {
+      _infiniteStems[e.key] = await e.value;
     }
     _stems.addAll(_infiniteStems);
-
-    // Motivation words
-    for (var word in MotivationWordType.values) {
-      await _soLoud.loadAsset('$baseAssets/motivation/${word.assetName}');
-    }
   }
 
   /// Loads the stems of [song] (once), so the next
