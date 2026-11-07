@@ -1,3 +1,18 @@
+## 2.1.0
+* New levels mode: 10 classical tunes played note for note, about 2 minutes each with an intro and a real ending, on a new home screen with a level dial and START
+* A bolder level progress ring that is easy to read at a glance, without the burst at each quarter
+* A soft wooden tick when turning the level dial
+* The potato shows its health with its face and body, looks dizzy while it recovers from a hit, and blinks safe for a moment after each hit
+* The potato wears headphones and enjoys the music, with small music notes on the beat while it is calm
+* A short first-time tutorial with a ghost shield and a spotlight on incoming orbs
+* Wider shields (115°) and steadier steering
+* A rhythmic opening, a headphones splash with a loading meter, and a gapless start into the game
+* Difficulty keeps rising fairly past 10 minutes
+* The potato is now drawn in code (no more Rive)
+* Fix the flickering warning ring around incoming orbs
+* Web: sounds play through Web Audio (no more crackle) and the game is cheaper to draw on phones
+* iOS: crash symbols upload to Crashlytics, and the app builds with Swift Package Manager only
+
 ## 2.0.1
 * Fix the potato not showing on iOS
 

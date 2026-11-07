@@ -1,5 +1,19 @@
 [
   {
+    "version": "2.1.0",
+    "shared": [
+      "Levels mode: 10 classical tunes of about 2 minutes each, played note for note",
+      "The potato now shows how it's doing with its face, and wears headphones",
+      "A short first-time tutorial",
+      "Wider shields and steadier steering",
+      "New loading screen and smoother start",
+      "Fairer difficulty after 10 minutes, plus a short safe blink after each hit",
+      "Better sound on the web and many small fixes"
+    ],
+    "ios_specific": [],
+    "android_specific": []
+  },
+  {
     "version": "2.0.1",
     "shared": [
       "Fix the potato not showing on iOS"
