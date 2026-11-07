@@ -26,6 +26,10 @@ sealed class MovingOrb extends MovingComponent {
   double moteClock = 0;
   double seed = 0;
 
+  /// Where the warning ring is in its beat. Kept moving by [OrbEffects]
+  /// so the beat speeds up smoothly as the orb gets closer
+  double warningPhase = 0;
+
   /// The head swells a little with it, the hitbox stays the same
   double pulse = 1;
 
@@ -53,6 +57,7 @@ sealed class MovingOrb extends MovingComponent {
     puffClock = 0;
     moteClock = 0;
     seed = rnd.nextDouble() * 100;
+    warningPhase = seed;
     pulse = 1;
     _initialized = true;
   }
