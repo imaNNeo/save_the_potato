@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -181,6 +182,20 @@ class _LevelSelectState extends State<LevelSelect>
             animation: Listenable.merge([_pulse, _intro]),
             builder: (context, _) => Stack(
               children: [
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _LevelPathPainter(
+                        style: _LevelPathStyle.current,
+                        center: center,
+                        radius: _radius(scale),
+                        turn: _turn,
+                        cleared: state.levelsCleared,
+                        intro: _intro.value,
+                      ),
+                    ),
+                  ),
+                ),
                 _marker(center, scale),
                 ..._stops(state, center, scale),
                 _title(),
@@ -195,7 +210,7 @@ class _LevelSelectState extends State<LevelSelect>
 
   // ---- the stops ----
 
-  double _radius(double scale) => 168 * scale;
+  double _radius(double scale) => 225 * scale;
 
   /// How far the ring is turned, in radians
   double get _turn => _pos * 2 * pi / LevelSelect.stops;
@@ -687,4 +702,144 @@ class _ArrowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ArrowPainter oldDelegate) => oldDelegate.color != color;
+}
+
+/// Samples of the line that joins level 1 to 10, picked on the web with
+/// `?path=dashes|dots|line|arrows|none`
+enum _LevelPathStyle {
+  /// Dashes, gold up to the next level to play
+  dashes,
+
+  /// Small dots, gold up to the next level to play
+  dots,
+
+  /// A solid line that fills with gold like a progress bar
+  line,
+
+  /// Dashes with a small arrow on each step, pointing to the next level
+  arrows,
+  none;
+
+  static final _LevelPathStyle current = () {
+    final name = kIsWeb ? Uri.base.queryParameters['path'] : null;
+    return _LevelPathStyle.values.firstWhere(
+      (s) => s.name == name,
+      orElse: () => _LevelPathStyle.dashes,
+    );
+  }();
+}
+
+/// The line from each level to the next one around the ring. The steps
+/// already walked (up to the next level to play) are gold.
+class _LevelPathPainter extends CustomPainter {
+  _LevelPathPainter({
+    required this.style,
+    required this.center,
+    required this.radius,
+    required this.turn,
+    required this.cleared,
+    required this.intro,
+  });
+
+  final _LevelPathStyle style;
+  final Offset center;
+  final double radius;
+  final double turn;
+  final int cleared;
+  final double intro;
+
+  static const _gold = GameColors.leaderboardGoldenColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (style == _LevelPathStyle.none || intro <= 0) {
+      return;
+    }
+    const n = LevelSelect.stops;
+    final step = 2 * pi / n;
+    // Leaves room around the beads
+    final gap = 21 / radius;
+    final paint = Paint()..strokeCap = StrokeCap.round;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    for (var level = 1; level < Levels.count; level++) {
+      // It grows in after the beads pop out
+      final t = (intro * 1.6 - 0.3 - level * 0.05).clamp(0.0, 1.0);
+      if (t <= 0) {
+        continue;
+      }
+      final from = LevelSelect.stopAngle(level.toDouble()) - turn + gap;
+      final sweep = (step - 2 * gap) * t;
+      final walked = level <= cleared;
+      final color = walked ? _gold : Colors.white;
+      switch (style) {
+        case _LevelPathStyle.dashes:
+        case _LevelPathStyle.arrows:
+          paint
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = walked ? 3 : 2
+            ..color = color.withValues(alpha: walked ? 0.9 : 0.35);
+          final dash = 7 / radius;
+          final space = 5 / radius;
+          for (var a = 0.0; a < sweep; a += dash + space) {
+            canvas.drawArc(rect, from + a, min(dash, sweep - a), false, paint);
+          }
+          if (style == _LevelPathStyle.arrows && t >= 1) {
+            _arrow(canvas, from + sweep / 2, walked, color);
+          }
+        case _LevelPathStyle.dots:
+          paint
+            ..style = PaintingStyle.fill
+            ..color = color.withValues(alpha: walked ? 0.95 : 0.4);
+          final spacing = 9 / radius;
+          final dots = (sweep / spacing).floor();
+          final offset = (sweep - dots * spacing) / 2;
+          for (var i = 0; i <= dots; i++) {
+            final a = from + offset + i * spacing;
+            canvas.drawCircle(
+              center + Offset(cos(a), sin(a)) * radius,
+              walked ? 2.2 : 1.7,
+              paint,
+            );
+          }
+        case _LevelPathStyle.line:
+          paint
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 4
+            ..color = walked
+                ? _gold.withValues(alpha: 0.9)
+                : Colors.white.withValues(alpha: 0.14);
+          canvas.drawArc(rect, from, sweep, false, paint);
+        case _LevelPathStyle.none:
+      }
+    }
+  }
+
+  /// A small chevron on the ring at [angle], pointing clockwise
+  void _arrow(Canvas canvas, double angle, bool walked, Color color) {
+    final p = center + Offset(cos(angle), sin(angle)) * radius;
+    canvas.save();
+    canvas.translate(p.dx, p.dy);
+    canvas.rotate(angle + pi / 2);
+    final path = Path()
+      ..moveTo(-3.5, -5)
+      ..lineTo(3.5, 0)
+      ..lineTo(-3.5, 5);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.4
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = color.withValues(alpha: walked ? 1 : 0.6),
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_LevelPathPainter old) =>
+      old.turn != turn ||
+      old.cleared != cleared ||
+      old.intro != intro ||
+      old.radius != radius;
 }
