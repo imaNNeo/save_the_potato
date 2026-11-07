@@ -1,47 +1,18 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
-import 'package:save_the_potato/presentation/components/moving/rift/ring_rift.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:save_the_potato/presentation/rhythm/levels.dart';
-
-/// Samples of the home screen's level select, picked on the web with
-/// `?home=dial|pointer|road`
-enum LevelSelectStyle {
-  /// The ring of stops turns, the picked one sits at the top
-  dial,
-
-  /// The stops stay put and the shields turn to point at one, like in a run
-  pointer,
-
-  /// The stops sit on the big arena ring as a road, which turns
-  road;
-
-  static final LevelSelectStyle current = () {
-    if (!kIsWeb) {
-      return LevelSelectStyle.dial;
-    }
-    final name = Uri.base.queryParameters['home'];
-    return LevelSelectStyle.values.firstWhere(
-      (s) => s.name == name,
-      orElse: () => LevelSelectStyle.dial,
-    );
-  }();
-}
 
 /// The home screen: the endless mode and the ten levels as stops around
 /// the potato, turned with the same left/right as the shields in a run,
 /// and a START button. Stop 0 is the endless mode, 1 to 10 the levels.
 class LevelSelect extends StatefulWidget {
   const LevelSelect({super.key});
-
-  /// Where the fire shield points on the home screen (screen angle)
-  static final pointerAngle = ValueNotifier<double>(-pi / 2);
 
   static const stops = Levels.count + 1;
 
@@ -58,8 +29,6 @@ class LevelSelect extends StatefulWidget {
 
 class _LevelSelectState extends State<LevelSelect>
     with TickerProviderStateMixin {
-  final style = LevelSelectStyle.current;
-
   /// Where the selector is, in stops (not wrapped: it can go round and
   /// round)
   double _pos = 1;
@@ -70,6 +39,12 @@ class _LevelSelectState extends State<LevelSelect>
   /// Whether it should sit on the next level to clear (until the player
   /// turns it). The cleared count loads a moment after the screen shows.
   bool _followNext = false;
+
+  /// The way left/right was held last frame, and the stop it started from:
+  /// letting go always lands on the next stop that way, so a single tap
+  /// moves one level
+  int _heldDirection = 0;
+  double _heldFrom = 0;
 
   late final Ticker _ticker;
   Duration _last = Duration.zero;
@@ -108,7 +83,6 @@ class _LevelSelectState extends State<LevelSelect>
       duration: const Duration(milliseconds: 700),
     )..forward();
     _ticker = createTicker(_tick)..start();
-    _updatePointer();
   }
 
   @override
@@ -136,6 +110,16 @@ class _LevelSelectState extends State<LevelSelect>
         _snap = next;
       }
     }
+    if (direction != 0 && _heldDirection == 0) {
+      _heldFrom = _snap ?? _pos.roundToDouble();
+    } else if (direction == 0 && _heldDirection != 0) {
+      var to = _heldDirection > 0 ? _pos.ceilToDouble() : _pos.floorToDouble();
+      if ((to - _heldFrom) * _heldDirection < 1) {
+        to = _heldFrom + _heldDirection;
+      }
+      _snap = to;
+    }
+    _heldDirection = direction.sign.toInt();
     if (direction != 0) {
       _followNext = false;
       _pos += direction * _turnSpeed * dt;
@@ -150,7 +134,6 @@ class _LevelSelectState extends State<LevelSelect>
     // Also keeps the game's pick in step when it ignored an earlier one
     _pickSelected();
     if (_pos != before) {
-      _updatePointer();
       setState(() {});
     }
   }
@@ -161,12 +144,6 @@ class _LevelSelectState extends State<LevelSelect>
     if (_cubit.state.level != level) {
       _cubit.selectLevel(level);
     }
-  }
-
-  void _updatePointer() {
-    LevelSelect.pointerAngle.value = style == LevelSelectStyle.pointer
-        ? LevelSelect.stopAngle(_pos)
-        : -pi / 2;
   }
 
   /// Turns to [stop] the short way round
@@ -204,21 +181,7 @@ class _LevelSelectState extends State<LevelSelect>
             animation: Listenable.merge([_pulse, _intro]),
             builder: (context, _) => Stack(
               children: [
-                if (style == LevelSelectStyle.road)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: CustomPaint(
-                        painter: _RoadPainter(
-                          center: center,
-                          radius: _radius(scale),
-                          turn: _turn,
-                          cleared: state.levelsCleared,
-                          intro: _intro.value,
-                        ),
-                      ),
-                    ),
-                  ),
-                if (style != LevelSelectStyle.pointer) _marker(center, scale),
+                _marker(center, scale),
                 ..._stops(state, center, scale),
                 _title(),
                 _panel(state),
@@ -232,18 +195,14 @@ class _LevelSelectState extends State<LevelSelect>
 
   // ---- the stops ----
 
-  double _radius(double scale) => switch (style) {
-    LevelSelectStyle.road => ArenaRing.radius * 0.92 * scale,
-    _ => 168 * scale,
-  };
+  double _radius(double scale) => 168 * scale;
 
   /// How far the ring is turned, in radians
-  double get _turn =>
-      style == LevelSelectStyle.pointer ? 0 : _pos * 2 * pi / LevelSelect.stops;
+  double get _turn => _pos * 2 * pi / LevelSelect.stops;
 
   List<Widget> _stops(GameState state, Offset center, double scale) {
     final radius = _radius(scale);
-    final base = style == LevelSelectStyle.road ? 40.0 : 34.0;
+    const base = 34.0;
     final widgets = <(double, Widget)>[];
     for (var stop = 0; stop < LevelSelect.stops; stop++) {
       // Each stop pops out a little after the one before
@@ -294,7 +253,7 @@ class _LevelSelectState extends State<LevelSelect>
   /// The notch at the top the picked stop sits under
   Widget _marker(Offset center, double scale) {
     final r = _radius(scale);
-    final y = center.dy - r - (style == LevelSelectStyle.road ? 40 : 34);
+    final y = center.dy - r - 34;
     return Positioned(
       left: center.dx - 9,
       top: y - 4 + 3 * _pulse.value,
@@ -445,16 +404,11 @@ class _Stop extends StatelessWidget {
           child: Icon(Icons.all_inclusive_rounded, color: ink),
         ),
       );
-    } else if (cleared) {
-      fill = GameColors.leaderboardGoldenColor;
-      child = const FittedBox(
-        child: Padding(
-          padding: EdgeInsets.all(6),
-          child: Icon(Icons.check_rounded, color: ink),
-        ),
-      );
     } else if (open) {
-      fill = Color(Levels.songOf(level).colors.first);
+      // Cleared ones are gold, with a check badge on top
+      fill = cleared
+          ? GameColors.leaderboardGoldenColor
+          : Color(Levels.songOf(level).colors.first);
       child = FittedBox(
         child: Padding(
           padding: const EdgeInsets.all(7),
@@ -470,38 +424,95 @@ class _Stop extends StatelessWidget {
         ),
       );
     } else {
+      // Locked: a dim number, with a lock badge on top
       fill = Colors.white.withValues(alpha: 0.12);
-      child = const FittedBox(
+      child = FittedBox(
         child: Padding(
-          padding: EdgeInsets.all(8),
-          child: Icon(Icons.lock_rounded, color: Colors.white60),
+          padding: const EdgeInsets.all(7),
+          child: Text(
+            '$level',
+            style: const TextStyle(
+              fontFamily: 'Cookies',
+              fontSize: 16,
+              color: Colors.white54,
+              height: 1.1,
+            ),
+          ),
         ),
       );
     }
+    final badge = cleared
+        ? const _Badge(
+            icon: Icons.check_rounded,
+            color: Color(0xFF3BD16F),
+            iconColor: Colors.white,
+          )
+        : level != null && !open
+        ? const _Badge(
+            icon: Icons.lock_rounded,
+            color: Color(0xFF3A3150),
+            iconColor: Colors.white70,
+          )
+        : null;
+    final bead = Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: fill,
+        border: selected > 0.5
+            ? Border.all(color: Colors.white, width: 2.5)
+            : null,
+        boxShadow: selected > 0.05
+            ? [
+                BoxShadow(
+                  color: fill.withValues(alpha: 0.8 * selected),
+                  blurRadius: (14 + pulse * 10) * selected,
+                ),
+              ]
+            : null,
+      ),
+      alignment: Alignment.center,
+      child: child,
+    );
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: fill,
-          border: selected > 0.5
-              ? Border.all(color: Colors.white, width: 2.5)
-              : null,
-          boxShadow: selected > 0.05
-              ? [
-                  BoxShadow(
-                    color: fill.withValues(alpha: 0.8 * selected),
-                    blurRadius: (14 + pulse * 10) * selected,
-                  ),
-                ]
-              : null,
-        ),
-        alignment: Alignment.center,
-        child: child,
-      ),
+      child: badge == null
+          ? bead
+          : Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned.fill(child: bead),
+                // Top right: a check when cleared, a lock when locked
+                Positioned(right: -3, top: -3, child: badge),
+              ],
+            ),
     );
   }
+}
+
+class _Badge extends StatelessWidget {
+  const _Badge({
+    required this.icon,
+    required this.color,
+    required this.iconColor,
+  });
+
+  final IconData icon;
+  final Color color;
+  final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 16,
+    height: 16,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: color,
+      border: Border.all(color: const Color(0xFF120A1E), width: 1.5),
+    ),
+    alignment: Alignment.center,
+    child: Icon(icon, size: 10, color: iconColor),
+  );
 }
 
 class _Chevron extends StatelessWidget {
@@ -608,62 +619,4 @@ class _ArrowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ArrowPainter oldDelegate) => oldDelegate.color != color;
-}
-
-/// The road between the stops on the arena ring: gold where the levels
-/// are cleared, dotted where they are still to come
-class _RoadPainter extends CustomPainter {
-  _RoadPainter({
-    required this.center,
-    required this.radius,
-    required this.turn,
-    required this.cleared,
-    required this.intro,
-  });
-
-  final Offset center;
-  final double radius;
-  final double turn;
-  final int cleared;
-  final double intro;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const n = LevelSelect.stops;
-    final step = 2 * pi / n;
-    final rect = Rect.fromCircle(center: center, radius: radius);
-    for (var stop = 0; stop < n; stop++) {
-      final from = LevelSelect.stopAngle(stop.toDouble()) - turn;
-      // From the endless stop to 1 and from 10 back round: plain. Between
-      // two cleared levels (or into the first): gold.
-      final done = stop >= 1 && stop < cleared;
-      final paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = done ? 4 : 2
-        ..color = (done ? GameColors.leaderboardGoldenColor : Colors.white)
-            .withValues(alpha: (done ? 0.85 : 0.25) * intro);
-      if (done) {
-        canvas.drawArc(rect, from + 0.12, step - 0.24, false, paint);
-      } else {
-        // Dotted
-        const dots = 5;
-        for (var i = 1; i < dots; i++) {
-          final a = from + step * i / dots;
-          canvas.drawCircle(
-            center + Offset(cos(a), sin(a)) * radius,
-            1.6,
-            paint..style = PaintingStyle.fill,
-          );
-        }
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_RoadPainter old) =>
-      old.turn != turn ||
-      old.cleared != cleared ||
-      old.intro != intro ||
-      old.radius != radius;
 }

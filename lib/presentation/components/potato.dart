@@ -15,7 +15,6 @@ import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato/potato_animator.dart';
 import 'package:save_the_potato/presentation/potato/potato_face_component.dart';
 import 'package:save_the_potato/presentation/rhythm/levels.dart';
-import 'package:save_the_potato/presentation/widgets/level_select.dart';
 import 'package:save_the_potato/presentation/potato/potato_vibe_motion.dart';
 import 'package:save_the_potato/presentation/potato/music_notes.dart';
 import 'package:save_the_potato/presentation/rhythm/rhythm_hit.dart';
@@ -177,8 +176,8 @@ class Potato extends PositionComponent
       fireShield.angle +=
           bloc.state.shieldsTurnDirection * GameConstants.shieldsTurnSpeed * dt;
     } else if (bloc.state.playingState.isGuide) {
-      // On the home screen the fire shield points at the level select
-      final target = LevelSelect.pointerAngle.value;
+      // On the home screen the fire shield points up at the picked level
+      const target = -pi / 2;
       final delta = atan2(
         sin(target - fireShield.angle),
         cos(target - fireShield.angle),

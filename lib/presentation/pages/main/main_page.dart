@@ -24,7 +24,7 @@ import 'package:save_the_potato/presentation/widgets/game_paused_ui.dart';
 import 'package:save_the_potato/presentation/widgets/high_score_widget.dart';
 import 'package:save_the_potato/presentation/widgets/level_cleared_ui.dart';
 import 'package:save_the_potato/presentation/widgets/level_select.dart';
-import 'package:save_the_potato/presentation/widgets/mode_switcher.dart';
+import 'package:save_the_potato/presentation/widgets/levels_progress_badge.dart';
 import 'package:save_the_potato/presentation/widgets/loading_overlay.dart';
 import 'package:save_the_potato/presentation/widgets/new_rank_celebration_page.dart';
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
