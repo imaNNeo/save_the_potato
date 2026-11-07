@@ -19,6 +19,8 @@ class PotatoHealthMotion {
   HealthMood get mood => _mood;
   HealthMood _mood = HealthMood.normal;
 
+  /// How far into the calm mood it is (0..1), it eases in and out
+  double get calm => _calm;
   double _calm = 0;
   double _worried = 0;
   double _faceFree = 1;
