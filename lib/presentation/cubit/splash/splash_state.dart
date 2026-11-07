@@ -6,6 +6,7 @@ class SplashState extends Equatable {
     this.openNextPage = false,
     this.showUpdatePopup,
     this.versionIsAllowed = false,
+    this.loadingProgress = 0,
   });
 
   final String showingVersion;
@@ -13,11 +14,15 @@ class SplashState extends Equatable {
   final UpdateInfo? showUpdatePopup;
   final bool versionIsAllowed;
 
+  /// How much of what the splash waits for is loaded, 0..1
+  final double loadingProgress;
+
   SplashState copyWith({
     String? showingVersion,
     bool? openNextPage,
     ValueWrapper<UpdateInfo>? showUpdatePopup,
     bool? versionIsAllowed,
+    double? loadingProgress,
   }) => SplashState(
     showingVersion: showingVersion ?? this.showingVersion,
     openNextPage: openNextPage ?? this.openNextPage,
@@ -25,6 +30,7 @@ class SplashState extends Equatable {
         ? showUpdatePopup.value
         : this.showUpdatePopup,
     versionIsAllowed: versionIsAllowed ?? this.versionIsAllowed,
+    loadingProgress: loadingProgress ?? this.loadingProgress,
   );
 
   @override
@@ -33,6 +39,7 @@ class SplashState extends Equatable {
     openNextPage,
     showUpdatePopup,
     versionIsAllowed,
+    loadingProgress,
   ];
 }
 
