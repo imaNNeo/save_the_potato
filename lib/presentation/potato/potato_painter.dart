@@ -656,10 +656,8 @@ abstract final class PotatoPainter {
 
   static const _headphonesDark = Color(0xFF2A1A18);
 
-  /// The color of the headphone band's inside
-  static HeadphonesBand headphonesBand = HeadphonesBand.fireIce;
-
-  /// Fire on the left fading into ice on the right
+  /// The inside of the headphone band: fire on the left fading into ice on
+  /// the right
   static final _fireIceBand = Gradient.linear(
     const Offset(110, 0),
     const Offset(374, 0),
@@ -759,20 +757,9 @@ abstract final class PotatoPainter {
       ..strokeWidth = 17;
     canvas.drawPath(_band, _stroke);
     _stroke.strokeWidth = 7;
-    switch (headphonesBand) {
-      case HeadphonesBand.fireIce:
-        _stroke
-          ..color = Color.fromRGBO(255, 255, 255, opacity)
-          ..shader = _fireIceBand;
-      case HeadphonesBand.brown:
-        _stroke.color = const Color(0xFF6B4A43).withValues(alpha: opacity);
-      case HeadphonesBand.cream:
-        _stroke.color = const Color(0xFFF6E2BC).withValues(alpha: opacity);
-      case HeadphonesBand.purple:
-        _stroke.color = const Color(0xFF8B6CFF).withValues(alpha: opacity);
-      case HeadphonesBand.gold:
-        _stroke.color = const Color(0xFFFFC93C).withValues(alpha: opacity);
-    }
+    _stroke
+      ..color = Color.fromRGBO(255, 255, 255, opacity)
+      ..shader = _fireIceBand;
     canvas.drawPath(_band, _stroke);
     _stroke.shader = null;
 
@@ -865,6 +852,3 @@ abstract final class PotatoPainter {
     canvas.drawPath(path, _stroke);
   }
 }
-
-/// Colors for the inside of the headphone band
-enum HeadphonesBand { fireIce, brown, cream, purple, gold }
