@@ -49,7 +49,6 @@ flutter:
 
   shaders:
     - shaders/background.frag
-    - shaders/life_bar.frag
 
   fonts:
     - family: Cookies
