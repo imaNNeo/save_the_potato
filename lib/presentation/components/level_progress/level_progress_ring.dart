@@ -9,11 +9,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Matrix4;
 import 'package:save_the_potato/presentation/components/moving/rift/ring_rift.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
-import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/presentation/rhythm/rhythm_director.dart';
 import 'package:save_the_potato/presentation/rhythm/rhythm_songs.dart';
-import 'package:save_the_potato/service_locator.dart';
 
 const _fire = Color(0xFFFF8A3D);
 const _ice = Color(0xFF7FD4FF);
@@ -198,15 +196,6 @@ class _SpriteBatch {
   }
 }
 
-class _Note {
-  _Note(this.at, this.timbre, this.midi, this.volume);
-
-  final double at;
-  final String timbre;
-  final int midi;
-  final double volume;
-}
-
 /// Shows how far the level's song is on the arena ring, where the orbs
 /// come in: one bead per bar of the song lights up, starting at the top,
 /// and a full round is the end of the level. It starts plain and gets
@@ -243,7 +232,6 @@ class LevelProgressRing extends PositionComponent
   }
 
   final RhythmDirector director;
-  final _audio = getIt.get<AudioHelper>();
 
   static const double radius = ArenaRing.radius;
   static const _start = -pi / 2;
@@ -251,7 +239,6 @@ class LevelProgressRing extends PositionComponent
   final _rnd = Random(7);
   final _sparks = <_Spark>[];
   final _waves = <_Wave>[];
-  final _notes = <_Note>[];
 
   Song _song = RhythmSongs.song;
   double _time = 0;
@@ -275,8 +262,6 @@ class LevelProgressRing extends PositionComponent
   final _litAt = <int, double>{};
 
   Color get _accent => Color(_song.colors.first);
-
-  int get _root => _song.chords.first.first;
 
   int get _bars => (_song.totalBeats ?? 0) ~/ 4;
 
@@ -305,7 +290,6 @@ class LevelProgressRing extends PositionComponent
     _finale = null;
     _sparks.clear();
     _waves.clear();
-    _notes.clear();
     _litAt.clear();
   }
 
@@ -367,7 +351,6 @@ class LevelProgressRing extends PositionComponent
       w.t += dt;
     }
     _waves.removeWhere((w) => w.t >= w.duration);
-    _playNotes();
   }
 
   // ------------------------------------------------------------------
@@ -420,35 +403,11 @@ class LevelProgressRing extends PositionComponent
       ),
     );
     _burst(head, 18 + index * 8, speed: 160, colors: [_accent, _white, _gold]);
-    // A short rising chime, higher at each quarter
-    const steps = [0, 4, 7, 12];
-    for (var i = 0; i < index + 1; i++) {
-      _scheduleNote(
-        i * 0.07,
-        i.isEven ? 'ice' : 'fire',
-        72 + _root + steps[i % 4] + (index - 1) * 2,
-        0.55,
-      );
-    }
   }
 
   void _startFinale() {
     _finale = 0;
     _progress = 1;
-    // A big rising arpeggio, fire and ice taking turns
-    const steps = [0, 4, 7, 12, 16, 19, 24, 28];
-    for (var i = 0; i < steps.length; i++) {
-      _scheduleNote(
-        0.06 * i,
-        i.isEven ? 'ice' : 'fire',
-        67 + _root + steps[i],
-        0.75,
-      );
-    }
-    // And a final chord when the sparks blow
-    for (final s in const [12, 16, 19, 24]) {
-      _scheduleNote(_blowAt, 'ice', 67 + _root + s, 0.6);
-    }
   }
 
   /// When the beads blow up, after a light ran around the closed ring
@@ -495,7 +454,6 @@ class LevelProgressRing extends PositionComponent
             center: p,
           ),
         );
-        _scheduleNote(0, 'fire', 79 + _root + (at * 10).round() % 12, 0.45);
       }
     }
   }
@@ -577,21 +535,6 @@ class LevelProgressRing extends PositionComponent
     if (_sparks.length > 400) {
       _sparks.removeRange(0, _sparks.length - 400);
     }
-  }
-
-  void _scheduleNote(double after, String timbre, int midi, double volume) {
-    _notes.add(_Note(_time + after, timbre, midi, volume));
-  }
-
-  void _playNotes() {
-    if (_notes.isEmpty) {
-      return;
-    }
-    final due = _notes.where((n) => n.at <= _time).toList();
-    for (final n in due) {
-      _audio.playNote(n.timbre, n.midi, volume: n.volume);
-    }
-    _notes.removeWhere(due.contains);
   }
 
   // ------------------------------------------------------------------
@@ -869,23 +812,7 @@ class LevelProgressRing extends PositionComponent
         colors: [_white, _gold],
       );
     }
-    // During the chase, notes climb with it
-    if (chaseAt >= 0) {
-      final step = (chaseAt * 8).floor();
-      if (step != _chaseStep) {
-        _chaseStep = step;
-        const scale = [0, 2, 4, 7, 9, 12, 14, 16];
-        _scheduleNote(
-          0,
-          step.isEven ? 'ice' : 'fire',
-          72 + _root + scale[step % 8],
-          0.5,
-        );
-      }
-    }
   }
-
-  int _chaseStep = -1;
 
   /// How far a lit bead hops out on the beat: a wave from the newest bead
   /// back to the first
