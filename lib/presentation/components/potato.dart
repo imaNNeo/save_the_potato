@@ -206,7 +206,9 @@ class Potato extends PositionComponent
     _audioHelper.playOrbHitSound();
     final angle = _angleTo(orb);
     game.onOrbHit(angle);
-    if (bloc.state.life > 0 && bloc.state.playingState.isPlaying) {
+    if (bloc.state.life > 0 &&
+        bloc.state.playingState.isPlaying &&
+        !bloc.state.tutorial) {
       invincibility.trigger();
       dizzy.trigger();
     }

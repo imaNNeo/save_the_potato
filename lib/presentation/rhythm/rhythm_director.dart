@@ -63,14 +63,16 @@ class RhythmDirector extends Component
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
-      previousState.playingState != newState.playingState;
+      previousState.playingState != newState.playingState ||
+      previousState.tutorial != newState.tutorial;
 
   @override
   void onNewState(GameState state) {
     super.onNewState(state);
     switch (state.playingState) {
       case PlayingStatePlaying():
-        if (!_running) {
+        // The tutorial throws its own orbs, the song starts after it
+        if (!_running && !state.tutorial) {
           _startRun();
         }
       case PlayingStatePaused():

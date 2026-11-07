@@ -133,7 +133,8 @@ class _MainPageState extends State<MainPage>
           previous.onNewHighScore != current.onNewHighScore,
       buildWhen: (previous, current) =>
           previous.playingState != current.playingState ||
-          previous.showGameOverUI != current.showGameOverUI,
+          previous.showGameOverUI != current.showGameOverUI ||
+          previous.tutorialHint != current.tutorialHint,
       listener: (context, state) {
         if (state.restartGame) {
           _restartGameWidgets();
@@ -172,6 +173,7 @@ class _MainPageState extends State<MainPage>
                 ),
                 RotationControls(
                   showGuide: state.playingState.isGuide,
+                  hint: state.playingState.isPlaying ? state.tutorialHint : 0,
                   onLeftDown: _gameCubit.onLeftTapDown,
                   onLeftUp: _gameCubit.onLeftTapUp,
                   onRightDown: _gameCubit.onRightTapDown,

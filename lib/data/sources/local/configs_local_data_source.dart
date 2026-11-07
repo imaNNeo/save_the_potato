@@ -33,4 +33,12 @@ class ConfigsLocalDataSource {
   Future<void> setFirstHealthReceived(bool received) async {
     await _keyValueStorage.setBool('first_health_received', received);
   }
+
+  Future<bool> isTutorialDone() async {
+    return (await _keyValueStorage.getBool('tutorial_done')) ?? false;
+  }
+
+  Future<void> setTutorialDone(bool done) async {
+    await _keyValueStorage.setBool('tutorial_done', done);
+  }
 }

@@ -17,7 +17,17 @@ class GameState extends Equatable {
     this.upcomingGameMode,
     this.playMotivationWord,
     this.motivationWordsPoolToPlay = MotivationWordType.values,
+    this.tutorial = false,
+    this.tutorialHint = 0,
   });
+
+  /// True while a first-time player is in the tutorial playground: the
+  /// run is "playing" (shields turn, orbs fly) but time, score and life
+  /// stand still, see [GameCubit.finishTutorial]
+  final bool tutorial;
+
+  /// Which turn button the tutorial points at: -1 left, 1 right, 0 none
+  final int tutorialHint;
 
   /// From 0 to 1, see [LifeMeter]
   final double life;
@@ -123,6 +133,8 @@ class GameState extends Equatable {
     ValueWrapper<GameMode>? upcomingGameMode,
     ValueWrapper<MotivationWordType>? playMotivationWord,
     List<MotivationWordType>? motivationWordsPoolToPlay,
+    bool? tutorial,
+    int? tutorialHint,
   }) => GameState(
     life: life ?? this.life,
     levelTimePassed: levelTimePassed ?? this.levelTimePassed,
@@ -146,6 +158,8 @@ class GameState extends Equatable {
         : this.playMotivationWord,
     motivationWordsPoolToPlay:
         motivationWordsPoolToPlay ?? this.motivationWordsPoolToPlay,
+    tutorial: tutorial ?? this.tutorial,
+    tutorialHint: tutorialHint ?? this.tutorialHint,
   );
 
   @override
@@ -165,5 +179,7 @@ class GameState extends Equatable {
     upcomingGameMode,
     playMotivationWord,
     motivationWordsPoolToPlay,
+    tutorial,
+    tutorialHint,
   ];
 }
