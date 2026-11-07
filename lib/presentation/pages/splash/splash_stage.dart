@@ -4,7 +4,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
-import 'package:save_the_potato/presentation/pages/splash/splash_choice.dart';
 import 'package:save_the_potato/presentation/widgets/background_stars.dart';
 import 'package:save_the_potato/presentation/potato/potato_painter.dart';
 import 'package:save_the_potato/presentation/potato/potato_pose.dart';
@@ -52,42 +51,15 @@ class HomeStars extends StatelessWidget {
   }
 }
 
-/// The ways the splash can play, to pick one. On the web `?splash=<name>`
-/// chooses it.
-enum SplashConcept {
-  /// The potato already wears its headphones and nods along, nothing else
-  simple,
-
-  /// The headphones drop onto the potato, it closes its eyes and grooves,
-  /// a couple of notes float out of the cups
-  headphonesDrop,
-
-  /// It nods with its headphones on while soft rings pulse out on the beat
-  beatRings,
-
-  /// It nods with its headphones on and the title hops along to the beat
-  dancingTitle;
-
-  static SplashConcept fromUrl() {
-    final name = pickedSplashConcept() ?? Uri.base.queryParameters['splash'];
-    return SplashConcept.values.firstWhere(
-      (c) => c.name == name,
-      orElse: () => SplashConcept.headphonesDrop,
-    );
-  }
-}
-
-/// The animated splash: the stars fade in, the potato pops in wearing (or
-/// putting on) its headphones and grooves to a silent beat, then the title
-/// shows up. [exit] takes the headphones off and shrinks the potato into the
-/// exact spot and size the game shows it at, and clears everything else away.
+/// The animated splash: the stars fade in, the potato pops in, its
+/// headphones drop onto its head and it grooves to a silent beat while notes
+/// float out of the ear cups, then the title shows up. [exit] shrinks the
+/// potato into the exact spot and size the game shows it at (headphones
+/// still on, like the start screen) and clears everything else away.
 class SplashStage extends StatefulWidget {
-  const SplashStage({super.key, required this.footer, this.concept});
+  const SplashStage({super.key, required this.footer});
 
   final Widget footer;
-
-  /// Defaults to [SplashConcept.fromUrl]
-  final SplashConcept? concept;
 
   @override
   State<SplashStage> createState() => SplashStageState();
@@ -103,11 +75,9 @@ class SplashStageState extends State<SplashStage>
   /// One beat of the silent tune the potato grooves to
   static const _beat = 0.5;
 
-  /// When the headphones land in [SplashConcept.headphonesDrop]
+  /// When the headphones land
   static const _dropAt = 0.9;
   static const _dropTime = 0.45;
-
-  late final SplashConcept _concept = widget.concept ?? SplashConcept.fromUrl();
 
   late final _clock = AnimationController(
     vsync: this,
@@ -139,9 +109,7 @@ class SplashStageState extends State<SplashStage>
 
   /// How much the potato grooves, 0..1
   double _groove(double t) {
-    final start = _concept == SplashConcept.headphonesDrop
-        ? _dropAt + _dropTime
-        : 0.8;
+    const start = _dropAt + _dropTime;
     return _span(t, start, start + 0.4) * (1 - _exitT);
   }
 
@@ -152,12 +120,8 @@ class SplashStageState extends State<SplashStage>
   static double _kick(double t) => pow(1 - _beatPhase(t), 3).toDouble();
 
   double _headphonesOn(double t) {
-    final on = switch (_concept) {
-      SplashConcept.headphonesDrop => _span(t, _dropAt, _dropAt + _dropTime),
-      _ => _span(t, 0.15, 0.6),
-    };
-    // Same drop as in the game, and they lift away on exit
-    return _easeOutBack(on) * (1 - _span(_exit.value, 0, 0.7));
+    // Same drop as in the game. They stay on, the start screen has them too
+    return _easeOutBack(_span(t, _dropAt, _dropAt + _dropTime));
   }
 
   static double _easeOutBack(double x) {
@@ -180,7 +144,7 @@ class SplashStageState extends State<SplashStage>
     pose[PotatoProp.bodyAngle] = 0.05 * sway * groove;
     pose[PotatoProp.sing] = 0.4 * kick * groove;
     // A little bump when the headphones land on its head
-    if (_concept == SplashConcept.headphonesDrop) {
+    {
       final land = _span(
         t,
         _dropAt + _dropTime * 0.6,
@@ -219,7 +183,6 @@ class SplashStageState extends State<SplashStage>
             Positioned.fill(
               child: CustomPaint(
                 painter: _SplashFxPainter(
-                  concept: _concept,
                   center: center,
                   potatoSize: size,
                   t: t,
@@ -267,14 +230,10 @@ class SplashStageState extends State<SplashStage>
     );
   }
 
-  /// The title fades in, colored from hot to cold. In
-  /// [SplashConcept.dancingTitle] its letters hop to the beat one after
-  /// another.
+  /// The title fades in, colored from hot to cold.
   Widget _titleRow(double t, double fade) {
     final appear = _span(t, 0.9, 1.5);
     final opacity = Curves.easeOut.transform(appear) * fade;
-    final letters = _title.split('');
-    final dance = _concept == SplashConcept.dancingTitle ? _groove(t) : 0.0;
     return Transform.translate(
       offset: Offset(0, 10 * (1 - Curves.easeOutCubic.transform(appear))),
       child: ShaderMask(
@@ -288,23 +247,15 @@ class SplashStageState extends State<SplashStage>
           ],
           stops: const [0.1, 0.5, 0.9],
         ).createShader(rect),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (var i = 0; i < letters.length; i++)
-              Transform.translate(
-                offset: Offset(0, -7 * dance * _kick(t - i * 0.06)),
-                child: Text(
-                  letters[i] == ' ' ? '  ' : letters[i],
-                  style: const TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-          ],
+        child: const Text(
+          _title,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            color: Colors.white,
+          ),
         ),
       ),
     );
@@ -313,7 +264,6 @@ class SplashStageState extends State<SplashStage>
 
 class _SplashFxPainter extends CustomPainter {
   _SplashFxPainter({
-    required this.concept,
     required this.center,
     required this.potatoSize,
     required this.t,
@@ -321,7 +271,6 @@ class _SplashFxPainter extends CustomPainter {
     required this.fade,
   });
 
-  final SplashConcept concept;
   final Offset center;
   final double potatoSize;
   final double t;
@@ -341,34 +290,7 @@ class _SplashFxPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (groove <= 0) return;
-    switch (concept) {
-      case SplashConcept.headphonesDrop:
-        _paintNotes(canvas);
-      case SplashConcept.beatRings:
-        _paintRings(canvas);
-      case SplashConcept.simple:
-      case SplashConcept.dancingTitle:
-        break;
-    }
-  }
-
-  /// A soft ring on every beat, fire and ice taking turns
-  void _paintRings(Canvas canvas) {
-    final r = potatoSize * 0.55;
-    final beat = (t / _beat).floor();
-    for (var k = 0; k < 2; k++) {
-      final p = (t / _beat - (beat - k)) / 2;
-      if (p < 0 || p > 1) continue;
-      final colors = (beat - k).isEven ? _fire : _ice;
-      canvas.drawCircle(
-        center,
-        r * (1 + 1.3 * Curves.easeOutCubic.transform(p)),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.5 * (1 - p) + 0.5
-          ..color = colors[0].withValues(alpha: 0.5 * (1 - p) * groove * fade),
-      );
-    }
+    _paintNotes(canvas);
   }
 
   /// Every other beat a small note floats up out of an ear cup

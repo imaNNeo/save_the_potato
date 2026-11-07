@@ -11,6 +11,7 @@ import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
+import 'package:save_the_potato/presentation/potato/potato_pose.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
 import 'package:save_the_potato/presentation/pages/splash/splash_stage.dart';
@@ -250,6 +251,10 @@ class _PotatoCover extends StatelessWidget {
 
   final bool visible;
 
+  /// Like the game potato on the start screen
+  static void _wearHeadphones(PotatoPose pose, double _) =>
+      pose[PotatoProp.headphones] = 1;
+
   @override
   Widget build(BuildContext context) {
     final size = GamePotatoFrame.splashPotatoSize(MediaQuery.sizeOf(context));
@@ -257,7 +262,13 @@ class _PotatoCover extends StatelessWidget {
       child: AnimatedOpacity(
         opacity: visible ? 1 : 0,
         duration: const Duration(milliseconds: 150),
-        child: Center(child: SplashPotato(size: size, intro: false)),
+        child: Center(
+          child: SplashPotato(
+            size: size,
+            intro: false,
+            decorate: _wearHeadphones,
+          ),
+        ),
       ),
     );
   }
