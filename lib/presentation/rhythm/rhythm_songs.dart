@@ -488,9 +488,10 @@ class Song {
       endless ? form[loop % form.length] : form[loop.clamp(0, form.length - 1)];
 
   /// The stage of the pass [loop] of the backing loop: by [difficulty] in
-  /// an endless song, by how far into the song it is in a level
+  /// an endless song, by how far into the song the middle of the pass is in
+  /// a level, so a short level (2 or 3 passes) still reaches the last stage
   SongStage stageFor({required int loop, required double difficulty}) {
-    final at = endless ? difficulty : loop / form.length;
+    final at = endless ? difficulty : (loop + 0.5) / form.length;
     return stages.lastWhere((s) => at >= s.from, orElse: () => stages.first);
   }
 

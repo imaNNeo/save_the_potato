@@ -7,11 +7,11 @@ import 'package:save_the_potato/presentation/rhythm/levels.dart';
 import 'package:save_the_potato/presentation/rhythm/rhythm_songs.dart';
 
 void main() {
-  test('there are 10 levels, each about 3 minutes, with no breather', () {
+  test('there are 10 levels, each about 2 minutes, with no breather', () {
     expect(LevelSongs.all, hasLength(Levels.count));
     for (final song in LevelSongs.all) {
       expect(song.endless, isFalse);
-      expect(song.durationSeconds, inInclusiveRange(150, 210));
+      expect(song.durationSeconds, inInclusiveRange(95, 135));
       expect(song.form, isNot(contains(SongSection.breather)));
     }
   });

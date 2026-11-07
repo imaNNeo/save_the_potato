@@ -320,6 +320,8 @@ CLASSICAL = [
     ),
     dict(
         level=6, name='Mountain King', tonic='B', mode=MINOR, bpm=116, beats=4,
+        # 4 passes would be 2:13 of the same 16 bars
+        plays=3,
         composer='E. Grieg', piece='In the Hall of the Mountain King, Peer Gynt (1875)',
         source='Mutopia Project, Dans_l_antre_du_roi_de_la_montagne',
         ice_bias=1,
