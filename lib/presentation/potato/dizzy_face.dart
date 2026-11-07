@@ -46,6 +46,19 @@ class DizzyFace {
     set(PotatoProp.zigzagOpacity, 0);
     set(PotatoProp.leftBrowAngle, -0.55);
     set(PotatoProp.rightBrowAngle, 0.15);
+    // The dizzy face owns the face while it lasts: no nervous mouth,
+    // glances or trembling from the music mood (see PotatoVibeMotion). They
+    // come back as it fades out, while the potato is still calming down.
+    set(PotatoProp.nervousMouth, 0);
+    set(PotatoProp.glanceX, 0);
+    set(PotatoProp.eyeBliss, 0);
+    set(PotatoProp.sing, 0);
+    set(PotatoProp.browWorry, 0);
+    set(PotatoProp.bodyX, 0);
+    set(PotatoProp.bodyY, 0);
+    set(PotatoProp.bodyAngle, 0);
+    set(PotatoProp.bodyScaleX, 1);
+    set(PotatoProp.bodyScaleY, 1);
   }
 
   /// A slight sway, pivoting on the bottom of the potato. Call before
@@ -73,8 +86,9 @@ class DizzyFace {
   final _path = Path();
 
   /// Draws the spirals, the wobbly mouth and the stars on top of the potato,
-  /// in artboard coordinates.
-  void paintOver(Canvas canvas) {
+  /// in artboard coordinates. [headphones] (0..1) lifts the stars above the
+  /// headphone band.
+  void paintOver(Canvas canvas, {double headphones = 0}) {
     if (!isActive) return;
     final e = _strength;
 
@@ -115,7 +129,10 @@ class DizzyFace {
     // Stars circling the head, smaller and dimmer when behind it
     for (var i = 0; i < 3; i++) {
       final a = _t * 2 * pi * 0.9 + i * 2 * pi / 3;
-      final center = Offset(242 + cos(a) * 95, 88 + sin(a) * 20);
+      final center = Offset(
+        242 + cos(a) * 95,
+        88 - 34 * headphones + sin(a) * 20,
+      );
       final front = sin(a) > 0;
       final size = (front ? 26.0 : 19.0) * (0.6 + 0.4 * e);
       _fill.color = _star.withValues(alpha: e * (front ? 1 : 0.7));

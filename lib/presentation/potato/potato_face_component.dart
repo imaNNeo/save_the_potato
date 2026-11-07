@@ -43,7 +43,7 @@ class PotatoFaceComponent extends PositionComponent {
     canvas.scale(size.x / PotatoPainter.artboardSize);
     dizzy.transform(canvas);
     PotatoPainter.paint(canvas, _pose);
-    dizzy.paintOver(canvas);
+    dizzy.paintOver(canvas, headphones: _pose[PotatoProp.headphones]);
     canvas.restore();
   }
 }
