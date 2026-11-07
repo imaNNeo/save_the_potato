@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/life_meter.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
+import 'package:save_the_potato/presentation/widgets/top_notes_hp.dart';
 
 /// The life bar under the timer (see [LifeMeter]), drawn by
 /// `shaders/life_bar.frag`.
@@ -73,6 +74,9 @@ class _LifeBarState extends State<LifeBar> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    if (TopNotesStyle.current != null) {
+      return TopNotesHp(style: TopNotesStyle.current!);
+    }
     return BlocListener<GameCubit, GameState>(
       listenWhen: (previous, current) =>
           previous.life != current.life ||
