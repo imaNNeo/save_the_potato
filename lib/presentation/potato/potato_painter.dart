@@ -665,39 +665,6 @@ abstract final class PotatoPainter {
     const [0, 0.42, 0.58, 1],
   );
 
-  /// The point at [t] (0..1) along the band and the band's angle there
-  static (Offset, double) _onBand(double t) {
-    const p0 = Offset(100, 226);
-    const p1 = Offset(98, 34);
-    const p2 = Offset(386, 34);
-    const p3 = Offset(384, 226);
-    final u = 1 - t;
-    final point =
-        p0 * (u * u * u) +
-        p1 * (3 * u * u * t) +
-        p2 * (3 * u * t * t) +
-        p3 * (t * t * t);
-    final tangent =
-        (p1 - p0) * (3 * u * u) +
-        (p2 - p1) * (6 * u * t) +
-        (p3 - p2) * (3 * t * t);
-    return (point, atan2(tangent.dy, tangent.dx));
-  }
-
-  /// A cat ear standing on the band: its base sits under the band
-  static final _earOuter = Path()
-    ..moveTo(-30, 6)
-    ..quadraticBezierTo(-20, -30, -4, -52)
-    ..quadraticBezierTo(0, -57, 4, -52)
-    ..quadraticBezierTo(20, -30, 30, 6)
-    ..close();
-
-  static final _earInner = Path()
-    ..moveTo(-15, -6)
-    ..quadraticBezierTo(-9, -24, -2, -36)
-    ..quadraticBezierTo(0, -39, 2, -36)
-    ..quadraticBezierTo(9, -24, 15, -6)
-    ..close();
   static const _fireCup = Color(0xFFFF5900);
   static const _iceCup = Color(0xFF00AFFF);
 
@@ -718,38 +685,6 @@ abstract final class PotatoPainter {
     }
 
     final pulse = pose[PotatoProp.headphonesPulse];
-
-    // Cat ears first, so the band covers where they join it
-    for (final (t, color, light) in const [
-      (0.27, _fireCup, Color(0xFFFF9362)),
-      (0.73, _iceCup, Color(0xFFB4E6FF)),
-    ]) {
-      final (at, angle) = _onBand(t);
-      _inShape(
-        canvas,
-        at,
-        () {
-          _fill
-            ..shader = null
-            ..color = _headphonesDark.withValues(alpha: opacity);
-          canvas.drawPath(_earOuter, _fill);
-          _fill.color = Color.lerp(
-            color,
-            const Color(0xFFFFFFFF),
-            0.3 * pulse,
-          )!.withValues(alpha: opacity);
-          canvas.drawPath(_earInner, _fill);
-          _stroke
-            ..color = light.withValues(alpha: opacity)
-            ..strokeWidth = 3;
-          canvas.drawPath(_earInner, _stroke);
-        },
-        angle: angle,
-        scaleX: 1.3,
-        // The ears perk up a little on the beat
-        scaleY: 1.4 + 0.1 * pulse,
-      );
-    }
 
     _stroke
       ..shader = null
