@@ -15,42 +15,10 @@ import 'package:save_the_potato/presentation/rhythm/rhythm_director.dart';
 import 'package:save_the_potato/presentation/rhythm/rhythm_songs.dart';
 import 'package:save_the_potato/service_locator.dart';
 
-/// How the level's progress is drawn on the arena ring. Samples to pick
-/// from; the web preview switches them with `?ring=comet|beads|wave`.
-enum ProgressRingStyle {
-  /// A comet runs around the ring and leaves a glowing trail
-  comet,
-
-  /// One bead per bar of the song lights up around the ring
-  beads,
-
-  /// The played part of the ring is an equalizer dancing to the beat
-  wave;
-
-  static final ProgressRingStyle current = () {
-    if (!kIsWeb) {
-      return ProgressRingStyle.comet;
-    }
-    final name = Uri.base.queryParameters['ring'];
-    return ProgressRingStyle.values.firstWhere(
-      (s) => s.name == name,
-      orElse: () => ProgressRingStyle.comet,
-    );
-  }();
-}
-
 const _fire = Color(0xFFFF8A3D);
 const _ice = Color(0xFF7FD4FF);
 const _gold = Color(0xFFFFD36B);
 const _white = Color(0xFFFFFFFF);
-
-/// A rotation around the screen, for gradient matrices
-Float64List _rotZ(double a) => Float64List.fromList([
-  cos(a), sin(a), 0, 0, //
-  -sin(a), cos(a), 0, 0, //
-  0, 0, 1, 0, //
-  0, 0, 0, 1,
-]);
 
 double _clamp01(double x) => x.clamp(0.0, 1.0);
 
@@ -59,12 +27,6 @@ double _fract(double x) => x - x.floorToDouble();
 /// 0 before [from], 1 a bit after it: the features of a stage fade in
 double _ramp(double p, double from, [double width = 0.06]) =>
     _clamp01((p - from) / width);
-
-double _hash(int a, int b) {
-  var h = a * 374761393 + b * 668265263;
-  h = (h ^ (h >> 13)) * 1274126177;
-  return ((h ^ (h >> 16)) & 0xFFFF) / 0xFFFF;
-}
 
 Offset _polar(double angle, double radius) =>
     Offset(cos(angle), sin(angle)) * radius;
@@ -106,55 +68,6 @@ class _Wave {
   final double width;
   final Offset center;
   double t = 0;
-}
-
-/// Thin quads from a radius to another, each with its own color, drawn
-/// together as one triangle mesh
-class _SpikeMesh {
-  final _xy = <double>[];
-  final _colors = <int>[];
-
-  void add(
-    double angle,
-    double from,
-    double to,
-    double width,
-    Color color,
-    double alpha,
-  ) {
-    final c = cos(angle);
-    final s = sin(angle);
-    final nx = -s * width / 2;
-    final ny = c * width / 2;
-    final bx = c * from;
-    final by = s * from;
-    final tx = c * to;
-    final ty = s * to;
-    // Two triangles: base-left, base-right, tip-right / base-left,
-    // tip-right, tip-left. The tip is a bit dimmer.
-    _xy.addAll([
-      bx - nx, by - ny, bx + nx, by + ny, tx + nx, ty + ny, //
-      bx - nx, by - ny, tx + nx, ty + ny, tx - nx, ty - ny,
-    ]);
-    final base = color.withValues(alpha: _clamp01(alpha)).toARGB32();
-    final tip = color.withValues(alpha: _clamp01(alpha * 0.6)).toARGB32();
-    _colors.addAll([base, base, tip, base, tip, tip]);
-  }
-
-  void draw(Canvas canvas, Paint paint) {
-    if (_xy.isEmpty) {
-      return;
-    }
-    canvas.drawVertices(
-      ui.Vertices.raw(
-        ui.VertexMode.triangles,
-        Float32List.fromList(_xy),
-        colors: Int32List.fromList(_colors),
-      ),
-      BlendMode.dst,
-      paint..color = _white,
-    );
-  }
 }
 
 /// Colored triangles, drawn together in one call
@@ -295,16 +208,16 @@ class _Note {
 }
 
 /// Shows how far the level's song is on the arena ring, where the orbs
-/// come in: it starts at the top, and a full round is the end of the
-/// level. It starts plain and gets juicier at each quarter, and closing the
-/// ring sets off a big celebration.
+/// come in: one bead per bar of the song lights up, starting at the top,
+/// and a full round is the end of the level. It starts plain and gets
+/// juicier at each quarter (the beads bounce, a light runs over them, they
+/// link up), and closing the ring sets off a big celebration: a light
+/// races around, then every bead bursts out as fireworks.
 class LevelProgressRing extends PositionComponent
     with
         HasGameReference<PotatoGame>,
         FlameBlocListenable<GameCubit, GameState> {
-  LevelProgressRing({required this.director, ProgressRingStyle? style})
-    : style = style ?? ProgressRingStyle.current,
-      super(priority: -1);
+  LevelProgressRing({required this.director}) : super(priority: -1);
 
   /// Draws each kind of shader the ring uses once, for [GameShaderWarmUp]
   /// (it clips everything to one pixel at the origin), so none of them
@@ -316,33 +229,9 @@ class LevelProgressRing extends PositionComponent
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 3
       ..color = _white;
-    const rect = Rect.fromLTWH(-3, -3, 6, 6);
     canvas
-      ..drawArc(rect, 0, 2, false, stroke)
       ..drawCircle(Offset.zero, 2, stroke)
-      ..drawLine(const Offset(-3, 0), const Offset(3, 0), stroke)
-      ..drawPath(
-        Path()
-          ..moveTo(-3, 0)
-          ..lineTo(0, 1)
-          ..lineTo(3, 0),
-        stroke,
-      )
-      ..drawRawPoints(
-        ui.PointMode.points,
-        Float32List.fromList([0, 0, 1, 1]),
-        stroke,
-      )
-      ..drawRawPoints(
-        ui.PointMode.lines,
-        Float32List.fromList([-3, 0, 3, 1]),
-        stroke,
-      )
-      ..drawCircle(Offset.zero, 2, Paint()..blendMode = BlendMode.plus);
-    (_SpikeMesh()..add(0, -3, 3, 2, _white, 0.5)).draw(
-      canvas,
-      Paint()..blendMode = BlendMode.plus,
-    );
+      ..drawLine(const Offset(-3, 0), const Offset(3, 0), stroke);
     (_ColorMesh()..quad(-3, -1, 3, -1, 3, 1, -3, 1, -1, -1, -1, -1)).flush(
       canvas,
       Paint()..blendMode = BlendMode.plus,
@@ -351,56 +240,9 @@ class LevelProgressRing extends PositionComponent
           ..glow(Offset.zero, 3, _white, 1)
           ..dot(Offset.zero, 2, _white, 1))
         .flush(canvas, Paint()..blendMode = BlendMode.plus);
-    for (final stops in const [
-      [0.0, 0.7, 1.0],
-      [0.0, 0.25, 0.5, 0.75, 1.0],
-    ]) {
-      final sweep = Paint()
-        ..blendMode = BlendMode.plus
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = 3
-        ..shader = ui.Gradient.sweep(
-          Offset.zero,
-          [for (var i = 0; i < stops.length; i++) _white],
-          stops,
-          TileMode.clamp,
-          0,
-          2 * pi,
-          _rotZ(1),
-        );
-      canvas
-        ..drawArc(rect, 0, 2, false, sweep)
-        ..drawCircle(Offset.zero, 2, sweep);
-    }
-    canvas.drawLine(
-      const Offset(-3, 0),
-      const Offset(3, 0),
-      Paint()
-        ..blendMode = BlendMode.plus
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = 3
-        ..shader = ui.Gradient.linear(const Offset(-3, 0), const Offset(3, 0), [
-          _white,
-          const Color(0x00FFFFFF),
-        ]),
-    );
-    canvas.drawCircle(
-      Offset.zero,
-      3,
-      Paint()
-        ..blendMode = BlendMode.plus
-        ..shader = ui.Gradient.radial(
-          Offset.zero,
-          3,
-          [_white, const Color(0x40FFFFFF), const Color(0x00FFFFFF)],
-          [0, 0.35, 1],
-        ),
-    );
   }
 
   final RhythmDirector director;
-  final ProgressRingStyle style;
   final _audio = getIt.get<AudioHelper>();
 
   static const double radius = ArenaRing.radius;
@@ -410,9 +252,6 @@ class LevelProgressRing extends PositionComponent
   final _sparks = <_Spark>[];
   final _waves = <_Wave>[];
   final _notes = <_Note>[];
-
-  /// Moving bright bits along the played arc, by their age
-  final _ripples = <double>[];
 
   Song _song = RhythmSongs.song;
   double _time = 0;
@@ -437,15 +276,11 @@ class LevelProgressRing extends PositionComponent
 
   Color get _accent => Color(_song.colors.first);
 
-  Color get _mid => Color(_song.colors[1]);
-
   int get _root => _song.chords.first.first;
 
   int get _bars => (_song.totalBeats ?? 0) ~/ 4;
 
   double get _kick => pow(1 - _fract(_beat), 3).toDouble();
-
-  double get _sixteenth => pow(1 - _fract(_beat * 4), 4).toDouble();
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
@@ -471,7 +306,6 @@ class LevelProgressRing extends PositionComponent
     _sparks.clear();
     _waves.clear();
     _notes.clear();
-    _ripples.clear();
     _litAt.clear();
   }
 
@@ -533,10 +367,6 @@ class LevelProgressRing extends PositionComponent
       w.t += dt;
     }
     _waves.removeWhere((w) => w.t >= w.duration);
-    for (var i = 0; i < _ripples.length; i++) {
-      _ripples[i] += dt;
-    }
-    _ripples.removeWhere((r) => r > 1.6);
     _playNotes();
   }
 
@@ -548,44 +378,22 @@ class LevelProgressRing extends PositionComponent
   Offset get _head => _polar(_headAngle, radius);
 
   void _onBeat(int beat) {
-    final p = _progress;
-    final downbeat = beat % 4 == 0;
-    switch (style) {
-      case ProgressRingStyle.comet:
-        if (p >= 0.25) {
-          _emitFromHead(2 + _milestones * 2, speed: 60 + 40.0 * _milestones);
-        }
-        if (p >= 0.5 && downbeat) {
-          _ripples.add(0);
-        }
-      case ProgressRingStyle.beads:
-        if (downbeat) {
-          final bar = beat ~/ 4 - 1;
-          if (bar >= 0) {
-            _litAt[bar] = _time;
-            if (p >= 0.25) {
-              _burst(
-                _polar(_beadAngle(bar), radius),
-                4 + _milestones * 2,
-                speed: 70,
-                colors: [_accent, _white],
-              );
-            }
-          }
-        }
-      case ProgressRingStyle.wave:
-        if (p >= 0.75) {
-          for (var i = 0; i < 3; i++) {
-            final a = _start + _rnd.nextDouble() * p * 2 * pi;
-            _burst(
-              _polar(a, radius + 18),
-              2,
-              speed: 90,
-              colors: [_waveColor(a - _start, p), _white],
-              outward: a,
-            );
-          }
-        }
+    // A bead lights up at the start of each bar, for the bar that ended
+    if (beat % 4 != 0) {
+      return;
+    }
+    final bar = beat ~/ 4 - 1;
+    if (bar < 0) {
+      return;
+    }
+    _litAt[bar] = _time;
+    if (_progress >= 0.25) {
+      _burst(
+        _polar(_beadAngle(bar), radius),
+        4 + _milestones * 2,
+        speed: 70,
+        colors: [_accent, _white],
+      );
     }
   }
 
@@ -643,32 +451,24 @@ class LevelProgressRing extends PositionComponent
     }
   }
 
-  /// When the finale blows up, after the ring closed
-  double get _blowAt => switch (style) {
-    ProgressRingStyle.comet => 0.0,
-    ProgressRingStyle.beads => 1.25,
-    ProgressRingStyle.wave => 0.85,
-  };
+  /// When the beads blow up, after a light ran around the closed ring
+  static const _blowAt = 1.25;
 
   void _updateFinale(double before, double now) {
     bool passed(double at) => before < at && now >= at;
     if (passed(0.0001) || (before == 0 && now > 0)) {
-      if (style == ProgressRingStyle.comet) {
-        _cometBlow();
-      } else {
-        _waves.add(
-          _Wave(
-            from: radius,
-            to: radius + 40,
-            duration: 0.5,
-            color: _white,
-            width: 6,
-          ),
-        );
-      }
+      _waves.add(
+        _Wave(
+          from: radius,
+          to: radius + 40,
+          duration: 0.5,
+          color: _white,
+          width: 6,
+        ),
+      );
     }
-    if (style != ProgressRingStyle.comet && passed(_blowAt)) {
-      style == ProgressRingStyle.beads ? _beadsBlow() : _waveBlow();
+    if (passed(_blowAt)) {
+      _beadsBlow();
     }
     if (passed(_blowAt + 0.45)) {
       game.world.player.face.amazed();
@@ -718,24 +518,6 @@ class LevelProgressRing extends PositionComponent
     );
   }
 
-  void _cometBlow() {
-    _shake(10);
-    _ringBurst(170);
-    _waves
-      ..add(
-        _Wave(
-          from: radius,
-          to: radius + 14,
-          duration: 0.9,
-          color: _white,
-          width: 14,
-        ),
-      )
-      ..add(
-        _Wave(from: radius, to: 60, duration: 0.45, color: _accent, width: 5),
-      );
-  }
-
   void _beadsBlow() {
     _shake(8);
     for (var bar = 0; bar < _bars; bar++) {
@@ -759,56 +541,6 @@ class LevelProgressRing extends PositionComponent
     _waves.add(
       _Wave(from: 0, to: radius, duration: 0.8, color: _gold, width: 10),
     );
-  }
-
-  void _waveBlow() {
-    _shake(12);
-    _ringBurst(120, from: 70);
-    _waves
-      ..add(
-        _Wave(from: 70, to: radius, duration: 0.7, color: _white, width: 10),
-      )
-      ..add(_Wave(from: 70, to: radius, duration: 0.6, color: _gold, width: 4));
-  }
-
-  /// Sparks all around a ring of [from], flying in and out
-  void _ringBurst(int count, {double from = radius}) {
-    final colors = [_accent, _gold, _white, _fire, _ice];
-    for (var i = 0; i < count; i++) {
-      final a = _rnd.nextDouble() * 2 * pi;
-      final out = _rnd.nextDouble() < 0.7;
-      final speed = (out ? 140 : 80) + _rnd.nextDouble() * 280;
-      _sparks.add(
-        _Spark(
-          p: _polar(a, from),
-          v: _polar(a, out ? speed : -speed),
-          life: 0.9 + _rnd.nextDouble() * 0.9,
-          color: colors[i % colors.length],
-          size: 3 + _rnd.nextDouble() * 4,
-          drag: 1.8,
-        ),
-      );
-    }
-  }
-
-  void _emitFromHead(int count, {required double speed}) {
-    final a = _headAngle;
-    // Backwards along the ring, and a bit in or out
-    final back = a - pi / 2;
-    for (var i = 0; i < count; i++) {
-      final dir = back + (_rnd.nextDouble() - 0.5) * 1.6;
-      _sparks.add(
-        _Spark(
-          p: _head,
-          v: _polar(dir, speed * (0.5 + _rnd.nextDouble())),
-          life: 0.4 + _rnd.nextDouble() * 0.5,
-          color: _milestones >= 3
-              ? (i.isEven ? _fire : _ice)
-              : (i.isEven ? _accent : _white),
-          size: 1.8 + _milestones * 0.5,
-        ),
-      );
-    }
   }
 
   void _burst(
@@ -865,46 +597,13 @@ class LevelProgressRing extends PositionComponent
   // ------------------------------------------------------------------
   // Drawing
 
-  /// Preview only: `?ring=off` hides it, to measure what it costs
-  static final _off = kIsWeb && Uri.base.queryParameters['ring'] == 'off';
-
-  /// Preview only: `?perf=1` prints how long drawing it takes
-  static final _perf = kIsWeb && Uri.base.queryParameters['perf'] == '1';
-  final _watch = Stopwatch();
-  int _perfFrames = 0;
-
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    if (_visible < 0.01 || _off) {
+    if (_visible < 0.01) {
       return;
     }
-    if (_perf) {
-      _watch.start();
-      _render(canvas);
-      _watch.stop();
-      if (++_perfFrames % 120 == 0) {
-        debugPrint(
-          'ring ${style.name} ${(_progress * 100).round()}%: '
-          '${(_watch.elapsedMicroseconds / 120).round()}us/frame, '
-          '${_sparks.length} sparks',
-        );
-        _watch.reset();
-      }
-      return;
-    }
-    _render(canvas);
-  }
-
-  void _render(Canvas canvas) {
-    switch (style) {
-      case ProgressRingStyle.comet:
-        _renderComet(canvas);
-      case ProgressRingStyle.beads:
-        _renderBeads(canvas);
-      case ProgressRingStyle.wave:
-        _renderWave(canvas);
-    }
+    _renderBeads(canvas);
     _renderStartMark(canvas);
     _renderWaves(canvas);
     _renderSparks(canvas);
@@ -1057,156 +756,6 @@ class LevelProgressRing extends PositionComponent
   /// How much brighter everything is just after a quarter is passed
   double get _milestoneFlash => exp(-_milestoneAge * 4);
 
-  // ---- comet ----
-
-  void _renderComet(Canvas canvas) {
-    final p = _progress;
-    final f = _finale;
-    final sweep = p * 2 * pi;
-    final s1 = _ramp(p, 0.25);
-    final s2 = _ramp(p, 0.5);
-    final s3 = _ramp(p, 0.75);
-    final kick = _kick * s1;
-    final flash = _milestoneFlash;
-
-    if (f != null) {
-      _renderCometFinale(canvas, f);
-      return;
-    }
-
-    // The trail: a plain line first, then brighter, wider and colorful
-    final width = 2.0 + 1.5 * s1 + 1.5 * s2 + 2 * s3 + kick * (1 + 2 * s2);
-    final hot = Color.lerp(_accent, _white, 0.6)!;
-    final plain = _accent.withValues(alpha: 0.75 + 0.25 * flash);
-    _band(
-      _start,
-      sweep,
-      width,
-      colorAt: s2 <= 0
-          ? (_) => plain
-          : (t) => t < 0.7
-                ? Color.lerp(
-                    _mid.withValues(alpha: 0.7),
-                    _accent.withValues(alpha: 0.9),
-                    t / 0.7,
-                  )!
-                : Color.lerp(
-                    _accent.withValues(alpha: 0.9),
-                    hot,
-                    (t - 0.7) / 0.3,
-                  )!,
-    );
-    // A soft glow under it
-    _band(
-      _start,
-      sweep,
-      width * 3.5,
-      color: _accent,
-      alpha: 0.08 + 0.1 * kick + 0.25 * flash,
-    );
-
-    // Half way: a wobbly echo just inside
-    if (s2 > 0) {
-      _band(
-        _start,
-        sweep,
-        1.2,
-        radiusAt: (a) => radius - 9 + sin(a * 14 - _time * 5) * (2 + 3 * kick),
-        color: _white,
-        alpha: 0.35 * s2,
-        step: 0.035,
-      );
-    }
-
-    // Last quarter: fire and ice twist around the trail
-    if (s3 > 0) {
-      for (final side in const [1.0, -1.0]) {
-        _band(
-          _start,
-          sweep,
-          1.6,
-          radiusAt: (a) =>
-              radius + side * sin(a * 22 - _time * 7) * (5 + 3 * kick),
-          color: side > 0 ? _fire : _ice,
-          alpha: 0.7 * s3,
-          step: 0.03,
-        );
-      }
-      // And it sheds sparks all the time
-      if (_rnd.nextDouble() < 0.5) {
-        _emitFromHead(1, speed: 80);
-      }
-    }
-
-    // Bright bits running back along the trail on each bar
-    for (final age in _ripples) {
-      final a = sweep - age * 2.4;
-      if (a <= 0) {
-        continue;
-      }
-      _band(
-        _start + max(0.0, a - 0.18),
-        min(0.18, a),
-        width + 2,
-        color: _white,
-        alpha: 0.8 * (1 - age / 1.6),
-      );
-    }
-
-    // Quarter marks: dim before, lit after
-    for (var q = 1; q < 4; q++) {
-      final at = _polar(_start + q * pi / 2, radius);
-      final lit = p >= q / 4;
-      _dot(
-        at,
-        lit ? 4.5 + 1.5 * _kick : 3,
-        lit ? _gold : _white,
-        lit ? 0.9 : 0.25,
-      );
-      if (lit) {
-        _bloom(canvas, at, 16 + 6 * _kick, _gold, 0.35);
-      }
-    }
-
-    // The comet's head
-    final head = _head;
-    _bloom(
-      canvas,
-      head,
-      14 + 10 * s1 + 10 * s3 + kick * 12 + flash * 30,
-      Color.lerp(_accent, _white, 0.3)!,
-      0.8,
-    );
-    _dot(head, 3.5 + 1.5 * s2 + kick * 1.5, _white, 1);
-  }
-
-  void _renderCometFinale(Canvas canvas, double f) {
-    // The whole ring flashes white, then spins in fire, ice and gold
-    final white = exp(-f * 3);
-    final spin = _time * 2.2;
-    final width = 4 + 8 * white + 2 * _kick;
-    final palette = [_fire, _gold, _ice, _accent, _fire];
-    _band(
-      0,
-      2 * pi,
-      width,
-      colorAt: (t) {
-        final k = _fract(t - spin / (2 * pi)) * 4;
-        final i = k.floor().clamp(0, 3);
-        return Color.lerp(palette[i], palette[i + 1], k - i)!;
-      },
-    );
-    _band(0, 2 * pi, width, color: _white, alpha: white);
-    _band(0, 2 * pi, width * 4, color: _gold, alpha: 0.12 + 0.2 * white);
-    // Four comets chase each other around
-    for (var i = 0; i < 4; i++) {
-      final a = spin + i * pi / 2;
-      final pt = _polar(a, radius);
-      _bloom(canvas, pt, 26 + 8 * _kick, i.isEven ? _fire : _ice, 0.8);
-      _dot(pt, 4, _white, 1);
-    }
-  }
-
   // ---- beads ----
 
   double _beadAngle(int bar) => _start + (bar / max(1, _bars)) * 2 * pi;
@@ -1353,124 +902,5 @@ class LevelProgressRing extends PositionComponent
     final a = exp(-t * 0.9);
     canvas.drawCircle(Offset.zero, radius, _stroke(_gold, 3 + 2 * _kick, a));
     canvas.drawCircle(Offset.zero, radius, _stroke(_gold, 16, 0.12 * a));
-  }
-
-  // ---- wave ----
-
-  static const _spikes = 144;
-
-  Color _waveColor(double along, double s2) {
-    if (s2 <= 0) {
-      return _accent;
-    }
-    final k = (sin(along * 2 + _time * 1.5) + 1) / 2;
-    return Color.lerp(_accent, Color.lerp(_fire, _ice, k)!, 0.75 * s2)!;
-  }
-
-  void _renderWave(Canvas canvas) {
-    final p = _progress;
-    final f = _finale;
-    final s1 = _ramp(p, 0.25);
-    final s2 = _ramp(p, 0.5);
-    final s3 = _ramp(p, 0.75);
-    final flash = _milestoneFlash;
-    final beatIndex = _beat.floor();
-
-    // In the finale, the ring falls into the potato, then blows out
-    var r = radius;
-    var boom = 0.0;
-    if (f != null) {
-      if (f < _blowAt) {
-        final k = Curves.easeInCubic.transform(_clamp01((f - 0.25) / 0.6));
-        r = radius + (70 - radius) * k;
-        boom = exp(-f * 5);
-      } else {
-        final t = f - _blowAt;
-        r = 70 + (radius - 70) * Curves.elasticOut.transform(_clamp01(t / 1.1));
-        boom = exp(-t * 2.5);
-        _renderSunburst(canvas, t);
-      }
-    }
-
-    final sweep = f != null ? 2 * pi : p * 2 * pi;
-    // All spikes are one mesh of colored quads: a single draw call that
-    // is cheap for the GPU (stroked lines with round caps are not)
-    final mesh = _SpikeMesh();
-    final tips = <double>[];
-    final rest = <double>[];
-    for (var i = 0; i < _spikes; i++) {
-      final along = i / _spikes * 2 * pi;
-      final a = _start + along;
-      if (along > sweep) {
-        final pt = _polar(a, r);
-        rest.addAll([pt.dx, pt.dy]);
-        continue;
-      }
-      final rnd = _hash(i, beatIndex);
-      var len = 3.0 + 4 * _kick * (0.4 + rnd);
-      len += s1 * 14 * _kick * rnd;
-      len += s2 * 5 * _sixteenth * _hash(i, beatIndex * 4 + 1);
-      len += s3 * 10 * _kick * rnd;
-      len += flash * 22 * (0.5 + rnd);
-      len += boom * 50 * (0.6 + rnd);
-      // The newest part of the ring jumps the most
-      final fresh = f == null ? exp(-(sweep - along) * 3) : 0.0;
-      len += fresh * 8 * _kick;
-      final color = f != null
-          ? Color.lerp(_gold, _waveColor(along, 1), 0.5)!
-          : _waveColor(along, s2);
-      final width = 2.2 + s3;
-      mesh.add(a, r, r + len, width, color, 0.85 * _visible);
-      if (s2 > 0 || f != null) {
-        // Half way: it mirrors inwards too
-        mesh.add(
-          a,
-          r,
-          r - len * 0.5,
-          width,
-          color,
-          0.45 * (f != null ? 1 : s2) * _visible,
-        );
-      }
-      if (s3 > 0 && len > 14) {
-        final tip = _polar(a, r + len);
-        tips.addAll([tip.dx, tip.dy]);
-      }
-    }
-    _dots(canvas, rest, 1.1, _white, 0.18);
-    mesh.draw(canvas, _fillPaint);
-    _dots(canvas, tips, 1.6, _white, 0.8 * s3);
-    // A thin line under the spikes
-    final line = f != null ? _gold : _accent;
-    _band(_start, sweep, 1.4, radiusAt: (_) => r, color: line, alpha: 0.6);
-    if (f == null) {
-      final head = _polar(_headAngle, r);
-      _bloom(canvas, head, 18 + 14 * _kick + 20 * s3, _white, 0.7);
-      _dot(head, 3 + _kick * 2, _white, 1);
-    }
-  }
-
-  /// Rays from the potato after the wave ring blows out
-  void _renderSunburst(Canvas canvas, double t) {
-    final a = exp(-t * 1.1);
-    if (a < 0.02) {
-      return;
-    }
-    final paint = _bloomPaint..strokeCap = StrokeCap.round;
-    const rays = 24;
-    final turn = t * 0.4;
-    for (var i = 0; i < rays; i++) {
-      final ang = turn + i * 2 * pi / rays;
-      final len =
-          radius * (0.5 + 0.9 * Curves.easeOut.transform(_clamp01(t / 0.6)));
-      paint
-        ..strokeWidth = i.isEven ? 6 : 3
-        ..shader = ui.Gradient.linear(_polar(ang, 80), _polar(ang, len), [
-          (i.isEven ? _gold : _accent).withValues(alpha: 0.55 * a * _visible),
-          (i.isEven ? _gold : _accent).withValues(alpha: 0),
-        ]);
-      canvas.drawLine(_polar(ang, 80), _polar(ang, len), paint);
-    }
-    paint.shader = null;
   }
 }
