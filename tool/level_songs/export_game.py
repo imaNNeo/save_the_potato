@@ -40,7 +40,8 @@ def write_ogg(st, path):
 
 
 def dart_phrase(var, p):
-    notes = ',\n'.join(f'      MelodyNote({b}, {beat:g}, {m})' for b, beat, m in p['notes'])
+    notes = ',\n'.join(f'      MelodyNote({n[0]}, {n[1]:g}, {n[2]}' + (f', {str(n[3]).lower()}' if len(n) > 3 else '') + ')'
+                        for n in p['notes'])
     return f"""  static const {var} = MelodyPhrase(
     '{p['name']}',
     iceFrom: {p['iceFrom']},

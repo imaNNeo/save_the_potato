@@ -41,7 +41,48 @@ def build(song):
         assert 0 <= beat < song['beats'], (song['name'], bar, beat)
     mids = sorted(m for _, _, m in notes)
     ice_from = int(mids[len(mids) // 2] + song.get('ice_bias', 0))
+    kinds = phrase_kinds(song, notes)
+    notes = [(b, t, x, k) for (b, t, x), k in zip(notes, kinds)]
     return {'tune': dict(name='tune', iceFrom=ice_from, notes=notes)}
+
+
+def phrase_groups(song, notes):
+    """Splits the tune where it breathes: a gap of song['breath'] beats
+    (2 by default) or more between two notes ends a group (a motif or a
+    phrase)"""
+    breath = song.get('breath', 2)
+    groups, cur, prev = [], [], None
+    for i, (b, t, _) in enumerate(notes):
+        at = b * song['beats'] + t
+        if prev is not None and at - prev >= breath:
+            groups.append(cur)
+            cur = []
+        cur.append(i)
+        prev = at
+    groups.append(cur)
+    if len(groups) > 1 and notes[0][:2] == (0, 0) and len(notes) > 1:
+        # the tune loops: a group running into the end joins the start
+        last_at = notes[-1][0] * song['beats'] + notes[-1][1]
+        total = len(song['bars']) * song['beats']
+        if total - last_at < breath:
+            groups[0] = groups.pop() + groups[0]
+    return groups
+
+
+def phrase_kinds(song, notes):
+    """Fire or ice for each note, one kind for a whole group, so a motif
+    and the note that ends it are played on the same side. Higher groups
+    are ice, lower ones fire (split at the middle group)."""
+    groups = phrase_groups(song, notes)
+    means = [sum(notes[i][2] for i in g) / len(g) for g in groups]
+    split = sorted(means)[len(means) // 2] + song.get('group_bias', 0)
+    kinds = [None] * len(notes)
+    for k, (g, mean) in enumerate(zip(groups, means)):
+        # call and response: phrases that sit at the same height take turns
+        ice = k % 2 == 0 if song.get('call_response') else mean >= split
+        for i in g:
+            kinds[i] = ice
+    return kinds
 
 
 def bar_chords(song, bar):
@@ -66,6 +107,7 @@ CLASSICAL = [
         level=1, name='Joy', tonic='D', mode=MAJOR, bpm=100, beats=4,
         composer='L. van Beethoven', piece='Ode to Joy, Symphony No. 9 (1824)',
         groove='pop',
+        call_response=True,
         mood='Ode to Joy, all 16 bars as Beethoven wrote them, in D.',
         colors=['#ffe9a8', '#8a6d1f', '#1a1404'],
         bars=[
@@ -97,6 +139,7 @@ CLASSICAL = [
         source='Mutopia Project, anna-magdalena-04',
         ice_bias=1,
         groove='waltz',
+        call_response=True,
         mood='The Minuet in G, both halves, in 3/4. Its second half turns to D major and walks home.',
         colors=['#a8e6cf', '#3d7a63', '#08170f'],
         bars=[
@@ -143,6 +186,8 @@ CLASSICAL = [
         composer='L. van Beethoven', piece='Für Elise, WoO 59 (1810)',
         source='Mutopia Project, fur_Elise_WoO59',
         groove='waltz',
+        # its motifs are split by a sixteenth rest: A4 (eighth), rest, C4
+        breath=1.5,
         mood='Für Elise in 3/8, counted in eighths: the theme twice, the bright middle part, and the theme again.',
         colors=['#d6c2ff', '#5a3f8f', '#0f0920'],
         bars=[
@@ -289,7 +334,7 @@ BY_LEVEL = {s['level']: s for s in CLASSICAL}
 if __name__ == '__main__':
     for s in CLASSICAL:
         p = build(s)['tune']
-        ms = [x for *_, x in p['notes']]
+        ms = [x for _, _, x, _ in p['notes']]
         loop = len(s['bars']) * s['beats'] * 60 / s['bpm']
         print(s['level'], s['name'], len(s['bars']), 'bars', len(ms), 'notes', round(loop, 1), 's',
               round(len(ms) / loop, 2), 'notes/s, peak', round(max_rate(s), 2), 'range', min(ms), max(ms), 'ice from', p['iceFrom'])

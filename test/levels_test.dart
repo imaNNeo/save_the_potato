@@ -51,6 +51,28 @@ void main() {
     }
   });
 
+  test('a motif of a tune stays on one side, its last note too', () {
+    // Für Elise: E D# E D# E B D C and the A that ends it are all ice,
+    // the broken chord after it (C E A B) is all fire
+    final elise = LevelSongs.all[2].phrases.single;
+    bool iceAt(int bar, double beat) => elise.isIce(
+      elise.notes.firstWhere((n) => n.bar == bar && n.beat == beat),
+    );
+    final motif = [
+      for (final b in <double>[0, 0.5, 1, 1.5, 2, 2.5]) iceAt(0, b),
+    ];
+    expect(motif, everyElement(isTrue));
+    expect(iceAt(1, 0), isTrue);
+    expect([
+      iceAt(1, 1.5),
+      iceAt(1, 2),
+      iceAt(1, 2.5),
+      iceAt(2, 0),
+    ], everyElement(isFalse));
+    // The pickup at the end of the tune leads into the motif
+    expect([iceAt(7, 2), iceAt(7, 2.5)], everyElement(isTrue));
+  });
+
   test('levels 1 to 6 play a whole tune note for note', () {
     for (final song in LevelSongs.all.take(6)) {
       expect(song.fullMelody, isTrue, reason: song.name);

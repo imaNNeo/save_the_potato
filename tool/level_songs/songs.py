@@ -413,7 +413,8 @@ def render(song, phrases, out_path, full=True):
                 continue
             mix.add(x, t0, gain=1.0)
         ph = phrases[names[i % len(names)]]
-        for bar, b, m in ph['notes']:
+        for note in ph['notes']:
+            bar, b, m = note[:3]
             tier = 0 if b == 0 else (1 if b == int(b) else 2)
             if not is_full(song):
                 # like the game, a verse and the start hold some notes back
@@ -421,7 +422,7 @@ def render(song, phrases, out_path, full=True):
                     continue
                 if full and f < 0.15 and tier == 2:
                     continue
-            ice = m >= ph['iceFrom']
+            ice = note[3] if len(note) > 3 else m >= ph['iceFrom']
             mix.add(note_sound(m + shift, ice), t0 + (bar * beats_of(song) + b) * beat, 0.25 if ice else -0.25, 0.55)
         plays.append(dict(section=sec, phrase=ph['name'], start=round(t0, 3)))
     if full:

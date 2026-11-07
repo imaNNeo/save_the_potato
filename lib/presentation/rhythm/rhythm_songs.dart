@@ -486,15 +486,20 @@ class MelodyPhrase {
   final int iceFrom;
   final List<MelodyNote> notes;
 
-  bool isIce(MelodyNote note) => note.midi >= iceFrom;
+  bool isIce(MelodyNote note) => note.ice ?? note.midi >= iceFrom;
 }
 
 class MelodyNote {
-  const MelodyNote(this.bar, this.beat, this.midi);
+  const MelodyNote(this.bar, this.beat, this.midi, [this.ice]);
 
   final int bar;
   final double beat;
   final int midi;
+
+  /// Whether it comes as ice (true) or fire (false), set for a whole
+  /// motif of a real tune so the note that ends a motif stays on the same
+  /// side as the rest of it. Null: by its pitch, see [MelodyPhrase.iceFrom].
+  final bool? ice;
 
   /// 0: first beat of the bar, 1: on a beat, 2: between beats
   int get tier => beat == 0 ? 0 : (beat == beat.floorToDouble() ? 1 : 2);
