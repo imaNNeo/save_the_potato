@@ -96,6 +96,9 @@ class RhythmDirector extends Component
   /// Whether the level's song has ended and the level is cleared
   bool _ended = false;
 
+  /// Whether the level's music has played its last note
+  bool _musicEnded = false;
+
   /// Whether a run is going and [songTime] follows the music
   bool get isRunning => _running;
 
@@ -107,14 +110,17 @@ class RhythmDirector extends Component
     _running = true;
     _song = bloc.state.song;
     _ended = false;
-    _songTime = 0;
-    _audioTime = 0;
+    _musicEnded = false;
+    // A level starts with its intro, before the tune's first beat at 0
+    _songTime = -_song.introSeconds;
+    _audioTime = _songTime;
     _lastPosition = null;
     _planned.clear();
     _passing.clear();
     _inFlight.clear();
-    // Give the player a moment before the first orb lands
-    _nextBeat = 4;
+    // Give the player a moment before the first orb lands. A level's
+    // intro gives it, so a tune starts from its very first note.
+    _nextBeat = _song.introBars > 0 ? -_song.introBars * _song.beatsPerBar : 4;
     _sides.reset();
     _beatsUntilHeartCheck = 8;
     _stageOfLoop.clear();
@@ -161,7 +167,10 @@ class RhythmDirector extends Component
       return;
     }
     if (_lastPosition == null) {
-      _audioTime = position;
+      // In the intro the music plays the end of the loop, before 0
+      _audioTime = _songTime < _loopEnd / 4 && position > _loopEnd / 2
+          ? position - _loopEnd
+          : position;
     } else {
       var delta = position - _lastPosition!;
       if (delta < -0.5) {
@@ -198,9 +207,18 @@ class RhythmDirector extends Component
       _planBeat(_nextBeat, speed);
       _nextBeat++;
     }
-    if (totalBeats != null &&
+    final endBeat = _song.endBeat;
+    if (endBeat != null &&
+        !_musicEnded &&
+        _songTime >= endBeat * _song.beatSeconds) {
+      // The tune's last note: the music stops right on it, with the
+      // final chord
+      _musicEnded = true;
+      _audio.endMusic(_song.finale);
+    }
+    if (endBeat != null &&
         !_ended &&
-        _songTime > _beatTime(totalBeats) + _clearDelay) {
+        _songTime > endBeat * _song.beatSeconds + _clearDelay) {
       // The level's song is over, and its last orbs are blocked
       _ended = true;
       bloc.levelCleared();
@@ -460,7 +478,7 @@ class RhythmDirector extends Component
 
   // ---- the song ----
 
-  int _barOf(int beat) => beat ~/ _song.beatsPerBar;
+  int _barOf(int beat) => (beat / _song.beatsPerBar).floor();
 
   /// The song stage of each pass of the backing loop. It is picked when the
   /// first beat of that pass is planned, so a pass never changes phrase or
@@ -482,7 +500,7 @@ class RhythmDirector extends Component
   void _planMelodyBeat(int beat, double speed) {
     final bar = _barOf(beat);
     final beatInBar = beat % _song.beatsPerBar;
-    final loop = bar ~/ _song.bars;
+    final loop = (bar / _song.bars).floor();
     final phrase = _phraseFor(loop);
     final section = _sectionFor(loop);
     for (final note in phrase.notes) {
@@ -492,7 +510,8 @@ class RhythmDirector extends Component
       if (note.beat.floor() != beatInBar) {
         continue;
       }
-      if (!_notePlays(phrase, note, section)) {
+      if (!_song.notePlaysIn(loop, note) ||
+          !_notePlays(phrase, note, section)) {
         continue;
       }
       final land =

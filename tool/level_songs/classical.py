@@ -69,6 +69,25 @@ def phrase_groups(song, notes):
     return groups
 
 
+def ending(song):
+    """(pickup_from, ends_at): the beat of the last bar where the pickup
+    into the next round starts (None if there is none), and the beat of
+    the last bar the level ends on. The last round leaves the pickup out
+    and ends on the tune's last note, or on the next downbeat (with the
+    tonic chord) when that note is not a tonic chord tone."""
+    notes = parse(song['bars'])
+    groups = phrase_groups(song, notes)
+    last = len(song['bars']) - 1
+    joined = [i for i in groups[0] if notes[i][0] == last]
+    pickup_from = min(notes[i][1] for i in joined) if joined else None
+    ending_notes = [n for n in notes if n[0] == last and (pickup_from is None or n[1] < pickup_from)]
+    final = ending_notes[-1]
+    tonic = synth.NOTE[song['tonic']]
+    triad = {tonic, (tonic + (4 if song['mode'] == MAJOR else 3)) % 12, (tonic + 7) % 12}
+    ends_at = final[1] if final[2] % 12 in triad else song['beats']
+    return pickup_from, ends_at
+
+
 def phrase_kinds(song, notes):
     """Fire or ice for each note, one kind for a whole group, so a motif
     and the note that ends it are played on the same side. Higher groups

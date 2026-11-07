@@ -1476,6 +1476,9 @@ class LevelSongs {
       bars: 16,
       beatsPerBar: 4,
       fullMelody: true,
+      introBars: 2,
+      endsAt: 2,
+      finale: [74, 78, 81, 86],
     ),
     Song(
       id: 'level2',
@@ -1530,6 +1533,9 @@ class LevelSongs {
       bars: 32,
       beatsPerBar: 3,
       fullMelody: true,
+      introBars: 2,
+      endsAt: 0,
+      finale: [79, 83, 86, 91],
     ),
     Song(
       id: 'level3',
@@ -1587,6 +1593,10 @@ class LevelSongs {
       bars: 30,
       beatsPerBar: 3,
       fullMelody: true,
+      introBars: 2,
+      pickupFrom: 2,
+      endsAt: 0,
+      finale: [69, 72, 76, 81],
     ),
     Song(
       id: 'level4',
@@ -1632,6 +1642,9 @@ class LevelSongs {
       bars: 18,
       beatsPerBar: 4,
       fullMelody: true,
+      introBars: 2,
+      endsAt: 0,
+      finale: [79, 83, 86, 91],
     ),
     Song(
       id: 'level5',
@@ -1683,6 +1696,10 @@ class LevelSongs {
       bars: 24,
       beatsPerBar: 4,
       fullMelody: true,
+      introBars: 2,
+      pickupFrom: 2,
+      endsAt: 0,
+      finale: [69, 72, 76, 81],
     ),
     Song(
       id: 'level6',
@@ -1727,6 +1744,9 @@ class LevelSongs {
       bars: 16,
       beatsPerBar: 4,
       fullMelody: true,
+      introBars: 2,
+      endsAt: 4,
+      finale: [71, 74, 78, 83],
     ),
     Song(
       id: 'level7',
@@ -1771,6 +1791,9 @@ class LevelSongs {
         SongSection.chorus,
         SongSection.chorus,
       ],
+      introBars: 2,
+      endsAt: 4,
+      finale: [77, 81, 84, 89],
     ),
     Song(
       id: 'level8',
@@ -1815,6 +1838,9 @@ class LevelSongs {
         SongSection.chorus,
         SongSection.chorus,
       ],
+      introBars: 2,
+      endsAt: 4,
+      finale: [71, 74, 78, 83],
     ),
     Song(
       id: 'level9',
@@ -1859,6 +1885,9 @@ class LevelSongs {
         SongSection.chorus,
         SongSection.chorus,
       ],
+      introBars: 2,
+      endsAt: 4,
+      finale: [72, 75, 79, 84],
     ),
     Song(
       id: 'level10',
@@ -1908,6 +1937,9 @@ class LevelSongs {
         SongSection.chorus,
         SongSection.chorus,
       ],
+      introBars: 2,
+      endsAt: 4,
+      finale: [74, 77, 81, 86],
     ),
   ];
 }

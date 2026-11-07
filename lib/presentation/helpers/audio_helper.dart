@@ -151,12 +151,33 @@ class AudioHelper {
     }
   }
 
-  void playBackgroundMusic() async {
+  /// Starts the song's stems [startAt] seconds into the loop, fading in
+  /// over [fadeIn] (a level's intro)
+  void playBackgroundMusic({
+    double startAt = 0,
+    Duration fadeIn = Duration.zero,
+  }) async {
     if (!(await _audioEnabled.value)) {
       return;
     }
     _stopStems();
-    _playStems();
+    _playStems(startAt: startAt, fadeIn: fadeIn);
+  }
+
+  /// A level's music played its last note: the stems stop right away (no
+  /// fade out) and [chord] rings, the tonic the tune ends on
+  void endMusic(List<int> chord) async {
+    _stopStems();
+    if (!(await _audioEnabled.value)) {
+      return;
+    }
+    for (final midi in chord) {
+      playNote('ice', midi, volume: 0.7);
+    }
+    if (chord.isNotEmpty) {
+      // and its root low, as fire (an octave further down)
+      playNote('fire', chord.first - 24, volume: 0.8);
+    }
   }
 
   void setAudioEnabled(bool enabled) {
@@ -225,22 +246,28 @@ class AudioHelper {
     _soLoud.setPause(group, false);
   }
 
-  void _playStems() {
+  void _playStems({double startAt = 0, Duration fadeIn = Duration.zero}) {
     final group = _soLoud.createVoiceGroup();
+    final fading = fadeIn > Duration.zero;
     for (final name in _song.allStems) {
       final source = _stems[name];
       if (source == null) {
         continue;
       }
+      final extra = RhythmSongs.extraLayers.contains(name);
       final handle = _soLoud.play(
         source,
-        volume: RhythmSongs.extraLayers.contains(name)
-            ? 0
-            : GameConstants.bgmVolume,
+        volume: extra || fading ? 0 : GameConstants.bgmVolume,
         looping: true,
         paused: true,
       );
       _soLoud.setProtectVoice(handle, true);
+      if (startAt > 0) {
+        _soLoud.seek(handle, Duration(microseconds: (startAt * 1e6).round()));
+      }
+      if (fading && !extra) {
+        _soLoud.fadeVolume(handle, GameConstants.bgmVolume, fadeIn);
+      }
       _stemHandles[name] = handle;
     }
     _soLoud.addVoicesToGroup(group, _stemHandles.values.toList());

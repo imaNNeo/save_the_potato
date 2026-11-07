@@ -73,6 +73,37 @@ void main() {
     expect([iceAt(7, 2), iceAt(7, 2.5)], everyElement(isTrue));
   });
 
+  test('a level starts with an intro and ends on the tune\'s last note', () {
+    final elise = LevelSongs.all[2];
+    final tune = elise.phrases.single;
+    final pickup = tune.notes.where(
+      (n) => n.bar == elise.bars - 1 && n.beat >= 2,
+    );
+    final last = tune.notes.firstWhere(
+      (n) => n.bar == elise.bars - 1 && n.beat == 0,
+    );
+    expect(elise.introBars, greaterThan(0));
+    expect(elise.introSeconds, greaterThan(3));
+    // In the intro only the pickup (E D#) plays
+    expect(pickup, hasLength(2));
+    expect(pickup.every((n) => elise.notePlaysIn(-1, n)), isTrue);
+    expect(elise.notePlaysIn(-1, last), isFalse);
+    // The last round ends on the A, with no pickup after it
+    final lastLoop = elise.form.length - 1;
+    expect(elise.notePlaysIn(lastLoop, last), isTrue);
+    expect(pickup.any((n) => elise.notePlaysIn(lastLoop, n)), isFalse);
+    expect(elise.endBeat, elise.totalBeats! - elise.beatsPerBar);
+    // The intro plays the end of the backing loop, up to the tune's start
+    expect(
+      elise.musicStartsAt + elise.introSeconds,
+      closeTo(elise.loopSeconds, 1e-9),
+    );
+    for (final song in LevelSongs.all) {
+      expect(song.finale, isNotEmpty, reason: song.name);
+      expect(song.endBeat, lessThanOrEqualTo(song.totalBeats!));
+    }
+  });
+
   test('levels 1 to 6 play a whole tune note for note', () {
     for (final song in LevelSongs.all.take(6)) {
       expect(song.fullMelody, isTrue, reason: song.name);

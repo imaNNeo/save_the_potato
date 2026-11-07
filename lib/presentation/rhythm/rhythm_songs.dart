@@ -372,6 +372,10 @@ class Song {
     this.bars = RhythmSongs.bars,
     this.beatsPerBar = 4,
     this.fullMelody = false,
+    this.introBars = 0,
+    this.pickupFrom,
+    this.endsAt,
+    this.finale = const [],
   });
 
   final String id;
@@ -409,17 +413,69 @@ class Song {
   /// on a real tune plays it like this, so it can be played by heart.
   final bool fullMelody;
 
+  /// How many bars a level plays before its tune starts: the last bars of
+  /// the backing loop, fading in, so the tune starts from its beginning
+  final int introBars;
+
+  /// The beat of the last bar where the tune's pickup into its next round
+  /// starts (null if it has none). The pickup also plays at the end of the
+  /// intro, and not at the very end of the level.
+  final double? pickupFrom;
+
+  /// The beat of the last bar of the last round where a level ends: the
+  /// music stops there and [finale] rings. Null: the bar after it.
+  final double? endsAt;
+
+  /// The chord (midi, ice notes) that rings when a level ends
+  final List<int> finale;
+
   double get beatSeconds => 60 / bpm;
 
   int get beatsPerLoop => bars * beatsPerBar;
 
   double get loopSeconds => beatsPerLoop * beatSeconds;
 
+  /// How long the intro lasts. The song's clock starts this far below 0.
+  double get introSeconds => introBars * beatsPerBar * beatSeconds;
+
+  /// Where in the backing loop the music starts, so its intro ends at the
+  /// end of the loop and the tune starts at 0
+  double get musicStartsAt =>
+      introBars == 0 ? 0 : loopSeconds - introSeconds % loopSeconds;
+
   /// How many beats the song has, null when it never ends
   int? get totalBeats => endless ? null : form.length * beatsPerLoop;
 
-  /// How long the song lasts, null when it never ends
-  double? get durationSeconds => endless ? null : form.length * loopSeconds;
+  /// Where a level ends, in beats from the start of its tune
+  double? get endBeat {
+    final total = totalBeats;
+    if (total == null) {
+      return null;
+    }
+    return total - beatsPerBar + (endsAt ?? beatsPerBar.toDouble());
+  }
+
+  /// How long the song lasts (from the start of the tune, the intro left
+  /// out), null when it never ends
+  double? get durationSeconds {
+    final end = endBeat;
+    return end == null ? null : end * beatSeconds;
+  }
+
+  /// Whether [note] of the pass [loop] of the loop plays. Before the tune
+  /// (the intro, loop -1) only its pickup plays, and the last pass leaves
+  /// the pickup and anything after the end out.
+  bool notePlaysIn(int loop, MelodyNote note) {
+    final inLastBar = note.bar == bars - 1;
+    final pickup = inLastBar && pickupFrom != null && note.beat >= pickupFrom!;
+    if (loop < 0) {
+      return pickup;
+    }
+    if (!endless && loop >= form.length - 1 && inLastBar) {
+      return !pickup && note.beat <= (endsAt ?? beatsPerBar);
+    }
+    return true;
+  }
 
   /// Every stem, the extra layers included
   List<String> get allStems => [...stems, ...RhythmSongs.extraLayers];

@@ -15,7 +15,7 @@ import os, subprocess, sys
 sys.path.insert(0, os.path.dirname(__file__))
 import numpy as np
 import soundfile as sf
-from songs import SONGS, design, stems, chord_pcs, song_form, stages_of, is_full, n_bars, beats_of, chords_of_bar
+from songs import SONGS, INTRO_BARS, level_ending, finale, design, stems, chord_pcs, song_form, stages_of, is_full, n_bars, beats_of, chords_of_bar
 import synth
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -88,6 +88,12 @@ def main(only=None):
         name = song['name'].replace("'", "\\'")
         c = song['colors']
         extra = (f"\n      bars: {n_bars(song)},\n      beatsPerBar: {beats_of(song)},\n      fullMelody: true," if is_full(song) else '')
+        pickup_from, ends_at = level_ending(song)
+        extra += f"\n      introBars: {INTRO_BARS},"
+        if pickup_from is not None:
+            extra += f"\n      pickupFrom: {pickup_from:g},"
+        extra += f"\n      endsAt: {ends_at:g},"
+        extra += f"\n      finale: [{', '.join(str(x) for x in finale(song))}],"
         songs_list.append(f"""    Song(
       id: 'level{lv}',
       name: '{name}',

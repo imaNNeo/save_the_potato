@@ -144,8 +144,13 @@ class GameCubit extends Cubit<GameState> {
         tutorialHint: 0,
       ),
     );
-    await _audioHelper.useSong(state.song);
-    _audioHelper.playBackgroundMusic();
+    final song = state.song;
+    await _audioHelper.useSong(song);
+    // A level starts with its intro: the end of the backing loop fading in
+    _audioHelper.playBackgroundMusic(
+      startAt: song.musicStartsAt,
+      fadeIn: Duration(milliseconds: (song.introSeconds * 1000).round()),
+    );
   }
 
   /// The level's song ended with the potato alive: the level is cleared and
@@ -164,13 +169,8 @@ class GameCubit extends Cubit<GameState> {
         levelsCleared: cleared,
       ),
     );
-    if (await _audioHelper.audioEnabled) {
-      await _audioHelper.fadeAndStopBackgroundMusic(
-        GameConstants.showRetryAfterGameOverDelay,
-      );
-    } else {
-      await Future.delayed(GameConstants.showRetryAfterGameOverDelay);
-    }
+    // The music already stopped on the tune's last note
+    await Future.delayed(GameConstants.showRetryAfterGameOverDelay);
     emit(state.copyWith(showGameOverUI: true));
   }
 
@@ -304,13 +304,8 @@ class GameCubit extends Cubit<GameState> {
       ),
     );
     _submitScore(previousScore);
-    if (await _audioHelper.audioEnabled) {
-      await _audioHelper.fadeAndStopBackgroundMusic(
-        GameConstants.showRetryAfterGameOverDelay,
-      );
-    } else {
-      await Future.delayed(GameConstants.showRetryAfterGameOverDelay);
-    }
+    // The music already stopped on the tune's last note
+    await Future.delayed(GameConstants.showRetryAfterGameOverDelay);
     emit(state.copyWith(showGameOverUI: true));
   }
 
