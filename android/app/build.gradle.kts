@@ -49,6 +49,11 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+            // Put native debug symbols in the app bundle so Play can
+            // symbolicate native crashes and ANRs.
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
         }
     }
 }
