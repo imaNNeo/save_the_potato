@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -373,23 +372,8 @@ class _LevelSelectState extends State<LevelSelect>
 }
 
 /// The endless mode's look: fire to ice, unlike any level's single color
-/// Samples of its colors, picked on the web with `?grad=1..4`
-const _endlessPalettes = [
-  // 1 Aurora: violet to cyan
-  [Color(0xFF8A6BFF), Color(0xFF2FD8F0)],
-  // 2 Sunset: amber to pink
-  [Color(0xFFFFB347), Color(0xFFFF5C93)],
-  // 3 Fire and ice, through violet so the middle isn't muddy
-  [Color(0xFFFF8A5B), Color(0xFFB07CFF), Color(0xFF5CC8FF)],
-  // 4 Candy: pink to periwinkle
-  [Color(0xFFFF78C8), Color(0xFF7D8BFF)],
-];
-final List<Color> _endlessColors = () {
-  final i = kIsWeb
-      ? int.tryParse(Uri.base.queryParameters['grad'] ?? '')
-      : null;
-  return _endlessPalettes[((i ?? 3) - 1).clamp(0, _endlessPalettes.length - 1)];
-}();
+/// Aurora: violet to cyan
+const _endlessColors = [Color(0xFF8A6BFF), Color(0xFF2FD8F0)];
 final _endlessFire = _endlessColors.first;
 final _endlessIce = _endlessColors.last;
 final _endlessGradient = LinearGradient(
