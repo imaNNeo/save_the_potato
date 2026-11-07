@@ -289,7 +289,7 @@ class _LevelSelectState extends State<LevelSelect>
     final level = state.level;
     final locked = level != null && !Levels.isOpen(level, state.levelsCleared);
     final accent = level == null
-        ? const Color(0xFFC9B8FF)
+        ? _endlessIce
         : Color(Levels.songOf(level).colors.first);
     final String name;
     final String caption;
@@ -357,6 +357,7 @@ class _LevelSelectState extends State<LevelSelect>
                 const SizedBox(height: 18),
                 _StartButton(
                   accent: accent,
+                  gradient: level == null ? _endlessGradient : null,
                   locked: locked,
                   pulse: _pulse.value,
                   onTap: locked ? null : _cubit.startFromHome,
@@ -369,6 +370,15 @@ class _LevelSelectState extends State<LevelSelect>
     );
   }
 }
+
+/// The endless mode's look: fire to ice, unlike any level's single color
+const _endlessFire = Color(0xFFFF7A3D);
+const _endlessIce = Color(0xFF4FC3FF);
+const _endlessGradient = LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [_endlessFire, _endlessIce],
+);
 
 class _Stop extends StatelessWidget {
   const _Stop({
@@ -397,14 +407,9 @@ class _Stop extends StatelessWidget {
     final Color fill;
     final Widget child;
     if (level == null) {
-      fill = const Color(0xFFC9B8FF);
-      child = const FittedBox(
-        child: Padding(
-          padding: EdgeInsets.all(5),
-          child: Icon(Icons.all_inclusive_rounded, color: ink),
-        ),
-      );
-    } else if (open) {
+      return _endless();
+    }
+    if (open) {
       // Cleared ones are gold, with a check badge on top
       fill = cleared
           ? GameColors.leaderboardGoldenColor
@@ -447,7 +452,7 @@ class _Stop extends StatelessWidget {
             color: Color(0xFF3BD16F),
             iconColor: Colors.white,
           )
-        : level != null && !open
+        : !open
         ? const _Badge(
             icon: Icons.lock_rounded,
             color: Color(0xFF3A3150),
@@ -488,6 +493,62 @@ class _Stop extends StatelessWidget {
             ),
     );
   }
+}
+
+extension on _Stop {
+  /// The endless mode: a fire to ice diamond, not a round bead like the
+  /// levels
+  Widget _endless() => GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: onTap,
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        Transform.rotate(
+          angle: pi / 4,
+          child: FractionallySizedBox(
+            widthFactor: 0.8,
+            heightFactor: 0.8,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: _endlessGradient,
+                borderRadius: BorderRadius.circular(6),
+                border: selected > 0.5
+                    ? Border.all(color: Colors.white, width: 2.5)
+                    : Border.all(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        width: 1.2,
+                      ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _endlessFire.withValues(
+                      alpha: 0.35 + 0.45 * selected,
+                    ),
+                    blurRadius: 8 + (10 + pulse * 10) * selected,
+                    offset: const Offset(-2, -2),
+                  ),
+                  BoxShadow(
+                    color: _endlessIce.withValues(
+                      alpha: 0.35 + 0.45 * selected,
+                    ),
+                    blurRadius: 8 + (10 + pulse * 10) * selected,
+                    offset: const Offset(2, 2),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const FractionallySizedBox(
+          widthFactor: 0.62,
+          heightFactor: 0.62,
+          child: FittedBox(
+            child: Icon(Icons.all_inclusive_rounded, color: Colors.white),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _Badge extends StatelessWidget {
@@ -539,12 +600,16 @@ class _Chevron extends StatelessWidget {
 class _StartButton extends StatelessWidget {
   const _StartButton({
     required this.accent,
+    this.gradient,
     required this.locked,
     required this.pulse,
     required this.onTap,
   });
 
   final Color accent;
+
+  /// Instead of the plain color (the endless mode)
+  final Gradient? gradient;
   final bool locked;
   final double pulse;
   final VoidCallback? onTap;
@@ -565,6 +630,7 @@ class _StartButton extends StatelessWidget {
           height: 58,
           decoration: BoxDecoration(
             color: color,
+            gradient: locked ? null : gradient,
             borderRadius: BorderRadius.circular(29),
             boxShadow: locked
                 ? null
