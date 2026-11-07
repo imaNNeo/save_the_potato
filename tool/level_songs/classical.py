@@ -1,19 +1,20 @@
-"""Level songs built on famous public-domain melodies.
+"""Level songs built on famous public-domain tunes, written out note for note.
 
-These are our own arrangements of the tunes (the notes only, written down
-here by hand) played by the game's own synth. No recording is used.
-Every composer here died more than 100 years ago, so the melodies are in
-the public domain.
+Every tune here comes from a public-domain edition of the sheet music
+(the Mutopia Project, mutopiaproject.org, except Ode to Joy, which is
+written from the score by hand). The game's own synth plays them; no
+recording is used, and every composer died more than 100 years ago.
 
-Each tune is fitted to the game's grid: 8 bars of 4 beats, a note on
-every downbeat, and exactly 17 notes on a beat and 6 between beats. That
-keeps the rhythm director and its density rules unchanged, so some notes
-are merged, dotted or added compared with the sheet music.
+A tune is one long phrase: every note of the melody, on the beat where
+the score has it, in the order the piece plays them. The game plays all
+of them as orbs (Song.fullMelody), so a player who knows the tune can play
+it by heart. Only grace notes and trills are left out, and a few chords
+are reduced to their top note.
 
-A song gives one or two 8 bar themes (A, and B over the same chords).
-The five phrases the game rotates through are made from them:
-  home = A, valley = B, lift = A with its second half an octave up,
-  tense = B an octave up, peak = A an octave up.
+Bars are written 'beat:Note ...'. The beat unit is the one the song's
+bpm counts: a quarter note, or an eighth for Für Elise and the Rondo
+alla Turca. A chord entry is (semitones above the tonic, 'M' or 'm') for
+the bar, or a list of them that share the bar evenly.
 """
 import synth
 
@@ -32,183 +33,254 @@ def parse(bars):
     return notes
 
 
-def counts(notes):
-    down = sum(1 for _, b, _ in notes if b == 0)
-    on = sum(1 for _, b, _ in notes if b != 0 and b == int(b))
-    off = sum(1 for _, b, _ in notes if b != int(b))
-    return down, on, off
-
-
-def shift(notes, semis, from_bar=0):
-    return [(b, beat, m + (semis if b >= from_bar else 0)) for b, beat, m in notes]
-
-
-def phrase(name, notes, bias=0):
-    mids = sorted(m for _, _, m in notes)
-    return dict(name=name, iceFrom=int(mids[len(mids) // 2] + bias), notes=notes)
-
-
 def build(song):
-    a = parse(song['A'])
-    b = parse(song.get('B', song['A']))
-    for label, t in (('A', a), ('B', b)):
-        bars = {bar for bar, beat, _ in t if beat == 0}
-        assert counts(t) == (8, 17, 6) and bars == set(range(8)), (song['name'], label, counts(t))
-    bias = song.get('ice_bias', 0)
-    return {
-        'home': phrase('home', a, bias),
-        'valley': phrase('valley', b, bias),
-        'lift': phrase('lift', shift(a, 12, 4), bias),
-        'tense': phrase('tense', shift(b, 12), bias),
-        'peak': phrase('peak', shift(a, 12), bias),
-    }
+    notes = parse(song['bars'])
+    n = len(song['bars'])
+    assert len(song['chords']) == n, (song['name'], len(song['chords']), n)
+    for bar, beat, _ in notes:
+        assert 0 <= beat < song['beats'], (song['name'], bar, beat)
+    mids = sorted(m for _, _, m in notes)
+    ice_from = int(mids[len(mids) // 2] + song.get('ice_bias', 0))
+    return {'tune': dict(name='tune', iceFrom=ice_from, notes=notes)}
+
+
+def bar_chords(song, bar):
+    """The chords of a bar as [(start beat, chord), ...]"""
+    c = song['chords'][bar]
+    cs = c if isinstance(c, list) else [c]
+    step = song['beats'] / len(cs)
+    return [(i * step, ch) for i, ch in enumerate(cs)]
+
+
+def max_rate(song):
+    """The most notes a second anywhere in the tune, over any one beat"""
+    beat_s = 60 / song['bpm']
+    times = [(b * song['beats'] + t) * beat_s for b, t, _ in parse(song['bars'])]
+    return max(sum(1 for u in times if x <= u < x + beat_s - 1e-6) for x in times) / beat_s
 
 
 M, m = 'M', 'm'
 
 CLASSICAL = [
     dict(
-        level=1, name='Prelude', tonic='C', mode=MAJOR, bpm=96,
-        composer='J. S. Bach', piece='Prelude in C major, BWV 846 (1722)',
-        # C  Dm/C  G7/B  C  Am/C  D7/C  G/B  Cmaj7/B
-        chords=[(0, M), (2, m), (7, M), (0, M), (9, m), (2, M), (7, M), (0, M)],
-        groove='soft',
-        mood='Bach\'s rolling arpeggios. The shield plays the top of each broken chord, calm and even.',
-        colors=['#a8e6cf', '#3d7a63', '#08170f'],
-        A=[
-            '0:G4 1:C5 2:E5 2.5:C5 3:E5',
-            '0:A4 1:D5 2:F5 2.5:D5 3:F5',
-            '0:G4 1:D5 2:F5',
-            '0:G4 1:C5 2:E5 2.5:C5 3:E5',
-            '0:A4 1:E5 2:A5 2.5:E5 3:A5',
-            '0:F#4 1:A4 2:D5',
-            '0:G4 1.5:D5 2:G5 3.5:D5',
-            '0:C5',
-        ],
-        B=[
-            '0:E5 1:C5 2:G4 2.5:C5 3:G4',
-            '0:F5 1:D5 2:A4 2.5:D5 3:A4',
-            '0:F5 1:D5 2:G4',
-            '0:E5 1:C5 2:G4 2.5:C5 3:G4',
-            '0:A5 1:E5 2:A4 2.5:E5 3:A4',
-            '0:D5 1:A4 2:F#4',
-            '0:G5 1.5:D5 2:G4 3.5:D5',
-            '0:E4',
-        ],
-    ),
-    dict(
-        level=2, name='Joy', tonic='D', mode=MAJOR, bpm=104,
+        level=1, name='Joy', tonic='D', mode=MAJOR, bpm=100, beats=4,
         composer='L. van Beethoven', piece='Ode to Joy, Symphony No. 9 (1824)',
-        chords=[(0, M), (7, M), (0, M), (7, M), (0, M), (7, M), (0, M), (7, M)],
         groove='pop',
-        mood='Ode to Joy with a little bounce: a few notes are dotted so it swings.',
+        mood='Ode to Joy, all 16 bars as Beethoven wrote them, in D.',
         colors=['#ffe9a8', '#8a6d1f', '#1a1404'],
-        A=[
+        bars=[
             '0:F#5 1:F#5 2:G5 3:A5',
             '0:A5 1:G5 2:F#5 3:E5',
             '0:D5 1:D5 2:E5 3:F#5',
             '0:F#5 1.5:E5 2:E5',
-            '0:F#5 1.5:F#5 2:G5 3:A5',
-            '0:A5 1.5:G5 2:F#5 3:E5',
-            '0:D5 1.5:D5 2:E5 3:F#5',
-            '0:E5 1.5:D5 2:D5 3.5:E5',
-        ],
-        B=[
+            '0:F#5 1:F#5 2:G5 3:A5',
+            '0:A5 1:G5 2:F#5 3:E5',
+            '0:D5 1:D5 2:E5 3:F#5',
+            '0:E5 1.5:D5 2:D5',
             '0:E5 1:E5 2:F#5 3:D5',
             '0:E5 1:F#5 1.5:G5 2:F#5 3:D5',
-            '0:E5 1:F#5 1.5:G5 2:F#5',
+            '0:E5 1:F#5 1.5:G5 2:F#5 3:E5',
             '0:D5 1:E5 2:A4',
-            '0:F#5 1.5:F#5 2:G5 3:A5',
-            '0:A5 1.5:G5 2:F#5 3:E5',
-            '0:D5 1.5:D5 2:E5 3:F#5',
+            '0:F#5 1:F#5 2:G5 3:A5',
+            '0:A5 1:G5 2:F#5 3:E5',
+            '0:D5 1:D5 2:E5 3:F#5',
             '0:E5 1.5:D5 2:D5',
         ],
+        chords=[(0, M), [(0, M), (7, M)], (0, M), [(0, M), (7, M)],
+                (0, M), [(0, M), (7, M)], (0, M), [(7, M), (0, M)],
+                [(7, M), (0, M)], [(7, M), (0, M)], [(7, M), (11, m)], [(2, M), (7, M)],
+                (0, M), [(0, M), (7, M)], (0, M), [(7, M), (0, M)]],
     ),
     dict(
-        level=3, name='Elise', tonic='A', mode=MINOR, bpm=108,
-        composer='L. van Beethoven', piece='Für Elise, WoO 59 (1810)',
-        chords=[(0, m), (7, M), (0, m), (7, M), (0, m), (7, M), (0, m), (7, M)],
-        groove='halftime',
-        mood='Für Elise: the high E-D# turn is ice, the low broken chords are fire.',
-        colors=['#d6c2ff', '#5a3f8f', '#0f0920'],
-        A=[
-            '0:E5 1:D#5 2:E5 3:D#5',
-            '0:E5 1:B4 2:D5 3:C5',
-            '0:A4 1.5:C4 2:E4 3:A4',
-            '0:B4 1.5:E4 2:G#4 3:B4',
-            '0:C5 1.5:E4 2:E5 3:D#5',
-            '0:E5 0.5:D#5 1:E5 1.5:B4 2:D5 3:C5',
-            '0:A4 1.5:E4 2:C5 3:B4',
-            '0:A4',
-        ],
-    ),
-    dict(
-        level=4, name='Canon', tonic='D', mode=MAJOR, bpm=112,
-        composer='J. Pachelbel', piece='Canon in D (about 1690)',
-        # D  A  Bm  F#m  G  D  G  A
-        chords=[(0, M), (7, M), (9, m), (4, m), (5, M), (0, M), (5, M), (7, M)],
-        groove='syncop',
-        mood='Pachelbel\'s eight chords. The downbeats walk the famous line down: F# E D C# B A B C#.',
-        colors=['#ffc8dd', '#8f3f63', '#1c0812'],
-        A=[
-            '0:F#5 2:A5 3:F#5',
-            '0:E5 1:C#5 2:E5 3:A5',
-            '0:D5 2:F#5 2.5:E5 3:D5',
-            '0:C#5 2:A4 3:C#5',
-            '0:B4 1:D5 2:G5 3:F#5',
-            '0:A4 1.5:D5 2:F#5 3:A5',
-            '0:B4 1.5:D5 2:G5 3:F#5',
-            '0:C#5 1.5:E5 2:A5 2.5:G5 3.5:E5',
-        ],
-        B=[
-            '0:D5 1:F#5 2:A5 3:G5',
-            '0:F#5 1:D5 2:F#5 3:E5',
-            '0:D5 1:B4 2:D5 3:A4',
-            '0:A4 1:C#5 2:F#5 2.5:E5',
-            '0:B4 1:D5 2:G5 2.5:F#5',
-            '0:F#5 1.5:A5 2:F#5 2.5:D5',
-            '0:G5 1:D5 1.5:B4 3:D5',
-            '0:C#5 1.5:E5 3:A4',
-        ],
-    ),
-    dict(
-        level=5, name='Swan', tonic='B', mode=MINOR, bpm=116,
-        composer='P. I. Tchaikovsky', piece='Swan Lake, Op. 20 (1876)',
-        chords=[(0, m), (0, m), (8, M), (0, m), (8, M), (0, m), (5, m), (7, M)],
-        groove='epic',
-        mood='The Swan Lake theme. Long high notes with soft echoes below, then it falls and turns.',
-        colors=['#c9e4ff', '#34557a', '#060d18'],
-        ice_bias=-1,
-        A=[
-            '0:B4 1:C#5 2:D5 3:E5',
-            '0:F#5 2:B4 3:D5',
-            '0:F#5 2:B4 3:D5',
-            '0:F#5 2:D5 3:B4',
-            '0:D5 1:B4 2:G4 3:D5',
-            '0:B4 1.5:F#4 2:B4 2.5:D5 3:F#5',
-            '0:G5 1:F#5 1.5:E5 2:D5 3:E5',
-            '0:F#5 1.5:C#5 2.5:A#4 3.5:F#4',
-        ],
-    ),
-    dict(
-        level=6, name='Mountain King', tonic='B', mode=MINOR, bpm=120,
-        composer='E. Grieg', piece='In the Hall of the Mountain King, Peer Gynt (1875)',
-        # Bm  Bm  C#  C  Bm  Bm  D  D
-        chords=[(0, m), (0, m), (2, M), (1, M), (0, m), (0, m), (3, M), (3, M)],
-        groove='drive',
-        mood='The sneaking troll march, fast. It ends on syncopated stabs that fall into the next round.',
-        colors=['#ff8a5c', '#7a2a12', '#170603'],
+        level=2, name='Minuet', tonic='G', mode=MAJOR, bpm=104, beats=3,
+        composer='C. Petzold (once credited to J. S. Bach)', piece='Minuet in G, from the Notebook for Anna Magdalena Bach (1725)',
+        source='Mutopia Project, anna-magdalena-04',
         ice_bias=1,
-        A=[
-            '0:B4 1:C#5 2:D5 3:E5',
-            '0:F#5 1:D5 2:F#5',
-            '0:F5 1:C#5 2:F5',
-            '0:E5 1:C5 2:E5',
-            '0:B4 1:C#5 2:D5 3:E5',
-            '0:F#5 1:D5 2:F#5 2.5:A5 3:B5',
-            '0:A5 0.5:F#5 1:D5 1.5:F#5 2:A5',
-            '0:A5 1.5:F#5 2.5:D5 3.5:A4',
+        groove='waltz',
+        mood='The Minuet in G, both halves, in 3/4. Its second half turns to D major and walks home.',
+        colors=['#a8e6cf', '#3d7a63', '#08170f'],
+        bars=[
+            '0:D5 1:G4 1.5:A4 2:B4 2.5:C5',
+            '0:D5 1:G4 2:G4',
+            '0:E5 1:C5 1.5:D5 2:E5 2.5:F#5',
+            '0:G5 1:G4 2:G4',
+            '0:C5 1:D5 1.5:C5 2:B4 2.5:A4',
+            '0:B4 1:C5 1.5:B4 2:A4 2.5:G4',
+            '0:F#4 1:G4 1.5:A4 2:B4 2.5:G4',
+            '0:A4',
+            '0:D5 1:G4 1.5:A4 2:B4 2.5:C5',
+            '0:D5 1:G4 2:G4',
+            '0:E5 1:C5 1.5:D5 2:E5 2.5:F#5',
+            '0:G5 1:G4 2:G4',
+            '0:C5 1:D5 1.5:C5 2:B4 2.5:A4',
+            '0:B4 1:C5 1.5:B4 2:A4 2.5:G4',
+            '0:A4 1:B4 1.5:A4 2:G4 2.5:F#4',
+            '0:G4',
+            '0:B5 1:G5 1.5:A5 2:B5 2.5:G5',
+            '0:A5 1:D5 1.5:E5 2:F#5 2.5:D5',
+            '0:G5 1:E5 1.5:F#5 2:G5 2.5:D5',
+            '0:C#5 1:B4 1.5:C#5 2:A4',
+            '0:A4 0.5:B4 1:C#5 1.5:D5 2:E5 2.5:F#5',
+            '0:G5 1:F#5 2:E5',
+            '0:F#5 1:A4 2:C#5',
+            '0:D5',
+            '0:D5 1:G4 1.5:F#4 2:G4',
+            '0:E5 1:G4 1.5:F#4 2:G4',
+            '0:D5 1:C5 2:B4',
+            '0:A4 0.5:G4 1:F#4 1.5:G4 2:A4',
+            '0:D4 0.5:E4 1:F#4 1.5:G4 2:A4 2.5:B4',
+            '0:C5 1:B4 2:A4',
+            '0:B4 0.5:D5 1:G4 2:F#4',
+            '0:G4',
         ],
+        chords=[(0, M), (0, M), (5, M), (0, M), (2, m), (0, M), (7, M), (7, M),
+                (0, M), (0, M), (5, M), (0, M), (2, m), (0, M), (7, M), (0, M),
+                (0, M), (7, M), (9, m), (2, M), (7, M), (2, M), (2, M), (7, M),
+                (0, M), (5, M), (0, M), (7, M), (7, M), (2, m), [(0, M), (7, M)], (0, M)],
+    ),
+    dict(
+        level=3, name='Elise', tonic='A', mode=MINOR, bpm=108, beats=3,
+        composer='L. van Beethoven', piece='Für Elise, WoO 59 (1810)',
+        source='Mutopia Project, fur_Elise_WoO59',
+        groove='waltz',
+        mood='Für Elise in 3/8, counted in eighths: the theme twice, the bright middle part, and the theme again.',
+        colors=['#d6c2ff', '#5a3f8f', '#0f0920'],
+        bars=[
+            # the theme (it starts with its pickup E D# at the end of the last bar)
+            '0:E5 0.5:D#5 1:E5 1.5:B4 2:D5 2.5:C5',
+            '0:A4 1.5:C4 2:E4 2.5:A4',
+            '0:B4 1.5:E4 2:G#4 2.5:B4',
+            '0:C5 1.5:E4 2:E5 2.5:D#5',
+            '0:E5 0.5:D#5 1:E5 1.5:B4 2:D5 2.5:C5',
+            '0:A4 1.5:C4 2:E4 2.5:A4',
+            '0:B4 1.5:E4 2:C5 2.5:B4',
+            '0:A4 2:E5 2.5:D#5',
+            # again, then into the middle part
+            '0:E5 0.5:D#5 1:E5 1.5:B4 2:D5 2.5:C5',
+            '0:A4 1.5:C4 2:E4 2.5:A4',
+            '0:B4 1.5:E4 2:G#4 2.5:B4',
+            '0:C5 1.5:E4 2:E5 2.5:D#5',
+            '0:E5 0.5:D#5 1:E5 1.5:B4 2:D5 2.5:C5',
+            '0:A4 1.5:C4 2:E4 2.5:A4',
+            '0:B4 1.5:E4 2:C5 2.5:B4',
+            '0:A4 1.5:B4 2:C5 2.5:D5',
+            # the middle part
+            '0:E5 1.5:G4 2:F5 2.5:E5',
+            '0:D5 1.5:F4 2:E5 2.5:D5',
+            '0:C5 1.5:E4 2:D5 2.5:C5',
+            '0:B4 1.5:E4 2:E5',
+            '0.5:E5 1:E6 2.5:D#5',
+            '0:E5 1.5:D#5 2:E5 2.5:D#5',
+            # and the theme once more
+            '0:E5 0.5:D#5 1:E5 1.5:B4 2:D5 2.5:C5',
+            '0:A4 1.5:C4 2:E4 2.5:A4',
+            '0:B4 1.5:E4 2:G#4 2.5:B4',
+            '0:C5 1.5:E4 2:E5 2.5:D#5',
+            '0:E5 0.5:D#5 1:E5 1.5:B4 2:D5 2.5:C5',
+            '0:A4 1.5:C4 2:E4 2.5:A4',
+            '0:B4 1.5:E4 2:C5 2.5:B4',
+            '0:A4 2:E5 2.5:D#5',
+        ],
+        chords=[(7, M), (0, m), (7, M), (0, m), (7, M), (0, m), (7, M), (0, m)] * 2
+               + [(3, M), (10, M), (0, m), (7, M), (7, M), (7, M)]
+               + [(7, M), (0, m), (7, M), (0, m), (7, M), (0, m), (7, M), (0, m)],
+    ),
+    dict(
+        level=4, name='Night Music', tonic='G', mode=MAJOR, bpm=104, beats=4,
+        composer='W. A. Mozart', piece='Eine kleine Nachtmusik, K. 525, first movement (1787)',
+        source='Mutopia Project, eine-kleine-nachtmusik-mvt1',
+        groove='four',
+        mood='The opening of Eine kleine Nachtmusik, the first violin part up to its first stop. Trills left out.',
+        colors=['#ffc8dd', '#8f3f63', '#1c0812'],
+        bars=[
+            '0:G5 1.5:D5 2:G5 3.5:D5',
+            '0:G5 0.5:D5 1:G5 1.5:B5 2:D6',
+            '0:C6 1.5:A5 2:C6 3.5:A5',
+            '0:C6 0.5:A5 1:F#5 1.5:A5 2:D5',
+            '0:G5 1:G5 2.5:B5 3:A5 3.5:G5',
+            '0:A5 0.5:F#5 1:F#5 2.5:A5 3:C6 3.5:F#5',
+            '0:A5 0.5:G5 1:G5 2.5:B5 3:A5 3.5:G5',
+            '0:A5 0.5:F#5 1:F#5 2.5:A5 3:C6 3.5:F#5',
+            '0:G5 0.5:G5 1:F#5 1.5:E5 1.75:F#5 2:G5 2.5:G5 3:A5 3.5:G5 3.75:A5',
+            '0:B5 0.5:B5 1:C6 1.5:B5 1.75:C6 2:D6',
+            '0:D5 2:E5',
+            '0:C5 1:C5 2:B4 3:B4',
+            '0:A4 1:A4 2:G4 2.5:F#4 3:E4 3.5:F#4',
+            '0:G4 1:A4 2:B4',
+            '0:D5 2:E5',
+            '0:D5 0.5:C5 1:C5 1.5:C5 2:C5 2.5:B4 3:B4 3.5:B4',
+            '0:B4 0.5:A4 1:A4 1.5:A4 2:G4 2.5:F#4 3:E4 3.5:F#4',
+            '0:G4',
+        ],
+        chords=[(0, M), [(0, M), (7, M)], (7, M), (7, M), (0, M), (7, M), (0, M), (7, M),
+                (0, M), [(0, M), (7, M)], [(0, M), (5, M)], [(7, M), (0, M)], (7, M), (0, M),
+                [(0, M), (5, M)], [(7, M), (0, M)], (7, M), (0, M)],
+    ),
+    dict(
+        level=5, name='Turkish March', tonic='A', mode=MINOR, bpm=112, beats=4,
+        composer='W. A. Mozart', piece='Rondo alla Turca, Piano Sonata No. 11, K. 331 (1783)',
+        source='Mutopia Project, KV331_3_RondoAllaTurca',
+        ice_bias=1,
+        groove='drive',
+        mood='The Rondo alla Turca theme, counted in eighths: the A minor tune, the C major answer, and the tune again.',
+        colors=['#c9e4ff', '#34557a', '#060d18'],
+        bars=[
+            '0:C5 2:D5 2.5:C5 3:B4 3.5:C5',
+            '0:E5 2:F5 2.5:E5 3:D#5 3.5:E5',
+            '0:B5 0.5:A5 1:G#5 1.5:A5 2:B5 2.5:A5 3:G#5 3.5:A5',
+            '0:C6 2:A5 3:C6',
+            '0:B5 1:A5 2:G5 3:A5',
+            '0:B5 1:A5 2:G5 3:A5',
+            '0:B5 1:A5 2:G5 3:F#5',
+            '0:E5 2:E5 3:F5',
+            '0:G5 1:G5 2:A5 2.5:G5 3:F5 3.5:E5',
+            '0:D5 1:G4 2:E5 3:F5',
+            '0:G5 1:G5 2:A5 2.5:G5 3:F5 3.5:E5',
+            '0:D5 2:C5 3:D5',
+            '0:E5 1:E5 2:F5 2.5:E5 3:D5 3.5:C5',
+            '0:B4 1:E4 2:C5 3:D5',
+            '0:E5 1:E5 2:F5 2.5:E5 3:D5 3.5:C5',
+            '0:B4 2:B4 2.5:A4 3:G#4 3.5:A4',
+            '0:C5 2:D5 2.5:C5 3:B4 3.5:C5',
+            '0:E5 2:F5 2.5:E5 3:D#5 3.5:E5',
+            '0:B5 0.5:A5 1:G#5 1.5:A5 2:B5 2.5:A5 3:G#5 3.5:A5',
+            '0:C6 2:A5 3:B5',
+            '0:C6 1:B5 2:A5 3:G#5',
+            '0:A5 1:E5 2:F5 3:D5',
+            '0:C5 2:B4 3.5:A4 3.75:B4',
+            '0:A4 2:B4 2.5:A4 3:G#4 3.5:A4',
+        ],
+        chords=[(0, m), (0, m), (0, m), (0, m), (7, m), (7, m), [(7, m), (2, M)], (7, m),
+                (3, M), (10, M), (3, M), [(10, M), (0, m)], (0, m), (7, M), (0, m), (7, M),
+                (0, m), (0, m), (0, m), (0, m), [(0, m), (7, M)], [(0, m), (5, m)], [(0, m), (7, M)], (0, m)],
+    ),
+    dict(
+        level=6, name='Mountain King', tonic='B', mode=MINOR, bpm=116, beats=4,
+        composer='E. Grieg', piece='In the Hall of the Mountain King, Peer Gynt (1875)',
+        source='Mutopia Project, Dans_l_antre_du_roi_de_la_montagne',
+        ice_bias=1,
+        groove='drive',
+        mood='The troll march: the low tune, the same an octave up, then the F# major turn low and high.',
+        colors=['#ff8a5c', '#7a2a12', '#170603'],
+        bars=[
+            '0:B3 0.5:C#4 1:D4 1.5:E4 2:F#4 2.5:D4 3:F#4',
+            '0:F4 0.5:C#4 1:F4 2:E4 2.5:C4 3:E4',
+            '0:B3 0.5:C#4 1:D4 1.5:E4 2:F#4 2.5:D4 3:F#4 3.5:B4',
+            '0:A4 0.5:F#4 1:D4 1.5:F#4 2:A4',
+            '0:B4 0.5:C#5 1:D5 1.5:E5 2:F#5 2.5:D5 3:F#5',
+            '0:F5 0.5:C#5 1:F5 2:E5 2.5:C5 3:E5',
+            '0:B4 0.5:C#5 1:D5 1.5:E5 2:F#5 2.5:D5 3:F#5 3.5:B5',
+            '0:A5 0.5:F#5 1:D5 1.5:F#5 2:A5',
+            '0:F#4 0.5:G#4 1:A#4 1.5:B4 2:C#5 2.5:A#4 3:C#5',
+            '0:D5 0.5:A#4 1:D5 2:C#5 2.5:A#4 3:C#5',
+            '0:F#4 0.5:G#4 1:A#4 1.5:B4 2:C#5 2.5:A#4 3:C#5',
+            '0:D5 0.5:A#4 1:D5 2:C#5',
+            '0:F#5 0.5:G#5 1:A#5 1.5:B5 2:C#6 2.5:A#5 3:C#6',
+            '0:D6 0.5:A#5 1:D6 2:C#6 2.5:A#5 3:C#6',
+            '0:F#5 0.5:G#5 1:A#5 1.5:B5 2:C#6 2.5:A#5 3:C#6',
+            '0:D6 0.5:A#5 1:D6 2:C#6',
+        ],
+        chords=[(0, m), [(2, M), (1, M)], (0, m), (3, M)] * 2 + [(7, M)] * 8,
     ),
 ]
 
@@ -216,5 +288,8 @@ BY_LEVEL = {s['level']: s for s in CLASSICAL}
 
 if __name__ == '__main__':
     for s in CLASSICAL:
-        ps = build(s)
-        print(s['level'], s['name'], {k: (min(m for *_, m in p['notes']), max(m for *_, m in p['notes']), p['iceFrom']) for k, p in ps.items()})
+        p = build(s)['tune']
+        ms = [x for *_, x in p['notes']]
+        loop = len(s['bars']) * s['beats'] * 60 / s['bpm']
+        print(s['level'], s['name'], len(s['bars']), 'bars', len(ms), 'notes', round(loop, 1), 's',
+              round(len(ms) / loop, 2), 'notes/s, peak', round(max_rate(s), 2), 'range', min(ms), max(ms), 'ice from', p['iceFrom'])

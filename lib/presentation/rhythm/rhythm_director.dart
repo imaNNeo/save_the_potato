@@ -373,7 +373,7 @@ class RhythmDirector extends Component
   static const _offbeatNotesTo = 0.85;
 
   bool _notePlays(MelodyPhrase phrase, MelodyNote note, SongSection section) {
-    if (note.tier == 0) {
+    if (note.tier == 0 || _song.fullMelody) {
       return true;
     }
     if (section.notesAhead < 0) {
@@ -396,6 +396,10 @@ class RhythmDirector extends Component
     MelodyNote note,
     SongSection section,
   ) {
+    if (_song.fullMelody) {
+      // The tune plays as written, with nothing added
+      return (pair: false, harmony: false);
+    }
     final calm = _difficulty < _companionsFadeFrom;
     final onPairBeat =
         note.beat == 0 || (calm && section.midBarPairs && note.beat == 2);
@@ -456,7 +460,7 @@ class RhythmDirector extends Component
 
   // ---- the song ----
 
-  int _barOf(int beat) => beat ~/ 4;
+  int _barOf(int beat) => beat ~/ _song.beatsPerBar;
 
   /// The song stage of each pass of the backing loop. It is picked when the
   /// first beat of that pass is planned, so a pass never changes phrase or
@@ -477,12 +481,12 @@ class RhythmDirector extends Component
 
   void _planMelodyBeat(int beat, double speed) {
     final bar = _barOf(beat);
-    final beatInBar = beat % 4;
-    final loop = bar ~/ Song.bars;
+    final beatInBar = beat % _song.beatsPerBar;
+    final loop = bar ~/ _song.bars;
     final phrase = _phraseFor(loop);
     final section = _sectionFor(loop);
     for (final note in phrase.notes) {
-      if (note.bar != bar % Song.bars) {
+      if (note.bar != bar % _song.bars) {
         continue;
       }
       if (note.beat.floor() != beatInBar) {

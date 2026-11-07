@@ -1,20 +1,21 @@
 """Exports the 10 level songs for the game:
 
-- assets/audio/levels/NN/stem_{drums,keys,hats16,arp}.ogg, one 8 bar loop each
+- assets/audio/levels/NN/stem_{drums,keys,hats16,arp}.ogg, one backing loop each
+  (8 bars, or the whole tune for levels 1-6)
 - lib/presentation/rhythm/level_songs.dart, the melody phrases and the form
 
   python3 tool/level_songs/export_game.py [--only 1,2]   (from the repo root; needs numpy,
   scipy, soundfile and ffmpeg)
 
-The melodies come from songs.py with fixed seeds, so running it again gives
-the same songs.
+The melodies of levels 7-10 come from songs.py with fixed seeds, and levels
+1-6 are written out in classical.py, so running it again gives the same songs.
 """
 import os, subprocess, sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 import numpy as np
 import soundfile as sf
-from songs import SONGS, STAGES, design, stems, chord_pcs, song_form, loop_seconds
+from songs import SONGS, design, stems, chord_pcs, song_form, stages_of, is_full, n_bars, beats_of, chords_of_bar
 import synth
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -72,18 +73,20 @@ def main(only=None):
                 write_ogg(sum(st[p] for p in parts) * g, os.path.join(d, f'stem_{name}.ogg'))
             print('level', lv, song['name'], 'stems written', flush=True)
         tonic = synth.NOTE[song['tonic']]
-        chords = ', '.join('[' + ', '.join(str(x) for x in chord_pcs(tonic, c)) + ']' for c in song['chords'])
+        chords = ', '.join('[' + ', '.join(str(x) for x in chord_pcs(tonic, chords_of_bar(song, b)[0][1])) + ']'
+                           for b in range(n_bars(song) if is_full(song) else len(song['chords'])))
         cls = f'_Level{lv}'
-        for kind in ('home', 'valley', 'lift', 'tense', 'peak'):
+        for kind in phrases:
             out.append(dart_phrase(f'_l{lv}{kind.capitalize()}', phrases[kind]))
         stages = []
-        for frm, names, layers in STAGES:
+        for frm, names, layers in stages_of(song):
             ps = ', '.join(f'_l{lv}{n.capitalize()}' for n in names)
             ls = ', '.join(f"'{x}'" for x in layers)
             stages.append(f'      SongStage(from: {frm}, phrases: [{ps}], layers: [{ls}]),')
         form = ', '.join(f'SongSection.{s}' for s in song_form(song))
         name = song['name'].replace("'", "\\'")
         c = song['colors']
+        extra = (f"\n      bars: {n_bars(song)},\n      beatsPerBar: {beats_of(song)},\n      fullMelody: true," if is_full(song) else '')
         songs_list.append(f"""    Song(
       id: 'level{lv}',
       name: '{name}',
@@ -97,7 +100,7 @@ def main(only=None):
       stages: [
 {chr(10).join(stages)}
       ],
-      form: [{form}],
+      form: [{form}],{extra}
     ),""")
     out.append('  static const all = [')
     out.extend(songs_list)

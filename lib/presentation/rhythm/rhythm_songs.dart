@@ -369,6 +369,9 @@ class Song {
     required this.colors,
     required this.stages,
     required this.form,
+    this.bars = RhythmSongs.bars,
+    this.beatsPerBar = 4,
+    this.fullMelody = false,
   });
 
   final String id;
@@ -395,14 +398,25 @@ class Song {
   final List<SongStage> stages;
   final List<SongSection> form;
 
-  static const bars = RhythmSongs.bars;
+  /// How many bars the backing loop and each melody phrase last
+  final int bars;
+
+  /// How many beats a bar has: 4, or 3 for a waltz
+  final int beatsPerBar;
+
+  /// Whether every note of the melody comes as an orb, as written, at any
+  /// difficulty, and no pair or harmony orbs come with them. A level built
+  /// on a real tune plays it like this, so it can be played by heart.
+  final bool fullMelody;
 
   double get beatSeconds => 60 / bpm;
 
-  double get loopSeconds => bars * 4 * beatSeconds;
+  int get beatsPerLoop => bars * beatsPerBar;
+
+  double get loopSeconds => beatsPerLoop * beatSeconds;
 
   /// How many beats the song has, null when it never ends
-  int? get totalBeats => endless ? null : form.length * bars * 4;
+  int? get totalBeats => endless ? null : form.length * beatsPerLoop;
 
   /// How long the song lasts, null when it never ends
   double? get durationSeconds => endless ? null : form.length * loopSeconds;
