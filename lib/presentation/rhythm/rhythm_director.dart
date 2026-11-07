@@ -40,6 +40,17 @@ class RhythmDirector extends Component
       kIsWeb && Uri.base.queryParameters['rhythmbot'] == '1';
   final _inFlight = <_PlannedOrb>[];
 
+  /// Prototype only: melody orbs (by count) the autopilot lets through on
+  /// purpose, `?botmiss=8,20,21`
+  static final _botMisses = kIsWeb
+      ? (Uri.base.queryParameters['botmiss'] ?? '')
+            .split(',')
+            .where((e) => e.isNotEmpty)
+            .map(int.parse)
+            .toSet()
+      : <int>{};
+  int _botCount = 0;
+
   // ---- clock ----
   double _songTime = 0;
   double _audioTime = 0;
@@ -237,6 +248,11 @@ class RhythmDirector extends Component
     }
     final next = _inFlight.first;
     final angle = next.thrownAngle;
+    if (next.botMiss) {
+      // Both shields sideways, so this one gets through
+      parent.player.fireShield.angle = angle + pi / 2;
+      return;
+    }
     final need = next.type == OrbType.fire ? angle : angle + pi;
     parent.player.fireShield.angle = need;
   }
@@ -292,6 +308,7 @@ class RhythmDirector extends Component
     _passing.add(orb);
     orb.thrownAngle = orb.angle;
     if (autopilot && !(orb.hit?.companion ?? false)) {
+      orb.botMiss = _botMisses.contains(_botCount++);
       _inFlight.add(orb);
     }
     final distance = max(_contactDistance + 4, orb.radius - orb.speed * late);
@@ -590,6 +607,8 @@ class _PlannedOrb {
     required this.speed,
     this.hit,
   }) : thrownAngle = angle;
+
+  bool botMiss = false;
 
   /// Song times: when it hits the shield, when it starts flying (unseen,
   /// outside the ring), when its rift starts to open, and when it is

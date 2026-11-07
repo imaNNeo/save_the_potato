@@ -60,6 +60,9 @@ class GameCubit extends Cubit<GameState> {
   /// New players only: anyone who finished it, or who already has a score
   /// from before the tutorial existed, knows how to play
   Future<bool> _needsTutorial() async {
+    if (TutorialFlags.skip) {
+      return false;
+    }
     if (await _configsRepository.isTutorialDone()) {
       return false;
     }

@@ -19,6 +19,7 @@ import 'package:save_the_potato/presentation/potato/potato_vibe_motion.dart';
 import 'package:save_the_potato/presentation/potato/music_notes.dart';
 import 'package:save_the_potato/presentation/rhythm/rhythm_hit.dart';
 import 'package:save_the_potato/presentation/potato/dizzy_face.dart';
+import 'package:save_the_potato/presentation/potato/health_mood.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import '../potato_game.dart';
@@ -63,6 +64,11 @@ class Potato extends PositionComponent
 
   /// The dizzy face it makes while it recovers from a hit
   final dizzy = DizzyFace();
+
+  /// Prototype: the face shows the life left (`?mood=`)
+  final healthMood = HealthMoodStyle.current == null
+      ? null
+      : HealthMood(HealthMoodStyle.current!);
 
   @override
   bool listenWhen(GameState previousState, GameState newState) =>
@@ -248,6 +254,25 @@ class Potato extends PositionComponent
       headphonesOn: playing,
       faceFree: face.mood == PotatoMood.idle,
     );
+    healthMood?.update(
+      dt,
+      face.pose,
+      life: state.life,
+      playing: playing,
+      faceFree: face.mood == PotatoMood.idle,
+    );
+  }
+
+  @override
+  void onMount() {
+    super.onMount();
+    healthMood?.attach();
+  }
+
+  @override
+  void onRemove() {
+    healthMood?.detach();
+    super.onRemove();
   }
 
   double _angleTo(PositionComponent other) {

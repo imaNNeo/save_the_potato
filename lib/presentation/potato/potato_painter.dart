@@ -50,10 +50,19 @@ abstract final class PotatoPainter {
   }
 
   /// Draws the potato in artboard coordinates (0..500 on both axes).
+  /// Prototype hooks: drawn over the skin, and over the face (under the
+  /// headphones), moving with the body
+  static void Function(Canvas canvas, PotatoPose pose)? afterBody;
+  static void Function(Canvas canvas, PotatoPose pose)? afterFace;
+
+  /// The potato's outline in artboard coordinates
+  static final bodyOutline = _body.shift(_bodyOrigin);
+
   static void paint(Canvas canvas, PotatoPose pose) {
     canvas.save();
     _applyBodyMove(canvas, pose);
     _paintBody(canvas, pose);
+    afterBody?.call(canvas, pose);
     _paintFreckles(canvas);
     _paintCheeks(canvas);
     _paintBrows(canvas, pose);
@@ -61,6 +70,7 @@ abstract final class PotatoPainter {
     _paintEyes(canvas, pose);
     _paintFrown(canvas, pose);
     _paintZigzag(canvas, pose);
+    afterFace?.call(canvas, pose);
     _paintHeadphones(canvas, pose);
     canvas.restore();
   }
