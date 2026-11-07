@@ -40,6 +40,11 @@ class _LevelSelectState extends State<LevelSelect>
   /// turns it). The cleared count loads a moment after the screen shows.
   bool _followNext = false;
 
+  /// Whether the player has turned the selector yet. Until then, picks are
+  /// the screen settling on its default, so they don't play the level's
+  /// note (it would blast out at whatever volume the device is on).
+  bool _playerTurned = false;
+
   /// The way left/right was held last frame, and the stop it started from:
   /// letting go always lands on the next stop that way, so a single tap
   /// moves one level
@@ -122,6 +127,7 @@ class _LevelSelectState extends State<LevelSelect>
     _heldDirection = direction.sign.toInt();
     if (direction != 0) {
       _followNext = false;
+      _playerTurned = true;
       _pos += direction * _turnSpeed * dt;
       _snap = null;
     } else {
@@ -142,13 +148,14 @@ class _LevelSelectState extends State<LevelSelect>
     final stop = _selected;
     final level = stop == 0 ? null : stop;
     if (_cubit.state.level != level) {
-      _cubit.selectLevel(level);
+      _cubit.selectLevel(level, playNote: _playerTurned);
     }
   }
 
   /// Turns to [stop] the short way round
   void _goTo(int stop) {
     _followNext = false;
+    _playerTurned = true;
     final n = LevelSelect.stops;
     var delta = (stop - _pos.round()) % n;
     if (delta > n / 2) {
@@ -159,6 +166,7 @@ class _LevelSelectState extends State<LevelSelect>
 
   void _step(int by) {
     _followNext = false;
+    _playerTurned = true;
     _snap = (_snap ?? _pos.roundToDouble()) + by;
   }
 
