@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
+import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/components/moving/rift/ring_rift.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
@@ -136,6 +137,10 @@ class OrbEffects extends Component
       final t = orb.effectsTime + orb.seed;
       // The head swells a little as it breathes
       orb.pulse = 1 + 0.04 * sin(t * 4.5);
+      // Step the beat by its current speed. Using sin(time * speed)
+      // instead made the beat jump around while the speed rose, which
+      // looked like flicker
+      orb.warningPhase += dt * (5 + _danger(orb) * 13);
       orb.sparkleClock += dt;
       orb.puffClock += dt;
       orb.moteClock += dt;
@@ -301,6 +306,13 @@ class OrbEffects extends Component
     }
   }
 
+  /// 0 far away, 1 at the potato. Gets a little brighter as it closes in.
+  /// Measured in world units, so it is the same on every screen size
+  double _danger(MovingOrb orb) {
+    final distance = orb.position.distanceTo(game.world.player.position);
+    return (1 - distance / (GameConstants.viewSize * 0.5)).clamp(0.0, 1.0);
+  }
+
   void _addOrbGlow(MovingOrb orb) {
     final direction = orb.direction;
     if (direction.x == 0 && direction.y == 0) {
@@ -311,10 +323,7 @@ class OrbEffects extends Component
     final size = orb.size.x;
     final t = orb.effectsTime + orb.seed;
 
-    // Gets a little brighter as it closes in on the potato
-    final potato = game.world.player.position;
-    final distance = orb.position.distanceTo(potato);
-    final danger = (1 - distance / (game.size.x * 0.5)).clamp(0.0, 1.0);
+    final danger = _danger(orb);
 
     final breath = 1 + 0.07 * sin(t * 4.5);
     final length = _tailLength(orb);
@@ -334,7 +343,7 @@ class OrbEffects extends Component
 
     // A warning that beats faster and harder the closer it gets
     if (danger > 0.05) {
-      final beat = 0.5 + 0.5 * sin(t * (5 + danger * 13));
+      final beat = 0.5 + 0.5 * sin(orb.warningPhase);
       _glow.addRing(
         x,
         y,

@@ -587,7 +587,8 @@ class RhythmDirector extends Component
   /// in or out to match the stage of the phrase that pass plays
   void _updateLayers() {
     final loop = (_songTime / _song.loopSeconds).floor();
-    if (loop == _layersLoop) {
+    if (loop == _layersLoop || loop < 0) {
+      // The intro keeps the fade in it started with
       return;
     }
     final stage = _stageOfLoop[loop];

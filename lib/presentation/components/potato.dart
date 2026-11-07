@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
@@ -18,6 +19,7 @@ import 'package:save_the_potato/presentation/rhythm/levels.dart';
 import 'package:save_the_potato/presentation/potato/potato_vibe_motion.dart';
 import 'package:save_the_potato/presentation/potato/music_notes.dart';
 import 'package:save_the_potato/presentation/rhythm/rhythm_hit.dart';
+import 'package:save_the_potato/presentation/potato/potato_pose.dart';
 import 'package:save_the_potato/presentation/potato/dizzy_face.dart';
 import 'package:save_the_potato/presentation/potato/potato_health_motion.dart';
 import 'package:save_the_potato/service_locator.dart';
@@ -61,6 +63,10 @@ class Potato extends PositionComponent
   /// Shows the life left on the potato's face and body
   final healthMotion = PotatoHealthMotion();
   late final MusicNotes _musicNotes;
+
+  static const _artboardToLocal = 0.0032;
+
+  int _lastNoteBeat = -1;
 
   /// Keeps the beat when there's no song clock (menu, muted before a run)
   double _ownBeatTime = 0;
@@ -152,7 +158,17 @@ class Potato extends PositionComponent
           PotatoFaceComponent(animator: face, dizzy: dizzy, position: size / 2),
         ),
     );
-    add(_musicNotes = MusicNotes(size: size, priority: 1));
+    add(
+      _musicNotes = MusicNotes(
+        size: size,
+        priority: 1,
+        // The painter's 500 wide artboard is about 1.6 times the potato
+        bodyOffset: () => Offset(
+          face.pose[PotatoProp.bodyX] * size.x * _artboardToLocal,
+          face.pose[PotatoProp.bodyY] * size.x * _artboardToLocal,
+        ),
+      ),
+    );
     add(fireShield = Shield(type: OrbType.fire));
     add(iceShield = Shield(type: OrbType.ice));
 
@@ -255,10 +271,6 @@ class Potato extends PositionComponent
       return;
     }
     vibe.onNote();
-    _musicNotes.spawn(
-      fire: hit.timbre == 'fire',
-      strength: vibe.calm * hit.volume.clamp(0.5, 1.0),
-    );
   }
 
   void _updateVibe(double dt) {
@@ -273,6 +285,7 @@ class Potato extends PositionComponent
     final songTime = rhythm != null && rhythm.isRunning
         ? rhythm.songTime
         : _ownBeatTime;
+    _updateBeatNotes(songTime, state.song.beatSeconds, playing: playing);
     _vibeMotion.update(
       dt,
       face.pose,
@@ -289,6 +302,22 @@ class Potato extends PositionComponent
       playing: playing && !state.tutorial,
       faceFree: face.mood == PotatoMood.idle,
     );
+  }
+
+  /// Notes come out of the headphones on the beat of the song while the
+  /// potato is calm and lost in the music, whether or not orbs are blocked.
+  /// They stop while it's shaken by a hit.
+  void _updateBeatNotes(
+    double songTime,
+    double beatSeconds, {
+    required bool playing,
+  }) {
+    final beat = (songTime / beatSeconds).floor();
+    if (beat == _lastNoteBeat) return;
+    _lastNoteBeat = beat;
+    if (!playing) return;
+    final shaken = invincibility.isActive ? 0.0 : 1 - vibe.nerves;
+    _musicNotes.onBeat(beat, flow: healthMotion.calm * shaken);
   }
 
   double _angleTo(PositionComponent other) {
