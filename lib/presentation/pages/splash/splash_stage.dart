@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
+import 'package:save_the_potato/presentation/pages/splash/splash_loading.dart';
 import 'package:save_the_potato/presentation/widgets/background_stars.dart';
 import 'package:save_the_potato/presentation/potato/potato_painter.dart';
 import 'package:save_the_potato/presentation/potato/potato_pose.dart';
@@ -57,9 +58,17 @@ class HomeStars extends StatelessWidget {
 /// potato into the exact spot and size the game shows it at (headphones
 /// still on, like the start screen) and clears everything else away.
 class SplashStage extends StatefulWidget {
-  const SplashStage({super.key, required this.footer});
+  const SplashStage({
+    super.key,
+    required this.footer,
+    this.loadingProgress = 1,
+  });
 
   final Widget footer;
+
+  /// How much is loaded, 0..1. Shown only when loading takes longer than
+  /// the intro animation.
+  final double loadingProgress;
 
   @override
   State<SplashStage> createState() => SplashStageState();
@@ -88,6 +97,37 @@ class SplashStageState extends State<SplashStage>
     vsync: this,
     duration: const Duration(milliseconds: 600),
   );
+
+  /// Loading that is done before this many seconds isn't shown at all
+  static const _loadingShowsAt = 1.2;
+  static const _loadingFadeIn = 0.4;
+
+  /// When the loading meter started to show, null while hidden
+  double? _loadingShownAt;
+
+  /// The progress on screen, it eases to [SplashStage.loadingProgress]
+  double _shownProgress = 0;
+  double _lastT = 0;
+
+  void _updateLoading(double t) {
+    final dt = (t - _lastT).clamp(0.0, 0.1);
+    _lastT = t;
+    final target = widget.loadingProgress.clamp(0.0, 1.0);
+    _shownProgress += (target - _shownProgress) * min(1.0, dt * 10);
+    if (target - _shownProgress < 0.002) _shownProgress = target;
+    if (_loadingShownAt == null && t >= _loadingShowsAt && target < 1) {
+      _loadingShownAt = t;
+    }
+  }
+
+  double _loadingOpacity(double t, double fade) {
+    final shownAt = _loadingShownAt;
+    if (shownAt == null) return 0;
+    return Curves.easeOut.transform(
+          _span(t, shownAt, shownAt + _loadingFadeIn),
+        ) *
+        fade;
+  }
 
   /// Plays the way out, completes when the splash looks like the game.
   Future<void> exit() => _exit.forward().orCancel.catchError((_) {});
@@ -166,6 +206,7 @@ class SplashStageState extends State<SplashStage>
       builder: (context, child) {
         final t = _t;
         final exit = _exitT;
+        _updateLoading(t);
 
         final fullSize = min(180.0, screen.shortestSide * 0.42);
         final gameSize = GamePotatoFrame.splashPotatoSize(screen);
@@ -188,6 +229,17 @@ class SplashStageState extends State<SplashStage>
                   t: t,
                   groove: _groove(t),
                   fade: fade,
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: CustomPaint(
+                painter: SplashLoadingPainter(
+                  center: center,
+                  potatoSize: fullSize,
+                  progress: _shownProgress,
+                  opacity: _loadingOpacity(t, fade),
+                  beat: _kick(t) * _groove(t),
                 ),
               ),
             ),
