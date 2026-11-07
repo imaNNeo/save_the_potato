@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/foundation.dart';
+import 'package:save_the_potato/presentation/components/level_progress/level_progress_ring.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_component_spawner.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
@@ -118,6 +119,22 @@ class RhythmDirector extends Component
     _beatsUntilHeartCheck = 8;
     _stageOfLoop.clear();
     _layersLoop = -1;
+    _skipAhead();
+  }
+
+  /// Preview only: `?from=0.9` starts a level's song 90% in, to see its
+  /// end without playing it all
+  void _skipAhead() {
+    final duration = _song.durationSeconds;
+    final from = kIsWeb
+        ? double.tryParse(Uri.base.queryParameters['from'] ?? '')
+        : null;
+    if (duration == null || from == null || from <= 0) {
+      return;
+    }
+    _songTime = duration * from.clamp(0.0, 0.99);
+    _audioTime = _songTime;
+    _nextBeat = (_songTime / _song.beatSeconds).ceil() + 2;
   }
 
   // ------------------------------------------------------------------
@@ -259,6 +276,7 @@ class RhythmDirector extends Component
   void onMount() {
     super.onMount();
     parent.add(ArenaRingComponent());
+    parent.add(LevelProgressRing(director: this));
   }
 
   void _openPortal(_PlannedOrb orb) {
