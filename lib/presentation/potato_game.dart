@@ -46,14 +46,28 @@ class PotatoGame extends FlameGame<MyWorld>
   @override
   Color backgroundColor() => Colors.transparent;
 
+  static final _images = [
+    ...List.generate(8, (index) => 'flame/flame${index + 1}.png'),
+    ...List.generate(2, (index) => 'snow/snowflake${index + 1}.png'),
+    ...List.generate(2, (index) => 'sparkle/sparkle${index + 1}.png'),
+    'two-way-arrow.png',
+  ];
+
+  static Future<void>? _preloading;
+
+  /// Starts loading the images the game draws, so a game created later
+  /// doesn't wait for them. Safe to call many times.
+  static Future<void> preloadAssets() =>
+      _preloading ??= Flame.images.loadAll(_images).then((_) {});
+
+  /// Completes once the potato is in the world and will be drawn on the
+  /// next frame.
+  Future<void> get potatoReady => _potatoReady.future;
+  final _potatoReady = Completer<void>();
+
   @override
   Future<void> onLoad() async {
-    await Flame.images.loadAll([
-      ...List.generate(8, (index) => 'flame/flame${index + 1}.png'),
-      ...List.generate(2, (index) => 'snow/snowflake${index + 1}.png'),
-      ...List.generate(2, (index) => 'sparkle/sparkle${index + 1}.png'),
-      'two-way-arrow.png',
-    ]);
+    await preloadAssets();
     remove(world);
     add(
       FlameMultiBlocProvider(
@@ -131,6 +145,9 @@ class MyWorld extends World
     await add(shieldImpacts = ShieldImpactEffects());
     await add(orbEffects = OrbEffects());
     await add(player = Potato());
+    player.mounted.then((_) {
+      if (!game._potatoReady.isCompleted) game._potatoReady.complete();
+    });
     final spawner = MovingComponentSpawner();
     rhythm = RhythmDirector(spawner: spawner);
     await add(rhythm);

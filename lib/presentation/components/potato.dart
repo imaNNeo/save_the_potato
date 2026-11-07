@@ -136,6 +136,8 @@ class Potato extends PositionComponent
 
     if (game.playingState.isGuide) {
       add(GuideTitle());
+      // It arrives from the splash with its headphones on
+      _vibeMotion.wearHeadphones();
     }
 
     mounted.then((_) {
@@ -245,7 +247,8 @@ class Potato extends PositionComponent
       dt,
       face.pose,
       songTime: songTime,
-      headphonesOn: playing,
+      // On from the start screen, so it's ready for the music
+      headphonesOn: playing || state.playingState.isGuide,
       faceFree: face.mood == PotatoMood.idle,
     );
   }

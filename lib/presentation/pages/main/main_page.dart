@@ -11,8 +11,11 @@ import 'package:save_the_potato/presentation/cubit/scores/scores_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/settings/settings_cubit.dart';
 import 'package:save_the_potato/presentation/dialogs/base_dialog.dart';
 import 'package:save_the_potato/presentation/game_colors.dart';
+import 'package:save_the_potato/presentation/potato/potato_pose.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
+import 'package:save_the_potato/presentation/pages/splash/splash_stage.dart';
+import 'package:save_the_potato/presentation/widgets/potato_initialize.dart';
 import 'package:save_the_potato/presentation/widgets/background_stars.dart';
 import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
@@ -49,6 +52,10 @@ class _MainPageState extends State<MainPage>
 
   OverlayEntry? _generalLoadingEntry;
 
+  /// Stands in for the potato until the game draws its own, so opening this
+  /// page never shows the stars without the potato.
+  bool _potatoCover = true;
+
   late StreamSubscription _generalLoadingSubscription;
 
   @override
@@ -59,6 +66,7 @@ class _MainPageState extends State<MainPage>
     _settingsCubit = context.read<SettingsCubit>();
     _gameCubit.startToShowGuide();
     _game = PotatoGame(_gameCubit, _settingsCubit, _backgroundReactions);
+    _removePotatoCoverWhenReady(_game);
     _previousState = _gameCubit.state.playingState;
     _streamSubscription = _gameCubit.stream.listen((state) {
       if ((_previousState.isNone || _previousState.isGameOver) &&
@@ -95,6 +103,15 @@ class _MainPageState extends State<MainPage>
       }
     });
     super.initState();
+  }
+
+  Future<void> _removePotatoCoverWhenReady(PotatoGame game) async {
+    await game.potatoReady;
+    // The potato is drawn on the next frame, then the cover can go
+    await WidgetsBinding.instance.endOfFrame;
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    setState(() => _potatoCover = false);
   }
 
   void _restartGameWidgets() {
@@ -163,6 +180,7 @@ class _MainPageState extends State<MainPage>
               children: [
                 _MainPageBackground(reactions: _backgroundReactions),
                 gameWidget,
+                _PotatoCover(visible: _potatoCover),
                 const Align(
                   alignment: Alignment.topCenter,
                   child: PotatoTopBar(),
@@ -224,6 +242,35 @@ class _MainPageState extends State<MainPage>
     _backgroundReactions.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+}
+
+/// The splash potato at exactly the spot and size of the game potato
+class _PotatoCover extends StatelessWidget {
+  const _PotatoCover({required this.visible});
+
+  final bool visible;
+
+  /// Like the game potato on the start screen
+  static void _wearHeadphones(PotatoPose pose, double _) =>
+      pose[PotatoProp.headphones] = 1;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = GamePotatoFrame.splashPotatoSize(MediaQuery.sizeOf(context));
+    return IgnorePointer(
+      child: AnimatedOpacity(
+        opacity: visible ? 1 : 0,
+        duration: const Duration(milliseconds: 150),
+        child: Center(
+          child: SplashPotato(
+            size: size,
+            intro: false,
+            decorate: _wearHeadphones,
+          ),
+        ),
+      ),
+    );
   }
 }
 
