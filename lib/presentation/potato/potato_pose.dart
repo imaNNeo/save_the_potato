@@ -92,7 +92,15 @@ enum PotatoProp {
   headphonesTilt(0),
 
   /// The ear cups thump with the beat
-  headphonesPulse(0);
+  headphonesPulse(0),
+
+  // Set every frame from the life left (see `HealthMood`)
+
+  /// Pale, a bit blue skin: worried, the next miss ends the run
+  pale(0),
+
+  /// Rosy glowing cheeks: calm, plenty of life
+  blush(0);
 
   const PotatoProp(this.rest);
 

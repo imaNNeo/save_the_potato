@@ -4,7 +4,6 @@ import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
 import 'game_timer.dart';
-import 'life_bar.dart';
 
 class PotatoTopBar extends StatefulWidget {
   const PotatoTopBar({super.key});
@@ -37,8 +36,6 @@ class _PotatoTopBarState extends State<PotatoTopBar> {
                 duration: const Duration(milliseconds: 600),
                 child: const GameTimer(),
               ),
-              const SizedBox(height: 4.0),
-              const LifeBar(),
             ],
           ),
         );
