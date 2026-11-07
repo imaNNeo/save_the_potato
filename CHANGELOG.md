@@ -1,3 +1,7 @@
+## 2.1.1
+* Fix no orbs coming in endless mode (seen on iOS): the game no longer waits for the music clock when the audio stalls
+* The endless music stops again at game over
+
 ## 2.1.0
 * New levels mode: 10 classical tunes played note for note, about 2 minutes each with an intro and a real ending, on a new home screen with a level dial and START
 * A bolder level progress ring that is easy to read at a glance, without the burst at each quarter
