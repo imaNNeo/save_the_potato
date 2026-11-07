@@ -2,10 +2,12 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:save_the_potato/domain/app_utils.dart';
 import 'package:save_the_potato/domain/game_constants.dart';
+import 'package:save_the_potato/domain/models/loading_progress.dart';
 import 'package:save_the_potato/domain/models/value_wrapper.dart';
 import 'package:save_the_potato/domain/repository/configs_repository.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 part 'splash_state.dart';
@@ -14,6 +16,25 @@ class SplashCubit extends Cubit<SplashState> {
   SplashCubit(this._configsRepository) : super(const SplashState());
 
   final ConfigsRepository _configsRepository;
+
+  /// Everything the splash waits for, shown as its loading meter
+  final _progress = LoadingProgress({
+    _appStep: 1,
+    _audioStep: AudioHelper.loadSteps,
+    _imagesStep: PotatoGame.preloadCount,
+  });
+  static const _appStep = 'app';
+  static const _audioStep = 'audio';
+  static const _imagesStep = 'images';
+
+  void _report(String step, int done) {
+    _progress.report(step, done);
+    if (isClosed) return;
+    emit(state.copyWith(loadingProgress: _progress.value));
+  }
+
+  /// Popups wait this long after the splash opens, so its animation can play
+  static const _popupDelay = Duration(milliseconds: 1000);
 
   Future<(int min, int latest, String storeUrl)>
   _getMinAndLatestVersion() async {
@@ -34,6 +55,10 @@ class SplashCubit extends Cubit<SplashState> {
   }
 
   Future<bool> _initialChecks() async {
+    final opened = DateTime.now();
+    final images = PotatoGame.preloadAssets(
+      onProgress: (done) => _report(_imagesStep, done),
+    );
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     final currentVersionCode = int.parse(packageInfo.buildNumber);
     emit(
@@ -46,19 +71,34 @@ class SplashCubit extends Cubit<SplashState> {
         await _getMinAndLatestVersion();
 
     final forceUpdate = currentVersionCode < minVersion;
+    _report(_appStep, 1);
 
     if (!forceUpdate) {
       emit(state.copyWith(versionIsAllowed: true));
       emit(state.copyWith(versionIsAllowed: false));
     }
 
-    /// Wait for splash animations before showing popups
     try {
-      await getIt.get<AudioHelper>().initialize();
+      await getIt.get<AudioHelper>().initialize(
+        onProgress: (done) => _report(_audioStep, done),
+      );
     } catch (e) {
       AppUtils.recordError(e, StackTrace.current);
     }
-    await Future.delayed(const Duration(milliseconds: 1000));
+    _progress.finish(_audioStep);
+    try {
+      await images;
+    } catch (e) {
+      AppUtils.recordError(e, StackTrace.current);
+    }
+    _report(_imagesStep, PotatoGame.preloadCount);
+
+    /// Wait for splash animations before showing popups. Loading already
+    /// took some of that time
+    final waited = DateTime.now().difference(opened);
+    if (waited < _popupDelay) {
+      await Future.delayed(_popupDelay - waited);
+    }
 
     if (forceUpdate) {
       emit(

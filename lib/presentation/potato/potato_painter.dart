@@ -25,6 +25,7 @@ abstract final class PotatoPainter {
   static const _heartRed = Color(0xFFFF0058);
   static const _fireTint = Color(0x82F92424);
   static const _iceTint = Color(0x822CB3F5);
+  static const _paleTint = Color(0x4DA8CCF0);
 
   static final _fill = Paint()..isAntiAlias = true;
   static final _stroke = Paint()
@@ -51,19 +52,47 @@ abstract final class PotatoPainter {
 
   /// Draws the potato in artboard coordinates (0..500 on both axes).
   static void paint(Canvas canvas, PotatoPose pose) {
+    canvas.save();
+    _applyBodyMove(canvas, pose);
     _paintBody(canvas, pose);
     _paintFreckles(canvas);
-    _paintCheeks(canvas);
+    _paintCheeks(canvas, pose);
     _paintBrows(canvas, pose);
     _paintSmile(canvas, pose);
     _paintEyes(canvas, pose);
     _paintFrown(canvas, pose);
     _paintZigzag(canvas, pose);
+    _paintHeadphones(canvas, pose);
+    canvas.restore();
+  }
+
+  /// The bottom middle of the potato: it dances and squashes around here.
+  static const _feet = Offset(242, 416);
+
+  /// The middle of the head, where knocked headphones turn around.
+  static const _headCenter = Offset(242, 250);
+
+  static void _applyBodyMove(Canvas canvas, PotatoPose pose) {
+    final x = pose[PotatoProp.bodyX];
+    final y = pose[PotatoProp.bodyY];
+    final angle = pose[PotatoProp.bodyAngle];
+    final scaleX = pose[PotatoProp.bodyScaleX];
+    final scaleY = pose[PotatoProp.bodyScaleY];
+    if (x == 0 && y == 0 && angle == 0 && scaleX == 1 && scaleY == 1) {
+      return;
+    }
+    canvas.translate(_feet.dx + x, _feet.dy + y);
+    if (angle != 0) canvas.rotate(angle);
+    canvas.scale(scaleX, scaleY);
+    canvas.translate(-_feet.dx, -_feet.dy);
   }
 
   // ---------------------------------------------------------------- body --
 
   static void _paintBody(Canvas canvas, PotatoPose pose) {
+    // Gradients take their opacity from the paint color, so start from an
+    // opaque one whatever the last frame left in it
+    _fill.color = const Color(0xFFFFFFFF);
     // Darker shading at the bottom of the potato.
     _inShape(
       canvas,
@@ -108,6 +137,7 @@ abstract final class PotatoPainter {
     _inShape(canvas, _bodyOrigin, () {
       _fillPath(canvas, _body, _iceTint, pose[PotatoProp.iceTint]);
       _fillPath(canvas, _body, _fireTint, pose[PotatoProp.fireTint]);
+      _fillPath(canvas, _body, _paleTint, pose[PotatoProp.pale]);
       _stroke
         ..color = _outline
         ..strokeWidth = 10
@@ -244,7 +274,10 @@ abstract final class PotatoPainter {
   /// shifted by this offset.
   static const _face = Offset(-169.5526, 90.4602);
 
-  static void _paintCheeks(Canvas canvas) {
+  static const _blush = Color(0xFFFF5A7A);
+  static const _blushSpots = [Offset(150, 281), Offset(335, 281)];
+
+  static void _paintCheeks(Canvas canvas, PotatoPose pose) {
     _fill.color = _pink;
     _inShape(canvas, _face + const Offset(504.7333, 190.7564), () {
       canvas.drawRRect(_pill(33.8574, 17.4735), _fill);
@@ -252,22 +285,40 @@ abstract final class PotatoPainter {
     _inShape(canvas, _face + const Offset(319.5062, 190.5455), () {
       canvas.drawRRect(_pill(33.8574, 17.4735), _fill);
     });
+    // A soft rosy glow around them when the potato is calm
+    final blush = pose[PotatoProp.blush];
+    if (blush > 0.01) {
+      for (final center in _blushSpots) {
+        _fill
+          ..color = const Color(0xFFFFFFFF)
+          ..shader = Gradient.radial(center, 46, [
+            _blush.withValues(alpha: 0.6 * blush.clamp(0, 1)),
+            _blush.withValues(alpha: 0),
+          ]);
+        canvas.drawCircle(center, 46, _fill);
+      }
+      _fill.shader = null;
+    }
   }
 
   static void _paintBrows(Canvas canvas, PotatoPose pose) {
     _fill.color = _ink;
+    // Worried brows tilt up in the middle and go up a little, happy closed
+    // eyes lift them a little too.
+    final worry = pose[PotatoProp.browWorry];
+    final lift = -9 * worry - 5 * pose[PotatoProp.eyeBliss];
     _inShape(
       canvas,
-      _face + const Offset(342.7701, 97.2783),
+      _face + Offset(342.7701, 97.2783 + lift),
       () => canvas.drawRRect(_brow, _fill),
-      angle: pose[PotatoProp.leftBrowAngle],
+      angle: pose[PotatoProp.leftBrowAngle] - worry * 0.32,
       scaleX: 1.1706,
     );
     _inShape(
       canvas,
-      _face + const Offset(482.7701, 97.2783),
+      _face + Offset(482.7701, 97.2783 + lift),
       () => canvas.drawRRect(_brow, _fill),
-      angle: pose[PotatoProp.rightBrowAngle],
+      angle: pose[PotatoProp.rightBrowAngle] + worry * 0.32,
       scaleX: 1.1706,
     );
   }
@@ -285,7 +336,8 @@ abstract final class PotatoPainter {
   // --------------------------------------------------------------- mouth --
 
   static void _paintSmile(Canvas canvas, PotatoPose pose) {
-    final opacity = pose[PotatoProp.smileOpacity];
+    final opacity =
+        pose[PotatoProp.smileOpacity] * (1 - pose[PotatoProp.nervousMouth]);
     final scaleY = pose[PotatoProp.smileScaleY];
     if (opacity <= 0 || scaleY == 0) return;
     _inShape(canvas, const Offset(245.467, 280.8404), () {
@@ -299,7 +351,8 @@ abstract final class PotatoPainter {
           opacity * pose[PotatoProp.mouthOpacity],
         ),
         scaleX: pose[PotatoProp.mouthScaleX],
-        scaleY: pose[PotatoProp.mouthScaleY],
+        scaleY:
+            pose[PotatoProp.mouthScaleY] * (1 + 0.5 * pose[PotatoProp.sing]),
       );
       _inShape(
         canvas,
@@ -355,7 +408,10 @@ abstract final class PotatoPainter {
     ..cubicTo(30.11, -16.3, 23.94, 16.22, 23.94, 16.22);
 
   static void _paintZigzag(Canvas canvas, PotatoPose pose) {
-    final opacity = pose[PotatoProp.zigzagOpacity];
+    final opacity = max(
+      pose[PotatoProp.zigzagOpacity],
+      pose[PotatoProp.nervousMouth],
+    );
     if (opacity <= 0) return;
     _inShape(
       canvas,
@@ -380,31 +436,53 @@ abstract final class PotatoPainter {
   // ---------------------------------------------------------------- eyes --
 
   static void _paintEyes(Canvas canvas, PotatoPose pose) {
-    _fill.color = _ink;
-    for (final (center, width) in const [
-      (Offset(477.9332, 149.1771), 63.9749),
-      (Offset(346.7722, 150.1771), 63.1761),
-    ]) {
-      canvas.drawOval(
-        Rect.fromCenter(center: _face + center, width: width, height: 65.3739),
-        _fill,
-      );
-    }
+    // Closed in bliss, but never over the green amazed sparkle
+    final bliss =
+        pose[PotatoProp.eyeBliss] * (1 - pose[PotatoProp.sparkleGreen]);
+    final closing = bliss > 0.001;
 
     final scaleX = pose[PotatoProp.sparkleScaleX];
     final scaleY = pose[PotatoProp.sparkleScaleY];
-    if (scaleX != 0 && scaleY != 0) {
-      final size = pose[PotatoProp.sparkleSize];
-      final star = _sparkleFor(size);
-      final color = Color.lerp(
-        _sparkle,
-        _sparkleGreen,
-        pose[PotatoProp.sparkleGreen],
-      )!;
-      for (final x in const [346.5571, 477.4041]) {
+    // The sparkle shrinks away as the eye closes, gone well before the end
+    final sparkleLeft = 1 - _easeInOut((bliss / 0.65).clamp(0.0, 1.0));
+    final showSparkle = scaleX != 0 && scaleY != 0 && sparkleLeft > 0.01;
+    final size = pose[PotatoProp.sparkleSize];
+    final star = _sparkleFor(size);
+    final color = Color.lerp(
+      _sparkle,
+      _sparkleGreen,
+      pose[PotatoProp.sparkleGreen],
+    )!;
+
+    for (final (eye, width, sparkleX) in const [
+      (Offset(346.7722, 150.1771), 63.1761, 346.5571),
+      (Offset(477.9332, 149.1771), 63.9749, 477.4041),
+    ]) {
+      final center = _face + eye;
+      _fill.color = _ink;
+      if (closing) {
+        // The lower lid rises in a curve and the eye becomes a happy arc,
+        // one smooth shape the whole way. The sparkle stays inside it.
+        final lid = _eyeLid(center, width, bliss);
+        canvas.drawPath(lid, _fill);
+        if (showSparkle) {
+          canvas.save();
+          canvas.clipPath(lid);
+        }
+      } else {
+        canvas.drawOval(
+          Rect.fromCenter(center: center, width: width, height: _eyeHeight),
+          _fill,
+        );
+      }
+      if (showSparkle) {
         _inShape(
           canvas,
-          _face + Offset(x + pose[PotatoProp.sparkleX], 146.5725),
+          _face +
+              Offset(
+                sparkleX + pose[PotatoProp.sparkleX] + pose[PotatoProp.glanceX],
+                146.5725 - 8 * bliss,
+              ),
           () {
             _fill.color = color;
             canvas.drawPath(star, _fill);
@@ -418,9 +496,10 @@ abstract final class PotatoPainter {
               ..strokeJoin = StrokeJoin.round
               ..strokeCap = StrokeCap.round;
           },
-          scaleX: scaleX,
-          scaleY: scaleY,
+          scaleX: scaleX * sparkleLeft,
+          scaleY: scaleY * sparkleLeft,
         );
+        if (closing) canvas.restore();
       }
     }
 
@@ -588,6 +667,138 @@ abstract final class PotatoPainter {
             ..close())
           .shift(const Offset(0, 1.4))
         ..fillType = PathFillType.evenOdd;
+
+  static const _eyeHeight = 65.3739;
+
+  static final _lidPath = Path();
+
+  /// The eye at [bliss] (0 = open oval, 1 = closed happy arc).
+  ///
+  /// The top edge stays a curve like the top of the oval (it flattens and
+  /// drops a little), and the bottom edge rises and bends up under it, so
+  /// the eye turns into a thick upside-down U without ever changing shape
+  /// type. Both edges meet at rounded ends.
+  static Path _eyeLid(Offset center, double width, double bliss) {
+    final b = _easeInOut(bliss);
+    final half = width / 2 * (1 - 0.18 * b);
+    final drop = 9 * b;
+    final top = lerpDouble(_eyeHeight / 2, 19, b)!;
+    // Positive bulges down (open eye), negative follows the top (closed)
+    final bottom = lerpDouble(_eyeHeight / 2, -(19 - 13), b)!;
+    const steps = 28;
+    final path = _lidPath..reset();
+    for (var i = 0; i <= steps; i++) {
+      final t = -1 + 2 * i / steps;
+      final curve = sqrt(1 - t * t);
+      final point = center + Offset(t * half, drop - top * curve);
+      i == 0
+          ? path.moveTo(point.dx, point.dy)
+          : path.lineTo(point.dx, point.dy);
+    }
+    for (var i = steps; i >= 0; i--) {
+      final t = -1 + 2 * i / steps;
+      final curve = sqrt(1 - t * t);
+      path.lineTo(center.dx + t * half, center.dy + drop + bottom * curve);
+    }
+    return path..close();
+  }
+
+  static double _easeInOut(double t) => t * t * (3 - 2 * t);
+
+  // ------------------------------------------------- feelings and music --
+
+  static const _headphonesDark = Color(0xFF2A1A18);
+
+  /// The inside of the headphone band: fire on the left fading into ice on
+  /// the right
+  static final _fireIceBand = Gradient.linear(
+    const Offset(110, 0),
+    const Offset(374, 0),
+    const [_fireCup, Color(0xFFFFB27A), Color(0xFFB4E6FF), _iceCup],
+    const [0, 0.42, 0.58, 1],
+  );
+
+  static const _fireCup = Color(0xFFFF5900);
+  static const _iceCup = Color(0xFF00AFFF);
+
+  /// Headphones over the head: a band over the top and an ear cup on each
+  /// side, fire on the left and ice on the right like the two shields.
+  static void _paintHeadphones(Canvas canvas, PotatoPose pose) {
+    final on = pose[PotatoProp.headphones].clamp(0.0, 1.0);
+    if (on <= 0.01) return;
+    final opacity = on;
+    canvas.save();
+    // They drop in from above, and lift away when taken off
+    canvas.translate(0, -110 * (1 - on) * (1 - on));
+    final tilt = pose[PotatoProp.headphonesTilt];
+    if (tilt != 0) {
+      canvas.translate(_headCenter.dx, _headCenter.dy - 120);
+      canvas.rotate(tilt);
+      canvas.translate(-_headCenter.dx, -(_headCenter.dy - 120));
+    }
+
+    final pulse = pose[PotatoProp.headphonesPulse];
+
+    _stroke
+      ..shader = null
+      ..color = _headphonesDark.withValues(alpha: opacity)
+      ..strokeWidth = 17;
+    canvas.drawPath(_band, _stroke);
+    _stroke.strokeWidth = 7;
+    _stroke
+      ..color = Color.fromRGBO(255, 255, 255, opacity)
+      ..shader = _fireIceBand;
+    canvas.drawPath(_band, _stroke);
+    _stroke.shader = null;
+
+    for (final (x, color, outer) in const [
+      (92.0, _fireCup, -1.0),
+      (392.0, _iceCup, 1.0),
+    ]) {
+      _inShape(
+        canvas,
+        Offset(x, 244),
+        () {
+          _fill
+            ..shader = null
+            ..color = _headphonesDark.withValues(alpha: opacity);
+          canvas.drawRRect(_cup, _fill);
+          // The colored outside of the cup, it lights up on the beat
+          _fill.color = Color.lerp(
+            color,
+            const Color(0xFFFFFFFF),
+            0.35 * pulse,
+          )!.withValues(alpha: opacity);
+          canvas.drawRRect(_cupFace.shift(Offset(outer * 6, 0)), _fill);
+          _fill.color = const Color(0xFFFFFFFF)
+              .withValues(alpha: opacity * (0.35 + 0.4 * pulse));
+          canvas.drawRRect(_cupShine.shift(Offset(outer * 6 - 3, -10)), _fill);
+        },
+        scaleX: 1 + 0.06 * pulse,
+        scaleY: 1 + 0.06 * pulse,
+      );
+    }
+    canvas.restore();
+  }
+
+  static final _band = Path()
+    ..moveTo(100, 226)
+    ..cubicTo(98, 34, 386, 34, 384, 226);
+
+  static final _cup = RRect.fromRectAndRadius(
+    Rect.fromCenter(center: Offset.zero, width: 42, height: 82),
+    const Radius.circular(20),
+  );
+
+  static final _cupFace = RRect.fromRectAndRadius(
+    Rect.fromCenter(center: Offset.zero, width: 26, height: 64),
+    const Radius.circular(13),
+  );
+
+  static final _cupShine = RRect.fromRectAndRadius(
+    Rect.fromCenter(center: Offset.zero, width: 6, height: 22),
+    const Radius.circular(3),
+  );
 
   // ------------------------------------------------------------- helpers --
 

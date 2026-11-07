@@ -4,7 +4,6 @@ import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 
 import 'game_timer.dart';
-import 'life_bar.dart';
 
 class PotatoTopBar extends StatefulWidget {
   const PotatoTopBar({super.key});
@@ -22,18 +21,26 @@ class _PotatoTopBarState extends State<PotatoTopBar> {
   Widget build(BuildContext context) {
     return BlocBuilder<GameCubit, GameState>(
       buildWhen: (previous, current) =>
-          previous.playingState != current.playingState,
+          previous.playingState != current.playingState ||
+          previous.tutorial != current.tutorial ||
+          previous.level != current.level,
       builder: (context, state) {
+        // A level shows its progress on the arena ring instead
+        if (state.isLevelsMode) {
+          return const SizedBox();
+        }
         return SafeArea(
           child: Column(
             children: [
               const SizedBox(height: 8.0),
-              Opacity(
-                opacity: state.playingState is PlayingStatePlaying ? 1.0 : 0.2,
+              AnimatedOpacity(
+                opacity:
+                    state.playingState is PlayingStatePlaying && !state.tutorial
+                    ? 1.0
+                    : 0.2,
+                duration: const Duration(milliseconds: 600),
                 child: const GameTimer(),
               ),
-              const SizedBox(height: 4.0),
-              const LifeBar(),
             ],
           ),
         );

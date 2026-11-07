@@ -39,4 +39,11 @@ class ConfigsLocalDataSource {
 
   Future<void> setLevelsCleared(int count) =>
       _keyValueStorage.setInt('levels_cleared', count);
+  Future<bool> isTutorialDone() async {
+    return (await _keyValueStorage.getBool('tutorial_done')) ?? false;
+  }
+
+  Future<void> setTutorialDone(bool done) async {
+    await _keyValueStorage.setBool('tutorial_done', done);
+  }
 }
