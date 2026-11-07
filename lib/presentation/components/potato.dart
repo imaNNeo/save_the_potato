@@ -8,13 +8,13 @@ import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/hit_invincibility.dart';
 import 'package:save_the_potato/domain/potato_vibe.dart';
 import 'package:save_the_potato/presentation/components/hit_blink.dart';
-import 'package:save_the_potato/presentation/components/guide_title.dart';
 import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato/potato_animator.dart';
 import 'package:save_the_potato/presentation/potato/potato_face_component.dart';
+import 'package:save_the_potato/presentation/rhythm/levels.dart';
 import 'package:save_the_potato/presentation/potato/potato_vibe_motion.dart';
 import 'package:save_the_potato/presentation/potato/music_notes.dart';
 import 'package:save_the_potato/presentation/rhythm/rhythm_hit.dart';
@@ -73,7 +73,8 @@ class Potato extends PositionComponent
       previousState.playingState != newState.playingState ||
       previousState.currentGameMode.runtimeType !=
           newState.currentGameMode.runtimeType ||
-      previousState.playMotivationWord != newState.playMotivationWord;
+      previousState.playMotivationWord != newState.playMotivationWord ||
+      previousState.level != newState.level;
 
   @override
   void onNewState(GameState state) {
@@ -114,6 +115,22 @@ class Potato extends PositionComponent
     if (state.playMotivationWord != null) {
       face.amazed();
     }
+    if (_lastState != null &&
+        _lastState!.level != state.level &&
+        state.playingState.isGuide) {
+      // A mode or level was picked on the home screen
+      final level = state.level;
+      if (level != null && !Levels.isOpen(level, state.levelsCleared)) {
+        face.scared();
+        Future.delayed(const Duration(milliseconds: 900), () {
+          if (isMounted) {
+            face.calmDown();
+          }
+        });
+      } else {
+        face.amazed();
+      }
+    }
     _lastState = state;
   }
 
@@ -140,7 +157,7 @@ class Potato extends PositionComponent
     add(iceShield = Shield(type: OrbType.ice));
 
     if (game.playingState.isGuide) {
-      add(GuideTitle());
+      // The level select shows the title on the home screen
       // It arrives from the splash with its headphones on
       _vibeMotion.wearHeadphones();
     }
@@ -158,6 +175,14 @@ class Potato extends PositionComponent
     if (bloc.state.playingState.isPlaying) {
       fireShield.angle +=
           bloc.state.shieldsTurnDirection * GameConstants.shieldsTurnSpeed * dt;
+    } else if (bloc.state.playingState.isGuide) {
+      // On the home screen the fire shield points up at the picked level
+      const target = -pi / 2;
+      final delta = atan2(
+        sin(target - fireShield.angle),
+        cos(target - fireShield.angle),
+      );
+      fireShield.angle += delta * min(1.0, dt * 8);
     }
     iceShield.angle = fireShield.angle - pi;
   }
@@ -252,6 +277,7 @@ class Potato extends PositionComponent
       dt,
       face.pose,
       songTime: songTime,
+      beatSeconds: state.song.beatSeconds,
       // On from the start screen, so it's ready for the music
       headphonesOn: playing || state.playingState.isGuide,
       faceFree: face.mood == PotatoMood.idle,

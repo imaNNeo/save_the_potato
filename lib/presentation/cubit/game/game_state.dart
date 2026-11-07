@@ -17,9 +17,22 @@ class GameState extends Equatable {
     this.upcomingGameMode,
     this.playMotivationWord,
     this.motivationWordsPoolToPlay = MotivationWordType.values,
+    this.level,
+    this.levelsCleared = 0,
     this.tutorial = false,
     this.tutorialHint = 0,
   });
+
+  /// The level picked on the home screen, null for the infinite mode
+  final int? level;
+
+  /// How many levels are cleared, so the next one is open
+  final int levelsCleared;
+
+  bool get isLevelsMode => level != null;
+
+  /// The song of this run
+  Song get song => level == null ? RhythmSongs.song : Levels.songOf(level!);
 
   /// True while a first-time player is in the tutorial playground: the
   /// run is "playing" (shields turn, orbs fly) but time, score and life
@@ -69,8 +82,17 @@ class GameState extends Equatable {
   );
 
   /// Between 0.0 and 1.0
-  double get difficulty =>
-      GameConstants.difficultyInitialToPeakCurve.transform(difficultyLinear);
+  double get difficulty {
+    final level = this.level;
+    if (level != null) {
+      // A level ramps up over its song, see [Levels.difficultyAt]
+      final progress = difficultyTimePassed / song.durationSeconds!;
+      return Levels.difficultyAt(level, progress);
+    }
+    return GameConstants.difficultyInitialToPeakCurve.transform(
+      difficultyLinear,
+    );
+  }
 
   /// Between 0.0 and 1.0: how far past the peak the game is, see
   /// [GameConstants.overdriveDuration]. 0 until [difficulty] reaches 1.
@@ -133,6 +155,8 @@ class GameState extends Equatable {
     ValueWrapper<GameMode>? upcomingGameMode,
     ValueWrapper<MotivationWordType>? playMotivationWord,
     List<MotivationWordType>? motivationWordsPoolToPlay,
+    ValueWrapper<int>? level,
+    int? levelsCleared,
     bool? tutorial,
     int? tutorialHint,
   }) => GameState(
@@ -158,6 +182,8 @@ class GameState extends Equatable {
         : this.playMotivationWord,
     motivationWordsPoolToPlay:
         motivationWordsPoolToPlay ?? this.motivationWordsPoolToPlay,
+    level: level != null ? level.value : this.level,
+    levelsCleared: levelsCleared ?? this.levelsCleared,
     tutorial: tutorial ?? this.tutorial,
     tutorialHint: tutorialHint ?? this.tutorialHint,
   );
@@ -179,6 +205,8 @@ class GameState extends Equatable {
     upcomingGameMode,
     playMotivationWord,
     motivationWordsPoolToPlay,
+    level,
+    levelsCleared,
     tutorial,
     tutorialHint,
   ];

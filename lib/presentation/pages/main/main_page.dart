@@ -14,6 +14,7 @@ import 'package:save_the_potato/presentation/game_colors.dart';
 import 'package:save_the_potato/presentation/potato/potato_pose.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/presentation/pages/fade_route.dart';
+import 'package:save_the_potato/presentation/rhythm/levels.dart';
 import 'package:save_the_potato/presentation/pages/splash/splash_stage.dart';
 import 'package:save_the_potato/presentation/widgets/potato_initialize.dart';
 import 'package:save_the_potato/presentation/widgets/background_stars.dart';
@@ -21,6 +22,9 @@ import 'package:save_the_potato/presentation/widgets/debug_panel.dart';
 import 'package:save_the_potato/presentation/widgets/game_over_ui.dart';
 import 'package:save_the_potato/presentation/widgets/game_paused_ui.dart';
 import 'package:save_the_potato/presentation/widgets/high_score_widget.dart';
+import 'package:save_the_potato/presentation/widgets/level_cleared_ui.dart';
+import 'package:save_the_potato/presentation/widgets/level_select.dart';
+import 'package:save_the_potato/presentation/widgets/levels_progress_badge.dart';
 import 'package:save_the_potato/presentation/widgets/loading_overlay.dart';
 import 'package:save_the_potato/presentation/widgets/new_rank_celebration_page.dart';
 import 'package:save_the_potato/presentation/widgets/potato_top_bar.dart';
@@ -151,7 +155,9 @@ class _MainPageState extends State<MainPage>
       buildWhen: (previous, current) =>
           previous.playingState != current.playingState ||
           previous.showGameOverUI != current.showGameOverUI ||
-          previous.tutorialHint != current.tutorialHint,
+          previous.tutorialHint != current.tutorialHint ||
+          previous.level != current.level ||
+          previous.levelsCleared != current.levelsCleared,
       listener: (context, state) {
         if (state.restartGame) {
           _restartGameWidgets();
@@ -190,22 +196,34 @@ class _MainPageState extends State<MainPage>
                   child: DebugPanel(),
                 ),
                 RotationControls(
-                  showGuide: state.playingState.isGuide,
+                  // A locked level can't be started, so no HOLD hint
+                  // The home screen has a START button instead
+                  showGuide: false,
                   hint: state.playingState.isPlaying ? state.tutorialHint : 0,
                   onLeftDown: _gameCubit.onLeftTapDown,
                   onLeftUp: _gameCubit.onLeftTapUp,
                   onRightDown: _gameCubit.onRightTapDown,
                   onRightUp: _gameCubit.onRightTapUp,
                 ),
+                if (state.playingState.isGuide) const LevelSelect(),
                 if (state.playingState.isPaused) const GamePausedUI(),
-                if (state.showGameOverUI) const GameOverUI(),
+                if (state.showGameOverUI && state.playingState.isGameOver)
+                  const GameOverUI(),
+                if (state.showGameOverUI &&
+                    state.playingState is PlayingStateLevelCleared)
+                  LevelClearedUI(
+                    level:
+                        (state.playingState as PlayingStateLevelCleared).level,
+                  ),
                 const Align(
                   alignment: Alignment.topRight,
                   child: SettingsPauseIcon(),
                 ),
-                const Align(
+                Align(
                   alignment: Alignment.topLeft,
-                  child: HighScoreWidget(),
+                  child: state.isLevelsMode
+                      ? const LevelsProgressBadge()
+                      : const HighScoreWidget(),
                 ),
               ],
             ),
@@ -286,7 +304,7 @@ class _MainPageBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final starsSize = min(MediaQuery.sizeOf(context).width * 0.1, 80.0);
-    return BlocSelector<GameCubit, GameState, (int, double)>(
+    return BlocSelector<GameCubit, GameState, (int, double, int?)>(
       selector: (state) => (
         state.gameDifficultyModeIndex,
         switch (state.playingState) {
@@ -297,14 +315,22 @@ class _MainPageBackground extends StatelessWidget {
                     1.5,
           PlayingStateNone() ||
           PlayingStatePaused() ||
-          PlayingStateGameOver() => 0.0,
+          PlayingStateGameOver() ||
+          PlayingStateLevelCleared() => 0.0,
         },
+        state.level,
       ),
       builder: (context, values) {
-        final (modeIndex, timeScale) = values;
+        final (modeIndex, timeScale, level) = values;
+        // A level's sky takes the colors of its song
+        final songColors = level == null ? null : Levels.songOf(level).colors;
         return AnimatedBackgroundStars(
-          backgroundColor: GameColors.starsBackground[modeIndex],
-          starsColor: GameColors.starsColors[modeIndex],
+          backgroundColor: songColors == null
+              ? GameColors.starsBackground[modeIndex]
+              : Color.lerp(Color(songColors[1]), Colors.black, 0.45)!,
+          starsColor: songColors == null
+              ? GameColors.starsColors[modeIndex]
+              : Color(songColors[0]),
           starsTimeScale: timeScale,
           starsSize: starsSize,
           reactions: reactions,

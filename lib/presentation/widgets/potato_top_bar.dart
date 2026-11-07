@@ -22,8 +22,13 @@ class _PotatoTopBarState extends State<PotatoTopBar> {
     return BlocBuilder<GameCubit, GameState>(
       buildWhen: (previous, current) =>
           previous.playingState != current.playingState ||
-          previous.tutorial != current.tutorial,
+          previous.tutorial != current.tutorial ||
+          previous.level != current.level,
       builder: (context, state) {
+        // A level shows its progress on the arena ring instead
+        if (state.isLevelsMode) {
+          return const SizedBox();
+        }
         return SafeArea(
           child: Column(
             children: [

@@ -20,9 +20,6 @@ class PotatoVibeMotion {
 
   final PotatoVibe vibe;
 
-  /// Seconds per beat of the song
-  static const beatSeconds = 0.5;
-
   double _time = 0;
   double _headphones = 0;
   double _tilt = 0;
@@ -37,14 +34,16 @@ class PotatoVibeMotion {
   /// Puts the headphones on right away, without dropping them in
   void wearHeadphones() => _headphones = 1;
 
-  /// [songTime] is where the music is (beats land on multiples of
-  /// [beatSeconds]). [headphonesOn] puts them on or takes them off.
+  /// [songTime] is where the music is, and beats land on multiples of
+  /// [beatSeconds] (the song's tempo). [headphonesOn] puts them on or takes
+  /// them off.
   /// [faceFree] is false while a clip (hit, scared, amazed, dying) owns the
   /// face, so the closed blissful eyes and the singing mouth wait for it.
   void update(
     double dt,
     PotatoPose pose, {
     required double songTime,
+    double beatSeconds = 0.5,
     required bool headphonesOn,
     required bool faceFree,
   }) {

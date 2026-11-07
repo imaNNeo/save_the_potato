@@ -12,6 +12,8 @@ sealed class PlayingState {
   bool get isPlaying => this is PlayingStatePlaying;
 
   bool get isPaused => this is PlayingStatePaused;
+
+  bool get isLevelCleared => this is PlayingStateLevelCleared;
 }
 
 class PlayingStateNone extends PlayingState {
@@ -43,4 +45,14 @@ class PlayingStateGameOver extends PlayingState with Equatable {
 
   @override
   List<Object?> get props => [score, isHighScore, highestScore];
+}
+
+/// The song of the level ended with the potato still alive
+class PlayingStateLevelCleared extends PlayingState with Equatable {
+  const PlayingStateLevelCleared({required this.level});
+
+  final int level;
+
+  @override
+  List<Object?> get props => [level];
 }

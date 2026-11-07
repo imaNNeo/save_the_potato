@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
@@ -18,6 +19,8 @@ import 'package:save_the_potato/presentation/components/motivation_component.dar
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
+import 'package:save_the_potato/presentation/rhythm/levels.dart';
+import 'package:save_the_potato/presentation/rhythm/rhythm_songs.dart';
 import 'package:save_the_potato/presentation/tutorial/tutorial_flags.dart';
 
 part 'game_state.dart';
@@ -48,10 +51,16 @@ class GameCubit extends Cubit<GameState> {
 
   void startToShowGuide() async {
     gameShowGuideTimestamp = DateTime.now().millisecondsSinceEpoch;
-    emit(const GameState().copyWith(playingState: const PlayingStateGuide()));
+    emit(
+      GameState(
+        level: state.level,
+        levelsCleared: state.levelsCleared,
+      ).copyWith(playingState: const PlayingStateGuide()),
+    );
     emit(
       state.copyWith(
         firstHealthReceived: await _configsRepository.isFirstHealthReceived(),
+        levelsCleared: await _configsRepository.getLevelsCleared(),
       ),
     );
     _showTutorial = TutorialFlags.force || await _needsTutorial();
@@ -70,8 +79,43 @@ class GameCubit extends Cubit<GameState> {
     }
   }
 
+  @override
+  Future<void> close() {
+    _songPreload?.cancel();
+    return super.close();
+  }
+
+  Timer? _songPreload;
+  static const _songPreloadDelay = Duration(milliseconds: 600);
+
+  /// Picks the mode on the home screen: a [level], or null for the infinite
+  /// mode. Locked levels can be picked to look at, not to play.
+  void selectLevel(int? level) {
+    if (!state.playingState.isGuide || level == state.level) {
+      return;
+    }
+    emit(state.copyWith(level: ValueWrapper(level)));
+    // Loading a song's stems decodes them, which takes a moment, so it waits
+    // until the player stops switching. Starting the run loads it anyway.
+    _songPreload?.cancel();
+    final song = state.song;
+    _songPreload = Timer(_songPreloadDelay, () => _audioHelper.useSong(song));
+    // A note in the key of the picked song
+    final root = state.song.chords.first.first;
+    _audioHelper.playNote('ice', 72 + root, volume: 0.7);
+  }
+
+  /// Whether the picked level is locked (the infinite mode never is)
+  bool get isSelectedLevelLocked {
+    final level = state.level;
+    return level != null && !Levels.isOpen(level, state.levelsCleared);
+  }
+
+  /// The START button on the home screen
+  void startFromHome() => _guideInteracted();
+
   void _guideInteracted() async {
-    if (!state.playingState.isGuide) {
+    if (!state.playingState.isGuide || isSelectedLevelLocked) {
       return;
     }
     if (_showTutorial) {
@@ -87,7 +131,8 @@ class GameCubit extends Cubit<GameState> {
     _startRun();
   }
 
-  void _startRun() {
+  void _startRun() async {
+    _songPreload?.cancel();
     gameStartedTimestamp = DateTime.now().millisecondsSinceEpoch;
     final afterGuideDurationMills =
         gameStartedTimestamp - gameShowGuideTimestamp;
@@ -99,7 +144,40 @@ class GameCubit extends Cubit<GameState> {
         tutorialHint: 0,
       ),
     );
+    await _audioHelper.useSong(state.song);
     _audioHelper.playBackgroundMusic();
+  }
+
+  /// The level's song ended with the potato alive: the level is cleared and
+  /// the next one opens
+  void levelCleared() async {
+    final level = state.level;
+    if (level == null || !state.playingState.isPlaying) {
+      return;
+    }
+    final cleared = max(state.levelsCleared, level);
+    await _configsRepository.setLevelsCleared(cleared);
+    _audioHelper.playVictorySound();
+    emit(
+      state.copyWith(
+        playingState: PlayingStateLevelCleared(level: level),
+        levelsCleared: cleared,
+      ),
+    );
+    if (await _audioHelper.audioEnabled) {
+      await _audioHelper.fadeAndStopBackgroundMusic(
+        GameConstants.showRetryAfterGameOverDelay,
+      );
+    } else {
+      await Future.delayed(GameConstants.showRetryAfterGameOverDelay);
+    }
+    emit(state.copyWith(showGameOverUI: true));
+  }
+
+  /// Goes back to the home screen with [level] picked (null for infinite)
+  void goToLevel(int? level) {
+    emit(state.copyWith(level: ValueWrapper(level)));
+    restartGame();
   }
 
   /// The player blocked enough orbs in the tutorial: the real run starts
@@ -177,6 +255,27 @@ class GameCubit extends Cubit<GameState> {
     _audioHelper.playGameOverSound();
     final score = (state.levelTimePassed * 1000).toInt();
     final previousScore = await _scoresRepository.getHighScore();
+    if (state.isLevelsMode) {
+      // A level run doesn't count for the infinite mode's high score
+      emit(
+        state.copyWith(
+          playingState: PlayingStateGameOver(
+            score: OfflineScoreEntity(score: score),
+            isHighScore: false,
+            highestScore: previousScore,
+          ),
+        ),
+      );
+      if (await _audioHelper.audioEnabled) {
+        await _audioHelper.fadeAndStopBackgroundMusic(
+          GameConstants.showRetryAfterGameOverDelay,
+        );
+      } else {
+        await Future.delayed(GameConstants.showRetryAfterGameOverDelay);
+      }
+      emit(state.copyWith(showGameOverUI: true));
+      return;
+    }
     final bool isHighScore = score > previousScore.score;
     _analyticsHelper.logLevelEnd(
       durationMills:
@@ -254,7 +353,6 @@ class GameCubit extends Cubit<GameState> {
   void onLeftTapDown() {
     isTapLeftDown = true;
     _lastPressedDirection = -1;
-    _guideInteracted();
     _updateShieldsTurn();
   }
 
@@ -266,7 +364,6 @@ class GameCubit extends Cubit<GameState> {
   void onRightTapDown() {
     isTapRightDown = true;
     _lastPressedDirection = 1;
-    _guideInteracted();
     _updateShieldsTurn();
   }
 
@@ -302,7 +399,11 @@ class GameCubit extends Cubit<GameState> {
     final containsRightArrow = keysPressed.contains(
       LogicalKeyboardKey.arrowRight,
     );
-    if (containsLeftArrow || containsRightArrow) {
+    // On the home screen the arrows turn the level select, and enter or
+    // space starts
+    if (event is KeyDownEvent &&
+        (event.logicalKey == LogicalKeyboardKey.enter ||
+            event.logicalKey == LogicalKeyboardKey.space)) {
       _guideInteracted();
     }
     final direction = containsLeftArrow == containsRightArrow
@@ -354,10 +455,10 @@ class GameCubit extends Cubit<GameState> {
   void restartGame() {
     _analyticsHelper.logLevelRestart();
     emit(
-      const GameState().copyWith(
-        playingState: const PlayingStateGuide(),
-        restartGame: true,
-      ),
+      GameState(
+        level: state.level,
+        levelsCleared: state.levelsCleared,
+      ).copyWith(playingState: const PlayingStateGuide(), restartGame: true),
     );
     emit(state.copyWith(restartGame: false));
   }
