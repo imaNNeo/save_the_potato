@@ -108,7 +108,24 @@ class AudioHelper {
 
   /// Loads the stems of [song] (once), so the next
   /// [playBackgroundMusic] plays it
-  Future<void> useSong(Song song) async {
+  /// Loads [song]'s stems. Calls run one after another, and a call that
+  /// is no longer the latest one by the time its turn comes is skipped, so
+  /// fast switching between levels loads only the song that was picked
+  /// last.
+  Future<void> useSong(Song song) {
+    _wantedSong = song;
+    return _songLoad = _songLoad.then((_) {
+      if (song.id != _wantedSong.id) {
+        return null;
+      }
+      return _loadSong(song);
+    });
+  }
+
+  Song _wantedSong = RhythmSongs.song;
+  Future<void> _songLoad = Future.value();
+
+  Future<void> _loadSong(Song song) async {
     if (song.id == _song.id) {
       return;
     }

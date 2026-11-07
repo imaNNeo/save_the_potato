@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
@@ -78,6 +79,15 @@ class GameCubit extends Cubit<GameState> {
     }
   }
 
+  @override
+  Future<void> close() {
+    _songPreload?.cancel();
+    return super.close();
+  }
+
+  Timer? _songPreload;
+  static const _songPreloadDelay = Duration(milliseconds: 600);
+
   /// Picks the mode on the home screen: a [level], or null for the infinite
   /// mode. Locked levels can be picked to look at, not to play.
   void selectLevel(int? level) {
@@ -85,7 +95,11 @@ class GameCubit extends Cubit<GameState> {
       return;
     }
     emit(state.copyWith(level: ValueWrapper(level)));
-    _audioHelper.useSong(state.song);
+    // Loading a song's stems decodes them, which takes a moment, so it waits
+    // until the player stops switching. Starting the run loads it anyway.
+    _songPreload?.cancel();
+    final song = state.song;
+    _songPreload = Timer(_songPreloadDelay, () => _audioHelper.useSong(song));
     // A note in the key of the picked song
     final root = state.song.chords.first.first;
     _audioHelper.playNote('ice', 72 + root, volume: 0.7);
@@ -115,6 +129,7 @@ class GameCubit extends Cubit<GameState> {
   }
 
   void _startRun() async {
+    _songPreload?.cancel();
     gameStartedTimestamp = DateTime.now().millisecondsSinceEpoch;
     final afterGuideDurationMills =
         gameStartedTimestamp - gameShowGuideTimestamp;
