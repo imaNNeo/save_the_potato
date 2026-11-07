@@ -182,16 +182,17 @@ class TutorialDirector extends Component
 
   void _throwNext({_Throw? repeat}) {
     final type = repeat?.type ?? _types[_blocks % _types.length];
-    late double angle;
-    if (repeat != null) {
-      angle = repeat.angle;
-    } else {
-      // Far enough from where the shield is, so the player has to turn
-      final turn = (80 + _rnd.nextDouble() * 60) * pi / 180;
-      final need = _fireAngle + (_rnd.nextBool() ? turn : -turn);
-      angle = type == OrbType.fire ? need : need - pi;
-    }
-    final t = _Throw(type: type, angle: _wrap(angle), index: _throws++);
+    // Every orb comes from the direction of an empty dot, and blocking it
+    // fills that dot
+    final dot = repeat?.dot ?? _pickDot(type);
+    final angle = TutorialProgressDots.angleOf(dot, blocksToFinish);
+    final t = _Throw(
+      type: type,
+      angle: _wrap(angle),
+      index: _throws++,
+      dot: dot,
+    );
+    dots.point(dot, type);
     t.guided = _guidedFromStart() || (repeat?.guided ?? false);
     _current = t;
     _missed = null;
@@ -204,6 +205,26 @@ class TutorialDirector extends Component
       return;
     }
     t.launchIn = _riftTime;
+  }
+
+  /// An empty dot whose orb makes the player turn the shield a fair bit
+  /// (60° to 160°), or any empty dot if none fits
+  int _pickDot(OrbType type) {
+    final empty = [
+      for (var i = 0; i < blocksToFinish; i++)
+        if (!dots.isFilled(i)) i,
+    ];
+    double turnFor(int i) {
+      final a = TutorialProgressDots.angleOf(i, blocksToFinish);
+      final need = type == OrbType.fire ? a : a + pi;
+      return _wrap(need - _fireAngle).abs();
+    }
+
+    final good = empty
+        .where((i) => turnFor(i) > 60 * pi / 180 && turnFor(i) < 160 * pi / 180)
+        .toList();
+    final from = good.isNotEmpty ? good : empty;
+    return from[_rnd.nextInt(from.length)];
   }
 
   void _launch(_Throw t) {
@@ -301,7 +322,7 @@ class TutorialDirector extends Component
     _blocks++;
     _lastWasHit = false;
     ghost.success();
-    dots.fill(_blocks, t.type);
+    dots.fill(t.dot, t.type);
     _audio.playNote(t.type == OrbType.fire ? 'fire' : 'ice', note + 12);
     parent.player.face.amazed();
     if (_blocks >= blocksToFinish) {
@@ -333,17 +354,22 @@ class TutorialDirector extends Component
         // The same orb again, with help this time
         _wait = 1.1;
         _then = () {
-          final again = _Throw(type: t.type, angle: t.angle, index: 0)
-            ..guided = _style == TutorialStyle.ghost;
+          final again = _Throw(
+            type: t.type,
+            angle: t.angle,
+            index: 0,
+            dot: t.dot,
+          )..guided = _style == TutorialStyle.ghost;
           _throwNext(repeat: again);
         };
       case TutorialStyle.ouch:
         // Freeze on the mistake, then wait for the shield to go there
         _wait = 0.9;
         _then = () {
-          final again = _Throw(type: t.type, angle: t.angle, index: 0)
-            ..guided = true
-            ..holdUntilCovered = true;
+          final again =
+              _Throw(type: t.type, angle: t.angle, index: 0, dot: t.dot)
+                ..guided = true
+                ..holdUntilCovered = true;
           _throwNext(repeat: again);
         };
     }
@@ -419,11 +445,19 @@ class TutorialDirector extends Component
 }
 
 class _Throw {
-  _Throw({required this.type, required this.angle, required this.index});
+  _Throw({
+    required this.type,
+    required this.angle,
+    required this.index,
+    required this.dot,
+  });
 
   final OrbType type;
   final double angle;
   final int index;
+
+  /// The progress dot this orb fills when blocked
+  final int dot;
 
   bool guided = false;
   bool holdUntilCovered = false;

@@ -26,7 +26,11 @@ class TutorialProgressDots extends PositionComponent {
 
   final _fills = <double>[];
   final _colors = <Color>[];
-  int _filled = 0;
+  final _filled = <bool>[];
+
+  /// The dot the coming orb points at, it pulses in the orb's color
+  int? _next;
+  Color _nextColor = _white;
 
   double _visible = 0;
   double _targetVisible = 0;
@@ -41,7 +45,10 @@ class TutorialProgressDots extends PositionComponent {
     _colors
       ..clear()
       ..addAll(List.filled(count, _white));
-    _filled = 0;
+    _filled
+      ..clear()
+      ..addAll(List.filled(count, false));
+    _next = null;
     _burst = -1;
     _miss = 0;
     _targetVisible = 1;
@@ -49,9 +56,25 @@ class TutorialProgressDots extends PositionComponent {
 
   void hide() => _targetVisible = 0;
 
-  void fill(int filled, OrbType type) {
-    _filled = filled.clamp(0, count);
-    _colors[_filled - 1] = type.baseColor;
+  /// Where dot [index] sits around the potato (the top one is 0)
+  static double angleOf(int index, int count) =>
+      -pi / 2 + index * 2 * pi / count;
+
+  bool isFilled(int index) => _filled[index];
+
+  /// An orb of [type] is coming from the direction of dot [index]
+  void point(int index, OrbType type) {
+    _next = index;
+    _nextColor = type.baseColor;
+  }
+
+  /// The orb from dot [index]'s direction was blocked
+  void fill(int index, OrbType type) {
+    _filled[index] = true;
+    _colors[index] = type.baseColor;
+    if (_next == index) {
+      _next = null;
+    }
   }
 
   void miss() => _miss = 1;
@@ -72,7 +95,7 @@ class TutorialProgressDots extends PositionComponent {
     _visible += (_targetVisible - _visible) * min(1, dt * 6);
     _miss = max(0, _miss - dt * 1.6);
     for (var i = 0; i < _fills.length; i++) {
-      final target = i < _filled ? 1.0 : 0.0;
+      final target = _filled[i] ? 1.0 : 0.0;
       _fills[i] += (target - _fills[i]) * min(1, dt * 10);
     }
     if (_burst >= 0) {
@@ -99,7 +122,7 @@ class TutorialProgressDots extends PositionComponent {
     final burst = glow * (1 - collapse);
     final shake = _miss > 0 ? sin(_time * 70) * 6 * _miss : 0.0;
     for (var i = 0; i < count; i++) {
-      final a = -pi / 2 + i * 2 * pi / count + swirl;
+      final a = angleOf(i, count) + swirl;
       final p = Offset(cos(a), sin(a)) * radius + Offset(shake, 0);
       final f = _fills[i];
       final pop = 1 + sin(_clamp01(f) * pi) * 0.9;
@@ -108,16 +131,36 @@ class TutorialProgressDots extends PositionComponent {
           pop *
           (0.6 + 0.4 * _visible) *
           (1 + burst * 0.8 - collapse * 0.4);
-      final ring = Color.lerp(_white, _missColor, _miss)!;
+      final isNext = _next == i && f < 0.5;
+      final beat = isNext ? 0.5 + 0.5 * sin(_time * 9) : 0.0;
+      final ring = Color.lerp(
+        isNext ? Color.lerp(_white, _nextColor, 0.8)! : _white,
+        _missColor,
+        _miss,
+      )!;
+      if (isNext) {
+        canvas.drawCircle(
+          p,
+          r * (2.6 + beat),
+          Paint()
+            ..blendMode = BlendMode.plus
+            ..shader = ui.Gradient.radial(p, r * (2.6 + beat), [
+              _nextColor.withValues(
+                alpha: _clamp01(alpha * (0.35 + 0.35 * beat)),
+              ),
+              _nextColor.withValues(alpha: 0),
+            ]),
+        );
+      }
       // Empty dot: a thin ring
       canvas.drawCircle(
         p,
         r,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.6
+          ..strokeWidth = isNext ? 2.4 : 1.6
           ..color = ring.withValues(
-            alpha: _clamp01(alpha * (0.45 + 0.5 * _miss)),
+            alpha: _clamp01(alpha * (isNext ? 0.95 : 0.45 + 0.5 * _miss)),
           ),
       );
       if (f > 0.01) {
