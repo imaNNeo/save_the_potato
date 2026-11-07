@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'package:save_the_potato/presentation/components/level_progress/level_progress_ring.dart';
 import 'package:save_the_potato/presentation/components/moving/rift/ring_rift.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
@@ -47,6 +48,7 @@ class GameShaderWarmUp extends Component {
     ArenaRingComponent.paintRing(canvas, visible: 1, time: 0);
     canvas.restore();
     warmUpOrbHeads(canvas);
+    LevelProgressRing.warmUp(canvas);
     // Other glows: radial gradients, each number of color stops is
     // its own shader
     for (var stops = 2; stops <= 6; stops++) {

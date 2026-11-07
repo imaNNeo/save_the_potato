@@ -108,6 +108,55 @@ class _Wave {
   double t = 0;
 }
 
+/// Thin quads from a radius to another, each with its own color, drawn
+/// together as one triangle mesh
+class _SpikeMesh {
+  final _xy = <double>[];
+  final _colors = <int>[];
+
+  void add(
+    double angle,
+    double from,
+    double to,
+    double width,
+    Color color,
+    double alpha,
+  ) {
+    final c = cos(angle);
+    final s = sin(angle);
+    final nx = -s * width / 2;
+    final ny = c * width / 2;
+    final bx = c * from;
+    final by = s * from;
+    final tx = c * to;
+    final ty = s * to;
+    // Two triangles: base-left, base-right, tip-right / base-left,
+    // tip-right, tip-left. The tip is a bit dimmer.
+    _xy.addAll([
+      bx - nx, by - ny, bx + nx, by + ny, tx + nx, ty + ny, //
+      bx - nx, by - ny, tx + nx, ty + ny, tx - nx, ty - ny,
+    ]);
+    final base = color.withValues(alpha: _clamp01(alpha)).toARGB32();
+    final tip = color.withValues(alpha: _clamp01(alpha * 0.6)).toARGB32();
+    _colors.addAll([base, base, tip, base, tip, tip]);
+  }
+
+  void draw(Canvas canvas, Paint paint) {
+    if (_xy.isEmpty) {
+      return;
+    }
+    canvas.drawVertices(
+      ui.Vertices.raw(
+        ui.VertexMode.triangles,
+        Float32List.fromList(_xy),
+        colors: Int32List.fromList(_colors),
+      ),
+      BlendMode.dst,
+      paint..color = _white,
+    );
+  }
+}
+
 class _Note {
   _Note(this.at, this.timbre, this.midi, this.volume);
 
@@ -128,6 +177,91 @@ class LevelProgressRing extends PositionComponent
   LevelProgressRing({required this.director, ProgressRingStyle? style})
     : style = style ?? ProgressRingStyle.current,
       super(priority: -1);
+
+  /// Draws each kind of shader the ring uses once, for [GameShaderWarmUp]
+  /// (it clips everything to one pixel at the origin), so none of them
+  /// compiles mid-level when a quarter or the finale brings it in
+  static void warmUp(Canvas canvas) {
+    final stroke = Paint()
+      ..blendMode = BlendMode.plus
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 3
+      ..color = _white;
+    const rect = Rect.fromLTWH(-3, -3, 6, 6);
+    canvas
+      ..drawArc(rect, 0, 2, false, stroke)
+      ..drawCircle(Offset.zero, 2, stroke)
+      ..drawLine(const Offset(-3, 0), const Offset(3, 0), stroke)
+      ..drawPath(
+        Path()
+          ..moveTo(-3, 0)
+          ..lineTo(0, 1)
+          ..lineTo(3, 0),
+        stroke,
+      )
+      ..drawRawPoints(
+        ui.PointMode.points,
+        Float32List.fromList([0, 0, 1, 1]),
+        stroke,
+      )
+      ..drawRawPoints(
+        ui.PointMode.lines,
+        Float32List.fromList([-3, 0, 3, 1]),
+        stroke,
+      )
+      ..drawCircle(Offset.zero, 2, Paint()..blendMode = BlendMode.plus);
+    (_SpikeMesh()..add(0, -3, 3, 2, _white, 0.5)).draw(
+      canvas,
+      Paint()..blendMode = BlendMode.plus,
+    );
+    for (final stops in const [
+      [0.0, 0.7, 1.0],
+      [0.0, 0.25, 0.5, 0.75, 1.0],
+    ]) {
+      final sweep = Paint()
+        ..blendMode = BlendMode.plus
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = 3
+        ..shader = ui.Gradient.sweep(
+          Offset.zero,
+          [for (var i = 0; i < stops.length; i++) _white],
+          stops,
+          TileMode.clamp,
+          0,
+          2 * pi,
+          _rotZ(1),
+        );
+      canvas
+        ..drawArc(rect, 0, 2, false, sweep)
+        ..drawCircle(Offset.zero, 2, sweep);
+    }
+    canvas.drawLine(
+      const Offset(-3, 0),
+      const Offset(3, 0),
+      Paint()
+        ..blendMode = BlendMode.plus
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = 3
+        ..shader = ui.Gradient.linear(const Offset(-3, 0), const Offset(3, 0), [
+          _white,
+          const Color(0x00FFFFFF),
+        ]),
+    );
+    canvas.drawCircle(
+      Offset.zero,
+      3,
+      Paint()
+        ..blendMode = BlendMode.plus
+        ..shader = ui.Gradient.radial(
+          Offset.zero,
+          3,
+          [_white, const Color(0x40FFFFFF), const Color(0x00FFFFFF)],
+          [0, 0.35, 1],
+        ),
+    );
+  }
 
   final RhythmDirector director;
   final ProgressRingStyle style;
@@ -572,8 +706,8 @@ class LevelProgressRing extends PositionComponent
       s.v *= exp(-s.drag * dt);
     }
     _sparks.removeWhere((s) => s.life <= 0);
-    if (_sparks.length > 600) {
-      _sparks.removeRange(0, _sparks.length - 600);
+    if (_sparks.length > 400) {
+      _sparks.removeRange(0, _sparks.length - 400);
     }
   }
 
@@ -595,12 +729,38 @@ class LevelProgressRing extends PositionComponent
   // ------------------------------------------------------------------
   // Drawing
 
+  /// Preview only: `?ring=off` hides it, to measure what it costs
+  static final _off = kIsWeb && Uri.base.queryParameters['ring'] == 'off';
+
+  /// Preview only: `?perf=1` prints how long drawing it takes
+  static final _perf = kIsWeb && Uri.base.queryParameters['perf'] == '1';
+  final _watch = Stopwatch();
+  int _perfFrames = 0;
+
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    if (_visible < 0.01) {
+    if (_visible < 0.01 || _off) {
       return;
     }
+    if (_perf) {
+      _watch.start();
+      _render(canvas);
+      _watch.stop();
+      if (++_perfFrames % 120 == 0) {
+        debugPrint(
+          'ring ${style.name} ${(_progress * 100).round()}%: '
+          '${(_watch.elapsedMicroseconds / 120).round()}us/frame, '
+          '${_sparks.length} sparks',
+        );
+        _watch.reset();
+      }
+      return;
+    }
+    _render(canvas);
+  }
+
+  void _render(Canvas canvas) {
     switch (style) {
       case ProgressRingStyle.comet:
         _renderComet(canvas);
@@ -614,16 +774,39 @@ class LevelProgressRing extends PositionComponent
     _renderSparks(canvas);
   }
 
-  Paint _stroke(Color color, double width, double alpha) => Paint()
+  // One paint of each kind, reused for every draw, so a frame doesn't
+  // make hundreds of objects for the garbage collector
+  final _strokePaint = Paint()
     ..blendMode = BlendMode.plus
     ..style = PaintingStyle.stroke
-    ..strokeCap = StrokeCap.round
+    ..strokeCap = StrokeCap.round;
+  final _fillPaint = Paint()..blendMode = BlendMode.plus;
+  final _bloomPaint = Paint()..blendMode = BlendMode.plus;
+
+  Paint _stroke(Color color, double width, double alpha) => _strokePaint
     ..strokeWidth = width
     ..color = color.withValues(alpha: _clamp01(alpha * _visible));
 
-  Paint _fill(Color color, double alpha) => Paint()
-    ..blendMode = BlendMode.plus
-    ..color = color.withValues(alpha: _clamp01(alpha * _visible));
+  Paint _fill(Color color, double alpha) =>
+      _fillPaint..color = color.withValues(alpha: _clamp01(alpha * _visible));
+
+  /// Round dots of one size and color in a single draw call
+  void _dots(
+    Canvas canvas,
+    List<double> xy,
+    double size,
+    Color color,
+    double alpha,
+  ) {
+    if (xy.isEmpty) {
+      return;
+    }
+    canvas.drawRawPoints(
+      ui.PointMode.points,
+      Float32List.fromList(xy),
+      _stroke(color, size * 2, alpha),
+    );
+  }
 
   void _bloom(Canvas canvas, Offset p, double r, Color color, double a) {
     if (r <= 0 || a <= 0) {
@@ -632,8 +815,7 @@ class LevelProgressRing extends PositionComponent
     canvas.drawCircle(
       p,
       r,
-      Paint()
-        ..blendMode = BlendMode.plus
+      _bloomPaint
         ..shader = ui.Gradient.radial(
           p,
           r,
@@ -891,17 +1073,19 @@ class LevelProgressRing extends PositionComponent
       canvas.drawPath(path, _stroke(_white, 1, 0.25 * s3 + 0.3 * flash));
     }
 
-    for (var i = 0; i < n; i++) {
+    // The beads still to come: two draw calls for all of them
+    final small = <double>[];
+    final large = <double>[];
+    for (var i = lit; i < n; i++) {
+      final pt = _polar(_beadAngle(i), radius);
+      (i % Song.bars == 0 ? large : small).addAll([pt.dx, pt.dy]);
+    }
+    _dots(canvas, small, 1.4, _white, 0.2);
+    _dots(canvas, large, 2.4, _white, 0.35);
+
+    for (var i = 0; i < lit; i++) {
       final big = i % Song.bars == 0;
       final a = _beadAngle(i);
-      if (i >= lit) {
-        canvas.drawCircle(
-          _polar(a, radius),
-          big ? 2.4 : 1.4,
-          _fill(_white, big ? 0.35 : 0.2),
-        );
-        continue;
-      }
       final age = _time - (_litAt[i] ?? -9);
       final pop = age < 0.4
           ? Curves.easeOutBack.transform(_clamp01(age / 0.4)) *
@@ -929,7 +1113,9 @@ class LevelProgressRing extends PositionComponent
       bright += flash * 0.8;
       final pt = _polar(a, radius + _beadLift(i, bar, s1));
       final color = f != null ? _gold : _beadColor(i, s2);
-      if (big || s3 > 0 || i == lit - 1) {
+      // Glows are the costly part: only the big beads, the newest one
+      // and the ones the light runs over get one
+      if (big || i == lit - 1 || bright > 1.2) {
         _bloom(canvas, pt, size * 4, color, 0.45 * bright);
       }
       canvas.drawCircle(pt, size, _fill(color, bright));
@@ -1020,14 +1206,17 @@ class LevelProgressRing extends PositionComponent
     }
 
     final sweep = f != null ? 2 * pi : p * 2 * pi;
-    final paint = Paint()
-      ..blendMode = BlendMode.plus
-      ..strokeCap = StrokeCap.round;
+    // All spikes are one mesh of colored quads: a single draw call that
+    // is cheap for the GPU (stroked lines with round caps are not)
+    final mesh = _SpikeMesh();
+    final tips = <double>[];
+    final rest = <double>[];
     for (var i = 0; i < _spikes; i++) {
       final along = i / _spikes * 2 * pi;
       final a = _start + along;
       if (along > sweep) {
-        canvas.drawCircle(_polar(a, r), 1.1, _fill(_white, 0.18));
+        final pt = _polar(a, r);
+        rest.addAll([pt.dx, pt.dy]);
         continue;
       }
       final rnd = _hash(i, beatIndex);
@@ -1043,19 +1232,27 @@ class LevelProgressRing extends PositionComponent
       final color = f != null
           ? Color.lerp(_gold, _waveColor(along, 1), 0.5)!
           : _waveColor(along, s2);
-      paint
-        ..strokeWidth = 2.2 + s3
-        ..color = color.withValues(alpha: _clamp01(0.85 * _visible));
-      canvas.drawLine(_polar(a, r), _polar(a, r + len), paint);
+      final width = 2.2 + s3;
+      mesh.add(a, r, r + len, width, color, 0.85 * _visible);
       if (s2 > 0 || f != null) {
         // Half way: it mirrors inwards too
-        paint.color = color.withValues(alpha: _clamp01(0.45 * s2 * _visible));
-        canvas.drawLine(_polar(a, r), _polar(a, r - len * 0.5), paint);
+        mesh.add(
+          a,
+          r,
+          r - len * 0.5,
+          width,
+          color,
+          0.45 * (f != null ? 1 : s2) * _visible,
+        );
       }
       if (s3 > 0 && len > 14) {
-        canvas.drawCircle(_polar(a, r + len), 1.6, _fill(_white, 0.8 * s3));
+        final tip = _polar(a, r + len);
+        tips.addAll([tip.dx, tip.dy]);
       }
     }
+    _dots(canvas, rest, 1.1, _white, 0.18);
+    mesh.draw(canvas, _fillPaint);
+    _dots(canvas, tips, 1.6, _white, 0.8 * s3);
     // A thin line under the spikes
     canvas.drawArc(
       Rect.fromCircle(center: Offset.zero, radius: r),
@@ -1077,9 +1274,7 @@ class LevelProgressRing extends PositionComponent
     if (a < 0.02) {
       return;
     }
-    final paint = Paint()
-      ..blendMode = BlendMode.plus
-      ..strokeCap = StrokeCap.round;
+    final paint = _bloomPaint..strokeCap = StrokeCap.round;
     const rays = 24;
     final turn = t * 0.4;
     for (var i = 0; i < rays; i++) {
@@ -1094,5 +1289,6 @@ class LevelProgressRing extends PositionComponent
         ]);
       canvas.drawLine(_polar(ang, 80), _polar(ang, len), paint);
     }
+    paint.shader = null;
   }
 }
