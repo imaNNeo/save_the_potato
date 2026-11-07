@@ -106,10 +106,9 @@ class GameCubit extends Cubit<GameState> {
     if (!playNote) {
       return;
     }
-    // A soft note in the key of the picked song: an octave below the song's
-    // notes and quiet, so turning the dial ticks instead of chiming
+    // A soft wooden tick in the key of the picked song, like a dial's click
     final root = state.song.chords.first.first;
-    _audioHelper.playNote('ice', 60 + root, volume: 0.3);
+    _audioHelper.playTick(81 + root, volume: 0.5);
   }
 
   /// Whether the picked level is locked (the infinite mode never is)
