@@ -251,9 +251,8 @@ class LevelProgressRing extends PositionComponent
   double _beat = 0;
   int _lastBeat = -1;
 
-  /// How many quarters are passed (0 to 3), and how long ago the last was
-  int _milestones = 0;
-  double _milestoneAge = 9;
+  /// How many quarters are passed (0 to 3)
+  int get _quarters => min(3, (_progress * 4).floor());
 
   /// Seconds since the ring closed, null before
   double? _finale;
@@ -285,8 +284,6 @@ class LevelProgressRing extends PositionComponent
     _progress = 0;
     _beat = 0;
     _lastBeat = -1;
-    _milestones = 0;
-    _milestoneAge = 9;
     _finale = null;
     _sparks.clear();
     _waves.clear();
@@ -331,17 +328,11 @@ class LevelProgressRing extends PositionComponent
         }
         _lastBeat = beat;
       }
-      final quarter = min(3, (_progress * 4).floor());
-      while (_milestones < quarter) {
-        _milestones++;
-        _onMilestone(_milestones);
-      }
       if (_progress >= 1 && _finale == null) {
         _startFinale();
       }
     }
 
-    _milestoneAge += dt;
     if (_finale != null) {
       _finale = _finale! + dt;
       _updateFinale(_finale! - dt, _finale!);
@@ -358,8 +349,6 @@ class LevelProgressRing extends PositionComponent
 
   double get _headAngle => _start + _progress * 2 * pi;
 
-  Offset get _head => _polar(_headAngle, radius);
-
   void _onBeat(int beat) {
     // A bead lights up at the start of each bar, for the bar that ended
     if (beat % _song.beatsPerBar != 0) {
@@ -373,36 +362,11 @@ class LevelProgressRing extends PositionComponent
     if (_progress >= 0.25) {
       _burst(
         _polar(_beadAngle(bar), radius),
-        4 + _milestones * 2,
+        4 + _quarters * 2,
         speed: 70,
         colors: [_accent, _white],
       );
     }
-  }
-
-  void _onMilestone(int index) {
-    _milestoneAge = 0;
-    final head = _head;
-    _waves.add(
-      _Wave(
-        from: 4,
-        to: 60 + 20.0 * index,
-        duration: 0.6,
-        color: _white,
-        width: 3,
-        center: head,
-      ),
-    );
-    _waves.add(
-      _Wave(
-        from: radius,
-        to: radius + 26,
-        duration: 0.7,
-        color: _accent,
-        width: 2,
-      ),
-    );
-    _burst(head, 18 + index * 8, speed: 160, colors: [_accent, _white, _gold]);
   }
 
   void _startFinale() {
@@ -672,7 +636,7 @@ class LevelProgressRing extends PositionComponent
     canvas.drawLine(
       top + const Offset(0, -9),
       top + const Offset(0, 9),
-      _stroke(_white, 2, 0.5 * pulse + 0.15),
+      _stroke(_white, 3, 0.6 * pulse + 0.3),
     );
   }
 
@@ -695,9 +659,6 @@ class LevelProgressRing extends PositionComponent
       _dot(s.p, s.size * (0.4 + 0.6 * k), s.color, k);
     }
   }
-
-  /// How much brighter everything is just after a quarter is passed
-  double get _milestoneFlash => exp(-_milestoneAge * 4);
 
   // ---- beads ----
 
@@ -723,7 +684,6 @@ class LevelProgressRing extends PositionComponent
     final s3 = _ramp(p, 0.75);
     final bar = _beat / _song.beatsPerBar;
     final lit = f != null ? n : bar.floor().clamp(0, n);
-    final flash = _milestoneFlash;
 
     // Finale: a light runs around twice, faster and faster, and every
     // bead it passes pops
@@ -738,6 +698,17 @@ class LevelProgressRing extends PositionComponent
       return;
     }
 
+    // A solid band from the top to where the song is, over a faint track
+    // for the rest of the round, so the progress reads at a glance
+    _band(_start, 2 * pi, 2.5, color: _white, alpha: 0.12);
+    _band(
+      _start,
+      f != null ? 2 * pi : _headAngle - _start,
+      4.5,
+      color: f != null ? _gold : _accent,
+      alpha: 0.75,
+    );
+
     // Last quarter: lines join the lit beads, like a constellation
     if (s3 > 0 && lit > 1) {
       final step = 2 * pi / n;
@@ -747,7 +718,7 @@ class LevelProgressRing extends PositionComponent
         1,
         radiusAt: (a) => radius + _beadLift((a / step).round(), bar, s1),
         color: _white,
-        alpha: 0.25 * s3 + 0.3 * flash,
+        alpha: 0.35 * s3,
         step: step,
       );
     }
@@ -759,8 +730,8 @@ class LevelProgressRing extends PositionComponent
       final pt = _polar(_beadAngle(i), radius);
       (i % _song.bars == 0 ? large : small).addAll([pt.dx, pt.dy]);
     }
-    _dots(canvas, small, 1.4, _white, 0.2);
-    _dots(canvas, large, 2.4, _white, 0.35);
+    _dots(canvas, small, 2.2, _white, 0.4);
+    _dots(canvas, large, 3.4, _white, 0.6);
 
     for (var i = 0; i < lit; i++) {
       final big = i % _song.bars == 0;
@@ -770,9 +741,9 @@ class LevelProgressRing extends PositionComponent
           ? Curves.easeOutBack.transform(_clamp01(age / 0.4)) *
                 (1 + 0.8 * exp(-age * 7))
           : 1.0;
-      var size = (big ? 4.8 : 2.8) * pop;
+      var size = (big ? 6.2 : 3.8) * pop;
       size *= 1 + 0.35 * s3 * _kick;
-      var bright = 0.85;
+      var bright = 1.0;
       // A light runs from the top to the newest bead on every bar
       if (s2 > 0) {
         final run = _fract(bar) * lit;
@@ -789,7 +760,6 @@ class LevelProgressRing extends PositionComponent
           bright += 1;
         }
       }
-      bright += flash * 0.8;
       final pt = _polar(a, radius + _beadLift(i, bar, s1));
       final color = f != null ? _gold : _beadColor(i, s2);
       // Only the big beads, the newest one and the ones the light runs
