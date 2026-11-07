@@ -59,8 +59,8 @@ class TutorialDirector extends Component
   late final TutorialProgressDots dots;
   late final GhostShield ghost;
 
-  /// Extra looks that pull the eye to the coming orb (samples to compare)
-  final focus = OrbFocus(OrbFocusStyle.current);
+  /// Dims the arena around the coming orb, its lane and the potato
+  final focus = OrbFocus();
 
   bool _active = false;
   bool _finishing = false;
@@ -80,10 +80,8 @@ class TutorialDirector extends Component
   Future<void> onLoad() async {
     await parent.add(dots = TutorialProgressDots(count: blocksToFinish));
     await parent.add(ghost = GhostShield());
-    if (focus.style.isOn) {
-      await parent.add(OrbFocusUnder(focus));
-      await parent.add(OrbFocusOver(focus));
-    }
+    await parent.add(OrbSpotlight(focus));
+    await parent.add(OrbFocusRings(focus));
     // A soft high note when the shield reaches the right spot
     ghost.onLocked = () => _audio.playNote('ice', 88, volume: 0.45);
   }
