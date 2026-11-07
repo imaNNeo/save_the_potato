@@ -360,13 +360,19 @@ def note_sound(midi, ice):
     return _note_cache[key]
 
 
+LEVEL_SECONDS = 120
+
+
 def song_form(song):
-    """Verses and choruses for about 3 minutes, with no breather: the
-    music keeps going, and the last two passes are choruses"""
+    """Verses and choruses for about 2 minutes (or song['plays'] passes),
+    with no breather: the music keeps going. A level always plays whole
+    passes of its loop, so a real tune still ends on its last note. It
+    starts on a verse, and with 3 passes or more the last two are choruses"""
     L = loop_seconds(song)
-    n = max(2, round(180 / L))
+    n = song.get('plays') or max(2, round(LEVEL_SECONDS / L))
     form = ['verse' if i % 2 == 0 else 'chorus' for i in range(n)]
-    form[-2:] = ['chorus', 'chorus']
+    if n >= 3:
+        form[-2:] = ['chorus', 'chorus']
     return form
 
 
