@@ -8,7 +8,6 @@ import 'package:save_the_potato/domain/game_constants.dart';
 import 'package:save_the_potato/domain/hit_invincibility.dart';
 import 'package:save_the_potato/domain/potato_vibe.dart';
 import 'package:save_the_potato/presentation/components/hit_blink.dart';
-import 'package:save_the_potato/presentation/components/guide_title.dart';
 import 'package:save_the_potato/presentation/components/shield.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_cubit.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
@@ -16,7 +15,7 @@ import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato/potato_animator.dart';
 import 'package:save_the_potato/presentation/potato/potato_face_component.dart';
 import 'package:save_the_potato/presentation/rhythm/levels.dart';
-import 'package:save_the_potato/presentation/widgets/mode_switcher.dart';
+import 'package:save_the_potato/presentation/widgets/level_select.dart';
 import 'package:save_the_potato/presentation/potato/potato_vibe_motion.dart';
 import 'package:save_the_potato/presentation/potato/music_notes.dart';
 import 'package:save_the_potato/presentation/rhythm/rhythm_hit.dart';
@@ -159,7 +158,7 @@ class Potato extends PositionComponent
     add(iceShield = Shield(type: OrbType.ice));
 
     if (game.playingState.isGuide) {
-      add(GuideTitle());
+      // The level select shows the title on the home screen
       // It arrives from the splash with its headphones on
       _vibeMotion.wearHeadphones();
     }
@@ -178,9 +177,8 @@ class Potato extends PositionComponent
       fireShield.angle +=
           bloc.state.shieldsTurnDirection * GameConstants.shieldsTurnSpeed * dt;
     } else if (bloc.state.playingState.isGuide) {
-      // On the home screen the fire shield faces the picked level's bead
-      final level = bloc.state.level;
-      final target = level == null ? 0.0 : ModeSwitcher.beadAngle(level);
+      // On the home screen the fire shield points at the level select
+      final target = LevelSelect.pointerAngle.value;
       final delta = atan2(
         sin(target - fireShield.angle),
         cos(target - fireShield.angle),
