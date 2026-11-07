@@ -2,6 +2,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:save_the_potato/presentation/potato/potato_animator.dart';
 import 'package:save_the_potato/presentation/potato/potato_painter.dart';
+import 'package:save_the_potato/presentation/potato/potato_pose.dart';
 
 /// The code-drawn potato as a Flutter widget, used on the splash screen.
 ///
@@ -9,10 +10,19 @@ import 'package:save_the_potato/presentation/potato/potato_painter.dart';
 /// right), then keeps idling. Without it, it starts idling right away.
 /// It is drawn on the first frame, there is nothing to load.
 class SplashPotato extends StatefulWidget {
-  const SplashPotato({super.key, this.size = 300, this.intro = true});
+  const SplashPotato({
+    super.key,
+    this.size = 300,
+    this.intro = true,
+    this.decorate,
+  });
 
   final double size;
   final bool intro;
+
+  /// Called every frame after the animation, to add moves of its own on top
+  /// (headphones, dancing). [seconds] is the time since the potato appeared.
+  final void Function(PotatoPose pose, double seconds)? decorate;
 
   /// How much bigger than its box the potato is drawn, as before.
   static const _drawScale = 1.45;
@@ -48,6 +58,10 @@ class _SplashPotatoState extends State<SplashPotato>
         (elapsed - _last).inMicroseconds / Duration.microsecondsPerSecond;
     _last = elapsed;
     _animator.update(dt);
+    widget.decorate?.call(
+      _animator.pose,
+      elapsed.inMicroseconds / Duration.microsecondsPerSecond,
+    );
     _frame.value++;
   }
 

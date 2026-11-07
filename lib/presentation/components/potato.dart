@@ -21,6 +21,7 @@ import 'package:save_the_potato/presentation/potato/potato_vibe_motion.dart';
 import 'package:save_the_potato/presentation/potato/music_notes.dart';
 import 'package:save_the_potato/presentation/rhythm/rhythm_hit.dart';
 import 'package:save_the_potato/presentation/potato/dizzy_face.dart';
+import 'package:save_the_potato/presentation/potato/potato_health_motion.dart';
 import 'package:save_the_potato/service_locator.dart';
 
 import '../potato_game.dart';
@@ -58,6 +59,9 @@ class Potato extends PositionComponent
   /// it is by orbs that get through
   final vibe = PotatoVibe();
   late final _vibeMotion = PotatoVibeMotion(vibe);
+
+  /// Shows the life left on the potato's face and body
+  final healthMotion = PotatoHealthMotion();
   late final MusicNotes _musicNotes;
 
   /// Keeps the beat when there's no song clock (menu, muted before a run)
@@ -84,6 +88,7 @@ class Potato extends PositionComponent
           _lastState?.playingState.isPaused == true;
       if (state.playingState.isPlaying && !wasInRun) {
         vibe.reset();
+        healthMotion.reset();
         _musicNotes.clear();
       }
       dizzy.reset();
@@ -155,6 +160,8 @@ class Potato extends PositionComponent
 
     if (game.playingState.isGuide) {
       add(GuideTitle());
+      // It arrives from the splash with its headphones on
+      _vibeMotion.wearHeadphones();
     }
 
     mounted.then((_) {
@@ -274,7 +281,15 @@ class Potato extends PositionComponent
       face.pose,
       songTime: songTime,
       beatSeconds: state.song.beatSeconds,
-      headphonesOn: playing,
+      // On from the start screen, so it's ready for the music
+      headphonesOn: playing || state.playingState.isGuide,
+      faceFree: face.mood == PotatoMood.idle,
+    );
+    healthMotion.update(
+      dt,
+      face.pose,
+      life: state.life,
+      playing: playing && !state.tutorial,
       faceFree: face.mood == PotatoMood.idle,
     );
   }

@@ -25,6 +25,7 @@ abstract final class PotatoPainter {
   static const _heartRed = Color(0xFFFF0058);
   static const _fireTint = Color(0x82F92424);
   static const _iceTint = Color(0x822CB3F5);
+  static const _paleTint = Color(0x4DA8CCF0);
 
   static final _fill = Paint()..isAntiAlias = true;
   static final _stroke = Paint()
@@ -55,7 +56,7 @@ abstract final class PotatoPainter {
     _applyBodyMove(canvas, pose);
     _paintBody(canvas, pose);
     _paintFreckles(canvas);
-    _paintCheeks(canvas);
+    _paintCheeks(canvas, pose);
     _paintBrows(canvas, pose);
     _paintSmile(canvas, pose);
     _paintEyes(canvas, pose);
@@ -136,6 +137,7 @@ abstract final class PotatoPainter {
     _inShape(canvas, _bodyOrigin, () {
       _fillPath(canvas, _body, _iceTint, pose[PotatoProp.iceTint]);
       _fillPath(canvas, _body, _fireTint, pose[PotatoProp.fireTint]);
+      _fillPath(canvas, _body, _paleTint, pose[PotatoProp.pale]);
       _stroke
         ..color = _outline
         ..strokeWidth = 10
@@ -272,7 +274,10 @@ abstract final class PotatoPainter {
   /// shifted by this offset.
   static const _face = Offset(-169.5526, 90.4602);
 
-  static void _paintCheeks(Canvas canvas) {
+  static const _blush = Color(0xFFFF5A7A);
+  static const _blushSpots = [Offset(150, 281), Offset(335, 281)];
+
+  static void _paintCheeks(Canvas canvas, PotatoPose pose) {
     _fill.color = _pink;
     _inShape(canvas, _face + const Offset(504.7333, 190.7564), () {
       canvas.drawRRect(_pill(33.8574, 17.4735), _fill);
@@ -280,6 +285,20 @@ abstract final class PotatoPainter {
     _inShape(canvas, _face + const Offset(319.5062, 190.5455), () {
       canvas.drawRRect(_pill(33.8574, 17.4735), _fill);
     });
+    // A soft rosy glow around them when the potato is calm
+    final blush = pose[PotatoProp.blush];
+    if (blush > 0.01) {
+      for (final center in _blushSpots) {
+        _fill
+          ..color = const Color(0xFFFFFFFF)
+          ..shader = Gradient.radial(center, 46, [
+            _blush.withValues(alpha: 0.6 * blush.clamp(0, 1)),
+            _blush.withValues(alpha: 0),
+          ]);
+        canvas.drawCircle(center, 46, _fill);
+      }
+      _fill.shader = null;
+    }
   }
 
   static void _paintBrows(Canvas canvas, PotatoPose pose) {

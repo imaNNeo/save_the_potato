@@ -31,8 +31,12 @@ class PotatoVibeMotion {
     _tiltVelocity += side * 3.2;
   }
 
+  /// Puts the headphones on right away, without dropping them in
+  void wearHeadphones() => _headphones = 1;
+
   /// [songTime] is where the music is, and beats land on multiples of
-  /// [beatSeconds] (the song's tempo). [headphonesOn] puts them on or takes them off.
+  /// [beatSeconds] (the song's tempo). [headphonesOn] puts them on or takes
+  /// them off.
   /// [faceFree] is false while a clip (hit, scared, amazed, dying) owns the
   /// face, so the closed blissful eyes and the singing mouth wait for it.
   void update(
