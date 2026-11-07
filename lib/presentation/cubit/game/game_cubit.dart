@@ -18,7 +18,7 @@ import 'package:save_the_potato/presentation/components/motivation_component.dar
 import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/cubit/game/game_mode.dart';
 import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
-import 'package:save_the_potato/presentation/tutorial/tutorial_style.dart';
+import 'package:save_the_potato/presentation/tutorial/tutorial_flags.dart';
 
 part 'game_state.dart';
 
@@ -43,9 +43,8 @@ class GameCubit extends Cubit<GameState> {
   late int gameShowGuideTimestamp;
   late int gameStartedTimestamp;
 
-  /// The tutorial to run on the next start, null when the player knows
-  /// the game already
-  TutorialStyle? tutorialStyle;
+  /// Whether the next start runs the tutorial first
+  bool _showTutorial = false;
 
   void startToShowGuide() async {
     gameShowGuideTimestamp = DateTime.now().millisecondsSinceEpoch;
@@ -55,18 +54,27 @@ class GameCubit extends Cubit<GameState> {
         firstHealthReceived: await _configsRepository.isFirstHealthReceived(),
       ),
     );
-    tutorialStyle =
-        TutorialStyle.forced ??
-        (await _configsRepository.isTutorialDone()
-            ? null
-            : TutorialStyle.defaultStyle);
+    _showTutorial = TutorialFlags.force || await _needsTutorial();
+  }
+
+  /// New players only: anyone who finished it, or who already has a score
+  /// from before the tutorial existed, knows how to play
+  Future<bool> _needsTutorial() async {
+    if (await _configsRepository.isTutorialDone()) {
+      return false;
+    }
+    try {
+      return (await _scoresRepository.getHighScore()).score <= 0;
+    } catch (_) {
+      return true;
+    }
   }
 
   void _guideInteracted() async {
     if (!state.playingState.isGuide) {
       return;
     }
-    if (tutorialStyle != null) {
+    if (_showTutorial) {
       // Straight into the playground, the real run starts when it's done
       emit(
         state.copyWith(
@@ -100,7 +108,7 @@ class GameCubit extends Cubit<GameState> {
     if (!state.tutorial) {
       return;
     }
-    tutorialStyle = null;
+    _showTutorial = false;
     _configsRepository.setTutorialDone(true);
     _startRun();
   }

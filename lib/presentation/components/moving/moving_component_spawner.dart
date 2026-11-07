@@ -76,19 +76,16 @@ class MovingComponentSpawner extends Component
       case OrbType.ice:
         orb = _iceOrbPool.get();
     }
-    orb.timeScale = 1;
     orb.loaded.then((_) {
       orb.initialize(
         speed: speed,
         target: player,
         position: position,
         onDisjointCallback: () {
-          orb.timeScale = 1;
           onBlocked?.call();
           _release(orb);
         },
         onPotatoHitCallback: () {
-          orb.timeScale = 1;
           onHit?.call();
           _release(orb);
         },

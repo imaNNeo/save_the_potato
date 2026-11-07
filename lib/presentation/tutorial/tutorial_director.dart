@@ -5,7 +5,6 @@ import 'package:flame/effects.dart';
 import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/animation.dart';
 import 'package:save_the_potato/presentation/components/moving/moving_component_spawner.dart';
-import 'package:save_the_potato/presentation/components/moving/moving_components.dart';
 import 'package:save_the_potato/presentation/components/moving/orb/orb_type.dart';
 import 'package:save_the_potato/presentation/components/moving/rift/ring_rift.dart';
 import 'package:save_the_potato/presentation/components/shield.dart';
@@ -14,7 +13,7 @@ import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/service_locator.dart';
 
-import 'tutorial_style.dart';
+import 'tutorial_flags.dart';
 import 'tutorial_visuals.dart';
 
 /// The first-time playground: throws one orb at a time, shows the player
@@ -50,9 +49,6 @@ class TutorialDirector extends Component
   static const _guidedSpeed = 95.0;
   static const _soloSpeed = 120.0;
 
-  /// Orb hitbox radius plus the shield's outer radius
-  static const _contactDistance = 8.5 + 68.0;
-
   /// How long a rift forms before its orb comes through
   static const _riftTime = 0.7;
 
@@ -62,7 +58,6 @@ class TutorialDirector extends Component
   late final TutorialProgressDots dots;
   late final GhostShield ghost;
 
-  TutorialStyle _style = TutorialStyle.defaultStyle;
   bool _active = false;
   bool _finishing = false;
   int _blocks = 0;
@@ -74,9 +69,6 @@ class TutorialDirector extends Component
   /// The orb that just hit, until it is thrown again
   _Throw? _missed;
   double _wait = 0;
-
-  /// The slow-motion style's time scale for the orb
-  double _orbTime = 1;
 
   final _rnd = Random();
 
@@ -107,7 +99,6 @@ class TutorialDirector extends Component
   void _begin() {
     _active = true;
     _finishing = false;
-    _style = bloc.tutorialStyle ?? TutorialStyle.defaultStyle;
     _blocks = 0;
     _throws = 0;
     _lastWasHit = false;
@@ -135,12 +126,8 @@ class TutorialDirector extends Component
   bool _covered(_Throw t) =>
       _offBy(t).abs() < Shield.defaultSweep / 2 - _coverMargin;
 
-  /// Is help on for this orb? Each style answers differently
-  bool _guidedFromStart() => switch (_style) {
-    TutorialStyle.ghost => _blocks < 3 || _lastWasHit,
-    TutorialStyle.slowMo => false,
-    TutorialStyle.ouch => false,
-  };
+  /// The ghost shield helps with the first orbs and after a miss
+  bool _guidedFromStart() => _blocks < 3 || _lastWasHit;
 
   @override
   void update(double dt) {
@@ -163,7 +150,7 @@ class TutorialDirector extends Component
       // following the shield
       _guide(_missed!, active: true);
     }
-    if (TutorialStyle.bot) {
+    if (TutorialFlags.bot) {
       _bot.update(this, dt);
     }
   }
@@ -199,10 +186,7 @@ class TutorialDirector extends Component
     t.rift = RingRift(type: type, spawnAngle: t.angle, formDuration: _riftTime);
     parent.add(t.rift!);
     if (t.guided) {
-      ghost.showFor(type, _needFor(t), angleOfOrb: t.angle);
-    }
-    if (t.holdUntilCovered) {
-      return;
+      ghost.showFor(type, angleOfOrb: t.angle);
     }
     t.launchIn = _riftTime;
   }
@@ -228,11 +212,8 @@ class TutorialDirector extends Component
   }
 
   void _launch(_Throw t) {
-    t.launched = true;
-    final speed = t.guided || _style == TutorialStyle.slowMo
-        ? _guidedSpeed
-        : _soloSpeed;
-    t.orb = spawner.spawnRhythmOrb(
+    final speed = t.guided ? _guidedSpeed : _soloSpeed;
+    spawner.spawnRhythmOrb(
       type: t.type,
       position: Vector2(cos(t.angle), sin(t.angle)) * (ArenaRing.radius + 10),
       speed: speed,
@@ -258,18 +239,6 @@ class TutorialDirector extends Component
       }
     }
 
-    // The ouch style waits, rift open, until the shield is where it was
-    // shown after the hit
-    if (t.holdUntilCovered && !t.launched && t.launchIn == null) {
-      if (_covered(t)) {
-        t.launchIn = 0.35;
-      }
-    }
-
-    if (_style == TutorialStyle.slowMo) {
-      _slowMo(t, dt);
-    }
-
     _guide(t, active: !t.done);
   }
 
@@ -286,37 +255,12 @@ class TutorialDirector extends Component
     }
   }
 
-  void _slowMo(_Throw t, double dt) {
-    final orb = t.orb;
-    var target = 1.0;
-    if (orb != null && t.launched && !t.done) {
-      final distance = orb.position.length - _contactDistance;
-      // Strong help for the first blocks, and after a miss
-      final strong = _blocks < 3 || _lastWasHit;
-      final reach = strong ? 120.0 : 70.0;
-      if (!_covered(t) && distance < reach && strong) {
-        target = 0.05;
-        if (!ghost.isShowing) {
-          ghost.showFor(t.type, _needFor(t), angleOfOrb: t.angle);
-          parent.player.face.scared();
-        }
-      }
-    }
-    // Into slow motion fast, out of it a bit slower so it reads
-    final rate = target < _orbTime ? 14.0 : 5.0;
-    _orbTime += (target - _orbTime) * min(1, dt * rate);
-    orb?.timeScale = _orbTime;
-    ghost.slowMo = 1 - _orbTime;
-  }
-
   void _onBlocked(_Throw t) {
     if (t.done || !_active) {
       return;
     }
     t.done = true;
     _current = null;
-    _orbTime = 1;
-    ghost.slowMo = 0;
     bloc.setTutorialHint(0);
     final note = _notes[_blocks.clamp(0, _notes.length - 1)];
     _blocks++;
@@ -338,41 +282,22 @@ class TutorialDirector extends Component
     }
     t.done = true;
     _current = null;
-    _orbTime = 1;
-    ghost.slowMo = 0;
     bloc.setTutorialHint(0);
     _lastWasHit = true;
     dots.miss();
     // Keep the help where it is (or bring it in) without flashing anything
     // else, so the player can calmly turn the shield there
     if (!ghost.isShowing) {
-      ghost.showFor(t.type, _needFor(t), angleOfOrb: t.angle);
+      ghost.showFor(t.type, angleOfOrb: t.angle);
     }
     _missed = t;
-    switch (_style) {
-      case TutorialStyle.ghost || TutorialStyle.slowMo:
-        // The same orb again, with help this time
-        _wait = 1.1;
-        _then = () {
-          final again = _Throw(
-            type: t.type,
-            angle: t.angle,
-            index: 0,
-            dot: t.dot,
-          )..guided = _style == TutorialStyle.ghost;
-          _throwNext(repeat: again);
-        };
-      case TutorialStyle.ouch:
-        // Freeze on the mistake, then wait for the shield to go there
-        _wait = 0.9;
-        _then = () {
-          final again =
-              _Throw(type: t.type, angle: t.angle, index: 0, dot: t.dot)
-                ..guided = true
-                ..holdUntilCovered = true;
-          _throwNext(repeat: again);
-        };
-    }
+    // The same orb again from the same spot, with help this time
+    _wait = 1.1;
+    _then = () {
+      final again = _Throw(type: t.type, angle: t.angle, index: 0, dot: t.dot)
+        ..guided = true;
+      _throwNext(repeat: again);
+    };
   }
 
   void _finish() {
@@ -460,13 +385,10 @@ class _Throw {
   final int dot;
 
   bool guided = false;
-  bool holdUntilCovered = false;
-  bool launched = false;
   bool done = false;
   double? launchIn;
   double? closeRiftIn;
   RingRift? rift;
-  MovingOrb? orb;
 }
 
 /// Plays like a new player: misses on purpose a couple of times, otherwise
@@ -475,16 +397,9 @@ class _TutorialBot {
   _Throw? _seen;
   double _react = 0;
   int _held = 0;
-  bool _sawGhost = false;
 
   /// Throws the bot lets through, to show what a miss looks like
-  static Set<int> _missThrows(TutorialStyle style) => switch (style) {
-    TutorialStyle.ghost => {4},
-    TutorialStyle.ouch => {0, 4},
-    // It waits for the slow motion instead, which stops coming after a few
-    // blocks, so it misses there
-    TutorialStyle.slowMo => {},
-  };
+  static const _missThrows = {4};
 
   void update(TutorialDirector d, double dt) {
     final t = d._current;
@@ -494,23 +409,11 @@ class _TutorialBot {
     }
     if (_seen != t) {
       _seen = t;
-      _react = t.holdUntilCovered ? 0.6 : 1.0;
+      _react = 1.0;
     }
-    if (_missThrows(d._style).contains(t.index)) {
+    if (_missThrows.contains(t.index)) {
       _press(d, 0);
       return;
-    }
-    if (d._style == TutorialStyle.slowMo && !t.guided) {
-      // Waits for time to slow down, like someone who doesn't know yet
-      if (!d.ghost.isShowing) {
-        _sawGhost = false;
-        _press(d, 0);
-        return;
-      }
-      if (!_sawGhost) {
-        _sawGhost = true;
-        _react = 0.7;
-      }
     }
     if (_react > 0) {
       _react -= dt;

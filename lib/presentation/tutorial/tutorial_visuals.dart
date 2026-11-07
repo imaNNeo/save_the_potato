@@ -14,8 +14,9 @@ const _white = Color(0xFFFFFFFF);
 const _good = Color(0xFF6BFFA8);
 
 /// A ring of dots around the potato, one for each orb the player has to
-/// block. Each block fills one, a hit shakes them red, and when all are
-/// full they burst out to the arena edge as the real game starts.
+/// block. Each orb comes from a dot's direction and blocking it fills that
+/// dot in the orb's color; a hit shakes them red. When all are full they
+/// swirl into the potato.
 class TutorialProgressDots extends PositionComponent {
   TutorialProgressDots({required this.count}) : super(priority: 2);
 
@@ -194,8 +195,7 @@ class TutorialProgressDots extends PositionComponent {
 
 /// A see-through shield where the right shield should go, with arrows
 /// that run from the shield toward it. It lights up when the shield is
-/// in place, flashes red where the shield should have been after a hit,
-/// and darkens the screen during slow motion.
+/// in place: the line turns green and a tick shows on the orb's dot.
 class GhostShield extends PositionComponent {
   GhostShield() : super(priority: 2);
 
@@ -210,10 +210,6 @@ class GhostShield extends PositionComponent {
 
   bool locked = false;
 
-  /// 0 normal, 1 full slow motion
-  double slowMo = 0;
-  double _dim = 0;
-
   double _visible = 0;
   double _target = 0;
   double _lock = 0;
@@ -222,40 +218,20 @@ class GhostShield extends PositionComponent {
 
   /// Called when the shield reaches the ghost
   VoidCallback? onLocked;
-  double _miss = 0;
   double _success = -1;
   double _time = 0;
 
   bool get isShowing => _target > 0;
 
-  void showFor(
-    OrbType type,
-    double needFireAngle, {
-    required double angleOfOrb,
-  }) {
+  void showFor(OrbType type, {required double angleOfOrb}) {
     final same = isShowing && type == _type && angleOfOrb == _angle;
     _type = type;
     _angle = angleOfOrb;
     _target = 1;
-    _miss = 0;
     _success = -1;
     if (!same) {
       locked = false;
     }
-  }
-
-  /// After a hit: red, where the shield should have been
-  void showMiss(
-    OrbType type,
-    double needFireAngle, {
-    required double angleOfOrb,
-  }) {
-    _type = type;
-    _angle = angleOfOrb;
-    _target = 0;
-    _visible = 1;
-    _miss = 1;
-    _success = -1;
   }
 
   void success() {
@@ -274,12 +250,7 @@ class GhostShield extends PositionComponent {
   void update(double dt) {
     super.update(dt);
     _time += dt;
-    if (_miss > 0) {
-      _miss = max(0, _miss - dt * 1.0);
-      if (_miss == 0) {
-        _visible = 0;
-      }
-    } else if (_success < 0) {
+    if (_success < 0) {
       _visible += (_target - _visible) * min(1, dt * 8);
     }
     if (_success >= 0) {
@@ -298,33 +269,11 @@ class GhostShield extends PositionComponent {
     }
     _lockAge += dt;
     _lock += ((locked ? 1.0 : 0.0) - _lock) * min(1, dt * 14);
-    _dim += (slowMo - _dim) * min(1, dt * 10);
   }
 
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    if (_dim > 0.01) {
-      // Slow motion: the world darkens around the potato
-      canvas.drawCircle(
-        Offset.zero,
-        560,
-        Paint()
-          ..shader = ui.Gradient.radial(
-            Offset.zero,
-            560,
-            [
-              Colors.black.withValues(alpha: 0),
-              Colors.black.withValues(alpha: _clamp01(_dim * 0.55)),
-            ],
-            [0.2, 0.8],
-          ),
-      );
-    }
-    if (_miss > 0) {
-      _renderMiss(canvas);
-      return;
-    }
     if (_success >= 0) {
       _renderSuccess(canvas);
       return;
@@ -484,41 +433,6 @@ class GhostShield extends PositionComponent {
           ..color = _good.withValues(alpha: _clamp01((1 - t) * _visible)),
       );
     }
-  }
-
-  void _renderMiss(Canvas canvas) {
-    final blink = (sin(_time * 22) > 0 ? 1.0 : 0.35) * _miss;
-    final arc = Rect.fromCircle(center: Offset.zero, radius: _radius);
-    final start = _angle - _sweep / 2;
-    canvas
-      ..drawArc(
-        arc,
-        start,
-        _sweep,
-        false,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round
-          ..strokeWidth = 18
-          ..blendMode = BlendMode.plus
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7)
-          ..color = _missColor.withValues(alpha: _clamp01(blink * 0.6)),
-      )
-      ..drawArc(
-        arc,
-        start,
-        _sweep,
-        false,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round
-          ..strokeWidth = 5
-          ..color = Color.lerp(
-            _missColor,
-            _white,
-            0.3,
-          )!.withValues(alpha: _clamp01(blink)),
-      );
   }
 
   void _renderSuccess(Canvas canvas) {
