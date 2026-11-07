@@ -14,8 +14,7 @@ enum HealthMoodStyle {
   face,
 
   /// The face, plus body language: a slow calm sway with rosy cheeks, the
-  /// normal dance, or a pale trembling potato with sweat and its headphones
-  /// slipping
+  /// normal dance, or a pale trembling potato with its headphones slipping
   full,
 
   /// Like [full], with a fourth "uneasy" step between normal and worried, so
@@ -163,10 +162,6 @@ class HealthMood {
   // ---- extras ----
 
   final _fill = Paint()..isAntiAlias = true;
-  final _stroke = Paint()
-    ..isAntiAlias = true
-    ..style = PaintingStyle.stroke
-    ..strokeJoin = StrokeJoin.round;
 
   void _paintSkin(Canvas canvas, PotatoPose pose) {
     final on = pose[PotatoProp.headphones].clamp(0.0, 1.0);
@@ -196,48 +191,5 @@ class HealthMood {
       }
       _fill.shader = null;
     }
-    // Sweat drops sliding down when worried
-    final sweat = (_worried + 0.4 * _uneasy) * on;
-    if (sweat > 0.01) {
-      for (final (start, phase, size) in const [
-        (Offset(350, 140), 0.0, 1.0),
-        (Offset(132, 160), 0.55, 0.8),
-      ]) {
-        if (style != HealthMoodStyle.four && _uneasy > _worried && size < 1) {
-          continue;
-        }
-        final t = (_time / 1.5 + phase) % 1.0;
-        final fade = (t < 0.15 ? t / 0.15 : (1 - t) / 0.85).clamp(0.0, 1.0);
-        final at = start + Offset(t * 10, t * 70);
-        _drop(canvas, at, 1.5 * size * (0.85 + 0.3 * t), sweat * fade);
-      }
-    }
-  }
-
-  void _drop(Canvas canvas, Offset at, double scale, double alpha) {
-    final path = Path()
-      ..moveTo(0, -30)
-      ..cubicTo(6, -16, 18, -4, 18, 8)
-      ..cubicTo(18, 19, 10, 26, 0, 26)
-      ..cubicTo(-10, 26, -18, 19, -18, 8)
-      ..cubicTo(-18, -4, -6, -16, 0, -30)
-      ..close();
-    canvas.save();
-    canvas.translate(at.dx, at.dy);
-    canvas.scale(scale);
-    _stroke
-      ..color = const Color(0xFF2A4A6A).withValues(alpha: alpha)
-      ..strokeWidth = 6;
-    canvas.drawPath(path, _stroke);
-    _fill
-      ..shader = null
-      ..color = const Color(0xFF8FD8FF).withValues(alpha: alpha);
-    canvas.drawPath(path, _fill);
-    _fill.color = const Color(0xFFFFFFFF).withValues(alpha: alpha * 0.9);
-    canvas.drawOval(
-      Rect.fromCenter(center: const Offset(-6, 8), width: 8, height: 12),
-      _fill,
-    );
-    canvas.restore();
   }
 }
