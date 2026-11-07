@@ -21,7 +21,8 @@ class TutorialProgressDots extends PositionComponent {
 
   final int count;
 
-  static const _radius = 122.0;
+  static const ringRadius = 122.0;
+  static const _radius = ringRadius;
   static const _dotRadius = 5.5;
 
   final _fills = <double>[];
@@ -440,7 +441,9 @@ class GhostShield extends PositionComponent {
     }
     final pop = _lockAge < 0.35 ? 1 + sin(_lockAge / 0.35 * pi) * 0.45 : 1.0;
     final size = 13.0 * _lock * pop;
-    final c = Offset(cos(_angle), sin(_angle)) * (_radius + 26);
+    // On the dot this orb will fill, so the tick and the dot read as one
+    final c =
+        Offset(cos(_angle), sin(_angle)) * TutorialProgressDots.ringRadius;
     final alpha = _clamp01(_visible * _lock);
     canvas
       ..drawCircle(
