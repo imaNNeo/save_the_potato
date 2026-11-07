@@ -67,6 +67,10 @@ class _LevelSelectState extends State<LevelSelect>
   /// The stop it eases to when nobody turns it
   double? _snap;
 
+  /// Whether it should sit on the next level to clear (until the player
+  /// turns it). The cleared count loads a moment after the screen shows.
+  bool _followNext = false;
+
   late final Ticker _ticker;
   Duration _last = Duration.zero;
   late final AnimationController _pulse;
@@ -90,9 +94,7 @@ class _LevelSelectState extends State<LevelSelect>
       LevelSelect._defaulted = true;
       if (level == null) {
         level = Levels.nextAfter(cubit.state.levelsCleared);
-        WidgetsBinding.instance.addPostFrameCallback(
-          (_) => cubit.selectLevel(level),
-        );
+        _followNext = true;
       }
     }
     _pos = (level ?? 0).toDouble();
@@ -128,7 +130,14 @@ class _LevelSelectState extends State<LevelSelect>
     }
     final before = _pos;
     final direction = state.shieldsTurnDirection;
+    if (_followNext) {
+      final next = Levels.nextAfter(state.levelsCleared).toDouble();
+      if (_snap != next) {
+        _snap = next;
+      }
+    }
     if (direction != 0) {
+      _followNext = false;
       _pos += direction * _turnSpeed * dt;
       _snap = null;
     } else {
@@ -138,9 +147,10 @@ class _LevelSelectState extends State<LevelSelect>
         _pos = snap;
       }
     }
+    // Also keeps the game's pick in step when it ignored an earlier one
+    _pickSelected();
     if (_pos != before) {
       _updatePointer();
-      _pickSelected();
       setState(() {});
     }
   }
@@ -161,6 +171,7 @@ class _LevelSelectState extends State<LevelSelect>
 
   /// Turns to [stop] the short way round
   void _goTo(int stop) {
+    _followNext = false;
     final n = LevelSelect.stops;
     var delta = (stop - _pos.round()) % n;
     if (delta > n / 2) {
@@ -169,7 +180,10 @@ class _LevelSelectState extends State<LevelSelect>
     _snap = _pos.roundToDouble() + delta;
   }
 
-  void _step(int by) => _snap = (_snap ?? _pos.roundToDouble()) + by;
+  void _step(int by) {
+    _followNext = false;
+    _snap = (_snap ?? _pos.roundToDouble()) + by;
+  }
 
   @override
   Widget build(BuildContext context) {
