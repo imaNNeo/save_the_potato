@@ -54,7 +54,45 @@ enum PotatoProp {
 
   /// Red and blue skin flashes when a fire or ice orb hits the potato.
   fireTint(0),
-  iceTint(0);
+  iceTint(0),
+
+  // The props below are not in the Rive file and no clip moves them. They
+  // are set every frame from how the potato feels about the music (see
+  // `PotatoVibe`), on top of whatever clip is playing.
+
+  /// Moves, turns and squashes the whole potato (dancing, trembling). The
+  /// scale pivots on the bottom of the potato, so it squashes into the
+  /// ground like a bounce.
+  bodyX(0),
+  bodyY(0),
+  bodyAngle(0),
+  bodyScaleX(1),
+  bodyScaleY(1),
+
+  /// Extra horizontal look of the sparkles (nervous glances), added to
+  /// [sparkleX]
+  glanceX(0),
+
+  /// 0 = open eyes, 1 = eyes closed in happy arcs (enjoying the music)
+  eyeBliss(0),
+
+  /// Raises the inner ends of the brows (worried)
+  browWorry(0),
+
+  /// Opens the smile wider, singing along with a note
+  sing(0),
+
+  /// Shows the wobbly zigzag mouth instead of the smile (nervous)
+  nervousMouth(0),
+
+  /// The headphones: 0 = off (lifted away), 1 = on the head
+  headphones(0),
+
+  /// Knocked askew by a hit, in radians
+  headphonesTilt(0),
+
+  /// The ear cups thump with the beat
+  headphonesPulse(0);
 
   const PotatoProp(this.rest);
 
@@ -77,6 +115,9 @@ class PotatoPose {
 
   void operator []=(PotatoProp prop, double value) =>
       _values[prop.index] = value;
+
+  /// Copies every value of [other] into this pose.
+  void copyFrom(PotatoPose other) => _values.setAll(0, other._values);
 
   /// Puts every value back to its [PotatoProp.rest] value.
   void reset() {

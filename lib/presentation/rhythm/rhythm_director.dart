@@ -86,6 +86,13 @@ class RhythmDirector extends Component
 
   bool _running = false;
 
+  /// Whether a run is going and [songTime] follows the music
+  bool get isRunning => _running;
+
+  /// Where the song is, in seconds (beats land on multiples of
+  /// [RhythmSongs.beatSeconds])
+  double get songTime => _songTime;
+
   void _startRun() {
     _running = true;
     _songTime = 0;
@@ -542,6 +549,7 @@ class RhythmDirector extends Component
     }
     final pan = cos(atan2(orb.position.y, orb.position.x)) * 0.5;
     _audio.playNote(hit.timbre, hit.midi, pan: pan, volume: hit.volume);
+    parent.player.onNotePlayed(hit);
   }
 }
 
