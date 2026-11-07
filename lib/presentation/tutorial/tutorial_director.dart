@@ -13,6 +13,7 @@ import 'package:save_the_potato/presentation/helpers/audio_helper.dart';
 import 'package:save_the_potato/presentation/potato_game.dart';
 import 'package:save_the_potato/service_locator.dart';
 
+import 'orb_focus.dart';
 import 'tutorial_flags.dart';
 import 'tutorial_visuals.dart';
 
@@ -58,6 +59,9 @@ class TutorialDirector extends Component
   late final TutorialProgressDots dots;
   late final GhostShield ghost;
 
+  /// Extra looks that pull the eye to the coming orb (samples to compare)
+  final focus = OrbFocus(OrbFocusStyle.current);
+
   bool _active = false;
   bool _finishing = false;
   int _blocks = 0;
@@ -76,6 +80,10 @@ class TutorialDirector extends Component
   Future<void> onLoad() async {
     await parent.add(dots = TutorialProgressDots(count: blocksToFinish));
     await parent.add(ghost = GhostShield());
+    if (focus.style.isOn) {
+      await parent.add(OrbFocusUnder(focus));
+      await parent.add(OrbFocusOver(focus));
+    }
     // A soft high note when the shield reaches the right spot
     ghost.onLocked = () => _audio.playNote('ice', 88, volume: 0.45);
   }
@@ -92,6 +100,7 @@ class TutorialDirector extends Component
     } else if (!state.tutorial && _active) {
       _active = false;
       ghost.hide();
+      focus.clear();
       bloc.setTutorialHint(0);
     }
   }
@@ -180,6 +189,7 @@ class TutorialDirector extends Component
       dot: dot,
     );
     dots.point(dot, type);
+    focus.aim(type, t.angle);
     t.guided = _guidedFromStart() || (repeat?.guided ?? false);
     _current = t;
     _missed = null;
@@ -213,13 +223,14 @@ class TutorialDirector extends Component
 
   void _launch(_Throw t) {
     final speed = t.guided ? _guidedSpeed : _soloSpeed;
-    spawner.spawnRhythmOrb(
+    final orb = spawner.spawnRhythmOrb(
       type: t.type,
       position: Vector2(cos(t.angle), sin(t.angle)) * (ArenaRing.radius + 10),
       speed: speed,
       onBlocked: () => _onBlocked(t),
       onHit: () => _onHit(t),
     );
+    focus.track(orb);
     t.closeRiftIn = 0.45;
   }
 
@@ -248,6 +259,7 @@ class TutorialDirector extends Component
     final showHelp = ghost.isShowing && active;
     final covered = _covered(t);
     ghost.locked = covered;
+    focus.covered = covered;
     if (showHelp && !covered) {
       bloc.setTutorialHint(_offBy(t) > 0 ? 1 : -1);
     } else {
@@ -261,6 +273,7 @@ class TutorialDirector extends Component
     }
     t.done = true;
     _current = null;
+    focus.clear();
     bloc.setTutorialHint(0);
     final note = _notes[_blocks.clamp(0, _notes.length - 1)];
     _blocks++;
@@ -282,6 +295,7 @@ class TutorialDirector extends Component
     }
     t.done = true;
     _current = null;
+    focus.clear();
     bloc.setTutorialHint(0);
     _lastWasHit = true;
     dots.miss();
