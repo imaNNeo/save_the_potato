@@ -1,0 +1,89 @@
+name: Web build to games portal
+
+# Every push to main builds the web version of Save The Potato and pushes it
+# to the save-the-potato-web-update branch of app2pack-dev/app2pack_games.
+# There a workflow opens a pull request that replaces
+# client/games/save-the-potato/ and merges it, and the server pulls main every
+# 5 minutes, so the new build goes live on games.app2pack.dev by itself.
+# Needs the PORTAL_DEPLOY_KEY secret (a deploy key, so it never expires),
+# see docs/RELEASE_GUIDE.md.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'repo_files/**'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch, tag or commit to build (default: the branch you run this from)'
+        required: false
+        default: ''
+
+concurrency:
+  group: web-to-portal
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.47.9'
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Check the PORTAL_DEPLOY_KEY secret is set
+        env:
+          PORTAL_DEPLOY_KEY: ${{ secrets.PORTAL_DEPLOY_KEY }}
+        run: |
+          if [ -z "$PORTAL_DEPLOY_KEY" ]; then
+            echo "::error::PORTAL_DEPLOY_KEY is not set. See docs/RELEASE_GUIDE.md."
+            exit 1
+          fi
+
+      - name: Check out the games portal
+        uses: actions/checkout@v4
+        with:
+          repository: app2pack-dev/app2pack_games
+          ssh-key: ${{ secrets.PORTAL_DEPLOY_KEY }}
+          path: .portal
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      # The portal owns the build script, so the web build always matches how
+      # the portal serves it (base path, self-hosted CanvasKit, pruned files).
+      - name: Build the web version into the portal
+        run: .portal/scripts/build-save-the-potato-web.sh "$GITHUB_WORKSPACE"
+
+      - name: Read the version
+        id: version
+        run: |
+          echo "name=$(grep -m1 '^version:' pubspec.yaml | sed 's/version: *//; s/+.*//')" >> "$GITHUB_OUTPUT"
+
+      # The portal's game-web-pr workflow turns this branch into a pull
+      # request and merges it.
+      - name: Push the build to the portal's save-the-potato-web-update branch
+        working-directory: .portal
+        env:
+          VERSION: ${{ steps.version.outputs.name }}
+          SOURCE: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
+        run: |
+          git add -A client/games/save-the-potato
+          if git diff --cached --quiet; then
+            echo "The web build is already up to date on the portal."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "Update Save The Potato web build to $VERSION" -m "Built from $SOURCE"
+          git push --force origin HEAD:refs/heads/save-the-potato-web-update
