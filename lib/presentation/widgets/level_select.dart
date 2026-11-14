@@ -177,13 +177,9 @@ class _LevelSelectState extends State<LevelSelect>
           a.level != b.level || a.levelsCleared != b.levelsCleared,
       builder: (context, state) => LayoutBuilder(
         builder: (context, constraints) {
-          // The camera fits the 720 world units square in the screen
-          final scale =
-              min(constraints.maxWidth, constraints.maxHeight) /
-              GameConstants.viewSize;
-          final center = Offset(
-            constraints.maxWidth / 2,
-            constraints.maxHeight / 2,
+          final layout = _HomeLayout.of(
+            Size(constraints.maxWidth, constraints.maxHeight),
+            MediaQuery.paddingOf(context),
           );
           return AnimatedBuilder(
             animation: Listenable.merge([_pulse, _intro]),
@@ -193,8 +189,9 @@ class _LevelSelectState extends State<LevelSelect>
                   child: IgnorePointer(
                     child: CustomPaint(
                       painter: _LevelPathPainter(
-                        center: center,
-                        radius: _radius(scale),
+                        center: layout.center,
+                        radius: layout.radius,
+                        beadScale: layout.beadScale,
                         turn: _turn,
                         cleared: state.levelsCleared,
                         intro: _intro.value,
@@ -202,10 +199,9 @@ class _LevelSelectState extends State<LevelSelect>
                     ),
                   ),
                 ),
-                _marker(center, scale),
-                ..._stops(state, center, scale),
-                _title(),
-                _panel(state),
+                _marker(layout),
+                ..._stops(state, layout),
+                ..._texts(state, layout),
               ],
             ),
           );
@@ -216,14 +212,13 @@ class _LevelSelectState extends State<LevelSelect>
 
   // ---- the stops ----
 
-  double _radius(double scale) => 225 * scale;
-
   /// How far the ring is turned, in radians
   double get _turn => _pos * 2 * pi / LevelSelect.stops;
 
-  List<Widget> _stops(GameState state, Offset center, double scale) {
-    final radius = _radius(scale);
-    const base = 34.0;
+  List<Widget> _stops(GameState state, _HomeLayout layout) {
+    final center = layout.center;
+    final radius = layout.radius;
+    final base = 34.0 * layout.beadScale;
     final widgets = <(double, Widget)>[];
     for (var stop = 0; stop < LevelSelect.stops; stop++) {
       // Each stop pops out a little after the one before
@@ -272,11 +267,10 @@ class _LevelSelectState extends State<LevelSelect>
   }
 
   /// The notch at the top the picked stop sits under
-  Widget _marker(Offset center, double scale) {
-    final r = _radius(scale);
-    final y = center.dy - r - 34;
+  Widget _marker(_HomeLayout layout) {
+    final y = layout.center.dy - layout.radius - 34 * layout.beadScale;
     return Positioned(
-      left: center.dx - 9,
+      left: layout.center.dx - 9,
       top: y - 4 + 3 * _pulse.value,
       child: Opacity(
         opacity: _intro.value,
@@ -290,106 +284,286 @@ class _LevelSelectState extends State<LevelSelect>
 
   // ---- text and START ----
 
-  Widget _title() => Align(
-    alignment: Alignment.topCenter,
-    child: SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.only(top: 64),
-        child: Opacity(
-          opacity: _intro.value,
-          child: const Text(
-            'SAVE THE POTATO',
-            style: TextStyle(fontFamily: 'Cookies', fontSize: 30),
+  /// The title and the panel (level name, caption, START), placed by
+  /// [layout]
+  List<Widget> _texts(GameState state, _HomeLayout layout) {
+    final info = _PanelInfo.of(state);
+    final opacity = _intro.value;
+    Widget fade(Widget child) => Opacity(opacity: opacity, child: child);
+    switch (layout.mode) {
+      case _Mode.stacked:
+        // Title above the ring, panel below it (the portrait home)
+        final u = layout.uiScale;
+        return [
+          Positioned(
+            left: 0,
+            right: 0,
+            top: layout.padding.top + 64 * u,
+            child: fade(Center(child: _titleText(30 * u))),
           ),
-        ),
-      ),
-    ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: layout.padding.bottom + 40 * u,
+            child: fade(
+              Center(
+                child: Transform.scale(
+                  scale: u,
+                  alignment: Alignment.bottomCenter,
+                  child: _panelColumn(info),
+                ),
+              ),
+            ),
+          ),
+        ];
+      case _Mode.sides:
+        // Title on the left of the ring, panel on the right
+        final side = layout.sideWidth;
+        final top = layout.padding.top + 64;
+        final bottom = layout.padding.bottom + 16;
+        return [
+          Positioned(
+            left: layout.padding.left + 12,
+            width: side,
+            top: top,
+            bottom: bottom,
+            child: fade(
+              Center(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: _titleText(38, stacked: true),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            right: layout.padding.right + 12,
+            width: side,
+            top: top,
+            bottom: bottom,
+            child: fade(
+              Center(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: _panelColumn(info),
+                ),
+              ),
+            ),
+          ),
+        ];
+    }
+  }
+
+  Widget _titleText(double size, {bool stacked = false}) => Text(
+    stacked ? 'SAVE\nTHE\nPOTATO' : 'SAVE THE POTATO',
+    textAlign: TextAlign.center,
+    style: TextStyle(fontFamily: 'Cookies', fontSize: size, height: 1.05),
   );
 
-  Widget _panel(GameState state) {
+  Widget _panelColumn(_PanelInfo info) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _nameRow(info),
+      const SizedBox(height: 6),
+      _captionText(info),
+      const SizedBox(height: 18),
+      _startButton(info),
+    ],
+  );
+
+  Widget _nameRow(_PanelInfo info) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _Chevron(left: true, onTap: () => _step(-1)),
+      SizedBox(
+        width: 200,
+        child: Column(
+          children: [
+            Text(
+              info.name,
+              style: TextStyle(
+                fontFamily: 'Cookies',
+                fontSize: 30,
+                shadows: [Shadow(blurRadius: 12, color: info.accent)],
+              ),
+            ),
+            Text(
+              info.song,
+              style: TextStyle(
+                fontFamily: 'Cookies',
+                fontSize: 17,
+                color: info.accent,
+              ),
+            ),
+          ],
+        ),
+      ),
+      _Chevron(left: false, onTap: () => _step(1)),
+    ],
+  );
+
+  Widget _captionText(_PanelInfo info) => Text(
+    info.caption,
+    textAlign: TextAlign.center,
+    style: const TextStyle(fontSize: 13, color: Colors.white60),
+  );
+
+  Widget _startButton(_PanelInfo info) => _StartButton(
+    accent: info.accent,
+    gradient: info.endless ? _endlessGradient : null,
+    locked: info.locked,
+    pulse: _pulse.value,
+    onTap: info.locked ? null : _cubit.startFromHome,
+  );
+}
+
+/// What the panel says about the picked stop
+class _PanelInfo {
+  const _PanelInfo({
+    required this.endless,
+    required this.locked,
+    required this.accent,
+    required this.name,
+    required this.song,
+    required this.caption,
+  });
+
+  factory _PanelInfo.of(GameState state) {
     final level = state.level;
     final locked = level != null && !Levels.isOpen(level, state.levelsCleared);
     final accent = level == null
         ? _endlessIce
         : Color(Levels.songOf(level).colors.first);
-    final String name;
     final String caption;
     if (level == null) {
-      name = 'ENDLESS';
       caption = 'No finish line: survive as long as you can';
     } else if (locked) {
-      name = 'LEVEL $level';
       caption = 'Clear level ${level - 1} to unlock it';
     } else if (level <= state.levelsCleared) {
-      name = 'LEVEL $level';
       caption = 'Cleared! Play it again any time';
     } else {
-      name = 'LEVEL $level';
       caption = 'Clear a level to unlock the next one';
     }
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 40, left: 16, right: 16),
-          child: Opacity(
-            opacity: _intro.value,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _Chevron(left: true, onTap: () => _step(-1)),
-                    SizedBox(
-                      width: 200,
-                      child: Column(
-                        children: [
-                          Text(
-                            name,
-                            style: TextStyle(
-                              fontFamily: 'Cookies',
-                              fontSize: 30,
-                              shadows: [Shadow(blurRadius: 12, color: accent)],
-                            ),
-                          ),
-                          Text(
-                            level == null
-                                ? 'INFINITE MODE'
-                                : Levels.songOf(level).name.toUpperCase(),
-                            style: TextStyle(
-                              fontFamily: 'Cookies',
-                              fontSize: 17,
-                              color: accent,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    _Chevron(left: false, onTap: () => _step(1)),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  caption,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13, color: Colors.white60),
-                ),
-                const SizedBox(height: 18),
-                _StartButton(
-                  accent: accent,
-                  gradient: level == null ? _endlessGradient : null,
-                  locked: locked,
-                  pulse: _pulse.value,
-                  onTap: locked ? null : _cubit.startFromHome,
-                ),
-              ],
-            ),
-          ),
-        ),
+    return _PanelInfo(
+      endless: level == null,
+      locked: locked,
+      accent: accent,
+      name: level == null ? 'ENDLESS' : 'LEVEL $level',
+      song: level == null
+          ? 'INFINITE MODE'
+          : Levels.songOf(level).name.toUpperCase(),
+      caption: caption,
+    );
+  }
+
+  final bool endless;
+  final bool locked;
+  final Color accent;
+  final String name;
+  final String song;
+  final String caption;
+}
+
+/// How the home is laid out: the portrait stack, or the landscape one with
+/// the title and the panel beside the ring
+enum _Mode { stacked, sides }
+
+/// Where the ring, the title and the panel go on a screen
+class _HomeLayout {
+  _HomeLayout({
+    required this.mode,
+    required this.center,
+    required this.radius,
+    required this.padding,
+    this.uiScale = 1,
+    this.sideWidth = 0,
+  });
+
+  /// Heights of the portrait title (from the top) and panel (from the
+  /// bottom), with their margins, at uiScale 1
+  static const _titleBottom = 64.0 + 34;
+  static const _panelTop = 40.0 + 161;
+
+  /// The least room the side panel keeps beside the ring (it scales down
+  /// to fit)
+  static const _sideRoom = 250.0;
+
+  /// Room the ring needs above its radius (the marker) and below it (a
+  /// bead), plus a little air
+  static const _aboveRing = 34.0 + 6 + 10;
+  static const _belowRing = 17.0 + 6;
+
+  factory _HomeLayout.of(Size size, EdgeInsets padding) {
+    // The camera fits the 720 world units square in the screen, and the
+    // potato is in the middle
+    final scale = min(size.width, size.height) / GameConstants.viewSize;
+    final center = Offset(size.width / 2, size.height / 2);
+    final full = 225 * scale;
+    // Never closer to the potato than this
+    final smallest = 95 * scale + 22;
+    final cy = center.dy;
+    // How big the ring can be with the portrait title and panel
+    double stackedRadius(double u) => min(
+      cy - padding.top - _titleBottom * u - _aboveRing,
+      size.height - cy - padding.bottom - _panelTop * u - _belowRing,
+    );
+    if (stackedRadius(1) >= full) {
+      return _HomeLayout(
+        mode: _Mode.stacked,
+        center: center,
+        radius: full,
+        padding: padding,
+      );
+    }
+    // Portrait screens only ever lack a little height: a smaller ring
+    // (and smaller texts on the shortest ones) makes room
+    if (size.width <= size.height) {
+      var u = 1.0;
+      var r = stackedRadius(1);
+      if (r < smallest) {
+        // Shrink the texts until the smallest ring fits
+        final room = size.height - padding.vertical - 2 * smallest - 60 - 50;
+        u = (room / (_titleBottom + _panelTop)).clamp(0.45, 1.0);
+        r = max(smallest, stackedRadius(u));
+      }
+      return _HomeLayout(
+        mode: _Mode.stacked,
+        center: center,
+        radius: min(full, r),
+        padding: padding,
+        uiScale: u,
+      );
+    }
+    // Up to the top bar and the bottom edge
+    final vertical = min(
+      cy - padding.top - 16 - _aboveRing,
+      size.height - cy - padding.bottom - _belowRing,
+    );
+    // Leaves the panel its full width beside the ring if it can
+    final horizontal =
+        size.width / 2 - padding.horizontal / 2 - 12 - _sideRoom - 30;
+    final r = max(smallest, min(full, min(vertical, horizontal)));
+    return _HomeLayout(
+      mode: _Mode.sides,
+      center: center,
+      radius: r,
+      padding: padding,
+      sideWidth: max(
+        120,
+        size.width / 2 - r - 30 - padding.horizontal / 2 - 12,
       ),
     );
   }
+
+  final _Mode mode;
+  final Offset center;
+  final double radius;
+  final EdgeInsets padding;
+  final double uiScale;
+  final double sideWidth;
+
+  /// Smaller beads on a small ring, so they don't bump into each other
+  double get beadScale => (radius / 110).clamp(0.7, 1.0);
 }
 
 /// The endless mode's look: fire to ice, unlike any level's single color
@@ -716,6 +890,7 @@ class _LevelPathPainter extends CustomPainter {
   _LevelPathPainter({
     required this.center,
     required this.radius,
+    required this.beadScale,
     required this.turn,
     required this.cleared,
     required this.intro,
@@ -723,6 +898,7 @@ class _LevelPathPainter extends CustomPainter {
 
   final Offset center;
   final double radius;
+  final double beadScale;
   final double turn;
   final int cleared;
   final double intro;
@@ -737,7 +913,7 @@ class _LevelPathPainter extends CustomPainter {
     const n = LevelSelect.stops;
     final step = 2 * pi / n;
     // Leaves room around the beads
-    final gap = 21 / radius;
+    final gap = 21 * beadScale / radius;
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
