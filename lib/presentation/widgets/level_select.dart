@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -181,7 +180,6 @@ class _LevelSelectState extends State<LevelSelect>
           final layout = _HomeLayout.of(
             Size(constraints.maxWidth, constraints.maxHeight),
             MediaQuery.paddingOf(context),
-            HomeLayoutStyle.current,
           );
           return AnimatedBuilder(
             animation: Listenable.merge([_pulse, _intro]),
@@ -353,43 +351,6 @@ class _LevelSelectState extends State<LevelSelect>
             ),
           ),
         ];
-      case _Mode.bar:
-        // Title up in the top bar, panel as one row along the bottom
-        return [
-          Positioned(
-            left: 0,
-            right: 0,
-            top: layout.padding.top + 16,
-            child: fade(Center(child: _titleText(24))),
-          ),
-          Positioned(
-            left: layout.padding.left + 16,
-            right: layout.padding.right + 16,
-            bottom: layout.padding.bottom + 14,
-            child: fade(
-              Center(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _nameRow(info),
-                          const SizedBox(width: 20),
-                          _startButton(info),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      _captionText(info),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ];
     }
   }
 
@@ -503,31 +464,9 @@ class _PanelInfo {
   final String caption;
 }
 
-/// PROTOTYPE: how the home makes room when the portrait layout doesn't
-/// fit (landscape, short windows). Picked with ?home= on the web.
-enum HomeLayoutStyle {
-  /// As before: always the portrait layout, whatever the screen
-  before,
-
-  /// Title left of the ring, panel right of it
-  sides,
-
-  /// The portrait layout with a smaller ring (and smaller text when even
-  /// that isn't enough)
-  fit,
-
-  /// Title in the top bar, panel as one row along the bottom
-  bar;
-
-  static final current = kIsWeb
-      ? HomeLayoutStyle.values.firstWhere(
-          (s) => s.name == Uri.base.queryParameters['home'],
-          orElse: () => HomeLayoutStyle.sides,
-        )
-      : HomeLayoutStyle.sides;
-}
-
-enum _Mode { stacked, sides, bar }
+/// How the home is laid out: the portrait stack, or the landscape one with
+/// the title and the panel beside the ring
+enum _Mode { stacked, sides }
 
 /// Where the ring, the title and the panel go on a screen
 class _HomeLayout {
@@ -554,7 +493,7 @@ class _HomeLayout {
   static const _aboveRing = 34.0 + 6 + 10;
   static const _belowRing = 17.0 + 6;
 
-  factory _HomeLayout.of(Size size, EdgeInsets padding, HomeLayoutStyle style) {
+  factory _HomeLayout.of(Size size, EdgeInsets padding) {
     // The camera fits the 720 world units square in the screen, and the
     // potato is in the middle
     final scale = min(size.width, size.height) / GameConstants.viewSize;
@@ -568,7 +507,7 @@ class _HomeLayout {
       cy - padding.top - _titleBottom * u - _aboveRing,
       size.height - cy - padding.bottom - _panelTop * u - _belowRing,
     );
-    if (style == HomeLayoutStyle.before || stackedRadius(1) >= full) {
+    if (stackedRadius(1) >= full) {
       return _HomeLayout(
         mode: _Mode.stacked,
         center: center,
@@ -576,58 +515,44 @@ class _HomeLayout {
         padding: padding,
       );
     }
-    // Portrait screens only ever lack a little height: shrink the ring
-    final landscape = size.width > size.height;
-    switch (landscape ? style : HomeLayoutStyle.fit) {
-      case HomeLayoutStyle.before:
-      case HomeLayoutStyle.fit:
-        var u = 1.0;
-        var r = stackedRadius(1);
-        if (r < smallest) {
-          // Shrink the texts until the smallest ring fits
-          final room = size.height - padding.vertical - 2 * smallest - 60 - 50;
-          u = (room / (_titleBottom + _panelTop)).clamp(0.45, 1.0);
-          r = max(smallest, stackedRadius(u));
-        }
-        return _HomeLayout(
-          mode: _Mode.stacked,
-          center: center,
-          radius: min(full, r),
-          padding: padding,
-          uiScale: u,
-        );
-      case HomeLayoutStyle.sides:
-        // Up to the top bar and the bottom edge
-        final vertical = min(
-          cy - padding.top - 16 - _aboveRing,
-          size.height - cy - padding.bottom - _belowRing,
-        );
-        // Leaves the panel its full width beside the ring if it can
-        final horizontal =
-            size.width / 2 - padding.horizontal / 2 - 12 - _sideRoom - 30;
-        final r = max(smallest, min(full, min(vertical, horizontal)));
-        return _HomeLayout(
-          mode: _Mode.sides,
-          center: center,
-          radius: r,
-          padding: padding,
-          sideWidth: max(
-            120,
-            size.width / 2 - r - 30 - padding.horizontal / 2 - 12,
-          ),
-        );
-      case HomeLayoutStyle.bar:
-        final r = min(
-          cy - padding.top - 50 - _aboveRing,
-          size.height - cy - padding.bottom - 100 - _belowRing,
-        );
-        return _HomeLayout(
-          mode: _Mode.bar,
-          center: center,
-          radius: max(smallest, min(full, r)),
-          padding: padding,
-        );
+    // Portrait screens only ever lack a little height: a smaller ring
+    // (and smaller texts on the shortest ones) makes room
+    if (size.width <= size.height) {
+      var u = 1.0;
+      var r = stackedRadius(1);
+      if (r < smallest) {
+        // Shrink the texts until the smallest ring fits
+        final room = size.height - padding.vertical - 2 * smallest - 60 - 50;
+        u = (room / (_titleBottom + _panelTop)).clamp(0.45, 1.0);
+        r = max(smallest, stackedRadius(u));
+      }
+      return _HomeLayout(
+        mode: _Mode.stacked,
+        center: center,
+        radius: min(full, r),
+        padding: padding,
+        uiScale: u,
+      );
     }
+    // Up to the top bar and the bottom edge
+    final vertical = min(
+      cy - padding.top - 16 - _aboveRing,
+      size.height - cy - padding.bottom - _belowRing,
+    );
+    // Leaves the panel its full width beside the ring if it can
+    final horizontal =
+        size.width / 2 - padding.horizontal / 2 - 12 - _sideRoom - 30;
+    final r = max(smallest, min(full, min(vertical, horizontal)));
+    return _HomeLayout(
+      mode: _Mode.sides,
+      center: center,
+      radius: r,
+      padding: padding,
+      sideWidth: max(
+        120,
+        size.width / 2 - r - 30 - padding.horizontal / 2 - 12,
+      ),
+    );
   }
 
   final _Mode mode;
