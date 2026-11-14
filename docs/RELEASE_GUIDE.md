@@ -39,5 +39,17 @@ Add these under **Settings → Secrets and variables → Actions**. For files, s
 | `APP_STORE_CONNECT_KEY_ID` | App Store Connect API key ID |
 | `APP_STORE_CONNECT_PRIVATE_KEY` | contents of the `AuthKey_XXXX.p8` file |
 | `IOS_CERTIFICATE_PRIVATE_KEY` | RSA private key for the distribution certificate (`ssh-keygen -t rsa -b 2048 -m PEM -f ios_cert_key -q -N ""`) |
+| `PORTAL_DEPLOY_KEY` | Private SSH key for the web build workflow (below). Its public half is a deploy key with write access on `app2pack-dev/app2pack_games`. Deploy keys don't expire. |
 
 The Firebase files come from `make firebaseConfigs` on a machine that is logged in to Firebase. The build itself never logs in to Firebase.
+
+## Web version on games.app2pack.dev
+
+The `Web build to games portal` workflow (`.github/workflows/web-to-portal.yml`) runs on every push to `main` (changes to docs and Markdown files only are skipped), so the web version can be ahead of the stores. It builds the web version with `scripts/build-save-the-potato-web.sh` from the portal repo and pushes it to the `save-the-potato-web-update` branch of `app2pack-dev/app2pack_games`. The portal's own workflow opens a pull request that replaces `client/games/save-the-potato/` and merges it, and the server pulls the portal's `main` every 5 minutes, so it goes live at [games.app2pack.dev/play.html?game=save-the-potato](https://games.app2pack.dev/play.html?game=save-the-potato) by itself. To rebuild it by hand, for example from another branch, run the workflow from the Actions tab.
+
+To set up the deploy key once:
+
+1. Make a key pair: `ssh-keygen -t ed25519 -C save-the-potato-web-to-portal -N "" -f potato_portal_key`
+2. In `app2pack_games`, Settings → Deploy keys → Add deploy key: paste `potato_portal_key.pub`, tick **Allow write access**.
+3. In `save_the_potato`, Settings → Secrets and variables → Actions: add `PORTAL_DEPLOY_KEY` with the contents of `potato_portal_key` (the file without `.pub`). Then delete both files.
+4. In `app2pack_games`, Settings → Actions → General: **Allow GitHub Actions to create and approve pull requests** must be ticked (it already is for Through The Galaxies).
