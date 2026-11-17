@@ -1,10 +1,10 @@
 name: Web build to games portal
 
 # Every push to main builds the web version of Save The Potato and pushes it
-# to the save-the-potato-web-update branch of app2pack-dev/app2pack_games.
+# to the save-the-potato-web-update branch of imaNNeo/games.
 # There a workflow opens a pull request that replaces
 # client/games/save-the-potato/ and merges it, and the server pulls main every
-# 5 minutes, so the new build goes live on games.app2pack.dev by itself.
+# 5 minutes, so the new build goes live on games.imanneo.dev by itself.
 # Needs the PORTAL_DEPLOY_KEY secret (a deploy key, so it never expires),
 # see docs/RELEASE_GUIDE.md.
 
@@ -50,7 +50,7 @@ jobs:
       - name: Check out the games portal
         uses: actions/checkout@v4
         with:
-          repository: app2pack-dev/app2pack_games
+          repository: imaNNeo/games
           ssh-key: ${{ secrets.PORTAL_DEPLOY_KEY }}
           path: .portal
 
